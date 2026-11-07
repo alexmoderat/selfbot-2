@@ -52,6 +52,9 @@ const start = (port) => {
 				get displayName() {
 					return user.name;
 				},
+				/** Wie Supibots getBestAvailableEmote: Emote-Verfuegbarkeit wird (noch) nicht geprueft, also der Fallback */
+				getBestAvailableEmote: async (emotes, fallback) => fallback,
+
 				send: async (message) => write(message),
 				whisper: async (message) => write(message),
 			};

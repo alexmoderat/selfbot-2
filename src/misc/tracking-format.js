@@ -101,19 +101,19 @@ const packLines = (head, lines, limit, separator = ' | ', repeatHead = true) => 
 };
 
 /** Eine Antwort oder mehrere Nachrichten mit 400 ms Pause (Twitchs Spam-Schutz, sb-v2 17.09.2026) */
-const replyInChunks = async (context, chunks, delay = 400) => {
+const replyInChunks = async (msg, chunks, delay = 400) => {
 	if (chunks.length === 1) {
-		return { reply: chunks[0] };
+		return { text: chunks[0] };
 	}
 
 	for (let i = 0; i < chunks.length; i++) {
 		if (i > 0) {
 			await new Promise((resolve) => setTimeout(resolve, delay));
 		}
-		await context.sendIntermediateMessage(chunks[i]);
+		await msg.send(chunks[i]);
 	}
 
-	return { reply: null };
+	return { text: null };
 };
 
 /** "3", "top3", "top 3" als Argument von vsall/vs: Hinweis auf !vstop statt Nutzersuche; sonst null */

@@ -16,6 +16,17 @@ const NEXT = path.join(__dirname, '..');
 const targetOf = (relative) => {
 	const rel = relative.replace(/\.ts$/, '');
 	const rules = [
+		// schon vorhandene Gegenstuecke im neuen Aufbau
+		[/^singletons\/logger$/, 'src/services/log'],
+		[/^utils\/command-levels$/, 'src/clients/modules/levels'],
+		[/^utils\/invocation$/, 'src/clients/modules/invocation'],
+		[/^utils\/parameters$/, 'src/clients/modules/parameters'],
+		[/^utils\/cooldown-manager$/, 'src/clients/modules/cooldown'],
+		[/^utils\/regexes$/, 'src/misc/regex'],
+		[/^classes\/command$/, 'src/clients/modules/commands'],
+		[/^classes\/chat-module$/, 'src/clients/modules/chat-modules'],
+		// Hilfsdateien eines Commands (Unterordner); der Loader laedt nur src/commands/*.js
+		[/^commands\/([^/]+)\/(?!index$)(.+)$/, 'src/misc/commands/$1/$2'],
 		[/^utils\/(.+)$/, 'src/misc/$1'],
 		[/^singletons\/(.+)$/, 'src/services/$1'],
 		[/^platforms\/twitch-utils$/, 'src/util/twitch/twitch-utils'],
@@ -64,6 +75,13 @@ const API_RENAMES = [
 	[/\bsb\.ChatModule\.dispatch\(/g, 'bot.ChatModules.dispatch('],
 	[/\bsb\.Platform\.get(?:Asserted)?\("twitch"\)/g, 'TODO_PORT_PLATFORM'],
 	// Command-Kontext -> msg
+	[/\bcontext\.getBestAvailableEmote\(/g, 'msg.getBestAvailableEmote('],
+	[/\bcontext\.sendIntermediateMessage\(/g, 'msg.send('],
+	[/\bcontext\.messageLimit\b/g, 'bot.Config.messageLimit'],
+	[/\bcontext\.command\b/g, 'msg.command'],
+	[/\bsb\.Command\.get\(/g, 'getCommand('],
+	[/\bsb\.Command\.data\b/g, 'commands'],
+	[/\bsb\.User\.normalizeUsername\(/g, 'bot.Users.normalizeUsername('],
 	[/\bcontext\.displayName\b/g, 'msg.displayName'],
 	[/\bcontext\.user\.ID\b/g, 'msg.sender.id'],
 	[/\bcontext\.user\.Name\b/g, 'msg.sender.name'],
@@ -214,10 +232,45 @@ const convertExports = (code) => {
 };
 
 /** declare({ Name, Aliases, ... Code: async function x (context, ...args) {}) }) -> DATB-Format */
-const convertCommand = (code) =>
-	code
-		.replace(/module\.exports = declare\(\{/, 'module.exports = {')
-		.replace(/\}\);\s*\n(Object\.assign|$)/, '};\n$1')
+const convertCommand = (input) => {
+	let code = input;
+	const declareStart = code.indexOf('module.exports = declare({');
+	if (declareStart !== -1) {
+		// Ende von declare({...}): erste Zeile "});" danach
+		const close = code.indexOf('\n});', declareStart);
+		if (close !== -1) {
+			code = code.slice(0, close) + '\n};' + code.slice(close + 4);
+		}
+		code = code.replace('module.exports = declare({', 'module.exports = {');
+	}
+
+	// Code: (async) function name (context, a, b) { ... }  -> execute: async (client, msg) => { const [a, b] = msg.args;
+	const codeMatch = /^\tCode: \(?(?:async )?function\s*\w*\s*\(([^)]*)\)\s*\{/m.exec(code);
+	if (codeMatch) {
+		const params = codeMatch[1].split(',').map((i) => i.trim()).filter(Boolean).slice(1);
+		let args = '';
+		if (params.length === 1 && params[0].startsWith('...')) {
+			args = `\n\t\tconst ${params[0].slice(3)} = [...msg.args];`;
+		}
+		else if (params.length > 0) {
+			const named = params.filter((i) => !i.startsWith('...')).map((i) => i.replace(/\s*=.*$/, ''));
+			const rest = params.find((i) => i.startsWith('...'));
+			args = `\n\t\tconst [${[...named, ...(rest ? [rest] : [])].join(', ')}] = msg.args;`;
+		}
+		code = code.slice(0, codeMatch.index) + `\texecute: async (client, msg) => {${args}` + code.slice(codeMatch.index + codeMatch[0].length);
+
+		// Ende des Code-Blocks: erste Zeile "\t})," oder "\t}," nach dem Anfang -> "\t},"
+		const after = codeMatch.index;
+		const closeRegex = /^\t\}\)?,?$/m;
+		const rest = code.slice(after);
+		const closeMatch = closeRegex.exec(rest);
+		if (closeMatch) {
+			const position = after + closeMatch.index;
+			code = code.slice(0, position) + '\t},' + code.slice(position + closeMatch[0].length);
+		}
+	}
+
+	return code
 		.replace(/^\tName:/m, '\tname:')
 		.replace(/^\tAliases: null,?\n/m, '')
 		.replace(/^\tAliases: \[\],?\n/m, '')
@@ -233,14 +286,10 @@ const convertCommand = (code) =>
 		.replace(/^\tWhitelist_Response:/m, '\twhitelistResponse:')
 		.replace(/^\tDynamic_Description: null,?\n?/m, '')
 		.replace(/^\tDynamic_Description:/m, '\tdynamicDescription:')
-		.replace(/^\tCode: \(?async function \w*\s*\(context(?:, \.\.\.(\w+))?(?:, (\w+))?\)\s*\{/m, (_m, rest, single) => {
-			const args = rest ? `\n\t\tconst ${rest} = [...msg.args];` : single ? `\n\t\tconst [${single}] = msg.args;` : '';
-			return `\texecute: async (client, msg) => {${args}`;
-		})
-		.replace(/^\t\}\)?,(\s*\n\t(?:dynamicDescription|\}))/m, '\t},$1')
 		.replace(/\bthis\.Cooldown\b/g, 'module.exports.cooldown')
 		.replace(/\breply:/g, 'text:')
 		.replace(/\breplyTo: true\b/g, 'reply: true');
+};
 
 const markTodos = (code) =>
 	code
@@ -254,12 +303,24 @@ const main = () => {
 	let code = stripTypeScriptTypes(readFileSync(source, 'utf8'), { mode: 'strip' });
 	code = convertImports(code, path.dirname(path.resolve(source)), absoluteTarget);
 	code = convertExports(code);
-	if (/commands\/[^/]+\/index\.ts$/.test(source)) {
+	if (/commands\/[^/]+\/+index\.ts$/.test(source)) {
 		code = code.replace(/^const \{ declare \} = require\([^)]*\);\n/m, '');
+		code = code.replace(/^const \{ declare, isResultFailure \} = require\([^)]*\);\n/m, "const { isResultFailure } = require('../clients/modules/commands.js');\n");
 		code = convertCommand(code);
 	}
 	for (const [regex, replacement] of API_RENAMES) {
 		code = code.replace(regex, replacement);
+	}
+	const relativeTo = (target) => {
+		let result = path.relative(path.dirname(absoluteTarget), path.join(NEXT, target));
+		return result.startsWith('.') ? result : `./${result}`;
+	};
+	if (/\bgetPermissions\(/.test(code) && !/getPermissions \} = require/.test(code)) {
+		code = `const { getPermissions } = require('${relativeTo('src/clients/modules/handler')}.js');\n${code}`;
+	}
+	const loaderNames = ['getCommand', 'commands', 'toListed'].filter((name) => new RegExp(`\\b${name}\\b`).test(code));
+	if (loaderNames.length > 0 && !/clients\/modules\/commands\.js/.test(code)) {
+		code = `const { ${loaderNames.join(', ')} } = require('${relativeTo('src/clients/modules/commands')}.js');\n${code}`;
 	}
 	if (/\bgot(\.gql)?\(/.test(code) && !/require\([^)]*token\/got\.js/.test(code)) {
 		let gotPath = path.relative(path.dirname(absoluteTarget), path.join(NEXT, 'src/token/got'));

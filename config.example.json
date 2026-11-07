@@ -4,7 +4,9 @@
 	"prefix": "sbn",
 	"messageLimit": 500,
 	"dedupeWindow": 600000,
-	"onlyChannels": ["testaccountalexmoderat"],
+	"onlyChannels": [
+		"testaccountalexmoderat"
+	],
 	"disableAltPrefix": true,
 	"parallelMode": true,
 	"mongo": {
@@ -29,15 +31,38 @@
 		"otherBotCommandsDir": "/root/twitch-bot/src/commands",
 		"massPingBanphraseThreshold": 10,
 		"modLogChannel": null,
-		"utilityChannels": ["ninou2", "testaccountalexmoderat", "im_row1"],
+		"utilityChannels": [
+			"ninou2",
+			"testaccountalexmoderat",
+			"im_row1"
+		],
 		"maxIncomingActiveReminders": 10,
 		"maxOutgoingActiveReminders": 10,
 		"maxIncomingScheduledReminders": 5,
 		"maxOutgoingScheduledReminders": 5
 	},
 	"modules": {
-		"commands": { "disableAll": false, "blacklist": ["vstop"], "whitelist": [] },
-		"modules": { "disableAll": false, "blacklist": ["join-check"], "whitelist": [] },
-		"crons": { "disableAll": false, "blacklist": ["auto-join", "justlog-sync"], "whitelist": [] }
+		"commands": {
+			"disableAll": false,
+			"blacklist": [
+				"vstop"
+			],
+			"whitelist": []
+		},
+		"modules": {
+			"disableAll": true,
+			"blacklist": [
+				"join-check"
+			],
+			"whitelist": []
+		},
+		"crons": {
+			"disableAll": false,
+			"blacklist": [
+				"auto-join",
+				"justlog-sync"
+			],
+			"whitelist": []
+		}
 	}
 }

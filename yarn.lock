@@ -477,6 +477,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jprochazk/roll-dice@npm:^0.4.2":
+  version: 0.4.2
+  resolution: "@jprochazk/roll-dice@npm:0.4.2"
+  checksum: 10c0/571a3e35691f4080a588e61640b7d1fb27a46fdd603c9867dd4d93fd3673d336e3c23abcc1a0a87c183f9ae6c7380cd946fa998235e31902fd7fba00b26fe971
+  languageName: node
+  linkType: hard
+
 "@kararty/dank-twitch-irc@npm:^6.2.0":
   version: 6.2.0
   resolution: "@kararty/dank-twitch-irc@npm:6.2.0"
@@ -1656,6 +1663,7 @@ __metadata:
   resolution: "selfbot-next@workspace:."
   dependencies:
     "@eslint/js": "npm:^9"
+    "@jprochazk/roll-dice": "npm:^0.4.2"
     "@kararty/dank-twitch-irc": "npm:^6.2.0"
     chrono-node: "npm:^2"
     eslint: "npm:^9"

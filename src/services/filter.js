@@ -94,21 +94,52 @@ const createFilterData = (type, rawData, id = null) => {
 	return null;
 };
 
-const fromDoc = (doc) => ({
-	id: doc._id,
-	userId: doc.userId ?? null,
-	channelId: doc.channelId ?? null,
-	command: doc.command ?? null,
-	invocation: doc.invocation ?? null,
-	type: doc.type,
-	response: doc.response ?? 'None',
-	reason: doc.reason ?? null,
-	blockedUser: doc.blockedUser ?? null,
-	issuedBy: doc.issuedBy ?? null,
-	active: doc.active !== false,
-	rawData: doc.data ?? null,
-	data: createFilterData(doc.type, doc.data ?? null, doc._id),
-});
+/** Alte Feldnamen (Supibots Filter-Klasse) als Getter und Instanz-Methoden, damit portierte Commands gleich lesen */
+const LEGACY_FILTER_FIELDS = {
+	ID: 'id',
+	User_Alias: 'userId',
+	Channel: 'channelId',
+	Command: 'command',
+	Invocation: 'invocation',
+	Type: 'type',
+	Response: 'response',
+	Reason: 'reason',
+	Blocked_User: 'blockedUser',
+	Issued_By: 'issuedBy',
+	Active: 'active',
+	Data: 'data',
+};
+const withLegacy = (filter) => {
+	for (const [legacy, field] of Object.entries(LEGACY_FILTER_FIELDS)) {
+		Object.defineProperty(filter, legacy, { get: () => filter[field], set: (value) => (filter[field] = value), enumerable: false });
+	}
+	// Es gibt nur Twitch - Filter gelten nie fuer eine bestimmte Plattform
+	Object.defineProperty(filter, 'Platform', { value: null, enumerable: false });
+	Object.defineProperties(filter, {
+		toggle: { value: () => toggle(filter), enumerable: false },
+		saveData: { value: (raw) => saveData(filter, raw), enumerable: false },
+		applyData: { value: (input) => applyData(filter, input), enumerable: false },
+		priority: { get: () => priority(filter), enumerable: false },
+	});
+	return filter;
+};
+
+const fromDoc = (doc) =>
+	withLegacy({
+		id: doc._id,
+		userId: doc.userId ?? null,
+		channelId: doc.channelId ?? null,
+		command: doc.command ?? null,
+		invocation: doc.invocation ?? null,
+		type: doc.type,
+		response: doc.response ?? 'None',
+		reason: doc.reason ?? null,
+		blockedUser: doc.blockedUser ?? null,
+		issuedBy: doc.issuedBy ?? null,
+		active: doc.active !== false,
+		rawData: doc.data ?? null,
+		data: createFilterData(doc.type, doc.data ?? null, doc._id),
+	});
 
 /** Arguments: true wenn ein Argument passt; Cooldown: veraenderte Laenge */
 const applyData = (filter, input) => {
@@ -301,7 +332,27 @@ const execute = async (options) => {
 };
 
 /** Neuer Filter (ban-Command) */
-const create = async (options) => {
+/** Optionen auch mit den alten Namen (User_Alias, Channel, Type, Issued_By, ...) */
+const LEGACY_CREATE_KEYS = {
+	User_Alias: 'userId',
+	Channel: 'channelId',
+	Command: 'command',
+	Invocation: 'invocation',
+	Type: 'type',
+	Response: 'response',
+	Reason: 'reason',
+	Blocked_User: 'blockedUser',
+	Issued_By: 'issuedBy',
+	Data: 'data',
+};
+
+const create = async (input) => {
+	const options = {};
+	for (const [key, value] of Object.entries(input)) {
+		if (key !== 'Platform') {
+			options[LEGACY_CREATE_KEYS[key] ?? key] = value;
+		}
+	}
 	const doc = await bot.DB.Filter.create({
 		_id: await bot.DB.nextId('filters'),
 		channelId: options.channelId ?? null,

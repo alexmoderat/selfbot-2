@@ -31,7 +31,7 @@ const available = new Map(); // reminderId -> userTo
 
 const mention = (user) => `@${user.name}`;
 
-const fromDoc = (doc) => ({
+const fromDocPlain = (doc) => ({
 	id: doc._id,
 	userFrom: doc.userFrom ?? null,
 	userTo: doc.userTo,
@@ -44,6 +44,51 @@ const fromDoc = (doc) => ({
 	timeout: null,
 	deactivated: false,
 });
+
+/** Alte Feldnamen (Supibots Reminder-Klasse) als Getter und Methoden, damit portierte Commands gleich lesen */
+const LEGACY_REMINDER_FIELDS = {
+	ID: 'id',
+	User_From: 'userFrom',
+	User_To: 'userTo',
+	Channel: 'channelId',
+	Text: 'text',
+	Created: 'created',
+	Schedule: 'schedule',
+	Private_Message: 'privateMessage',
+	Type: 'type',
+};
+const fromDoc = (doc) => {
+	const reminder = fromDocPlain(doc);
+	for (const [legacy, field] of Object.entries(LEGACY_REMINDER_FIELDS)) {
+		Object.defineProperty(reminder, legacy, { get: () => reminder[field], set: (value) => (reminder[field] = value), enumerable: false });
+	}
+	Object.defineProperties(reminder, {
+		Platform: { get: () => bot.Twitch, enumerable: false },
+		deactivate: { value: (permanent, cancelled) => deactivate(reminder, permanent, cancelled), enumerable: false },
+		setText: { value: (text) => setText(reminder, text), enumerable: false },
+	});
+	return reminder;
+};
+
+/** Eingaben auch mit den alten Namen (User_From, User_To, Channel, Text, Schedule, Private_Message, Type) */
+const LEGACY_CREATE_KEYS = {
+	User_From: 'userFrom',
+	User_To: 'userTo',
+	Channel: 'channelId',
+	Text: 'text',
+	Schedule: 'schedule',
+	Private_Message: 'privateMessage',
+	Type: 'type',
+};
+const normalizeInput = (input) => {
+	const result = {};
+	for (const [key, value] of Object.entries(input)) {
+		if (key !== 'Platform' && key !== 'Created') {
+			result[LEGACY_CREATE_KEYS[key] ?? key] = value;
+		}
+	}
+	return result;
+};
 
 const destroy = (reminder) => {
 	reminder.timeout?.clear();
@@ -233,7 +278,8 @@ const checkLimits = async (userFrom, userTo, schedule, type = 'Reminder') => {
 };
 
 /** Neuer Reminder; @returns {{ success: true, id } | { success: false, cause, reason }} */
-async function create(input, skipChecks = false) {
+async function create(rawInput, skipChecks = false) {
+	const input = normalizeInput(rawInput);
 	if (!skipChecks && input.userFrom !== null) {
 		const limits = await checkLimits(input.userFrom, input.userTo, input.schedule ?? null, input.type);
 		if (!limits.success) {
@@ -253,7 +299,7 @@ async function create(input, skipChecks = false) {
 		type: input.type ?? 'Reminder',
 	});
 	add(fromDoc(doc.toObject()));
-	return { success: true, cause: null, id: doc._id };
+	return { success: true, cause: null, id: doc._id, ID: doc._id };
 }
 
 /** Text nachtraeglich aendern (Dashboard "My reminders") */
@@ -371,6 +417,7 @@ const checkActive = async (targetUser, channel, displayName = targetUser.name) =
 const list = () => [...data.values()].flat();
 
 module.exports = {
+	data,
 	REMINDER_ERROR_REASONS,
 	activeLimitFor,
 	load,

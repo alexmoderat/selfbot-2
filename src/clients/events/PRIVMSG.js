@@ -68,6 +68,9 @@ const buildMsgData = (msg, channel) => {
 			return this.user.display || this.user.login;
 		},
 
+		/** Wie Supibots getBestAvailableEmote: Emote-Verfuegbarkeit wird (noch) nicht geprueft, also der Fallback */
+		getBestAvailableEmote: async (emotes, fallback) => fallback,
+
 		send: async function (message, reply = false) {
 			try {
 				await bot.Twitch.send(message, this.channelData, { replyTo: reply ? this.id : null });

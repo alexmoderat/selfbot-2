@@ -32,13 +32,13 @@ const detectTimezone = (...args) => {
 		if (!Number.isFinite(offset)) {
 			return {
 				success: false,
-				reply: `Malformed timezone offset provided!`,
+				text: `Malformed timezone offset provided!`,
 			};
 		} else if (Math.abs(offset) > 14 * 60) {
 			// UTC[+/-]14 is the maximum offset
 			return {
 				success: false,
-				reply: `Maximum timezone offset exceeded!`,
+				text: `Maximum timezone offset exceeded!`,
 			};
 		}
 

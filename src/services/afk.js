@@ -21,7 +21,15 @@ const pickStatusMessage = (status, minutesDelta) => {
 	return randArray(definitions.responses.static[status]);
 };
 
-const fromDoc = (doc) => ({ id: doc._id, userId: doc.userId, started: doc.started, text: doc.text ?? NO_TEXT_AFK, status: doc.status ?? DEFAULT_AFK_STATUS });
+/** Alte Feldnamen (Supibots AFK-Klasse) als Getter */
+const LEGACY_AFK_FIELDS = { ID: 'id', User_Alias: 'userId', Started: 'started', Text: 'text', Status: 'status' };
+const fromDoc = (doc) => {
+	const afk = { id: doc._id, userId: doc.userId, started: doc.started, text: doc.text ?? NO_TEXT_AFK, status: doc.status ?? DEFAULT_AFK_STATUS };
+	for (const [legacy, field] of Object.entries(LEGACY_AFK_FIELDS)) {
+		Object.defineProperty(afk, legacy, { get: () => afk[field], enumerable: false });
+	}
+	return afk;
+};
 
 const load = async () => {
 	active.clear();
@@ -52,7 +60,14 @@ const checkActive = async (user, channel, displayName = user.name) => {
 };
 
 /** Neuer Status; interruptedId setzt einen beendeten fort (Dauer zaehlt weiter) */
-const set = async (user, data = {}) => {
+/** data auch mit den alten Namen (Text, Status, Started, Interrupted_ID) */
+const set = async (user, rawData = {}) => {
+	const data = {
+		text: rawData.text ?? rawData.Text,
+		status: rawData.status ?? rawData.Status,
+		started: rawData.started ?? rawData.Started,
+		interruptedId: rawData.interruptedId ?? rawData.Interrupted_ID,
+	};
 	const started = data.started ?? new Date();
 	const status = data.status ?? DEFAULT_AFK_STATUS;
 	const doc = await bot.DB.AFK.create({

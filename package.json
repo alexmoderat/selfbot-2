@@ -22,6 +22,7 @@
 	"author": "alexmoderat",
 	"license": "AGPL-3.0",
 	"dependencies": {
+		"@jprochazk/roll-dice": "^0.4.2",
 		"@kararty/dank-twitch-irc": "^6.2.0",
 		"chrono-node": "^2",
 		"ioredis": "^5",

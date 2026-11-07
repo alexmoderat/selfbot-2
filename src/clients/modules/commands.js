@@ -38,7 +38,7 @@ const normalize = (definition, file) => {
 		throw new Error(`Command ${definition.name}: unbekannte Flags ${unknown.join(', ')}`);
 	}
 
-	return {
+	const command = {
 		aliases: [],
 		cooldown: 0,
 		description: null,
@@ -51,6 +51,26 @@ const normalize = (definition, file) => {
 		...definition,
 		flags: Object.freeze([...flags]),
 	};
+
+	// Alte Feldnamen (selfbots Command-Klasse) als Getter, damit portierte Commands, Module und Web gleich lesen
+	for (const [legacy, field] of Object.entries(LEGACY_FIELDS)) {
+		Object.defineProperty(command, legacy, { get: () => command[field], enumerable: false });
+	}
+	Object.defineProperty(command, 'permission', { get: () => permissionOf(command), enumerable: false });
+	Object.defineProperty(command, 'toListed', { value: () => toListed(command), enumerable: false });
+	return command;
+};
+
+const LEGACY_FIELDS = {
+	Name: 'name',
+	Aliases: 'aliases',
+	Cooldown: 'cooldown',
+	Description: 'description',
+	Usage: 'usage',
+	Flags: 'flags',
+	Params: 'params',
+	Whitelist_Response: 'whitelistResponse',
+	Dynamic_Description: 'dynamicDescription',
 };
 
 /** Rechte-Stufe wie in sb-v2s Permission-Feld */
@@ -113,4 +133,7 @@ const getCommand = (identifier) => {
 	return commands.get(name) ?? commands.get(aliases.get(name)) ?? null;
 };
 
-module.exports = { startCmds, getCommand, commands, aliases, permissionOf, toListed, normalize, FLAGS };
+/** Fehlschlag mit Antworttext (bisher isResultFailure aus classes/command) */
+const isResultFailure = (input) => Boolean(input && typeof input === 'object' && input.success === false && typeof input.text === 'string');
+
+module.exports = { isResultFailure, startCmds, getCommand, commands, aliases, permissionOf, toListed, normalize, FLAGS };

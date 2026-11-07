@@ -91,4 +91,7 @@ const destroy = () => {
 	}
 };
 
-module.exports = { load, reloadAttachments, isAttached, dispatch, dispatchPubSub, names, list, destroy };
+/** Nur Durchreichen (bisher classes/chat-module.ts) - Module bleiben so lesbar wie im alten Bot */
+const defineChatModule = (definition) => definition;
+
+module.exports = { defineChatModule, load, reloadAttachments, isAttached, dispatch, dispatchPubSub, names, list, destroy };
