@@ -20,6 +20,8 @@ const { client, connect } = require('./util/twitch/connections.js');
 const { Twitch, platform } = require('./clients/twitch.js');
 const { startCmds, commands } = require('./clients/modules/commands.js');
 const ChatModules = require('./clients/modules/chat-modules.js');
+const { startServices, chatLogger } = require('./clients/startup.js');
+const { getTimers } = require('./clients/modules/timers.js');
 
 bot.Client = client;
 bot.Twitch = platform;
@@ -29,6 +31,8 @@ bot.Filter = require('./services/filter.js');
 bot.Banphrase = require('./services/banphrase.js');
 bot.AFK = require('./services/afk.js');
 bot.Reminders = require('./services/reminders.js');
+// Custom Commands der Channels (!discord usw.), der Handler fragt sie, wenn kein eingebauter Command passt
+bot.CustomCommands = require('./services/custom-commands.js');
 bot.ChatModules = ChatModules;
 bot.Commands = commands;
 
@@ -53,6 +57,9 @@ const start = async () => {
 	client.once('ready', async () => {
 		Logger.log(LogLevel.SILLY, 'Connected to chat!');
 		await Twitch();
+		startServices();
+		const crons = getTimers(config);
+		Logger.info(`[cron] ${crons.length} Cron(s) aktiv: ${crons.map((i) => i.name).join(', ')}`);
 	});
 
 	client.on('close', (err) => {
@@ -79,10 +86,15 @@ process.on('unhandledRejection', (reason) => {
 	Logger.warn('Unhandled rejection', reason);
 });
 
+// pm2 stoppt mit SIGINT: Gepuffertes noch schreiben (bis zu einer Minute Zeilen, fuenf Minuten Meta)
 process.once('SIGINT', () => {
 	client.close();
-	void bot.DB.disconnect().finally(() => process.exit(0));
-	setTimeout(() => process.exit(0), 1500).unref();
+	void chatLogger
+		.flush()
+		.catch(() => {})
+		.finally(() => bot.DB.disconnect())
+		.finally(() => process.exit(0));
+	setTimeout(() => process.exit(0), 3000).unref();
 });
 
 start().catch((e) => {

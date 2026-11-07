@@ -75,7 +75,15 @@ const getByTwitchId = (twitchId) => {
 };
 
 const all = () => [...channels.values()];
-const getJoinable = () => all().filter((i) => i.mode !== 'Inactive');
+/**
+ * Aktive Channels. Parallelbetrieb (config.onlyChannels): nur die bedienten - so greifen auch Crons, Join-Poller,
+ * PubSub und Module nirgends sonst ein, solange der alte selfbot dort laeuft.
+ */
+const getJoinable = () => {
+	const only = bot.Config?.onlyChannels;
+	const active = all().filter((i) => i.mode !== 'Inactive');
+	return Array.isArray(only) && only.length > 0 ? active.filter((i) => only.includes(i.name)) : active;
+};
 
 /** Darf der Bot hier schreiben? */
 const isWritable = (channel) => channel.mode !== 'Inactive' && channel.mode !== 'Read';

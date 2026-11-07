@@ -7,6 +7,9 @@ const Users = require('../../services/users.js');
 const AFK = require('../../services/afk.js');
 const Reminders = require('../../services/reminders.js');
 const ChatModules = require('../modules/chat-modules.js');
+const chatterRegistry = require('../../services/chatter-registry.js');
+const colorCycler = require('../../services/color-cycler.js');
+const { chatLogger } = require('../../services/chat-logger.js');
 
 // Wie DontAddThisBot: client.on('PRIVMSG') baut msgData mit send() und gibt sie an den Handler.
 // Davor wie bisher: Doppel-Erkennung, Channel-/User-Datensatz, AFK-Rueckkehr und wartende Reminder.
@@ -103,8 +106,18 @@ const onMessage = async (msg) => {
 		await bot.Channels.saveProperty(channel, 'Name', msg.channelName);
 	}
 
+	// Wie im alten Bot: jede Nachricht des Bot-Kontos (von Hand getippt - eigene gesendete kommen per IRC nicht zurueck)
+	// wechselt die Farbe, wenn colorcycle an ist. Im Parallelbetrieb macht das der alte selfbot.
+	if (msg.senderUserID === bot.Config.selfId && !bot.Config.parallelMode) {
+		void colorCycler.maybeCycle(bot.Config.selfId).catch((e) => Logger.log(LogLevel.WARN, '[color-cycler]', e));
+	}
+
 	const msgData = buildMsgData(msg, channel);
 	msgData.sender = await Users.getOrCreate(msg.senderUsername, { twitchId: msg.senderUserID });
+
+	// Wie Supibot: Meta (letzte Nachricht, Zaehler) und Zeilen-Log vor der Command-Verarbeitung
+	chatLogger.updateLastSeen({ channel, user: msgData.sender, message: msg.messageText });
+	chatLogger.push(msg.messageText, msgData.sender, channel);
 
 	// Wie Supibot: vor dem Command AFK-Rueckkehr und wartende Reminder - die Nachricht, die gerade einen
 	// AFK-Status setzt, beendet ihn so nicht gleich wieder
@@ -114,6 +127,12 @@ const onMessage = async (msg) => {
 	}
 
 	const isCommand = await handler(msgData);
+
+	// Erstnachricht: IRC liefert Twitchs first-msg-Tag; die eigene Ableitung (channelChatter) laeuft weiter mit,
+	// damit sie aktuell bleibt (Rueckfall, wie im alten Bot)
+	if (!chatterRegistry.isKnown(channel.id, msg.senderUserID)) {
+		void chatterRegistry.firstSeen(channel.id, msg.senderUserID).catch(() => {});
+	}
 
 	// Form wie bisher (TwitchMessageData), damit die portierten Chat-Module gleich lesen
 	ChatModules.dispatch('message', {

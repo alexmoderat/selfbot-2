@@ -1621,6 +1621,13 @@ duration-parser@supinic/duration-parser:
   languageName: node
   linkType: hard
 
+"reconnecting-websocket@npm:^4.4.0":
+  version: 4.4.0
+  resolution: "reconnecting-websocket@npm:4.4.0"
+  checksum: 10c0/0155223200882e123bc884eb5935bdff7ee4d2998eee578c23bba6a6fec63b68c22ccaf9ff4bdcd05284568d89f02e6a664cc40daf108872f820197848b09579
+  languageName: node
+  linkType: hard
+
 "redis-errors@npm:1.2.0, redis-errors@npm:^1.0.0":
   version: 1.2.0
   resolution: "redis-errors@npm:1.2.0"
@@ -1682,6 +1689,7 @@ duration-parser@supinic/duration-parser:
     mongoose: "npm:^8"
     node-cron: "npm:^4"
     prettier: "npm:^3"
+    reconnecting-websocket: "npm:^4.4.0"
     transliteration: "npm:^2"
     ws: "npm:^8"
     zod: "npm:^4.6.5"

@@ -2,6 +2,7 @@ const { readdirSync, existsSync } = require('node:fs');
 const path = require('node:path');
 const { filterByConfig } = require('../../config.js');
 const { Logger } = require('../../misc/logger.js');
+const { isServed } = require('../JoinChannels.js');
 
 // Chat-Module (bisher classes/chat-module.ts, gleiche Schnittstelle): Dateien in src/modules/ mit
 //   module.exports = { name, description, scope: 'global' | 'channel', initialize?, destroy?, handlers: { message(context, runtime) {}, ... } }
@@ -56,6 +57,10 @@ const isAttached = (name, channel) => {
 /** Event an alle passenden Module verteilen; Fehler eines Moduls stoppen die anderen nicht */
 const dispatch = (event, context) => {
 	const channel = context.channel ?? null;
+	// Parallelbetrieb: nur Ereignisse aus bedienten Channels (sonst z. B. Whispers von live-detection doppelt zum alten Bot)
+	if (channel && !isServed(channel.name)) {
+		return;
+	}
 	const full = { platform: bot.Twitch, ...context };
 	for (const definition of definitions.values()) {
 		const handler = definition.handlers?.[event];

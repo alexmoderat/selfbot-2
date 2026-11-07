@@ -1,10 +1,20 @@
 const { HermesPubSubClient } = require('../util/twitch/hermes-client.js');
+const { LegacyPubSubClient } = require('../util/twitch/pubSub.js');
 const { getUserToken, invalidateUserToken } = require('../util/twitch/twitch-utils.js');
+const { getConfig } = require('../config.js');
 
-// PubSub ueber Hermes, wie sb-v2s v2/singletons/pubsub.ts: ein Standard-Topic-Satz pro Channel,
-// rohe Nachrichten werden als benannte Chat-Modul-Events verteilt ("raw" fuer alles, dazu z. B. "modAction").
+// PubSub wie sb-v2s v2/singletons/pubsub.ts: ein Standard-Topic-Satz pro Channel, rohe Nachrichten werden als benannte
+// Chat-Modul-Events verteilt ("raw" fuer alles, dazu z. B. "modAction").
+// Transport per config.json "pubsub": "legacy" (Standard, wie DontAddThisBot: altes PubSub, Web-Token fuer
+// Mod-Themen) oder "hermes" (Nachfolger aus der Twitch-Weboberflaeche, normaler User-Token) als Ausweg.
 
-const MAX_TOPICS_PER_CONNECTION = 140; // Hermes erlaubt 150
+const TRANSPORT = getConfig().pubsub === 'hermes' ? 'hermes' : 'legacy';
+const Client = TRANSPORT === 'hermes' ? HermesPubSubClient : LegacyPubSubClient;
+// Hermes erlaubt 150 Abos je Verbindung, das alte PubSub 50
+const MAX_TOPICS_PER_CONNECTION = TRANSPORT === 'hermes' ? 140 : LegacyPubSubClient.MAX_TOPICS;
+
+/** Token fuer LISTEN: altes PubSub braucht fuer Mod-Themen den Web-Token (TWITCH_WEB_TOKEN), Hermes den User-Token */
+const getToken = async () => (TRANSPORT === 'legacy' && process.env.TWITCH_WEB_TOKEN ? process.env.TWITCH_WEB_TOKEN : await getUserToken());
 const SUBSCRIBE_DELAY = 15;
 const TOKEN_REFRESH_INTERVAL = 15 * 60_000;
 const LOG_RAW = process.env.PUBSUB_LOG_RAW === '1';
@@ -65,7 +75,7 @@ class PubSub {
 		// uebergebenen an - der vom Start ist nach ~4 h abgelaufen (Ausfall 26.10.2026, siehe hermes-client _open).
 		// Bestehende Abos werden dabei uebersprungen, es geht nichts ueber die Leitung.
 		setInterval(() => {
-			void getUserToken()
+			void getToken()
 				.then((token) => {
 					for (const slot of this.#slots) {
 						slot.client.listen([...slot.topics], token);
@@ -81,7 +91,7 @@ class PubSub {
 			return free;
 		}
 
-		const client = new HermesPubSubClient();
+		const client = new Client();
 		const slot = { client, topics: new Set() };
 		this.#slots.push(slot);
 		const index = this.#slots.length;
@@ -96,7 +106,7 @@ class PubSub {
 
 			console.warn(`[pubsub] Listen-Fehler (${topic}): ${error.message}`);
 		});
-		client.onConnect(() => console.log(`[pubsub] Verbindung ${index} bereit`));
+		client.onConnect(() => console.log(`[pubsub] Verbindung ${index} bereit (${TRANSPORT})`));
 		client.connect();
 		return slot;
 	}
@@ -108,8 +118,13 @@ class PubSub {
 
 		this.#reauthenticating = true;
 		try {
+			// Der Web-Token laesst sich nicht erneuern - abgelehnt heisst: neuen TWITCH_WEB_TOKEN in .env eintragen
+			if (TRANSPORT === 'legacy' && process.env.TWITCH_WEB_TOKEN) {
+				console.warn('[pubsub] TWITCH_WEB_TOKEN abgelehnt (ERR_BADAUTH) - Mod-Themen kommen nicht an');
+				return;
+			}
 			await invalidateUserToken();
-			const token = await getUserToken();
+			const token = await getToken();
 			for (const slot of this.#slots) {
 				slot.client.listen([...slot.topics], token);
 			}
@@ -140,7 +155,7 @@ class PubSub {
 			const slot = this.#slot();
 			slot.topics.add(topic);
 			this.#topicSlot.set(topic, slot);
-			slot.client.listen(topic, await getUserToken());
+			slot.client.listen(topic, await getToken());
 		}
 
 		if (this.#queue.length > 0) {
@@ -205,11 +220,10 @@ class PubSub {
 
 		bot.ChatModules.dispatchPubSub('raw', base);
 
-		// transport "irc": ohne EventSub kommt der Live-Status der gejointen Channels von hier
+		// Ohne EventSub kommt der Live-Status der gejointen Channels von hier
 		const playback = prefix === 'video-playback-by-id' ? payload?.type : null;
-		const streamState = platform;
-		if (channel && streamState.usesIrc && (playback === 'stream-up' || playback === 'stream-down')) {
-			streamState.setStreamState?.(broadcasterId, playback === 'stream-up');
+		if (channel && (playback === 'stream-up' || playback === 'stream-down')) {
+			platform.setStreamState(broadcasterId, playback === 'stream-up');
 		}
 
 		const event = PUBSUB_EVENTS[prefix];
@@ -220,6 +234,7 @@ class PubSub {
 
 	status() {
 		return {
+			transport: TRANSPORT,
 			connections: this.#slots.length,
 			topics: this.#slots.reduce((sum, i) => sum + i.topics.size, 0),
 		};

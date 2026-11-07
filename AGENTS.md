@@ -20,7 +20,15 @@ kommen aus selfbot; Aufbau, IRC-Anbindung und Stil von DontAddThisBot. Bauplan: 
   `msg.args`, `msg.params`, `msg.invocation`, `msg.prefix`, `msg.sender` (User), `msg.channelData` (Channel),
   `msg.displayName`. Rueckgabe: `text` (Antwort), `reply: true` (als Twitch-Reply), `success`, `cooldown`, `whisper`.
   Neue Commands werden automatisch geladen (kein Index).
-- `src/modules/<name>.js` — Chat-Module `{ name, scope, events: { message, usernotice, clearchat, ... } }`.
+- `src/modules/<name>.js` — Chat-Module `{ name, description, scope, initialize, handlers: { message(context, runtime), ... } }`
+  wie im alten selfbot; Events: message, online, offline, usernotice, clearchat, clearmsg, channelState und die
+  PubSub-Namen (raw, modAction, automodQueue, lowTrust, ...).
+- `src/crons/<name>.js` — `defineCron({ name, expression, description, code })`, geladen von
+  `src/clients/modules/timers.js` (node-cron wie DontAddThisBot, Ausdruck mit Sekunden-Feld).
+- `src/util/twitch/pubSub.js` — altes Twitch-PubSub wie DontAddThisBot (50 Themen je Verbindung, Mod-Themen mit
+  `TWITCH_WEB_TOKEN`); `hermes-client.js` als Ausweg, Auswahl per `config.json` `"pubsub": "legacy" | "hermes"`.
+- `src/clients/startup.js` — nach dem IRC-Connect: PubSub-Abos, Notify-Streamer, CatQuery-Firehose, Join-Poller,
+  Chat-Logger.
 - `src/services/` — Channels, Users, Filter, Banphrase, AFK, Reminder, Datenschalter (`data-properties.js`: jede neue
   Channel-/User-Eigenschaft dort mit Typ deklarieren), Log.
 - `src/database/` — `db.js` (mongoose, `nextId()` fuer numerische IDs), `models/`, `redis.js` (`getJSON`/`setJSON`).
@@ -37,8 +45,15 @@ kommen aus selfbot; Aufbau, IRC-Anbindung und Stil von DontAddThisBot. Bauplan: 
 ## Parallelbetrieb (bis zum Umschalten)
 Der alte selfbot laeuft weiter als `selfbot` auf demselben Twitch-Konto. Damit nie beide antworten, gilt in
 `config.json`: `prefix: "sbn"`, `onlyChannels: ["testaccountalexmoderat"]`, `disableAltPrefix: true` (kein "!"),
-`parallelMode: true` (keine AFK-Rueckkehr, keine Reminder-Ansagen). Eigene Ports (11201), Redis-DB 10, Mongo-DB
-`selfbot_next`. MariaDB bleibt bis zum Umschalten die Quelle der Daten; eine erneute Migration ueberschreibt Mongo.
+`parallelMode: true` (keine AFK-Rueckkehr, keine Reminder-Ansagen, kein Chat-Logger, kein Firehose, kein Farbwechsel).
+`onlyChannels` begrenzt auch `bot.Channels.getJoinable()`, PubSub-Abos und Modul-Ereignisse, damit Crons und Module
+nirgends sonst eingreifen. Gesperrt bis zum Umschalten: Module `discord-mirror` (Discord doppelt), Crons `disk-watch`,
+`smartbox-watch` (Warnungen doppelt). Eigene Ports (11201), Redis-DB 10, Mongo-DB `selfbot_next`. MariaDB bleibt bis
+zum Umschalten die Quelle der Daten; eine erneute Migration ueberschreibt Mongo.
+
+## Geteilte sb-v2-Daten
+`chat_data` (first_message_sightings, known_bots, longest_sub, global_sub_counter, ...) gehoert sb-v2, utility-bot und
+autojoin-bot, die es laufend schreiben. Es bleibt in MariaDB; Zugriff nur ueber `src/database/sbv2.js` mit Platzhaltern.
 
 ## Konventionen
 - Plain JavaScript (CommonJS), Node 24, kein Build. Prettier wie DontAddThisBot (Tabs, einfache Anfuehrungszeichen).

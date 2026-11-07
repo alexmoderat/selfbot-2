@@ -50,9 +50,10 @@
 			"whitelist": []
 		},
 		"modules": {
-			"disableAll": true,
+			"disableAll": false,
 			"blacklist": [
-				"join-check"
+				"join-check",
+				"discord-mirror"
 			],
 			"whitelist": []
 		},
@@ -60,9 +61,12 @@
 			"disableAll": false,
 			"blacklist": [
 				"auto-join",
-				"justlog-sync"
+				"justlog-sync",
+				"disk-watch",
+				"smartbox-watch"
 			],
 			"whitelist": []
 		}
-	}
+	},
+	"pubsub": "legacy"
 }

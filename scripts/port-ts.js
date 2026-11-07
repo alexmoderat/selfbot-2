@@ -25,6 +25,7 @@ const targetOf = (relative) => {
 		[/^utils\/regexes$/, 'src/misc/regex'],
 		[/^classes\/command$/, 'src/clients/modules/commands'],
 		[/^classes\/chat-module$/, 'src/clients/modules/chat-modules'],
+		[/^classes\/cron$/, 'src/clients/modules/timers'],
 		// Hilfsdateien eines Commands (Unterordner); der Loader laedt nur src/commands/*.js
 		[/^commands\/([^/]+)\/(?!index$)(.+)$/, 'src/misc/commands/$1/$2'],
 		[/^utils\/(.+)$/, 'src/misc/$1'],
