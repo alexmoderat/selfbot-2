@@ -36,7 +36,6 @@ module.exports = defineCron({
 
 				const live = (await bot.Channels.isLive(channel)) === true;
 				await addWatchtime(channel, ids, MINUTES_PER_TICK, live);
-				console.log(`[watchtime] #${channel.name} (${live ? 'live' : 'offline'}): +${MINUTES_PER_TICK} min fuer ${ids.length} User`);
 			} catch (e) {
 				console.warn(`[watchtime] Fehler in #${channel.name}`, e);
 			}
