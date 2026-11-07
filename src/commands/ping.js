@@ -50,12 +50,14 @@ module.exports = {
 	name: 'ping',
 	aliases: ['pong'],
 	cooldown: 3000,
-	description: 'Shows bot and server uptime, memory usage, channel count and commit.',
+	description: 'Shows bot and server uptime, memory usage, channel count, IRC and PubSub connections and commit.',
 	usage: 'ping',
 	flags: ['pipe', 'skip-banphrase'],
 	execute: async (client, msg) => {
 		const latency = msg.debug ? null : await getTwitchLatency(client);
 		const memory = (process.memoryUsage().rss / 1024 / 1024).toFixed(2);
+		// Wie potatbotat: offene IRC- und PubSub-Verbindungen
+		const pubsub = bot.PubSub?.status();
 
 		const parts = [
 			`uptime: ${formatUptime(Date.now() - BOT_START)}`,
@@ -63,6 +65,8 @@ module.exports = {
 			latency !== null ? `twitch latency: ${latency}ms` : null,
 			`memory: ${memory}MiB`,
 			`channels: ${bot.Channels.getJoinable().length}`,
+			`irc: ${client.connections.length}`,
+			pubsub ? `ps: ${pubsub.connections}` : null,
 			`commit: ${getCommit()}`,
 			`node: ${process.version}`,
 		].filter(Boolean);
