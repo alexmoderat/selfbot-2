@@ -8,7 +8,7 @@ const { CooldownManager } = require('./cooldown.js');
 const { parseParametersFromArguments, formatParams } = require('./parameters.js');
 const { ALT_PREFIX, parseInvocation, checkConfirmation, isMissingRequiredArgument, isAltPrefixOwnedElsewhere } = require('./invocation.js');
 const { effectiveLevel, isLevelAllowed } = require('./levels.js');
-const { getUtilityInvocations } = require('./utility-bot.js');
+const { getUtilityInvocations } = require('../../misc/command-listing.js');
 const Filter = require('../../services/filter.js');
 const Banphrase = require('../../services/banphrase.js');
 const Users = require('../../services/users.js');
@@ -112,8 +112,7 @@ const checkAndExecute = async (msg, options = {}) => {
 		// Wie Supibot: nicht sofort abbrechen, erst die Filter pruefen
 		if (!parsed.success) {
 			failedParams = parsed.reply;
-		}
-		else {
+		} else {
 			args = parsed.args;
 			params = parsed.parameters;
 		}
@@ -123,8 +122,7 @@ const checkAndExecute = async (msg, options = {}) => {
 	if (!filterData.success) {
 		finish(command.cooldown);
 		return { success: false, reason: `filter-${filterData.reason}`, text: filterData.reply };
-	}
-	else if (failedParams !== null) {
+	} else if (failedParams !== null) {
 		finish(command.cooldown);
 		return { success: false, reason: 'params', text: failedParams };
 	}
@@ -150,8 +148,7 @@ const checkAndExecute = async (msg, options = {}) => {
 		const usage = command.usage.startsWith('!') ? command.usage : `${msg.prefix}${command.usage}`;
 		const description = command.description ? ` — ${command.description}` : '';
 		return { success: false, reason: 'usage', text: `@${msg.displayName}, Usage: ${usage}${description}` };
-	}
-	else if (confirmation?.destructive && !confirmation.confirmed) {
+	} else if (confirmation?.destructive && !confirmation.confirmed) {
 		finish(command.cooldown);
 		return {
 			success: false,
@@ -176,8 +173,7 @@ const checkAndExecute = async (msg, options = {}) => {
 			executionTime: round(Number(end - start) / 1_000_000, 3),
 		});
 		execution = response;
-	}
-	catch (error) {
+	} catch (error) {
 		const isExternal = isHttpError(error);
 		const errorId = await logError('Command', error, {
 			origin: isExternal ? 'External' : 'Internal',
@@ -261,8 +257,7 @@ const handler = async (msg) => {
 	const text = trimMessage(result.text, config.messageLimit);
 	if (result.whisper || !msg.channelData) {
 		await msg.whisper(text);
-	}
-	else {
+	} else {
 		// Wie sb-v2: normal senden, als Reply nur wenn der Command es verlangt
 		await msg.send(text, Boolean(result.reply));
 	}

@@ -1,6 +1,12 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { checkConfirmation, isAltPrefixOwnedElsewhere, isMissingRequiredArgument, parseInvocation, prefixProblem } = require('../src/clients/modules/invocation.js');
+const {
+	checkConfirmation,
+	isAltPrefixOwnedElsewhere,
+	isMissingRequiredArgument,
+	parseInvocation,
+	prefixProblem,
+} = require('../src/clients/modules/invocation.js');
 const { formatParams } = require('../src/clients/modules/parameters.js');
 
 const noPrefix = new Set(['8ball', 'vod']);
@@ -23,7 +29,12 @@ describe('parseInvocation', () => {
 	});
 
 	it('Zweit-Prefix ! nur fuer no-prefix-Commands, sonst altOnly', () => {
-		assert.deepEqual(parseInvocation('!8ball will it work', 'sb', isNoPrefix), { invocation: '8ball', args: ['will', 'it', 'work'], altOnly: false, usedPrefix: '!' });
+		assert.deepEqual(parseInvocation('!8ball will it work', 'sb', isNoPrefix), {
+			invocation: '8ball',
+			args: ['will', 'it', 'work'],
+			altOnly: false,
+			usedPrefix: '!',
+		});
 		assert.equal(parseInvocation('!ping', 'sb', isNoPrefix)?.altOnly, true);
 		assert.equal(parseInvocation('!', 'sb', isNoPrefix), null);
 	});
@@ -63,16 +74,60 @@ describe('isMissingRequiredArgument', () => {
 describe('utility-Channels', () => {
 	const utility = ['ninou2', 'testaccountalexmoderat', 'im_row1'];
 	it('"!" gehoert dort dem utility-bot, "sb" bleibt beim Bot (alexmoderat, 24.10.2026)', () => {
-		assert.equal(isAltPrefixOwnedElsewhere(parseInvocation('!remind me in 5m zzq', 'sb', () => true), 'ninou2', utility), true);
-		assert.equal(isAltPrefixOwnedElsewhere(parseInvocation('sb remind me in 5m zzq', 'sb', () => true), 'ninou2', utility), false);
-		assert.equal(isAltPrefixOwnedElsewhere(parseInvocation('!remind me in 5m zzq', 'sb', () => true), 'alexmoderat', utility), false);
-		assert.equal(isAltPrefixOwnedElsewhere(parseInvocation('!remind x', 'sb', () => true), null, utility), false);
+		assert.equal(
+			isAltPrefixOwnedElsewhere(
+				parseInvocation('!remind me in 5m zzq', 'sb', () => true),
+				'ninou2',
+				utility,
+			),
+			true,
+		);
+		assert.equal(
+			isAltPrefixOwnedElsewhere(
+				parseInvocation('sb remind me in 5m zzq', 'sb', () => true),
+				'ninou2',
+				utility,
+			),
+			false,
+		);
+		assert.equal(
+			isAltPrefixOwnedElsewhere(
+				parseInvocation('!remind me in 5m zzq', 'sb', () => true),
+				'alexmoderat',
+				utility,
+			),
+			false,
+		);
+		assert.equal(
+			isAltPrefixOwnedElsewhere(
+				parseInvocation('!remind x', 'sb', () => true),
+				null,
+				utility,
+			),
+			false,
+		);
 	});
 
 	it('kennt der utility-bot den Command nicht (ninou2: "!title"), antwortet der Bot', () => {
 		const knows = (invocation) => invocation === 'remind';
-		assert.equal(isAltPrefixOwnedElsewhere(parseInvocation('!title xqc', '!', () => true), 'ninou2', utility, knows), false);
-		assert.equal(isAltPrefixOwnedElsewhere(parseInvocation('!remind me in 5m x', '!', () => true), 'ninou2', utility, knows), true);
+		assert.equal(
+			isAltPrefixOwnedElsewhere(
+				parseInvocation('!title xqc', '!', () => true),
+				'ninou2',
+				utility,
+				knows,
+			),
+			false,
+		);
+		assert.equal(
+			isAltPrefixOwnedElsewhere(
+				parseInvocation('!remind me in 5m x', '!', () => true),
+				'ninou2',
+				utility,
+				knows,
+			),
+			true,
+		);
 	});
 });
 

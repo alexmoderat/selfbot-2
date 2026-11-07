@@ -1,30 +1,18 @@
-const { getCommand, commands, permissionOf } = require('../clients/modules/commands.js');
+const { getCommand, commands, toListed } = require('../clients/modules/commands.js');
+const { formatUsage } = require('../misc/command-listing.js');
 
-// Command-Liste und Einzelhilfe wie sb-v2s commands. Die Liste verlinkt die Seite /commands (kommt mit Phase 5,
-// bis dahin nur die Anzahl).
+// Command-Liste und Einzelhilfe wie sb-v2s commands (alexmoderat, 24.10.2026: "Wie die alte sb-v2-Seite"). Die Liste
+// ist dieselbe Seite wie bei botcommands (/commands).
 
-/** "sb" -> "sb ", "?" -> "?" (Wortprefixe brauchen ein Leerzeichen, Zeichenprefixe nicht) */
-const spacePrefix = (prefix) => (/^[a-z0-9]/i.test(prefix) ? `${prefix} ` : prefix);
-
-/** Usage-Zeile mit Prefix; Usages, die schon mit "!" anfangen, bleiben unveraendert */
-const formatUsage = (command, prefix) => {
-	if (!command.usage) {
-		return null;
-	}
-	if (command.usage.startsWith('!')) {
-		return command.usage;
-	}
-	return `${command.flags.includes('no-prefix') ? '!' : spacePrefix(prefix)}${command.usage}`;
-};
-
-/** "name (aliases) · Beschreibung · Permission: mod · Cooldown: 3s · Usage: sb ..." */
+/** Einzelhilfe wie sb-v2: "name (aliases) · Beschreibung · Permission: mod · Cooldown: 3s · Usage: sb ..." */
 const formatCommandHelp = (command, prefix) => {
-	const parts = [`${command.name}${command.aliases.length > 0 ? ` (${command.aliases.join(', ')})` : ''}`];
-	if (command.description) {
-		parts.push(command.description);
+	const listed = toListed(command);
+	const parts = [`${listed.Name}${listed.Aliases.length > 0 ? ` (${listed.Aliases.join(', ')})` : ''}`];
+	if (listed.Description) {
+		parts.push(listed.Description);
 	}
-	parts.push(`Permission: ${permissionOf(command)}`, `Cooldown: ${command.cooldown / 1000}s`);
-	const usage = formatUsage(command, prefix);
+	parts.push(`Permission: ${listed.permission}`, `Cooldown: ${command.cooldown / 1000}s`);
+	const usage = formatUsage(listed, prefix);
 	if (usage) {
 		parts.push(`Usage: ${usage}`);
 	}
@@ -38,9 +26,7 @@ module.exports = {
 	description: 'Lists all loaded commands; with an argument, help for a single one.',
 	usage: 'help [command]',
 	flags: ['mod'],
-	formatUsage,
 	formatCommandHelp,
-	spacePrefix,
 	execute: async (client, msg) => {
 		const [target] = msg.args;
 		if (target) {
@@ -52,6 +38,7 @@ module.exports = {
 			return { text: `@${msg.displayName}, ${formatCommandHelp(command, bot.Config.prefix)}` };
 		}
 
+		// Seite /commands kommt mit dem Web (Phase 5); bis dahin der Link auf die alte Seite bzw. nur die Anzahl
 		const base = process.env.WEB_BASE_URL;
 		const link = base ? `: ${base.replace(/\/$/, '')}/commands` : ' loaded.';
 		return { text: `@${msg.displayName}, ${commands.size} commands${link}` };

@@ -4,7 +4,20 @@ const Users = require('./users.js');
 // Supibots Filter (bisher classes/filter.ts): sperrt Kombinationen aus User/Channel/Command/Aufruf.
 // Verwaltet ueber die Commands ban/unban. Ein Filter ist ein einfaches Objekt aus fromDoc().
 
-const TYPES = ['Blacklist', 'Whitelist', 'Opt-out', 'Block', 'Unping', 'Unmention', 'Cooldown', 'Flags', 'Offline-only', 'Online-only', 'Arguments', 'Reminder-prevention'];
+const TYPES = [
+	'Blacklist',
+	'Whitelist',
+	'Opt-out',
+	'Block',
+	'Unping',
+	'Unmention',
+	'Cooldown',
+	'Flags',
+	'Offline-only',
+	'Online-only',
+	'Arguments',
+	'Reminder-prevention',
+];
 
 const filters = new Map();
 
@@ -25,8 +38,7 @@ const createFilterData = (type, rawData, id = null) => {
 	let data;
 	try {
 		data = JSON.parse(rawData);
-	}
-	catch {
+	} catch {
 		return null;
 	}
 
@@ -42,27 +54,22 @@ const createFilterData = (type, rawData, id = null) => {
 			if (arg.regex) {
 				try {
 					item.regex = Array.isArray(arg.regex) ? new RegExp(arg.regex[0], arg.regex[1] ?? '') : parseStringRegex(arg.regex);
-				}
-				catch (e) {
+				} catch (e) {
 					console.warn('Invalid string regex representation', { filter: id, e: e.message });
 					continue;
 				}
-			}
-			else if (arg.string) {
+			} else if (arg.string) {
 				item.string = arg.string;
-			}
-			else {
+			} else {
 				console.warn('Invalid filter Args item - type', { arg, filter: id });
 				continue;
 			}
 
 			if (typeof arg.index === 'number') {
 				item.index = arg.index;
-			}
-			else if (Array.isArray(arg.range)) {
+			} else if (Array.isArray(arg.range)) {
 				item.range = arg.range.slice(0, 2).map(Number);
-			}
-			else if (typeof arg.range === 'string') {
+			} else if (typeof arg.range === 'string') {
 				item.range = arg.range.split('..').map(Number).slice(0, 2);
 			}
 
@@ -74,13 +81,11 @@ const createFilterData = (type, rawData, id = null) => {
 			result.push(item);
 		}
 		return result;
-	}
-	else if (type === 'Cooldown') {
+	} else if (type === 'Cooldown') {
 		const { multiplier, override, respect } = data;
 		if (typeof multiplier === 'number' && override === undefined) {
 			return { multiplier };
-		}
-		else if (multiplier === undefined && typeof override === 'number') {
+		} else if (multiplier === undefined && typeof override === 'number') {
 			return { override, respect };
 		}
 		console.warn('Invalid Cooldown filter - incorrect combination of multiplier/override', { multiplier, override });
@@ -118,14 +123,12 @@ const applyData = (filter, input) => {
 			}
 		}
 		return false;
-	}
-	else if (filter.type === 'Cooldown' && filter.data && (input === null || typeof input === 'number')) {
+	} else if (filter.type === 'Cooldown' && filter.data && (input === null || typeof input === 'number')) {
 		const value = input ?? 0; // null-Cooldowns zaehlen als 0
 		const { multiplier, override, respect } = filter.data;
 		if (typeof override === 'number') {
 			return respect === false ? override : Math.min(override, value);
-		}
-		else if (typeof multiplier === 'number') {
+		} else if (typeof multiplier === 'number') {
 			return input === null ? input : Math.round(value * multiplier);
 		}
 	}
@@ -162,20 +165,15 @@ const getLocals = (type, options) => {
 	return all().filter((filter) => {
 		if (type !== 'all' && filter.type !== type) {
 			return false;
-		}
-		else if (!options.includeInactive && !filter.active) {
+		} else if (!options.includeInactive && !filter.active) {
 			return false;
-		}
-		else if (!options.skipUserCheck && filter.userId !== null && filter.userId !== userId) {
+		} else if (!options.skipUserCheck && filter.userId !== null && filter.userId !== userId) {
 			return false;
-		}
-		else if (filter.channelId !== null && filter.channelId !== channelId) {
+		} else if (filter.channelId !== null && filter.channelId !== channelId) {
 			return false;
-		}
-		else if (filter.invocation !== null && filter.invocation !== invocation) {
+		} else if (filter.invocation !== null && filter.invocation !== invocation) {
 			return false;
-		}
-		else if (filter.command !== null && filter.command !== commandName) {
+		} else if (filter.command !== null && filter.command !== commandName) {
 			return false;
 		}
 		return true;
@@ -186,8 +184,7 @@ const getLocals = (type, options) => {
 const getReason = ({ string, response, reason }) => {
 	if (response === 'Auto') {
 		return string;
-	}
-	else if (response === 'Reason') {
+	} else if (response === 'Reason') {
 		return reason ?? null;
 	}
 	return null;
@@ -224,7 +221,12 @@ const execute = async (options) => {
 	if (command.flags.includes('whitelist')) {
 		const isWhitelisted = localFilters.some((i) => i.type === 'Whitelist' && (i.userId === user.id || i.userId === null));
 		if (!isWhitelisted) {
-			return { success: false, reason: 'whitelist', filter: { reason: 'Reply' }, reply: command.whitelistResponse ?? "You can't use this command as it is whitelisted!" };
+			return {
+				success: false,
+				reason: 'whitelist',
+				filter: { reason: 'Reply' },
+				reply: command.whitelistResponse ?? "You can't use this command as it is whitelisted!",
+			};
 		}
 	}
 
@@ -266,8 +268,7 @@ const execute = async (options) => {
 		let reply = null;
 		if (blacklist.response === 'Reason') {
 			reply = blacklist.reason;
-		}
-		else if (blacklist.response === 'Auto') {
+		} else if (blacklist.response === 'Auto') {
 			reply = getBlacklistAutoReply(blacklist);
 		}
 		return { success: false, reason: 'blacklist', filter: blacklist, reply };
@@ -335,7 +336,9 @@ const getMentionStatus = (options) => getLocals('Unmention', options).length ===
 
 /** Unping: Namen bekommen ein unsichtbares Zeichen an zweiter Stelle; nicht vor "." und "@" (URLs, Mails) */
 const applyUnping = async (options) => {
-	const list = getLocals('Unping', { ...options, skipUserCheck: true }).filter((i) => i.blockedUser === null || options.executor === null || i.blockedUser === options.executor?.id);
+	const list = getLocals('Unping', { ...options, skipUserCheck: true }).filter(
+		(i) => i.blockedUser === null || options.executor === null || i.blockedUser === options.executor?.id,
+	);
 
 	let { string } = options;
 	for (const filter of list) {

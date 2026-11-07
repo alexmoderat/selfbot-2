@@ -57,8 +57,7 @@ const channelDataSchema = {
 const checkValue = (type, value) => {
 	if (value === null) {
 		return true;
-	}
-	else if (type === 'object') {
+	} else if (type === 'object') {
 		return typeof value === 'object' && !Array.isArray(value);
 	}
 	return typeof value === type;
@@ -90,8 +89,7 @@ const write = async (schema, kind, model, entity, property, value) => {
 	entity.data ??= {};
 	if (value === null) {
 		delete entity.data[property];
-	}
-	else {
+	} else {
 		entity.data[property] = value;
 	}
 };

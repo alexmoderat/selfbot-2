@@ -8,12 +8,7 @@ const pending = new Map();
 
 const fromDoc = (doc) => ({ id: doc._id, name: doc.name, twitchId: doc.twitchId ?? null, startedUsing: doc.startedUsing, data: doc.data ?? {} });
 
-const normalizeUsername = (name) =>
-	String(name)
-		.toLowerCase()
-		.replace(/^@/, '')
-		.replace(/,$/, '')
-		.trim();
+const normalizeUsername = (name) => String(name).toLowerCase().replace(/^@/, '').replace(/,$/, '').trim();
 
 const store = (doc) => {
 	const user = fromDoc(doc);
@@ -25,8 +20,7 @@ const store = (doc) => {
 const get = async (identifier) => {
 	if (identifier && typeof identifier === 'object') {
 		return identifier;
-	}
-	else if (typeof identifier === 'number') {
+	} else if (typeof identifier === 'number') {
 		for (const user of cache.values()) {
 			if (user.id === identifier) {
 				return user;

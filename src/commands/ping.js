@@ -27,8 +27,7 @@ const getCommit = () => {
 			commit = execSync('git rev-parse --short HEAD', { cwd: path.join(__dirname, '..', '..') })
 				.toString()
 				.trim();
-		}
-		catch {
+		} catch {
 			commit = 'unknown';
 		}
 	}
@@ -41,8 +40,7 @@ const getTwitchLatency = async (client) => {
 		const start = process.hrtime.bigint();
 		await client.ping();
 		return Math.round(Number(process.hrtime.bigint() - start) / 1_000_000);
-	}
-	catch {
+	} catch {
 		return null;
 	}
 };

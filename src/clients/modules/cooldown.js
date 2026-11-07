@@ -51,8 +51,7 @@ class CooldownManager {
 		const pending = this.#pending.get(user);
 		if (!pending) {
 			return null;
-		}
-		else if (pending.expires <= now) {
+		} else if (pending.expires <= now) {
 			this.#pending.delete(user);
 			return null;
 		}

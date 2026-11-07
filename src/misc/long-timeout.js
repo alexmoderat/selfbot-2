@@ -16,15 +16,13 @@ class LongTimeout {
 		if (useTimestamp) {
 			this.scheduleTime = new Date(time);
 			time -= Date.now();
-		}
-		else {
+		} else {
 			this.scheduleTime = new Date(Date.now() + time);
 		}
 
 		if (time < MAX_TIMEOUT) {
 			this.timeout = setTimeout(callback, time);
-		}
-		else {
+		} else {
 			this.timeout = setTimeout(() => {
 				this.timeout = new LongTimeout(callback, time - MAX_TIMEOUT, false);
 			}, MAX_TIMEOUT);

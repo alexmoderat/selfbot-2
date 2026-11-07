@@ -18,7 +18,11 @@ describe('parseParametersFromArguments', () => {
 	});
 
 	it('liest Werte in Anfuehrungszeichen ueber mehrere Woerter', () => {
-		assert.deepEqual(parseParametersFromArguments(defs, ['channel:"two', 'words"', 'rest']), { success: true, args: ['rest'], parameters: { channel: 'two words' } });
+		assert.deepEqual(parseParametersFromArguments(defs, ['channel:"two', 'words"', 'rest']), {
+			success: true,
+			args: ['rest'],
+			parameters: { channel: 'two words' },
+		});
 		assert.deepEqual(parseParametersFromArguments(defs, ['channel:"one"']), { success: true, args: [], parameters: { channel: 'one' } });
 	});
 
@@ -34,7 +38,11 @@ describe('parseParametersFromArguments', () => {
 	});
 
 	it('laesst unbekannte name:wert-Tokens und URLs als Argumente stehen', () => {
-		assert.deepEqual(parseParametersFromArguments(defs, ['foo:bar', 'https://example.com']), { success: true, args: ['foo:bar', 'https://example.com'], parameters: {} });
+		assert.deepEqual(parseParametersFromArguments(defs, ['foo:bar', 'https://example.com']), {
+			success: true,
+			args: ['foo:bar', 'https://example.com'],
+			parameters: {},
+		});
 	});
 
 	it('liest nach -- keine Parameter mehr', () => {

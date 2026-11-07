@@ -71,8 +71,7 @@ const buildMsgData = (msg, channel) => {
 		send: async function (message, reply = false) {
 			try {
 				await bot.Twitch.send(this.channelData, message, { replyTo: reply ? this.id : null });
-			}
-			catch (err) {
+			} catch (err) {
 				Logger.log(LogLevel.ERROR, `Error while sending message: ${err.message}`);
 			}
 		},

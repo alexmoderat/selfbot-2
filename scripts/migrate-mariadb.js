@@ -1,8 +1,9 @@
 // Migration MariaDB (selfbot_core) -> MongoDB. Wiederholbar: jede Zeile wird per Upsert ueber ihre ID geschrieben,
 // ein zweiter Lauf aktualisiert nur. Am Ende werden Zeilen und Dokumente je Tabelle verglichen.
 //
-//   yarn migrate            alle Kerntabellen
-//   yarn migrate Channel    nur einzelne Tabellen (Namen wie in MariaDB)
+//   yarn migrate                 alle Tabellen (selfbot_core und selfbot_data)
+//   yarn migrate core | data     nur Kern- bzw. Feature-Tabellen
+//   yarn migrate Channel ...     nur einzelne Tabellen (Namen wie in MariaDB)
 
 const mariadb = require('mariadb');
 const { getConfig } = require('../src/config.js');
@@ -17,8 +18,7 @@ const json = (value) => {
 	}
 	try {
 		return JSON.parse(value);
-	}
-	catch {
+	} catch {
 		return value;
 	}
 };
@@ -165,7 +165,14 @@ const TABLES = [
 		table: 'Banphrase',
 		model: DB.Banphrase,
 		counter: 'banphrases',
-		map: (row) => ({ _id: num(row.ID), code: row.Code, type: row.Type, channelId: num(row.Channel), priority: num(row.Priority) ?? 0, description: row.Description }),
+		map: (row) => ({
+			_id: num(row.ID),
+			code: row.Code,
+			type: row.Type,
+			channelId: num(row.Channel),
+			priority: num(row.Priority) ?? 0,
+			description: row.Description,
+		}),
 	},
 	{
 		table: 'Channel_Chat_Module',
@@ -221,6 +228,65 @@ const TABLES = [
 	},
 ];
 
+/** Wert einer Spalte in den Typ des Feldes (BIGINT kommt als BigInt; zu grosse Werte wie Hashes bleiben Text) */
+const convertValue = (value, info) => {
+	if (value === null || value === undefined) {
+		return null;
+	}
+	switch (info.type) {
+		case 'Boolean':
+			return Boolean(Number(value));
+		case 'Number':
+			return Number(value);
+		case 'String':
+			return typeof value === 'bigint' ? value.toString() : String(value);
+		case 'Date':
+			return value instanceof Date ? value : new Date(value);
+		default:
+			return value;
+	}
+};
+
+/** Feature-Tabelle (selfbot_data) laut data-specs.js streamen und per Upsert ueber den Schluessel schreiben */
+const copyDataTable = async (conn, spec) => {
+	const model = DB[spec.model];
+	const entries = Object.entries(spec.fields);
+	let rows = 0;
+	let maxId = 0;
+	let ops = [];
+
+	const flush = async () => {
+		if (ops.length > 0) {
+			await model.bulkWrite(ops, { ordered: false });
+			ops = [];
+		}
+	};
+
+	const stream = conn.queryStream(`SELECT * FROM selfbot_data.\`${spec.table}\``);
+	for await (const row of stream) {
+		const doc = {};
+		for (const [field, info] of entries) {
+			doc[field] = convertValue(row[info.column], info);
+		}
+		const filter = Object.fromEntries(spec.key.map((field) => [field, doc[field]]));
+		ops.push({ replaceOne: { filter, replacement: doc, upsert: true } });
+		rows++;
+		if (spec.counter) {
+			maxId = Math.max(maxId, doc._id);
+		}
+		// for await liest erst weiter, wenn der Batch geschrieben ist
+		if (ops.length >= BATCH) {
+			await flush();
+		}
+	}
+	await flush();
+
+	if (spec.counter && maxId > 0) {
+		await DB.ensureCounterAtLeast(spec.counter, maxId);
+	}
+	return { rows, docs: await model.estimatedDocumentCount() };
+};
+
 /** Tabelle in Batches nach ID lesen und per Upsert schreiben */
 const copyTable = async (conn, { table, model, map, key = '_id', counter }) => {
 	let lastId = 0;
@@ -257,20 +323,43 @@ const main = async () => {
 
 	await DB.connect(config.mongo.uri);
 	const conn = await mariadb.createConnection({ host: MARIA_HOST, user: MARIA_USER, password: MARIA_PASSWORD, dateStrings: false, bigIntAsNumber: true });
+	// Eigene Verbindung fuer selfbot_data: BIGINT als BigInt, damit 64-Bit-Hashes nicht ungenau werden
+	const dataConn = await mariadb.createConnection({
+		host: MARIA_HOST,
+		user: MARIA_USER,
+		password: MARIA_PASSWORD,
+		dateStrings: false,
+		bigIntAsNumber: false,
+	});
+
+	const wanted = (table) =>
+		only.length === 0 ||
+		only.includes(table) ||
+		(only.includes('core') && TABLES.some((i) => i.table === table)) ||
+		(only.includes('data') && DB.dataSpecs.some((i) => i.table === table));
 
 	try {
 		const results = [];
+		const record = (table, result, start) =>
+			results.push({ Tabelle: table, Zeilen: result.rows, Dokumente: result.docs, Sekunden: ((Date.now() - start) / 1000).toFixed(1) });
+
 		for (const definition of TABLES) {
-			if (only.length > 0 && !only.includes(definition.table)) {
+			if (!wanted(definition.table)) {
 				continue;
 			}
 			const start = Date.now();
-			const result = definition.custom ? await definition.custom(conn) : await copyTable(conn, definition);
-			results.push({ Tabelle: definition.table, Zeilen: result.rows, Dokumente: result.docs, Sekunden: ((Date.now() - start) / 1000).toFixed(1) });
+			record(definition.table, definition.custom ? await definition.custom(conn) : await copyTable(conn, definition), start);
+		}
+		for (const spec of DB.dataSpecs) {
+			if (!wanted(spec.table)) {
+				continue;
+			}
+			const start = Date.now();
+			record(spec.table, await copyDataTable(dataConn, spec), start);
 		}
 		console.table(results);
-	}
-	finally {
+	} finally {
+		await dataConn.end();
 		await conn.end();
 		await DB.disconnect();
 	}

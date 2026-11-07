@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 const { Logger } = require('../misc/logger.js');
-const models = require('./models/index.js');
+const coreModels = require('./models/index.js');
+const { dataModels, dataSpecs, counterOf } = require('./models/data.js');
+
+const models = { ...coreModels, ...dataModels };
 
 // MongoDB wie bei DontAddThisBot (bot.DB.<Model>), Verbindung aus config.json
 
@@ -28,4 +31,13 @@ const ensureCounterAtLeast = async (name, value) => {
 
 const disconnect = () => mongoose.disconnect();
 
-module.exports = { ...models, connect, disconnect, nextId, ensureCounterAtLeast, mongoose };
+/** Dokument mit naechster numerischer ID anlegen (Collections mit Zaehler, z. B. ModerationBanLog) */
+const createWithId = async (modelName, data) => {
+	const counter = counterOf(modelName);
+	if (!counter) {
+		throw new Error(`${modelName} hat keine numerische ID`);
+	}
+	return await models[modelName].create({ _id: await nextId(counter), ...data });
+};
+
+module.exports = { ...models, connect, disconnect, nextId, ensureCounterAtLeast, createWithId, dataSpecs, mongoose };

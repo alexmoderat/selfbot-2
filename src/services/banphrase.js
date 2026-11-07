@@ -37,8 +37,7 @@ const load = async () => {
 	for (const doc of docs) {
 		try {
 			banphrases.set(doc._id, fromDoc(doc));
-		}
-		catch (e) {
+		} catch (e) {
 			Logger.warn('[banphrase] konnte nicht geladen werden', { id: doc._id, e: e.message });
 		}
 	}
@@ -51,8 +50,7 @@ const run = async (banphrase, message) => {
 	}
 	try {
 		return await banphrase.code(message, getBanphraseConfigData());
-	}
-	catch (e) {
+	} catch (e) {
 		Logger.warn('[banphrase] fehlgeschlagen', { message, id: banphrase.id, e: e.message });
 		return message;
 	}
@@ -66,8 +64,7 @@ const execute = async (message, channel) => {
 	for (const banphrase of banphrases.values()) {
 		if (!banphrase.active || banphrase.type === 'API response') {
 			continue;
-		}
-		else if (banphrase.channelId !== null && banphrase.channelId !== channelId) {
+		} else if (banphrase.channelId !== null && banphrase.channelId !== channelId) {
 			continue;
 		}
 
@@ -78,8 +75,7 @@ const execute = async (message, channel) => {
 		// Ignorieren oder eigene Antwort: sofort zurueck; Replacement ersetzt weiter
 		if (banphrase.type !== 'Replacement') {
 			return { string: result || null, passed: false };
-		}
-		else if (typeof result !== 'string') {
+		} else if (typeof result !== 'string') {
 			throw new Error(`Non-string result of a Replacement Banphrase (${banphrase.id})`);
 		}
 		resultMessage = result;

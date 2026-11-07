@@ -24,8 +24,7 @@ const buildUrl = (url, searchParams) => {
 		}
 		if (Array.isArray(value)) {
 			value.forEach((item) => target.searchParams.append(key, String(item)));
-		}
-		else {
+		} else {
 			target.searchParams.append(key, String(value));
 		}
 	}
@@ -60,8 +59,7 @@ const request = async (options) => {
 			body,
 			signal: AbortSignal.timeout(options.timeout ?? DEFAULT_TIMEOUT),
 		});
-	}
-	catch (e) {
+	} catch (e) {
 		throw new HttpError(`Request failed: ${e.message}`, { url: options.url, cause: e });
 	}
 
@@ -70,8 +68,7 @@ const request = async (options) => {
 	if ((options.responseType ?? 'json') === 'json' && text.length > 0) {
 		try {
 			parsed = JSON.parse(text);
-		}
-		catch {
+		} catch {
 			parsed = text;
 		}
 	}

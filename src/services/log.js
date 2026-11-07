@@ -8,15 +8,16 @@ const stringifySafe = (value) => {
 	}
 	try {
 		return JSON.parse(JSON.stringify(value));
-	}
-	catch {
+	} catch {
 		return String(value);
 	}
 };
 
 /** Fire-and-forget */
 const logCommandExecution = (data) => {
-	bot.DB.CommandExecution.create({ ...data, result: data.result?.slice(0, 1000) ?? null }).catch((e) => Logger.warn('[log] Command-Log fehlgeschlagen', e.message));
+	bot.DB.CommandExecution.create({ ...data, result: data.result?.slice(0, 1000) ?? null }).catch((e) =>
+		Logger.warn('[log] Command-Log fehlgeschlagen', e.message),
+	);
 };
 
 /** Fehler speichern, gibt die ID fuer die Chat-Antwort zurueck (null wenn das Speichern scheitert) */
@@ -33,8 +34,7 @@ const logError = async (type, error, options = {}) => {
 			arguments: stringifySafe(options.arguments),
 		});
 		return id;
-	}
-	catch (e) {
+	} catch (e) {
 		Logger.error('[log] Fehler-Log fehlgeschlagen', { original: error, logError: e });
 		return null;
 	}

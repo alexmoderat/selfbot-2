@@ -33,29 +33,24 @@ const timeDelta = (input, skipAffixes = false, respectLeapYears = false, deltaTo
 
 	if (delta < timeUnits.s.ms) {
 		string = `${delta}ms`;
-	}
-	else if (delta < timeUnits.m.ms) {
+	} else if (delta < timeUnits.m.ms) {
 		string = `${round(delta / timeUnits.s.ms, 2)}s`;
-	}
-	else if (delta < timeUnits.h.ms) {
+	} else if (delta < timeUnits.h.ms) {
 		const trimmed = round(delta, -3);
 		const minutes = Math.trunc(trimmed / timeUnits.m.ms);
 		const seconds = Math.trunc((trimmed / timeUnits.s.ms) % timeUnits.m.s);
 		string = `${minutes}m, ${seconds}s`;
-	}
-	else if (delta < timeUnits.d.ms) {
+	} else if (delta < timeUnits.d.ms) {
 		const trimmed = round(delta, -3);
 		const hours = Math.trunc(trimmed / timeUnits.h.ms);
 		const minutes = Math.trunc(trimmed / timeUnits.m.ms) % timeUnits.h.m;
 		string = `${hours}h, ${minutes}m`;
-	}
-	else if (delta < timeUnits.y.ms) {
+	} else if (delta < timeUnits.y.ms) {
 		const trimmed = round(delta, -3);
 		const days = Math.trunc(trimmed / timeUnits.d.ms);
 		const hours = Math.trunc(trimmed / timeUnits.h.ms) % timeUnits.d.h;
 		string = `${days}d, ${hours}h`;
-	}
-	else if (respectLeapYears) {
+	} else if (respectLeapYears) {
 		const [earlier, later] = deltaTo < target ? [deltaTo, target] : [target, deltaTo];
 		const trimmed = round(delta, -3);
 		const laterRounded = new Date(earlier.valueOf() + trimmed);
@@ -68,8 +63,7 @@ const timeDelta = (input, skipAffixes = false, respectLeapYears = false, deltaTo
 		}
 		const remainingDelta = round(laterRounded.valueOf() - earlierPlusYears.valueOf(), -4);
 		string = `${years}y, ${Math.trunc(remainingDelta / timeUnits.d.ms)}d`;
-	}
-	else {
+	} else {
 		const trimmed = round(delta, -4);
 		const years = Math.trunc(trimmed / timeUnits.y.ms);
 		const days = Math.trunc(trimmed / timeUnits.d.ms) % timeUnits.y.d;
@@ -121,8 +115,7 @@ const partitionString = (message, limit, messageCount) => {
 	for (const rawWord of message.split(' ')) {
 		if (rawWord.length > limit) {
 			words.push(...(rawWord.match(regex) ?? []));
-		}
-		else {
+		} else {
 			words.push(rawWord);
 		}
 	}

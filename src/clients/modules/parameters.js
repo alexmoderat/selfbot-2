@@ -25,8 +25,7 @@ const parseRegex = (value, linear = process.execArgv.includes(LINEAR_REGEX_FLAG)
 			flags = flags.replace('i', '');
 		}
 		return new RegExp(source, `${flags}l`);
-	}
-	catch {
+	} catch {
 		return null;
 	}
 };
@@ -34,18 +33,14 @@ const parseRegex = (value, linear = process.execArgv.includes(LINEAR_REGEX_FLAG)
 const parseValue = (type, value) => {
 	if (type === 'string') {
 		return value;
-	}
-	else if (type === 'regex') {
+	} else if (type === 'regex') {
 		return parseRegex(value);
-	}
-	else if (type === 'number') {
+	} else if (type === 'number') {
 		const number = Number(value);
 		return value !== '' && Number.isFinite(number) ? number : null;
-	}
-	else if (value === 'true') {
+	} else if (value === 'true') {
 		return true;
-	}
-	else if (value === 'false') {
+	} else if (value === 'false') {
 		return false;
 	}
 	return null;
@@ -63,8 +58,7 @@ const parseParametersFromArguments = (definitions, argsInput) => {
 		if (ignoring) {
 			args.push(token);
 			continue;
-		}
-		else if (token === IGNORE_PARAMETERS_DELIMITER) {
+		} else if (token === IGNORE_PARAMETERS_DELIMITER) {
 			ignoring = true;
 			continue;
 		}
@@ -91,8 +85,7 @@ const parseParametersFromArguments = (definitions, argsInput) => {
 				if (next.endsWith('"')) {
 					parts.push(next.slice(0, -1));
 					closed = true;
-				}
-				else {
+				} else {
 					parts.push(next);
 				}
 			}

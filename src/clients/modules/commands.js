@@ -56,6 +56,16 @@ const normalize = (definition, file) => {
 /** Rechte-Stufe wie in sb-v2s Permission-Feld */
 const permissionOf = (command) => (command.flags.includes('owner') ? 'owner' : command.flags.includes('mod') ? 'mod' : 'everyone');
 
+/** Listenform wie bisher (Command.toListed) fuer help, how, botcommands und die Web-Seite /commands */
+const toListed = (command) => ({
+	Name: command.name,
+	Aliases: command.aliases,
+	Description: command.description,
+	Usage: command.usage,
+	permission: permissionOf(command),
+	noPrefix: command.flags.includes('no-prefix'),
+});
+
 const register = (command) => {
 	commands.set(command.name, command);
 	for (const alias of command.aliases) {
@@ -103,4 +113,4 @@ const getCommand = (identifier) => {
 	return commands.get(name) ?? commands.get(aliases.get(name)) ?? null;
 };
 
-module.exports = { startCmds, getCommand, commands, aliases, permissionOf, normalize, FLAGS };
+module.exports = { startCmds, getCommand, commands, aliases, permissionOf, toListed, normalize, FLAGS };

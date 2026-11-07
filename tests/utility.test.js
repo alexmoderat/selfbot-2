@@ -36,13 +36,22 @@ describe('Text-Helfer', () => {
 	});
 
 	it('tag.trim, groupDigits, replaceLinks, splitByCondition, round', () => {
-		assert.equal(utils.tag.trim`
+		assert.equal(
+			utils.tag.trim`
 			a
 			${1} b
-		`, 'a 1 b');
+		`,
+			'a 1 b',
+		);
 		assert.equal(utils.groupDigits(1234567), '1 234 567');
 		assert.equal(utils.replaceLinks('see https://example.com now'), 'see [LINK] now');
-		assert.deepEqual(utils.splitByCondition([1, 2, 3, 4], (i) => i % 2 === 0), [[2, 4], [1, 3]]);
+		assert.deepEqual(
+			utils.splitByCondition([1, 2, 3, 4], (i) => i % 2 === 0),
+			[
+				[2, 4],
+				[1, 3],
+			],
+		);
 		assert.equal(utils.round(1.2345, 2), 1.23);
 		assert.equal(utils.round(119_999, -3), 120_000);
 	});
@@ -59,7 +68,10 @@ describe('Text-Helfer', () => {
 
 describe('Twitch-Helfer', () => {
 	it('toBadgeList wandelt dank-twitch-irc-Badges in die EventSub-Form', () => {
-		const badges = [{ name: 'broadcaster', version: '1' }, { name: 'subscriber', version: '12' }];
+		const badges = [
+			{ name: 'broadcaster', version: '1' },
+			{ name: 'subscriber', version: '12' },
+		];
 		const info = [{ name: 'subscriber', version: '14' }];
 		assert.deepEqual(toBadgeList(badges, info), [
 			{ set_id: 'broadcaster', id: '1', info: '' },
@@ -82,8 +94,17 @@ describe('Twitch-Helfer', () => {
 describe('filterByConfig', () => {
 	const items = ['a', 'b', 'c'];
 	it('disableAll, whitelist, blacklist', () => {
-		assert.deepEqual(filterByConfig(items, (i) => i, { disableAll: true, blacklist: [], whitelist: [] }), []);
-		assert.deepEqual(filterByConfig(items, (i) => i, { disableAll: false, blacklist: [], whitelist: ['b'] }), ['b']);
-		assert.deepEqual(filterByConfig(items, (i) => i, { disableAll: false, blacklist: ['b'], whitelist: [] }), ['a', 'c']);
+		assert.deepEqual(
+			filterByConfig(items, (i) => i, { disableAll: true, blacklist: [], whitelist: [] }),
+			[],
+		);
+		assert.deepEqual(
+			filterByConfig(items, (i) => i, { disableAll: false, blacklist: [], whitelist: ['b'] }),
+			['b'],
+		);
+		assert.deepEqual(
+			filterByConfig(items, (i) => i, { disableAll: false, blacklist: ['b'], whitelist: [] }),
+			['a', 'c'],
+		);
 	});
 });

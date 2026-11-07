@@ -25,8 +25,7 @@ const uploadToOwnHaste = async (text, options = {}) => {
 			throw new Error('Own haste upload returned no key');
 		}
 		return `${OWN_BASE}/${key}${options.hash ? `#${options.hash}` : ''}`;
-	}
-	catch {
+	} catch {
 		return await uploadToHaste(text, { raw: true });
 	}
 };

@@ -25,10 +25,12 @@
 		"@kararty/dank-twitch-irc": "^6.2.0",
 		"chrono-node": "^2",
 		"ioredis": "^5",
+		"jimp": "^1.6.0",
 		"mongoose": "^8",
 		"node-cron": "^4",
 		"transliteration": "^2",
-		"ws": "^8"
+		"ws": "^8",
+		"zod": "^4.6.5"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9",

@@ -42,8 +42,7 @@ exports.getConfig = () => {
 exports.filterByConfig = (items, getName, list) => {
 	if (list.disableAll) {
 		return [];
-	}
-	else if (list.whitelist.length > 0) {
+	} else if (list.whitelist.length > 0) {
 		return items.filter((i) => list.whitelist.includes(getName(i)));
 	}
 	return items.filter((i) => !list.blacklist.includes(getName(i)));

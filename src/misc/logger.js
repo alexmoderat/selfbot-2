@@ -18,11 +18,9 @@ const Logger = {
 		}
 		if (level === LogLevel.ERROR) {
 			console.error(...args);
-		}
-		else if (level === LogLevel.WARN) {
+		} else if (level === LogLevel.WARN) {
 			console.warn(...args);
-		}
-		else {
+		} else {
 			console.log(...args);
 		}
 	},

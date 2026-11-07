@@ -63,11 +63,9 @@ const fireScheduled = async (reminder) => {
 	let message;
 	if (reminder.userFrom === reminder.userTo) {
 		message = `${mention(toUser)}, reminder from yourself (${delta}): ${reminder.text}`;
-	}
-	else if (!fromUser) {
+	} else if (!fromUser) {
 		message = `${mention(toUser)}, system reminder (${delta}): ${reminder.text}`;
-	}
-	else {
+	} else {
 		message = `${mention(toUser)}, timed reminder from ${mention(fromUser)} (${delta}): ${reminder.text}`;
 	}
 
@@ -88,11 +86,9 @@ const fireScheduled = async (reminder) => {
 
 	if (reminder.privateMessage) {
 		await bot.Twitch.whisper(toUser, message);
-	}
-	else if (!channel) {
+	} else if (!channel) {
 		throw new Error(`Cannot post non-private reminder ${reminder.id} in an unspecified channel`);
-	}
-	else {
+	} else {
 		await bot.Channels.send(channel, message);
 	}
 
@@ -195,7 +191,12 @@ const startOfUtcDay = (date) => new Date(Date.UTC(date.getUTCFullYear(), date.ge
 /** Prueft die Limits fuer einen neuen Reminder */
 const checkLimits = async (userFrom, userTo, schedule, type = 'Reminder') => {
 	const { maxIncomingActiveReminders, maxOutgoingActiveReminders, maxIncomingScheduledReminders, maxOutgoingScheduledReminders } = getConfig().values;
-	const activeQuery = { $or: [{ type: 'Reminder', schedule: null }, { type: 'Deferred', schedule: { $ne: null } }] };
+	const activeQuery = {
+		$or: [
+			{ type: 'Reminder', schedule: null },
+			{ type: 'Deferred', schedule: { $ne: null } },
+		],
+	};
 
 	const [incoming, outgoing] = await Promise.all([
 		bot.DB.Reminder.find({ ...activeQuery, userFrom: { $ne: null }, userTo }, { privateMessage: 1 }).lean(),
@@ -271,8 +272,7 @@ const createListLink = async (targetUser, reminders) => {
 	}
 	try {
 		return await uploadToOwnHaste(`Reminders for ${targetUser.name}\n\n${lines.join('\n')}`);
-	}
-	catch {
+	} catch {
 		return '(link unavailable)';
 	}
 };
@@ -318,8 +318,7 @@ const checkActive = async (targetUser, channel, displayName = targetUser.name) =
 			}
 			if (reminder.privateMessage) {
 				await bot.Twitch.whisper(fromUser, message);
-			}
-			else if (reminderChannel) {
+			} else if (reminderChannel) {
 				await bot.Channels.send(reminderChannel, message);
 			}
 			continue;
@@ -329,11 +328,9 @@ const checkActive = async (targetUser, channel, displayName = targetUser.name) =
 		let reminderMessage;
 		if (reminder.userFrom === targetUser.id) {
 			reminderMessage = `yourself - ${reminder.text} (${delta})`;
-		}
-		else if (!fromUser) {
+		} else if (!fromUser) {
 			reminderMessage = `system reminder - ${reminder.text} (${delta})`;
-		}
-		else {
+		} else {
 			reminderMessage = `${mention(fromUser)} - ${reminder.text} (${delta})`;
 		}
 		(reminder.privateMessage ? privateReply : reply).push(reminderMessage);
@@ -361,7 +358,10 @@ const checkActive = async (targetUser, channel, displayName = targetUser.name) =
 		for (const privateReminder of privateReply) {
 			await bot.Twitch.whisper(targetUser, `Private reminder: ${privateReminder}`);
 		}
-		await bot.Channels.send(channel, `Hey ${userMention} - I just private messaged you ${privateReply.length} private reminder(s) - make sure to check them out!`);
+		await bot.Channels.send(
+			channel,
+			`Hey ${userMention} - I just private messaged you ${privateReply.length} private reminder(s) - make sure to check them out!`,
+		);
 	}
 
 	await Promise.all(reminders.map((reminder) => deactivate(reminder, true, false)));
@@ -370,4 +370,17 @@ const checkActive = async (targetUser, channel, displayName = targetUser.name) =
 /** Aktive Reminder (fuer Commands und Dashboard) */
 const list = () => [...data.values()].flat();
 
-module.exports = { REMINDER_ERROR_REASONS, activeLimitFor, load, get, list, create, deactivate, setText, checkLimits, checkActive, createListLink, _data: data };
+module.exports = {
+	REMINDER_ERROR_REASONS,
+	activeLimitFor,
+	load,
+	get,
+	list,
+	create,
+	deactivate,
+	setText,
+	checkLimits,
+	checkActive,
+	createListLink,
+	_data: data,
+};

@@ -16,8 +16,7 @@ const start = (port) => {
 		const handleLine = async (line) => {
 			if (!line) {
 				return;
-			}
-			else if (line === 'exit' || line === 'quit') {
+			} else if (line === 'exit' || line === 'quit') {
 				socket.end();
 				return;
 			}
@@ -33,7 +32,14 @@ const start = (port) => {
 			}
 
 			const msg = {
-				user: { id: user.twitchId, name: user.name, login: user.name, display: user.name, badges: [], perms: { mod: false, broadcaster: false, vip: false } },
+				user: {
+					id: user.twitchId,
+					name: user.name,
+					login: user.name,
+					display: user.name,
+					badges: [],
+					perms: { mod: false, broadcaster: false, vip: false },
+				},
 				channel: null,
 				id: null,
 				text: line,

@@ -7,14 +7,11 @@ const parseLevel = (input) => {
 	const value = input?.toLowerCase();
 	if (!value) {
 		return null;
-	}
-	else if (['everyone', 'anyone', 'all', 'everybody'].includes(value)) {
+	} else if (['everyone', 'anyone', 'all', 'everybody'].includes(value)) {
 		return 'everyone';
-	}
-	else if (['mod', 'mods', 'moderator', 'moderators'].includes(value)) {
+	} else if (['mod', 'mods', 'moderator', 'moderators'].includes(value)) {
 		return 'mod';
-	}
-	else if (['streamer', 'broadcaster', 'owner'].includes(value)) {
+	} else if (['streamer', 'broadcaster', 'owner'].includes(value)) {
 		return 'streamer';
 	}
 	return null;
@@ -33,8 +30,7 @@ const applyLevel = (overrides, name, own, level) => {
 	const result = { ...overrides };
 	if (level === own || level === 'everyone') {
 		delete result[name];
-	}
-	else {
+	} else {
 		result[name] = level;
 	}
 	return result;

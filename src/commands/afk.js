@@ -45,8 +45,7 @@ module.exports = {
 		}
 		if (target.textSuffix) {
 			text = `${text} ${target.textSuffix}`;
-		}
-		else if (target.specialSuffix) {
+		} else if (target.specialSuffix) {
 			text = `${text} ${randArray(specialSuffixes[target.specialSuffix])}`;
 		}
 

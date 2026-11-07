@@ -13,11 +13,9 @@ const ALT_PREFIX = '!';
 const prefixProblem = (prefix) => {
 	if (/\s/.test(prefix)) {
 		return "it can't contain spaces";
-	}
-	else if ([...prefix].length > 3) {
+	} else if ([...prefix].length > 3) {
 		return 'it can be 3 characters at most';
-	}
-	else if (prefix.startsWith('/') || prefix.startsWith('.')) {
+	} else if (prefix.startsWith('/') || prefix.startsWith('.')) {
 		return 'Twitch uses / and . for its own commands';
 	}
 	return null;

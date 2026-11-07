@@ -37,8 +37,7 @@ module.exports = {
 		if (newPrefix === 'reset') {
 			await bot.Channels.setData(channel, 'prefix', null);
 			return { text: `@${display}, prefix in #${channel.name} reset to default (${fallback}).` };
-		}
-		else if (newPrefix === fallback.toLowerCase()) {
+		} else if (newPrefix === fallback.toLowerCase()) {
 			return { text: `@${display}, "${newPrefix}" is already the default prefix — no custom one needed.` };
 		}
 

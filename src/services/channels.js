@@ -29,8 +29,7 @@ const load = async () => {
 const get = (identifier) => {
 	if (identifier && typeof identifier === 'object') {
 		return identifier;
-	}
-	else if (typeof identifier === 'number') {
+	} else if (typeof identifier === 'number') {
 		return channels.get(identifier) ?? null;
 	}
 

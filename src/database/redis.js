@@ -18,8 +18,7 @@ const create = ({ host, port, db }) => {
 		}
 		try {
 			return JSON.parse(raw);
-		}
-		catch {
+		} catch {
 			return null;
 		}
 	};
@@ -33,8 +32,7 @@ const create = ({ host, port, db }) => {
 		const raw = JSON.stringify(value);
 		if (expiry) {
 			await client.set(PREFIX + key, raw, 'PX', Math.max(1, Math.round(expiry)));
-		}
-		else {
+		} else {
 			await client.set(PREFIX + key, raw);
 		}
 	};

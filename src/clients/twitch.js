@@ -36,8 +36,7 @@ exports.send = async (channel, message, options = {}) => {
 	}
 	if (options.replyTo) {
 		await client.reply(channel.name, options.replyTo, text);
-	}
-	else {
+	} else {
 		await client.say(channel.name, text);
 	}
 };
