@@ -1,0 +1,40 @@
+{
+	"name": "selfbot-next",
+	"version": "0.1.0",
+	"type": "commonjs",
+	"private": true,
+	"description": "alexmoderat's Twitch-Bot, aufgebaut wie DontAddThisBot (IRC + PubSub, MongoDB)",
+	"main": "src/main.js",
+	"engines": {
+		"node": ">= 24.0"
+	},
+	"scripts": {
+		"start": "node --env-file=.env --enable-experimental-regexp-engine src/main.js",
+		"dev": "node --env-file=.env --enable-experimental-regexp-engine --watch src/main.js",
+		"test": "node --enable-experimental-regexp-engine --test-reporter=spec --test \"tests/**/*.test.js\"",
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
+		"format": "prettier --check \"./**/*.js\"",
+		"format:fix": "prettier --write \"./**/*.js\"",
+		"check": "yarn lint && yarn test",
+		"migrate": "node --env-file=.env scripts/migrate-mariadb.js"
+	},
+	"author": "alexmoderat",
+	"license": "AGPL-3.0",
+	"dependencies": {
+		"@kararty/dank-twitch-irc": "^6.2.0",
+		"chrono-node": "^2",
+		"ioredis": "^5",
+		"mongoose": "^8",
+		"node-cron": "^4",
+		"transliteration": "^2",
+		"ws": "^8"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9",
+		"eslint": "^9",
+		"globals": "^16",
+		"mariadb": "^3",
+		"prettier": "^3"
+	}
+}

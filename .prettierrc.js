@@ -1,0 +1,10 @@
+// Wie DontAddThisBot: Tabs, einfache Anfuehrungszeichen, breite Zeilen
+module.exports = {
+	endOfLine: 'lf',
+	printWidth: 160,
+	semi: true,
+	singleQuote: true,
+	tabWidth: 4,
+	trailingComma: 'all',
+	useTabs: true,
+};
