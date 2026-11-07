@@ -414,8 +414,21 @@ const getCooldownModifiers = (options) => getLocals('Cooldown', options).sort((a
 /** User-IDs, deren Reminder in diesem Channel nicht ausgeloest werden */
 const getReminderPreventions = (options) => getLocals('Reminder-prevention', { ...options, skipUserCheck: true }).map((i) => i.userId);
 
+/** Arguments-Daten: Liste aus { string|regex, index|range } (bisher isArgumentsData in classes/filter) */
+const isArgumentsData = (input) =>
+	Array.isArray(input) &&
+	input.every((i) => (typeof i.string === 'string' || i.regex instanceof RegExp) && (Array.isArray(i.range) || typeof i.index === 'number'));
+
+/** Cooldown-Daten: { multiplier } oder { override, respect } */
+const isCooldownData = (input) => Boolean(input && !Array.isArray(input) && (typeof input.multiplier === 'number' || typeof input.override === 'number'));
+
 module.exports = {
+	/** Alle Filter nach ID (wie Filter.data der alten Klasse) */
+	data: filters,
+	reloadData: () => load(),
 	TYPES,
+	isArgumentsData,
+	isCooldownData,
 	load,
 	get,
 	all,

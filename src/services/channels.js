@@ -19,6 +19,8 @@ const withLegacy = (entity) => {
 	for (const [legacy, field] of Object.entries(LEGACY_FIELDS)) {
 		Object.defineProperty(entity, legacy, { get: () => entity[field], enumerable: false });
 	}
+	// Es gibt nur Twitch: Platform zeigt auf bot.Twitch (alter Code vergleicht channel.Platform === twitch)
+	Object.defineProperty(entity, 'Platform', { get: () => bot.Twitch, enumerable: false });
 	// Supibot: auf Twitch einfach der Channelname
 	Object.defineProperty(entity, 'getFullName', { value: () => entity.name, enumerable: false });
 	Object.defineProperty(entity, 'getDatabaseName', { value: () => entity.name, enumerable: false });

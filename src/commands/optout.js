@@ -1,5 +1,5 @@
 const { getCommand } = require('../clients/modules/commands.js');
-const { Filter } = require('../services/filter.js');
+const Filter = require('../services/filter.js');
 
 // Supibots commands/optout (mit parseGenericFilterOptions/handleGenericFilter aus Supibots utils/command-utils.ts):
 // niemand kann den Command mit dir als Ziel ausfuehren. Ersetzt sb-v2s "lastseen optout" allgemein fuer alle

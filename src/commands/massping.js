@@ -1,6 +1,6 @@
 const { setTimeout: sleep } = require('node:timers/promises');
 const { listOrLink } = require('../misc/list-reply.js');
-const { Filter } = require('../services/filter.js');
+const Filter = require('../services/filter.js');
 const { fetchChatters } = require('../misc/twitch-lists.js');
 
 /**

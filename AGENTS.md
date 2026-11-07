@@ -31,6 +31,9 @@ kommen aus selfbot; Aufbau, IRC-Anbindung und Stil von DontAddThisBot. Bauplan: 
   Chat-Logger.
 - `src/services/` — Channels, Users, Filter, Banphrase, AFK, Reminder, Datenschalter (`data-properties.js`: jede neue
   Channel-/User-Eigenschaft dort mit Typ deklarieren), Log.
+- `src/api/` — Web wie DontAddThisBots api/: `index.js` (Express: Dashboard, OAuth, Status-/Statistikseiten, /v1,
+  /docs), `routes-*.js`, `public/` (HTML), `internal.js` (interne API). Ports aus `config.json` `web.port`,
+  `web.compatPort` (alter sb-v2-Port 3000) und `api.port`; im Parallelbetrieb 11202/11200, compatPort aus.
 - `src/database/` — `db.js` (mongoose, `nextId()` fuer numerische IDs), `models/`, `redis.js` (`getJSON`/`setJSON`).
 - `src/token/` — `http.js` (fetch-Wrapper), `helix.js` (Tokens, Helix).
 - `src/misc/` — `utility.js` (Ersatz fuer supi-core Utils), `logger.js`, `regex.js`, `long-timeout.js`, `haste.js`.

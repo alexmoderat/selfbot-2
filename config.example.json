@@ -68,5 +68,12 @@
 			"whitelist": []
 		}
 	},
-	"pubsub": "legacy"
+	"pubsub": "legacy",
+	"web": {
+		"port": 11202,
+		"compatPort": null
+	},
+	"api": {
+		"port": 11200
+	}
 }

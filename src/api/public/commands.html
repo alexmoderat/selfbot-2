@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlexBot – Commands</title>
+  <!-- Oeffentliche Command-Liste statt Paste-Link (alexmoderat, 01.11.2026: "wäre glaube richtige Website besser"),
+       Daten aus /api/commands/public, Info-Fenster wie im Dashboard -->
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, 'Segoe UI', Arial, sans-serif; background: #060606; color: #ffffff; min-height: 100vh; }
+    main { max-width: 960px; margin: 0 auto; padding: 32px 16px 48px; }
+    h1 { font-size: 30px; color: #3a9bd0; }
+    .brand { align-items: center; color: #ffffff; display: inline-flex; font-size: 18.5px; font-weight: 800; gap: 10px; letter-spacing: -0.3px; margin-bottom: 20px; text-decoration: none; }
+    .brand:hover { opacity: .85; }
+    .brand-icon { align-items: center; background: linear-gradient(135deg, #1f7fb3, #165a7d); border-radius: 10px; display: flex; font-size: 20.5px; height: 36px; justify-content: center; width: 36px; }
+    .brand-accent { color: #1f7fb3; }
+    @media (min-width: 1200px) { .brand { position: absolute; left: 24px; top: 20px; margin: 0; } }
+    .intro { margin-top: 8px; color: #adafae; line-height: 1.5; }
+    .intro b { color: #00c853; }
+    .add { display: inline-block; margin-top: 14px; background: #1f7fb3; color: #fff; text-decoration: none; border-radius: 7px; padding: 9px 18px; font-weight: 600; }
+    .add:hover { background: #196a96; }
+    .tabs { display: flex; gap: 6px; margin-top: 26px; border-bottom: 1px solid #282828; }
+    .tab { background: none; border: none; border-bottom: 2px solid transparent; color: #adafae; cursor: pointer; font-size: 16px; font-weight: 600; padding: 9px 14px; }
+    .tab[aria-selected="true"] { border-bottom-color: #1f7fb3; color: #ffffff; }
+    .run-form { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .run-form label { display: flex; flex-direction: column; gap: 5px; color: #adafae; font-size: 14.5px; }
+    .run-form .grow { flex: 1; min-width: 220px; }
+    .run-form input { background: #111111; border: 1px solid #282828; border-radius: 7px; color: #ffffff; padding: 9px 13px; font-size: 16px; font-family: monospace; outline: none; width: 100%; }
+    .run-form input:focus { border-color: #1f7fb3; }
+    .run-button { align-self: flex-end; background: #1f7fb3; border: none; border-radius: 7px; color: #fff; cursor: pointer; font-size: 16px; font-weight: 600; padding: 10px 20px; }
+    .run-button:hover { background: #196a96; }
+    .run-button:disabled { background: #282828; cursor: default; }
+    .run-output { background: #111111; border: 1px solid #282828; border-radius: 10px; margin-top: 16px; min-height: 64px; padding: 14px 16px; line-height: 1.5; overflow-wrap: anywhere; }
+    .run-output.error { color: #ff8a8d; }
+    .run-output.idle { color: #9a9c9b; }
+    .run-output p + p { margin-top: 8px; }
+    .run-output a { color: #3a9bd0; }
+    .run-hint { color: #adafae; font-size: 17px; line-height: 1.5; margin-top: 12px; }
+    .run-login { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+    .run-login .run-hint { margin-top: 0; }
+    .login-button { background: #1f7fb3; border-radius: 6px; color: #fff; font-size: 16px; font-weight: 600; padding: 8px 15px; text-decoration: none; }
+    .login-button:hover { background: #196a96; }
+    .login-status { color: #adafae; font-size: 15px; }
+    .login-status a { color: #3a9bd0; margin-left: 6px; }
+    .run-names { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+    .run-all { background: #282828; border: none; border-radius: 6px; color: #ffffff; cursor: pointer; font-size: 17px; font-weight: 600; padding: 7px 13px; }
+    .run-all:hover { background: #383838; }
+    .run-name { background: #111111; border: 1px solid #282828; border-radius: 5px; color: #3a9bd0; cursor: pointer; font-family: monospace; font-size: 17px; padding: 7px 12px; }
+    .run-name:hover { border-color: #1f7fb3; }
+    .my-location { background: #111111; border: 1px solid #282828; border-radius: 10px; margin-top: 20px; padding: 16px; }
+    .my-location h2 { font-size: 18.5px; margin-bottom: 4px; }
+    .my-location p { color: #adafae; font-size: 16px; line-height: 1.45; }
+    .my-location .location-form { align-items: center; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .my-location input[type="text"] { background: #060606; border: 1px solid #282828; border-radius: 7px; color: #ffffff; flex: 1; font-size: 16px; min-width: 200px; outline: none; padding: 9px 13px; }
+    .my-location input[type="text"]:focus { border-color: #1f7fb3; }
+    .my-location label { align-items: center; color: #adafae; display: flex; font-size: 16px; gap: 6px; }
+    .location-remove { background: #282828; border: none; border-radius: 7px; color: #ffffff; cursor: pointer; font-size: 16px; padding: 10px 14px; }
+    .location-status { margin-top: 10px; }
+    .location-status.error { color: #ff8a8d; }
+    .location-secret { background: none; border: none; color: inherit; cursor: pointer; filter: blur(6px); font: inherit; padding: 0 2px; user-select: none; }
+    .location-secret.shown { filter: none; user-select: text; }
+    .reveal-dialog { background: #111111; border: 1px solid #282828; border-radius: 10px; color: #ffffff; margin: auto; padding: 22px; text-align: center; }
+    .reveal-dialog::backdrop { background: rgba(0, 0, 0, .6); }
+    .reveal-dialog p { margin-bottom: 14px; }
+    .reveal-dialog button { margin: 0 4px; }
+    [hidden] { display: none !important; }
+    /* Im Dashboard als Seite eingebettet: Rahmen kommt von dort */
+    .embed .brand, .embed h1, .embed .intro, .embed .add { display: none; }
+    /* ninou2, 07.11.2026: "the USE COMMAND tab, the content should be max to the TOP-LEFT" - im Dashboard links wie die anderen Seiten */
+    .embed main { margin: 0; padding: 0 32px 48px; }
+    .embed .tabs { margin-top: 12px; }
+    .controls { display: flex; gap: 10px; margin: 26px 0 14px; flex-wrap: wrap; align-items: center; }
+    .search { flex: 1; min-width: 200px; background: #111111; border: 1px solid #282828; border-radius: 7px; color: #ffffff; padding: 9px 13px; font-size: 16px; outline: none; }
+    .search:focus { border-color: #1f7fb3; }
+    .filter { background: #111111; border: 1px solid #282828; border-radius: 7px; color: #ffffff; padding: 9px 12px; font-size: 16px; outline: none; cursor: pointer; }
+    .count { color: #9a9c9b; font-size: 15px; }
+    .list { border: 1px solid #282828; border-radius: 10px; overflow: hidden; }
+    .row { display: grid; grid-template-columns: 190px 1fr auto; gap: 14px; padding: 11px 16px; border-bottom: 1px solid #161616; cursor: pointer; align-items: start; }
+    .row:last-child { border-bottom: none; }
+    .row:hover { background: #111111; }
+    .name { font-family: monospace; color: #3a9bd0; font-size: 16px; word-break: break-word; }
+    .desc { color: #adafae; font-size: 16px; line-height: 1.4; }
+    .badge { font-size: 12.5px; border-radius: 4px; padding: 2px 7px; border: 1px solid #00c853; color: #00c853; white-space: nowrap; }
+    .empty { padding: 30px; text-align: center; color: #9a9c9b; }
+    .cmd-info {
+      background: #111111; color: #ffffff; border: 1px solid #282828; border-radius: 10px;
+      padding: 22px 24px; width: min(560px, calc(100vw - 32px)); max-height: 80vh; overflow-y: auto; margin: auto;
+    }
+    .cmd-info::backdrop { background: rgba(0, 0, 0, 0.6); }
+    .cmd-info-title { font-size: 23px; font-weight: 700; color: #3a9bd0; font-family: monospace; }
+    .cmd-info-label { margin-top: 14px; margin-bottom: 4px; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.05em; color: #9a9c9b; }
+    .mono { font-family: monospace; }
+    .cmd-info-usage { padding: 3px 0; word-break: break-word; }
+    .close { margin-top: 18px; background: #282828; color: #ffffff; border: none; border-radius: 6px; padding: 7px 16px; cursor: pointer; }
+    @media (max-width: 600px) {
+      .row { grid-template-columns: 1fr auto; }
+      .desc { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <!-- ninou2, 03.11.2026: "should add the logo and name like [on] the main page ... on the top left", Klick fuehrt zur Hauptseite -->
+    <a class="brand" href="dashboard"><span class="brand-icon">🤖</span><span><span class="brand-accent">Alex</span>Bot</span></a>
+    <h1>AlexBot commands</h1>
+    <p class="intro">
+      Use @Alexmoderat's bot and its commands for free: <b>mod the bot and it will join your channel</b>.
+      Click on any command to see how to use it.
+    </p>
+    <a class="add" href="dashboard#join">➕ Join your channel</a>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tabList" aria-selected="true" aria-controls="panelList">All commands</button>
+      <button class="tab" role="tab" id="tabRun" aria-selected="false" aria-controls="panelRun">Use a command</button>
+    </div>
+
+    <div id="panelRun" role="tabpanel" aria-labelledby="tabRun" hidden>
+      <form class="run-form" id="runForm">
+        <label>Channel <input id="runChannel" required maxlength="25" placeholder="ninou2" autocomplete="off" spellcheck="false"></label>
+        <label class="grow">Command <input id="runInput" required maxlength="200" placeholder="hs 2026" autocomplete="off" spellcheck="false"></label>
+        <button class="run-button" id="runButton">Run</button>
+      </form>
+      <div class="run-output idle" id="runOutput" aria-live="polite">The reply shows up here. Nothing gets posted in chat.</div>
+      <div class="run-login">
+        <p class="run-hint">Works like typing in a channel's chat. Available without logging in:</p>
+        <a class="login-button" id="loginButton" href="login">Log in with Twitch</a>
+        <span class="login-status" id="loginStatus" hidden></span>
+      </div>
+      <div class="run-names" id="runNames"></div>
+
+      <section class="my-location" id="myLocation" hidden>
+        <h2>My location</h2>
+        <p>Used by <code>time</code> and <code>weather</code> without typing it in chat. Private hides the place in their replies.</p>
+        <form class="location-form" id="locationForm">
+          <input type="text" id="locationQuery" required maxlength="200" placeholder="City" autocomplete="off" aria-label="Location">
+          <label><input type="checkbox" id="locationPrivate" checked> Private</label>
+          <button class="run-button" id="locationSave">Save</button>
+          <button class="location-remove" id="locationRemove" type="button" hidden>Remove</button>
+        </form>
+        <p class="location-status" id="locationStatus" aria-live="polite"></p>
+      </section>
+
+      <section class="my-location" id="myTimezone" hidden>
+        <h2>My timezone</h2>
+        <p>Used by <code>time</code> without typing anything, and it goes before your location. Same as <code>uts</code> in chat.</p>
+        <form class="location-form" id="timezoneForm">
+          <input type="text" id="timezoneInput" required maxlength="20" placeholder="UTC+1 or CET" autocomplete="off" aria-label="Timezone">
+          <button class="run-button">Save</button>
+          <button class="location-remove" id="timezoneRemove" type="button" hidden>Remove</button>
+        </form>
+        <p class="location-status" id="timezoneStatus" aria-live="polite"></p>
+      </section>
+
+      <!-- ninou2, 03.11.2026: "if i was streaming that, it will leak", "make it blurry", "are you sure you wanna show [your] location with YES and NO options" -->
+      <dialog class="reveal-dialog" id="revealDialog">
+        <p>Are you sure you want to show your location?</p>
+        <button class="run-button" id="revealYes" type="button">Yes</button>
+        <button class="location-remove" id="revealNo" type="button">No</button>
+      </dialog>
+    </div>
+
+    <div id="panelList" role="tabpanel" aria-labelledby="tabList">
+    <div class="controls">
+      <input class="search" id="search" type="search" placeholder="Search commands…" autocomplete="off">
+      <select class="filter" id="filter">
+        <option value="all">Everyone + mods</option>
+        <option value="everyone">Everyone</option>
+        <option value="mod">Mods only</option>
+      </select>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="list" id="list"><div class="empty">Loading…</div></div>
+    </div>
+  </main>
+
+  <dialog id="info" class="cmd-info" onclick="if (event.target === this) this.close()">
+    <div id="infoBody"></div>
+    <button class="close" onclick="document.getElementById('info').close()">Close</button>
+  </dialog>
+
+  <script>
+    let commands = [];
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    function render() {
+      const term = document.getElementById('search').value.trim().toLowerCase();
+      const filter = document.getElementById('filter').value;
+      const shown = commands.filter(c => (filter === 'all' || c.permission === filter)
+        && (!term || [c.name, ...c.aliases, c.description || ''].some(t => t.toLowerCase().includes(term))));
+      document.getElementById('count').textContent = `${shown.length} of ${commands.length}`;
+      document.getElementById('list').innerHTML = (shown.length === 0)
+        ? '<div class="empty">No command found.</div>'
+        : shown.map(c => `<div class="row" onclick="showInfo('${esc(c.name)}')">
+            <div class="name">${esc(c.prefix)}${esc(c.name)}</div>
+            <div class="desc">${esc(c.description || '—')}</div>
+            <div>${(c.permission === 'mod') ? '<span class="badge">MOD</span>' : ''}</div>
+          </div>`).join('');
+    }
+
+    function showInfo(name) {
+      const c = commands.find(i => i.name === name);
+      if (!c) return;
+      const usage = String(c.usage || '').split(' | ').filter(Boolean);
+      // Usages, die schon mit "!" anfangen, bleiben wie sie sind (wie formatUsage im Bot)
+      const withPrefix = u => (u.startsWith('!')) ? u : c.prefix + u;
+      document.getElementById('infoBody').innerHTML = `
+        <div class="cmd-info-title">${esc(c.prefix)}${esc(c.name)}</div>
+        ${c.aliases.length ? `<div class="cmd-info-label">Aliases</div><div class="mono">${c.aliases.map(a => esc(c.prefix + a)).join(', ')}</div>` : ''}
+        <div class="cmd-info-label">What it does</div><div>${esc(c.description || '—')}</div>
+        <div class="cmd-info-label">Usage</div>
+        <div>${usage.length ? usage.map(u => `<div class="mono cmd-info-usage">${esc(withPrefix(u))}</div>`).join('') : '—'}</div>
+        <div class="cmd-info-label">Who can use it</div><div>${(c.permission === 'mod') ? 'Mods and the streamer' : 'Everyone'}</div>`;
+      document.getElementById('info').showModal();
+    }
+
+    const embedded = new URLSearchParams(location.search).has('embed');
+    if (embedded) {
+      document.documentElement.classList.add('embed');
+      // Login und Logout gehen nicht im Rahmen, Twitch verbietet das Einbetten seiner Anmeldeseite
+      const base = document.createElement('base');
+      base.target = '_top';
+      document.head.append(base);
+    }
+
+    function showTab(run) {
+      // ninou2, 03.11.2026: "use the browser button : <- and ->" - jeder Tab bekommt einen eigenen Verlaufseintrag
+      const hash = run ? '#use' : '';
+      if (location.hash !== hash) history.pushState(null, '', location.pathname + location.search + hash);
+      document.getElementById('panelRun').hidden = !run;
+      document.getElementById('panelList').hidden = run;
+      document.getElementById('tabRun').setAttribute('aria-selected', String(run));
+      document.getElementById('tabList').setAttribute('aria-selected', String(!run));
+    }
+
+    function showOutput(kind, lines) {
+      const out = document.getElementById('runOutput');
+      out.className = 'run-output ' + kind;
+      out.replaceChildren(...lines.map(line => {
+        const p = document.createElement('p');
+        for (const part of line.split(/(https:\/\/\S+)/)) {
+          if (part.startsWith('https://')) {
+            const a = document.createElement('a');
+            a.href = part;
+            a.textContent = part;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            p.append(a);
+          }
+          else {
+            p.append(part);
+          }
+        }
+        return p;
+      }));
+    }
+
+    function renderRunNames() {
+      // ninou2, 03.11.2026: "beside all the buttons ... add a button that take [you] to the command list"
+      const all = document.createElement('button');
+      all.type = 'button';
+      all.className = 'run-all';
+      all.textContent = 'All commands →';
+      all.addEventListener('click', () => showTab(false));
+      document.getElementById('runNames').replaceChildren(...commands.filter(c => c.runnable).map(c => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'run-name';
+        const name = [c.name, ...c.aliases].sort((x, y) => x.length - y.length)[0];
+        b.textContent = name;
+        b.title = c.description || '';
+        b.addEventListener('click', () => {
+          document.getElementById('runInput').value = name + ' ';
+          document.getElementById('runInput').focus();
+        });
+        return b;
+      }), all);
+    }
+
+    if (location.hash === '#use') showTab(true);
+    window.addEventListener('popstate', () => showTab(location.hash === '#use'));
+
+    function showLocation(saved, error) {
+      const status = document.getElementById('locationStatus');
+      status.className = 'location-status' + (error ? ' error' : '');
+      status.textContent = error || (saved ? 'Saved: ' : 'No location saved yet.');
+      if (!error && saved) {
+        const secret = document.createElement('button');
+        secret.type = 'button';
+        secret.className = 'location-secret';
+        secret.textContent = saved.formatted;
+        secret.title = 'Click to show';
+        secret.addEventListener('click', () => {
+          if (secret.classList.contains('shown')) secret.classList.remove('shown');
+          else document.getElementById('revealDialog').showModal();
+        });
+        status.append(secret, ` (${saved.hidden ? 'private' : 'public'})`);
+      }
+      if (error) return;
+      document.getElementById('locationRemove').hidden = !saved;
+      if (saved) document.getElementById('locationPrivate').checked = saved.hidden;
+    }
+
+    async function locationRequest(options) {
+      try {
+        const res = await fetch('api/my/location', options);
+        const data = await res.json();
+        if (res.ok) showLocation(data.location);
+        else showLocation(undefined, data.error || 'That did not work, try again later.');
+      }
+      catch {
+        showLocation(undefined, 'Could not reach the bot, try again later.');
+      }
+    }
+
+    const loadLocation = () => locationRequest({});
+
+    document.getElementById('revealYes').addEventListener('click', () => {
+      document.querySelector('.location-secret')?.classList.add('shown');
+      document.getElementById('revealDialog').close();
+    });
+    document.getElementById('revealNo').addEventListener('click', () => document.getElementById('revealDialog').close());
+
+    function showTimezone(timezone, error) {
+      const status = document.getElementById('timezoneStatus');
+      status.className = 'location-status' + (error ? ' error' : '');
+      status.textContent = error || (timezone ? `Saved: ${timezone}` : 'No timezone saved yet.');
+      if (!error) document.getElementById('timezoneRemove').hidden = !timezone;
+    }
+
+    async function timezoneRequest(options) {
+      try {
+        const res = await fetch('api/my/timezone', options);
+        const data = await res.json();
+        if (res.ok) showTimezone(data.timezone);
+        else showTimezone(undefined, data.error || 'That did not work, try again later.');
+        return res.ok;
+      }
+      catch {
+        showTimezone(undefined, 'Could not reach the bot, try again later.');
+        return false;
+      }
+    }
+
+    document.getElementById('timezoneForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const input = document.getElementById('timezoneInput');
+      const saved = await timezoneRequest({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timezone: input.value })
+      });
+      if (saved) input.value = '';
+    });
+    document.getElementById('timezoneRemove').addEventListener('click', () => timezoneRequest({ method: 'DELETE' }));
+
+    document.getElementById('locationForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const query = document.getElementById('locationQuery');
+      await locationRequest({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query.value, hidden: document.getElementById('locationPrivate').checked })
+      });
+      query.value = '';
+    });
+    document.getElementById('locationRemove').addEventListener('click', () => locationRequest({ method: 'DELETE' }));
+
+    fetch('api/login')
+      .then(r => r.json())
+      .then(({ login }) => {
+        if (!login) return;
+        const status = document.getElementById('loginStatus');
+        const logout = document.createElement('a');
+        logout.href = 'login/logout';
+        logout.textContent = 'Log out';
+        status.append('Logged in as ' + (login.displayName || login.username), logout);
+        status.hidden = false;
+        document.getElementById('loginButton').hidden = true;
+        showTab(true);
+        document.getElementById('myLocation').hidden = false;
+        loadLocation();
+        document.getElementById('myTimezone').hidden = false;
+        timezoneRequest({});
+      })
+      .catch(() => {});
+
+    document.getElementById('tabList').addEventListener('click', () => showTab(false));
+    document.getElementById('tabRun').addEventListener('click', () => showTab(true));
+    document.getElementById('runForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const button = document.getElementById('runButton');
+      button.disabled = true;
+      showOutput('idle', ['Running…']);
+      try {
+        const res = await fetch('api/commands/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channel: document.getElementById('runChannel').value, input: document.getElementById('runInput').value })
+        });
+        const data = await res.json();
+        if (res.ok) showOutput('', data.replies.length ? data.replies : ['No reply.']);
+        else showOutput('error', [data.error || 'That did not work, try again later.']);
+      }
+      catch {
+        showOutput('error', ['Could not reach the bot, try again later.']);
+      }
+      button.disabled = false;
+    });
+
+    document.getElementById('search').addEventListener('input', render);
+    document.getElementById('filter').addEventListener('change', render);
+
+    fetch('api/commands/public')
+      .then(r => r.json())
+      .then(list => { commands = list; render(); renderRunNames(); })
+      .catch(() => { document.getElementById('list').innerHTML = '<div class="empty">Could not load the commands, try again later.</div>'; });
+  </script>
+</body>
+</html>

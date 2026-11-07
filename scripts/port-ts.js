@@ -44,6 +44,7 @@ const targetOf = (relative) => {
 		[/^classes\/custom-data-properties$/, 'src/services/data-properties'],
 		[/^config$/, 'src/config'],
 		[/^web\/(.+)$/, 'src/api/$1'],
+		[/^api\/index$/, 'src/api/internal'],
 	];
 	for (const [regex, replacement] of rules) {
 		if (regex.test(rel)) {
