@@ -54,6 +54,14 @@ nirgends sonst eingreifen. Gesperrt bis zum Umschalten: Module `discord-mirror` 
 `smartbox-watch` (Warnungen doppelt). Eigene Ports (11201), Redis-DB 10, Mongo-DB `selfbot_next`. MariaDB bleibt bis
 zum Umschalten die Quelle der Daten; eine erneute Migration ueberschreibt Mongo.
 
+Umschalten: `bash scripts/cutover.sh` (zeigt den Plan), `--go` (Sicherungen nach `/root/backups/cutover-next`, beide
+Bots stoppen, `migrate --fresh` + `migrate:chatlines` + `migrate:check`, `scripts/cutover-config.js`, pm2-Name
+`selfbot`), `--rollback` (alter selfbot wieder an, dieser Bot zurueck in den Parallelbetrieb). Redis-DB 10 und
+Mongo-DB `selfbot_next` bleiben auch danach, nginx muss nicht angepasst werden.
+
+PubSub (altes PubSub: 60 Verbindungen x 50 Topics): Mod-Topics nur in Channels mit Mode `Moderator`, Hype-Train,
+Predictions und Kanalpunkte werden nicht abonniert.
+
 ## Geteilte sb-v2-Daten
 `chat_data` (first_message_sightings, known_bots, longest_sub, global_sub_counter, ...) gehoert sb-v2, utility-bot und
 autojoin-bot, die es laufend schreiben. Es bleibt in MariaDB; Zugriff nur ueber `src/database/sbv2.js` mit Platzhaltern.

@@ -35,16 +35,20 @@ const PUBSUB_EVENTS = {
 };
 
 /** Topic-Satz eines Channels; uid = eigene User-ID fuer moderator-gebundene Topics */
-const channelTopics = (uid, broadcasterId) => [
-	`chat_moderator_actions.${uid}.${broadcasterId}`,
-	`automod-queue.${uid}.${broadcasterId}`,
-	`low-trust-users.${uid}.${broadcasterId}`,
-	`shield-mode.${uid}.${broadcasterId}`,
-	`channel-unban-requests.${uid}.${broadcasterId}`,
+// Altes PubSub erlaubt 60 Verbindungen mit je 50 Topics (3000 insgesamt). Mod-Topics gibt es deshalb nur in Channels
+// mit Mode "Moderator" (anderswo liefern sie ohnehin ERR_BADAUTH); Hype-Train, Predictions und Kanalpunkte nutzt kein
+// Modul und werden nicht abonniert.
+const channelTopics = (uid, broadcasterId, { moderator = true } = {}) => [
+	...(moderator
+		? [
+				`chat_moderator_actions.${uid}.${broadcasterId}`,
+				`automod-queue.${uid}.${broadcasterId}`,
+				`low-trust-users.${uid}.${broadcasterId}`,
+				`shield-mode.${uid}.${broadcasterId}`,
+				`channel-unban-requests.${uid}.${broadcasterId}`,
+			]
+		: []),
 	`video-playback-by-id.${broadcasterId}`,
-	`hype-train-events-v1.${broadcasterId}`,
-	`predictions-channel-v1.${broadcasterId}`,
-	`community-points-channel-v1.${broadcasterId}`,
 	`raid.${broadcasterId}`,
 	`broadcast-settings-update.${broadcasterId}`,
 ];
@@ -171,7 +175,7 @@ class PubSub {
 			return;
 		}
 
-		for (const topic of channelTopics(this.#selfId, channel.twitchId)) {
+		for (const topic of channelTopics(this.#selfId, channel.twitchId, { moderator: channel.mode === 'Moderator' })) {
 			this.#enqueue(topic);
 		}
 	}
