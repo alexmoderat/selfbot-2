@@ -4,6 +4,7 @@
 //   yarn migrate                 alle Tabellen (selfbot_core und selfbot_data)
 //   yarn migrate core | data     nur Kern- bzw. Feature-Tabellen
 //   yarn migrate Channel ...     nur einzelne Tabellen (Namen wie in MariaDB)
+//   yarn migrate --fresh         Collections vorher leeren (letzter Abgleich beim Umschalten); Chat-Logs: migrate:chatlines
 
 const mariadb = require('mariadb');
 const { getConfig } = require('../src/config.js');
@@ -315,7 +316,10 @@ const copyTable = async (conn, { table, model, map, key = '_id', counter }) => {
 
 const main = async () => {
 	const config = getConfig();
-	const only = process.argv.slice(2);
+	// --fresh: Ziel-Collection vor dem Kopieren leeren - fuer den letzten Abgleich beim Umschalten, damit auch in
+	// MariaDB Geloeschtes (erledigte Reminder, entfernte Notify-Eintraege, ...) aus MongoDB verschwindet
+	const fresh = process.argv.includes('--fresh');
+	const only = process.argv.slice(2).filter((i) => i !== '--fresh');
 	const { MARIA_USER, MARIA_PASSWORD, MARIA_HOST } = process.env;
 	if (!MARIA_USER || !MARIA_PASSWORD || !MARIA_HOST) {
 		throw new Error('MARIA_USER, MARIA_PASSWORD und MARIA_HOST fehlen in .env');
@@ -348,6 +352,10 @@ const main = async () => {
 				continue;
 			}
 			const start = Date.now();
+			const freshModel = definition.model ?? (definition.table === 'Channel_Chat_Module' ? DB.ChannelChatModule : null);
+			if (fresh && freshModel) {
+				await freshModel.deleteMany({});
+			}
 			record(definition.table, definition.custom ? await definition.custom(conn) : await copyTable(conn, definition), start);
 		}
 		for (const spec of DB.dataSpecs) {
@@ -355,6 +363,9 @@ const main = async () => {
 				continue;
 			}
 			const start = Date.now();
+			if (fresh) {
+				await DB[spec.model].deleteMany({});
+			}
 			record(spec.table, await copyDataTable(dataConn, spec), start);
 		}
 		console.table(results);

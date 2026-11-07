@@ -17,7 +17,9 @@
 		"format": "prettier --check \"./**/*.js\"",
 		"format:fix": "prettier --write \"./**/*.js\"",
 		"check": "yarn lint && yarn test",
-		"migrate": "node --env-file=.env scripts/migrate-mariadb.js"
+		"migrate": "node --env-file=.env scripts/migrate-mariadb.js",
+		"migrate:chatlines": "node --env-file=.env scripts/migrate-chatlines.js",
+		"migrate:check": "node --env-file=.env scripts/check-migration.js"
 	},
 	"author": "alexmoderat",
 	"license": "AGPL-3.0",

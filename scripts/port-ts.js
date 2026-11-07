@@ -257,12 +257,15 @@ const convertCommand = (input) => {
 	// Code: (async) function name (context, a, b) { ... }  -> execute: async (client, msg) => { const [a, b] = msg.args;
 	const codeMatch = /^\tCode: \(?(?:async )?function\s*\w*\s*\(([^)]*)\)\s*\{/m.exec(code);
 	if (codeMatch) {
-		const params = codeMatch[1].split(',').map((i) => i.trim()).filter(Boolean).slice(1);
+		const params = codeMatch[1]
+			.split(',')
+			.map((i) => i.trim())
+			.filter(Boolean)
+			.slice(1);
 		let args = '';
 		if (params.length === 1 && params[0].startsWith('...')) {
 			args = `\n\t\tconst ${params[0].slice(3)} = [...msg.args];`;
-		}
-		else if (params.length > 0) {
+		} else if (params.length > 0) {
 			const named = params.filter((i) => !i.startsWith('...')).map((i) => i.replace(/\s*=.*$/, ''));
 			const rest = params.find((i) => i.startsWith('...'));
 			args = `\n\t\tconst [${[...named, ...(rest ? [rest] : [])].join(', ')}] = msg.args;`;
@@ -315,7 +318,10 @@ const main = () => {
 	code = convertExports(code);
 	if (/commands\/[^/]+\/+index\.ts$/.test(source)) {
 		code = code.replace(/^const \{ declare \} = require\([^)]*\);\n/m, '');
-		code = code.replace(/^const \{ declare, isResultFailure \} = require\([^)]*\);\n/m, "const { isResultFailure } = require('../clients/modules/commands.js');\n");
+		code = code.replace(
+			/^const \{ declare, isResultFailure \} = require\([^)]*\);\n/m,
+			"const { isResultFailure } = require('../clients/modules/commands.js');\n",
+		);
 		code = convertCommand(code);
 	}
 	for (const [regex, replacement] of API_RENAMES) {
