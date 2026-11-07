@@ -1,6 +1,5 @@
 const { defineChatModule } = require('../clients/modules/chat-modules.js');
 
-const { banUser } = require('../services/moderation.js');
 const { suspendChannel } = require('../services/channel-suspension.js');
 
 /**
@@ -10,17 +9,16 @@ const { suspendChannel } = require('../services/channel-suspension.js');
  *   msg_channel_suspended   Account gesperrt/geloescht -> Channel still verlassen (ban-check holt ihn zurueck)
  *   msg_channel_restricted  Feature-Sperre (FLC) -> drinbleiben, nur melden
  *   msg_suspended_channel   dito
- *   msg_banned              Bot selbst gebannt -> Channel-Owner im eigenen Channel bannen
+ *   msg_banned              Bot selbst gebannt -> nur melden (kein Auto-Ban des Owners mehr, alexmoderat 08.11.2026)
  * Ein gesperrter Channel, in dem der Bot schon ist, meldet sich nicht zwingend - das uebernimmt der Cron ban-check.
  */
 const flcChannels = new Map();
-const selfBannedChannels = new Map();
 
 const getFlcChannels = () => flcChannels;
 
 module.exports = defineChatModule({
 	name: 'channel-suspension',
-	description: 'Handles channel state notices (suspension, feature restriction, bot banned).',
+	description: 'Handles channel state notices (suspension, feature restriction).',
 	scope: 'global',
 	handlers: {
 		channelState: async (context) => {
@@ -37,28 +35,9 @@ module.exports = defineChatModule({
 				flcChannels.set(channel.id, { type: msgId, detectedAt: new Date().toISOString() });
 				await platform.sendToBroadcaster(`⚠️ FLC-Restriction in ${channel.name}: ${msgId}`, platform.selfId).catch(() => {});
 				return;
-			} else if (msgId !== 'msg_banned') {
-				console.log(`[channel-suspension] #${channel.name}: ${msgId} - "${text}"`);
-				return;
 			}
 
-			// Bot selbst gebannt -> Channel-Owner im eigenen Channel bannen (einmal je Laufzeit)
-			if (!selfBannedChannels.has(channel.id) && channel.twitchId) {
-				console.warn(`[channel-suspension] Bot ist in #${channel.name} gebannt`);
-				const ok = await banUser(
-					{
-						channelName: platform.selfName.toLowerCase(),
-						broadcasterId: platform.selfId,
-						userId: channel.twitchId,
-						userName: channel.name,
-					},
-					{ reason: 'Bot was banned from their channel', status: 'SELF_BANNED' },
-				);
-
-				console.warn(`[channel-suspension] Auto-Ban ${channel.name} in #${platform.selfName}: ${ok ? 'ok' : 'fehlgeschlagen'}`);
-			}
-
-			selfBannedChannels.set(channel.id, Date.now());
+			console.log(`[channel-suspension] #${channel.name}: ${msgId} - "${text}"`);
 		},
 	},
 });
