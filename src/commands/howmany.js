@@ -1,4 +1,4 @@
-const { getCommand, commands } = require('../clients/modules/commands.js');
+const { getCommand } = require('../clients/modules/commands.js');
 const customCommands = require('../services/custom-commands.js');
 
 /**
@@ -10,15 +10,7 @@ const formatHowMany = (shown, channelName, inChannel, global) =>
 	`the command ${shown} has been used in @${channelName} chat : [${inChannel} times] , Global use : [${global} times]`;
 
 const count = async (command, channelId) => {
-	const rows = await core.Query.getRecordset((rs) => {
-		// TODO(port)
-		rs.select('COUNT(*) AS Total').from('selfbot_core', 'Command_Execution').where('Command = %s', command);
-		if (channelId !== null) {
-			rs.where('Channel = %n', channelId);
-		}
-		return rs;
-	});
-	return Number(rows[0]?.Total ?? 0);
+	return await bot.DB.CommandExecution.countDocuments({ command, ...(channelId !== null ? { channelId } : {}) });
 };
 
 module.exports = {

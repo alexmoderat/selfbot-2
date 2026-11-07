@@ -1,5 +1,4 @@
 const { got } = require('../token/got.js');
-const { commands } = require('../clients/modules/commands.js');
 const { getPermissions } = require('../clients/modules/handler.js');
 const { Script, createContext } = require('node:vm');
 const crypto = require('node:crypto');
@@ -46,7 +45,7 @@ const scrub = (text, secrets) => {
 const liveChannelNames = (channels, liveIds) => channels.filter((i) => i.twitchId && liveIds.has(i.twitchId)).map((i) => i.Name);
 
 /**
- * Kuerzel fuer den eval (alexmoderat, 05.11.2026: "kuerzer wie hier" - anderer Bot mit sb.svc.twitch.gql.getUser). // TODO(port)
+ * Kuerzel fuer den eval (alexmoderat, 05.11.2026: "kuerzer wie hier" - anderer Bot mit sb.svc.twitch.gql.getUser).
  * z. B. "=js return live().join(', ')" oder "=js return (await gql.getUserInfo('kattah'))?.followers".
  */
 const shortcuts = () => {
@@ -108,8 +107,8 @@ module.exports = {
 				crypto,
 				version: process.version,
 				msg,
-				sb,
-				core,
+				// "bot" statt sb/core: alles Globale des Bots (Channels, Users, DB, Twitch, ...)
+				bot,
 				...shortcuts(),
 				args: scriptArgs ?? [],
 			});

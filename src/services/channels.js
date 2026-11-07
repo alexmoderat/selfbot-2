@@ -5,16 +5,37 @@ const dataProperties = require('./data-properties.js');
 
 const channels = new Map();
 
-const fromDoc = (doc) => ({
-	id: doc._id,
-	name: doc.name,
-	twitchId: doc.twitchId ?? null,
-	mode: doc.mode,
-	description: doc.description ?? null,
-	linksAllowed: doc.linksAllowed !== false,
-	logging: new Set(doc.logging ?? []),
-	data: doc.data ?? {},
-});
+/** Alte Feldnamen (selfbots Channel-Klasse) als Getter - fuer portierten Code, der sie noch liest */
+const LEGACY_FIELDS = {
+	ID: 'id',
+	Name: 'name',
+	Specific_ID: 'twitchId',
+	Mode: 'mode',
+	Description: 'description',
+	Links_Allowed: 'linksAllowed',
+	Logging: 'logging',
+};
+const withLegacy = (entity) => {
+	for (const [legacy, field] of Object.entries(LEGACY_FIELDS)) {
+		Object.defineProperty(entity, legacy, { get: () => entity[field], enumerable: false });
+	}
+	// Supibot: auf Twitch einfach der Channelname
+	Object.defineProperty(entity, 'getFullName', { value: () => entity.name, enumerable: false });
+	Object.defineProperty(entity, 'getDatabaseName', { value: () => entity.name, enumerable: false });
+	return entity;
+};
+
+const fromDoc = (doc) =>
+	withLegacy({
+		id: doc._id,
+		name: doc.name,
+		twitchId: doc.twitchId ?? null,
+		mode: doc.mode,
+		description: doc.description ?? null,
+		linksAllowed: doc.linksAllowed !== false,
+		logging: new Set(doc.logging ?? []),
+		data: doc.data ?? {},
+	});
 
 const load = async () => {
 	const docs = await bot.DB.Channel.find({}).lean();

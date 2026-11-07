@@ -1,4 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
 const { getPermissions } = require('../clients/modules/handler.js');
 const { subcommands } = require('../misc/commands/set/subcommands/index.js');
 
@@ -108,7 +107,7 @@ module.exports = {
 		if (results.length === 1) {
 			return {
 				success: results[0].success,
-				text: results[0].reply,
+				text: results[0].text,
 			};
 		}
 

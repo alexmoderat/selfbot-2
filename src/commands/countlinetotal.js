@@ -1,4 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
 const SupiDate = require('../misc/date.js');
 
 // Supibots commands/countlinetotal: Summe der AUTO_INCREMENT-Werte aller Log-Tabellen, Rate ueber einen Redis-Stand
@@ -13,14 +12,8 @@ module.exports = {
 	usage: 'countlinetotal',
 	flags: ['mention'],
 	execute: async (client, msg) => {
-		const chatLineAmount = await core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('SUM(AUTO_INCREMENT) AS Chat_Lines')
-				.from('INFORMATION_SCHEMA', 'TABLES')
-				.where('TABLE_SCHEMA = %s', 'selfbot_chat_line')
-				.flat('Chat_Lines')
-				.single(),
-		);
+		// Supibot nahm AUTO_INCREMENT aller Log-Tabellen; hier die (geschaetzte) Zahl der Dokumente in chatLines
+		const chatLineAmount = await bot.DB.ChatLine.estimatedDocumentCount();
 
 		if (!chatLineAmount) {
 			return { success: false, text: 'No chat lines are currently being logged!' };

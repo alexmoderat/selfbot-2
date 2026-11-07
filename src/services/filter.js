@@ -111,7 +111,13 @@ const LEGACY_FILTER_FIELDS = {
 };
 const withLegacy = (filter) => {
 	for (const [legacy, field] of Object.entries(LEGACY_FILTER_FIELDS)) {
-		Object.defineProperty(filter, legacy, { get: () => filter[field], set: (value) => (filter[field] = value), enumerable: false });
+		Object.defineProperty(filter, legacy, {
+			get: () => filter[field],
+			set: (value) => {
+				filter[field] = value;
+			},
+			enumerable: false,
+		});
 	}
 	// Es gibt nur Twitch - Filter gelten nie fuer eine bestimmte Plattform
 	Object.defineProperty(filter, 'Platform', { value: null, enumerable: false });

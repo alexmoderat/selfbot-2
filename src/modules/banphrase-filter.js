@@ -38,7 +38,7 @@ const bumpEscalation = (key, now = Date.now()) => {
 
 /**
  * Zustand fuer "moderation" im eval (alexmoderat, 05.11.2026: "bei banphrases triggered sowie hier" - pajbots
- * sb.modules.moderation mit banphrasesTriggered und config). Zeiten in Millisekunden. // TODO(port)
+ * sb.modules.moderation mit banphrasesTriggered und config). Zeiten in Millisekunden.
  */
 const getModerationStats = (now = Date.now()) => {
 	const { reloadInterval, ...stats } = phrases.getStats();

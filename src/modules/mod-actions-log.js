@@ -40,7 +40,7 @@ module.exports = defineChatModule({
 				return;
 			}
 
-			const channelName = msg.channelData?.name ?? context.broadcasterId;
+			const channelName = context.channel?.name ?? context.broadcasterId;
 			const args = data.args ?? [];
 			const targetUser = String(args[0] || data.target_user_login || '?');
 			const modName = data.created_by || '?';
@@ -65,7 +65,7 @@ module.exports = defineChatModule({
 				username: targetUser,
 				userId: data.target_user_id || null,
 				channelName,
-				channel: msg.channelData,
+				channel: context.channel,
 				reason,
 				status: spec.status ?? '',
 				duration: action === 'timeout' ? Number(args[1]) || null : null,

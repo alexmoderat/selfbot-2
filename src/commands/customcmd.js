@@ -1,4 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
 const customCommands = require('../services/custom-commands.js');
 const { uuidPrefix } = require('../services/moderation-phrases.js');
 

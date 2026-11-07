@@ -1,4 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
 const { defineChatModule } = require('../clients/modules/chat-modules.js');
 
 const customCommands = require('../services/custom-commands.js');
@@ -36,11 +35,7 @@ const raidPingMessages = (users, template, seconds = REMINDER_LEAD_S) => {
 };
 
 const getSubscribers = async () => {
-	const rows = await core.Query.getRecordset((rs) =>
-		rs // TODO(port)
-			.select('Channel', 'User_Alias')
-			.from('selfbot_data', 'Raid_Subscriber'),
-	);
+	const rows = (await bot.DB.RaidSubscriber.find({}, { channel: 1, userAlias: 1 }).lean()).map((i) => ({ Channel: i.channel, User_Alias: i.userAlias }));
 
 	const result = new Map();
 	for (const row of rows) {

@@ -1,5 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
-
 // Supibots commands/countline. sb-v2s "messages"/"msgs" zaehlten dasselbe und bleiben als Aliase erhalten
 module.exports = {
 	name: 'countline',
@@ -20,15 +18,8 @@ module.exports = {
 			return { success: false, text: 'No such user exists in the database!' };
 		}
 
-		const lines = await core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('Message_Count AS Total')
-				.from('selfbot_data', 'Message_Meta_User_Alias')
-				.where('User_Alias = %n', userData.id)
-				.where('Channel = %n', channelData.id)
-				.single()
-				.flat('Total'),
-		);
+		const lines = (await bot.DB.MessageMetaUserAlias.findOne({ userAlias: userData.id, channel: channelData.id }, { messageCount: 1 }).lean())
+			?.messageCount;
 
 		const who = userData.id === msg.sender.id ? 'You have' : 'That user has';
 		if (!lines) {

@@ -60,7 +60,13 @@ const LEGACY_REMINDER_FIELDS = {
 const fromDoc = (doc) => {
 	const reminder = fromDocPlain(doc);
 	for (const [legacy, field] of Object.entries(LEGACY_REMINDER_FIELDS)) {
-		Object.defineProperty(reminder, legacy, { get: () => reminder[field], set: (value) => (reminder[field] = value), enumerable: false });
+		Object.defineProperty(reminder, legacy, {
+			get: () => reminder[field],
+			set: (value) => {
+				reminder[field] = value;
+			},
+			enumerable: false,
+		});
 	}
 	Object.defineProperties(reminder, {
 		Platform: { get: () => bot.Twitch, enumerable: false },

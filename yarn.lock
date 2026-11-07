@@ -794,6 +794,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+duration-parser@supinic/duration-parser:
+  version: 1.0.0
+  resolution: "duration-parser@https://github.com/supinic/duration-parser.git#commit=b61d547160c3913e620a64539ee1ef9a4f0c2afb"
+  checksum: 10c0/5c4e9e21700a941c0b86dc2b3996871043b521808b1f6c87b0fde9474932bfd6e9d65f762e91f43586ed6e65dccbd484c1ebeee911274e0ddbc4b3b6aefb11f2
+  languageName: node
+  linkType: hard
+
 "end-of-stream@npm:^1.4.1":
   version: 1.4.5
   resolution: "end-of-stream@npm:1.4.5"
@@ -1666,6 +1673,7 @@ __metadata:
     "@jprochazk/roll-dice": "npm:^0.4.2"
     "@kararty/dank-twitch-irc": "npm:^6.2.0"
     chrono-node: "npm:^2"
+    duration-parser: supinic/duration-parser
     eslint: "npm:^9"
     globals: "npm:^16"
     ioredis: "npm:^5"

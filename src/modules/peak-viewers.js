@@ -12,7 +12,7 @@ module.exports = defineChatModule({
 		videoPlayback: async (context) => {
 			const payload = context.payload;
 			const viewers = Number(payload?.viewers);
-			if (!msg.channelData || payload?.type !== 'viewcount' || !Number.isFinite(viewers) || viewers <= 0) {
+			if (!context.channel || payload?.type !== 'viewcount' || !Number.isFinite(viewers) || viewers <= 0) {
 				return;
 			}
 
@@ -23,8 +23,8 @@ module.exports = defineChatModule({
 			}
 
 			known.set(key, viewers);
-			await recordPeakIfHigher(context.broadcasterId, msg.channelData.name, year, viewers).catch((e) =>
-				console.warn(`[peak-viewers] #${msg.channelData?.name}`, e),
+			await recordPeakIfHigher(context.broadcasterId, context.channel.name, year, viewers).catch((e) =>
+				console.warn(`[peak-viewers] #${context.channel?.name}`, e),
 			);
 		},
 	},

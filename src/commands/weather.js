@@ -68,7 +68,7 @@ module.exports = {
 		{ name: 'provider', type: 'string' },
 	],
 	execute: async (client, msg) => {
-		const args = [...msg.args];
+		let args = [...msg.args];
 		const reportData = determineReportType(args);
 		args = reportData.args;
 

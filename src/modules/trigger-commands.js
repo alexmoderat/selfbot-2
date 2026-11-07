@@ -1,4 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
 const { defineChatModule } = require('../clients/modules/chat-modules.js');
 const triggers = require('../services/trigger-commands.js');
 const { rolesFromBadges } = require('../misc/text-analysis.js');

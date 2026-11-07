@@ -6,19 +6,9 @@ module.exports = {
 	flags: {
 		pipe: false, // suggest itself isn't pipe-able
 	},
-	getLastID: (msg) =>
-		core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('ID')
-				.from('selfbot_data', 'Suggestion')
-				.where('User_Alias = %n', msg.sender.id)
-				.orderBy('ID DESC')
-				.limit(1)
-				.single()
-				.flat('ID'),
-		),
+	getLastID: async (msg) => (await bot.DB.Suggestion.findOne({ userAlias: msg.sender.id }, { _id: 1 }).sort({ _id: -1 }).lean())?._id,
 	unset: async (msg, ID) => {
-		const row = await core.Query.getRow('selfbot_data', 'Suggestion'); // TODO(port)
+		const row = await bot.DB.getRow('Suggestion');
 		await row.load(ID, true);
 		if (!row.loaded) {
 			return {

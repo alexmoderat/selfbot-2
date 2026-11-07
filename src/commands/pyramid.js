@@ -120,7 +120,7 @@ module.exports = {
 		try {
 			const awaitPromise = msg.params.wait ?? true;
 			for (const line of pyramidLines(text, size)) {
-				const promise = bot.Channels.send(channelData, line);
+				const promise = bot.Channels.send(msg.channelData, line);
 				if (awaitPromise) {
 					await promise;
 				}

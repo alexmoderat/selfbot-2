@@ -1,4 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
 const { listOrLink } = require('../misc/list-reply.js');
 
 /**
@@ -35,15 +34,7 @@ module.exports = {
 		}
 
 		const { invocation } = msg;
-		const existing = await core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('ID', 'Data', 'Active')
-				.from('selfbot_data', 'Event_Subscription')
-				.where('User_Alias = %n', msg.sender.id)
-				.where('Type = %s', event.title)
-				.limit(1)
-				.single(),
-		);
+		const existing = bot.DB.toRow('EventSubscription', await bot.DB.EventSubscription.findOne({ userAlias: msg.sender.id, type: event.title }).lean());
 
 		if (!existing && invocation === 'unsubscribe') {
 			return {
@@ -55,21 +46,26 @@ module.exports = {
 		const data = JSON.parse(existing?.Data ?? '{}');
 		data.channels = data.channels ?? [];
 
-		const twitch = bot.Twitch;
 		const channels = args
-			.map((i) => bot.Channels.get(i.toLowerCase().replace(/^[@#]/, ''), twitch))
+			.map((i) => bot.Channels.get(i.toLowerCase().replace(/^[@#]/, '')))
 			.filter((i) => i !== null && i.Mode !== 'Inactive')
 			.map((i) => i.ID);
 
 		const save = async (values) => {
-			const row = await core.Query.getRow('selfbot_data', 'Event_Subscription'); // TODO(port)
+			// values mit Spaltennamen ({ Active, Data })
+			const fields = { ...bot.DB.fromRow('EventSubscription', values), lastEdit: new Date() };
 			if (existing) {
-				await row.load(existing.ID);
+				await bot.DB.EventSubscription.updateOne({ _id: existing.ID }, { $set: fields });
 			} else {
-				row.setValues({ User_Alias: msg.sender.id, Channel: null, Platform: bot.Twitch.ID, Type: event.title });
+				await bot.DB.createWithId('EventSubscription', {
+					userAlias: msg.sender.id,
+					channel: null,
+					platform: bot.Twitch.ID,
+					type: event.title,
+					created: new Date(),
+					...fields,
+				});
 			}
-			row.setValues(values);
-			await row.save({ skipLoad: true });
 		};
 
 		if (channels.length === 0) {

@@ -6,7 +6,16 @@ const dataProperties = require('./data-properties.js');
 const cache = new Map(); // Name -> User
 const pending = new Map();
 
-const fromDoc = (doc) => ({ id: doc._id, name: doc.name, twitchId: doc.twitchId ?? null, startedUsing: doc.startedUsing, data: doc.data ?? {} });
+/** Alte Feldnamen (selfbots User-Klasse) als Getter - fuer portierten Code, der sie noch liest */
+const LEGACY_FIELDS = { ID: 'id', Name: 'name', Twitch_ID: 'twitchId', Started_Using: 'startedUsing' };
+const withLegacy = (entity) => {
+	for (const [legacy, field] of Object.entries(LEGACY_FIELDS)) {
+		Object.defineProperty(entity, legacy, { get: () => entity[field], enumerable: false });
+	}
+	return entity;
+};
+
+const fromDoc = (doc) => withLegacy({ id: doc._id, name: doc.name, twitchId: doc.twitchId ?? null, startedUsing: doc.startedUsing, data: doc.data ?? {} });
 
 const normalizeUsername = (name) => String(name).toLowerCase().replace(/^@/, '').replace(/,$/, '').trim();
 

@@ -3,6 +3,8 @@ const { Logger } = require('../misc/logger.js');
 const coreModels = require('./models/index.js');
 const { dataModels, dataSpecs, counterOf, toRow, fromRow } = require('./models/data.js');
 
+const { createRowFactory } = require('./row.js');
+
 const models = { ...coreModels, ...dataModels };
 
 // MongoDB wie bei DontAddThisBot (bot.DB.<Model>), Verbindung aus config.json
@@ -40,4 +42,7 @@ const createWithId = async (modelName, data) => {
 	return await models[modelName].create({ _id: await nextId(counter), ...data });
 };
 
-module.exports = { ...models, connect, disconnect, nextId, ensureCounterAtLeast, createWithId, dataSpecs, toRow, fromRow, mongoose };
+/** Ersatz fuer core.Query.getRow: bot.DB.getRow('Suggestion') */
+const getRow = createRowFactory({ models, toRow, fromRow, counterOf, nextId });
+
+module.exports = { ...models, connect, disconnect, nextId, ensureCounterAtLeast, createWithId, getRow, dataSpecs, toRow, fromRow, counterOf, mongoose };

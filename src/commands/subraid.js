@@ -14,13 +14,13 @@ module.exports = {
 		}
 
 		if (msg.invocation === 'unsubraid') {
-			const result = await core.Query.raw(`DELETE FROM selfbot_data.Raid_Subscriber WHERE Channel = ${channel.id} AND User_Alias = ${msg.sender.id}`); // TODO(port)
+			const result = await bot.DB.RaidSubscriber.deleteOne({ channel: channel.id, userAlias: msg.sender.id });
 			return {
-				text: result.affectedRows > 0 ? `@${display}, ✅ You have been unsubscribed from raid notifications.` : `@${display}, You were not subscribed.`,
+				text: result.deletedCount > 0 ? `@${display}, ✅ You have been unsubscribed from raid notifications.` : `@${display}, You were not subscribed.`,
 			};
 		}
 
-		await core.Query.raw(`INSERT IGNORE INTO selfbot_data.Raid_Subscriber (Channel, User_Alias) VALUES (${channel.id}, ${msg.sender.id})`); // TODO(port)
+		await bot.DB.RaidSubscriber.updateOne({ channel: channel.id, userAlias: msg.sender.id }, { $setOnInsert: { added: new Date() } }, { upsert: true });
 		return { text: `@${display}, ✅ You will be notified when a raid starts. Type !unsubraid to unsubscribe.` };
 	},
 };

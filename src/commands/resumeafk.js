@@ -18,15 +18,18 @@ module.exports = {
 			};
 		}
 
-		const lastAFK = await core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('*')
-				.from('selfbot_core', 'AFK')
-				.where('User_Alias = %n', msg.sender.id)
-				.orderBy('ID DESC')
-				.limit(1)
-				.single(),
-		);
+		const doc = await bot.DB.AFK.findOne({ userId: msg.sender.id }).sort({ _id: -1 }).lean();
+		// Alte Form wie bisher (Ended als SupiDate fuer addSeconds)
+		const lastAFK = doc
+			? {
+					ID: doc._id,
+					Text: doc.text,
+					Started: doc.started,
+					Status: doc.status,
+					Interrupted_ID: doc.interruptedId,
+					Ended: doc.ended ? new SupiDate(doc.ended) : null,
+				}
+			: null;
 
 		if (!lastAFK) {
 			return {
@@ -62,15 +65,7 @@ module.exports = {
 			Status: lastAFK.Status,
 		});
 
-		const oldAFK = await core.Query.getRow('selfbot_core', 'AFK'); // TODO(port)
-		await oldAFK.load(lastAFK.ID);
-
-		oldAFK.setValues({
-			Interrupted_ID: newAFK.ID,
-			Active: false,
-		});
-
-		await oldAFK.save({ skipLoad: true });
+		await bot.DB.AFK.updateOne({ _id: lastAFK.ID }, { $set: { interruptedId: newAFK.ID, active: false } });
 
 		// Supibot macht den Cooldown hier global (alle Channels); das Cooldown-Objekt gibt es hier noch nicht
 		return {

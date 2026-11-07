@@ -1,5 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
-
 const { Filter } = require('../services/filter.js');
 const { chatLogger } = require('../services/chat-logger.js');
 
@@ -59,16 +57,9 @@ module.exports = {
 
 		let date = chatLogger.getUserLastSeen(targetUser.id);
 		if (!date) {
-			date = await core.Query.getRecordset((rs) =>
-				rs // TODO(port)
-					.select('Last_Message_Posted AS Date')
-					.from('selfbot_data', 'Message_Meta_User_Alias')
-					.where('User_Alias = %n', targetUser.id)
-					.orderBy('Last_Message_Posted DESC')
-					.limit(1)
-					.single()
-					.flat('Date'),
-			);
+			date =
+				(await bot.DB.MessageMetaUserAlias.findOne({ userAlias: targetUser.id }, { lastMessagePosted: 1 }).sort({ lastMessagePosted: -1 }).lean())
+					?.lastMessagePosted ?? null;
 
 			if (!date) {
 				return {

@@ -1,5 +1,4 @@
 const { got } = require('../../../token/got.js');
-const { commands } = require('../../../clients/modules/commands.js');
 const SupiDate = require('../../date.js');
 
 // Wie Supibots commands/randomline/rustlog.ts: Rustlog-kompatible Log-Dienste. Standard ist der eigene justlog

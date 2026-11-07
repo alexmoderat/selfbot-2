@@ -1,4 +1,4 @@
-const { getCommand, commands } = require('../clients/modules/commands.js');
+const { getCommand } = require('../clients/modules/commands.js');
 const { SupiError } = require('../misc/error.js');
 const { Filter, isArgumentsData } = require('../services/filter.js');
 

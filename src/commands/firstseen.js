@@ -1,5 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
-
 // Supibots commands/firstseen: erste Nachricht ueber alle Channels laut Message_Meta_User_Alias
 module.exports = {
 	name: 'firstseen',
@@ -16,57 +14,33 @@ module.exports = {
 		}
 
 		// Fehlende erste Nachrichten aus den Log-Tabellen nachtragen (wie Supibot)
-		const missing = await core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('Channel')
-				.from('selfbot_data', 'Message_Meta_User_Alias')
-				.where('User_Alias = %n', userData.id)
-				.where('First_Message_Posted IS NULL')
-				.flat('Channel'),
-		);
+		const missing = await bot.DB.MessageMetaUserAlias.distinct('channel', { userAlias: userData.id, firstMessagePosted: null });
 
 		if (missing.length > 0 && userData.twitchId) {
 			await Promise.all(
 				missing.map(async (channelId) => {
 					const channelData = bot.Channels.get(channelId);
-					if (!channelData || !(await core.Query.isTablePresent('selfbot_chat_line', channelData.getDatabaseName()))) {
-						// TODO(port)
+					if (!channelData) {
 						return;
 					}
 
-					const message = await core.Query.getRecordset((rs) =>
-						rs // TODO(port)
-							.select('Text', 'Posted')
-							.from('selfbot_chat_line', channelData.getDatabaseName())
-							.where('Platform_ID = %s', userData.twitchId)
-							.orderBy('ID ASC')
-							.limit(1)
-							.single(),
-					);
+					const message = await bot.DB.ChatLine.findOne({ channel: channelData.id, userId: userData.twitchId }).sort({ posted: 1, _id: 1 }).lean();
 					if (!message) {
 						return;
 					}
 
-					const row = await core.Query.getRow('selfbot_data', 'Message_Meta_User_Alias'); // TODO(port)
-					await row.load({ User_Alias: userData.id, Channel: channelData.id }, true);
-					if (row.loaded) {
-						row.setValues({ First_Message_Text: message.Text, First_Message_Posted: message.Posted });
-						await row.save({ skipLoad: true });
-					}
+					await bot.DB.MessageMetaUserAlias.updateOne(
+						{ userAlias: userData.id, channel: channelData.id },
+						{ $set: { firstMessageText: message.text, firstMessagePosted: message.posted } },
+					);
 				}),
 			);
 		}
 
-		const data = await core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('Channel', 'First_Message_Posted AS Date', 'First_Message_Text AS Message')
-				.from('selfbot_data', 'Message_Meta_User_Alias')
-				.where('User_Alias = %n', userData.id)
-				.where('First_Message_Posted IS NOT NULL')
-				.orderBy('First_Message_Posted ASC')
-				.limit(1)
-				.single(),
-		);
+		const first = await bot.DB.MessageMetaUserAlias.findOne({ userAlias: userData.id, firstMessagePosted: { $ne: null } })
+			.sort({ firstMessagePosted: 1 })
+			.lean();
+		const data = first ? { Channel: first.channel, Date: first.firstMessagePosted, Message: first.firstMessageText } : null;
 
 		if (!data) {
 			return {

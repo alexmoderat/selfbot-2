@@ -7,23 +7,13 @@ module.exports = {
 	flags: {
 		pipe: true,
 	},
-	getLastID: (msg) =>
-		core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('ID')
-				.from('selfbot_core', 'Reminder')
-				.where('User_From = %n', msg.sender.id)
-				.orderBy('ID DESC')
-				.limit(1)
-				.single()
-				.flat('ID'),
-		),
+	getLastID: async (msg) => (await bot.DB.Reminder.findOne({ userFrom: msg.sender.id }, { _id: 1 }).sort({ _id: -1 }).lean())?._id,
 	unset: async (msg, ID) => {
-		const row = await core.Query.getRow('selfbot_core', 'Reminder'); // TODO(port)
+		const row = await bot.DB.getRow('Reminder');
 		await row.load(ID, true);
 
 		if (!row.loaded) {
-			const historyRow = await core.Query.getRow('selfbot_core', 'Reminder_History'); // TODO(port)
+			const historyRow = await bot.DB.getRow('ReminderHistory');
 			await historyRow.load(ID, true);
 			return {
 				success: false,
@@ -63,15 +53,9 @@ module.exports = {
 			};
 		}
 
-		const reminderIDs = await core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('ID')
-				.from('selfbot_core', 'Reminder')
-				.where('Schedule IS NOT NULL')
-				.where('User_From = %n', authorUserData.id)
-				.where('User_To = %n', msg.sender.id)
-				.flat('ID'),
-		);
+		const reminderIDs = (
+			await bot.DB.Reminder.find({ schedule: { $ne: null }, userFrom: authorUserData.id, userTo: msg.sender.id }, { _id: 1 }).lean()
+		).map((i) => i._id);
 
 		if (reminderIDs.length === 0) {
 			return {

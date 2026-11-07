@@ -26,7 +26,7 @@ module.exports = defineChatModule({
 	handlers: {
 		usernotice: (context) => {
 			if (context.msgId === 'raid') {
-				suppressChannel(msg.channelData.id);
+				suppressChannel(context.channel.id);
 			}
 		},
 		message: async (context) => {

@@ -1,5 +1,4 @@
 const { got } = require('../token/got.js');
-const { commands } = require('../clients/modules/commands.js');
 const { getPermissions } = require('../clients/modules/handler.js');
 const { parseStreamInfosLine } = require('../modules/stream-infos-restore.js');
 

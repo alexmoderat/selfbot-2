@@ -1,4 +1,4 @@
-const { commands, toListed } = require('../clients/modules/commands.js');
+const { commands } = require('../clients/modules/commands.js');
 const { setTimeout: sleep } = require('node:timers/promises');
 
 const { getConfig } = require('../config.js');

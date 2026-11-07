@@ -246,7 +246,6 @@ const announceBan = async (channel, login, reason, customMessage) => {
 const resolveStreamer = async (login) => await fetchTwitchUser(login).catch(() => null);
 
 module.exports = {
-	escape,
 	watchStreamer,
 	watchTitle,
 	subscribeAll,

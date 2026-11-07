@@ -38,18 +38,17 @@ module.exports = {
 		// Notiz nur anhaengen, wenn sie etwas Neues sagt - sonst kam "Scam: Scam" heraus
 		const categoryLabel = CATEGORY_LABELS[category];
 		const label = note && note.toLowerCase() !== categoryLabel.toLowerCase() ? `${categoryLabel}: ${note}` : categoryLabel;
-		const row = await core.Query.getRow('selfbot_data', 'Moderation_Ban_Log'); // TODO(port)
-		row.setValues({
-			Username: target,
-			Channel_Name: msg.channelData?.name ?? '',
-			Channel: msg.channelData?.id ?? null,
-			Type: 'ban',
-			Reason: `${label} (Reported by ${msg.sender.name})`,
-			Status: 'MANUAL',
-			Mod_Name: msg.sender.name,
-			Automated: false,
+		await bot.DB.createWithId('ModerationBanLog', {
+			username: target,
+			channelName: msg.channelData?.name ?? '',
+			channel: msg.channelData?.id ?? null,
+			type: 'ban',
+			reason: `${label} (Reported by ${msg.sender.name})`,
+			status: 'MANUAL',
+			modName: msg.sender.name,
+			automated: false,
+			created: new Date(),
 		});
-		await row.save({ skipLoad: true });
 
 		return { text: `@${display}, ${target} added to the monitor: "${label}"` };
 	},

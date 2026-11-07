@@ -66,7 +66,7 @@ module.exports = {
 
 		return {
 			success: true,
-			reply,
+			text: reply,
 		};
 	},
 	dynamicDescription: (prefix) => [

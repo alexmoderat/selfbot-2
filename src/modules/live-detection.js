@@ -1,4 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
 const { defineChatModule } = require('../clients/modules/chat-modules.js');
 const { CHANNEL_LIVE_SUBSCRIPTION_TITLE } = require('../commands/subscribe.js');
 
@@ -11,14 +10,19 @@ module.exports = defineChatModule({
 	handlers: {
 		online: async (context) => {
 			const { channel, platform } = context;
-			const subscriptions = await core.Query.getRecordset((rs) =>
-				rs // TODO(port)
-					.select('User_Alias AS userId')
-					.from('selfbot_data', 'Event_Subscription')
-					.where('Active = %b', true)
-					.where('Type = %s', CHANNEL_LIVE_SUBSCRIPTION_TITLE)
-					.where('JSON_CONTAINS(Data, %s, %s) = %n', String(channel.id), '$.channels', 1),
-			);
+			// data ist JSON-Text { channels: [IDs] } (wie in MariaDB); JSON_CONTAINS hier in JS
+			const parse = (raw) => {
+				try {
+					return JSON.parse(raw ?? '{}');
+				} catch {
+					return {};
+				}
+			};
+			const subscriptions = (
+				await bot.DB.EventSubscription.find({ active: true, type: CHANNEL_LIVE_SUBSCRIPTION_TITLE }, { userAlias: 1, data: 1 }).lean()
+			)
+				.filter((i) => (parse(i.data).channels ?? []).map(Number).includes(channel.id))
+				.map((i) => ({ userId: i.userAlias }));
 
 			for (const { userId } of subscriptions) {
 				const userData = await bot.Users.get(userId);

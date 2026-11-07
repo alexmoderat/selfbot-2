@@ -21,7 +21,7 @@ module.exports = defineChatModule({
 			}
 
 			const prefix = parseTopic(context.topic).prefix;
-			const name = msg.channelData?.name ?? context.broadcasterId;
+			const name = context.channel?.name ?? context.broadcasterId;
 			const short = raw.length > MAX_LENGTH ? `${raw.slice(0, MAX_LENGTH)}…` : raw;
 			void sendToDiscord(`**[${prefix}]** \`${name}\`\n\`\`\`json\n${short}\n\`\`\``);
 		},

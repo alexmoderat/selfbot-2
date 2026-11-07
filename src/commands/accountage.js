@@ -1,5 +1,4 @@
 const { got } = require('../token/got.js');
-const { commands } = require('../clients/modules/commands.js');
 const SupiDate = require('../misc/date.js');
 const { ivrUserDataSchema } = require('../misc/schemas.js');
 

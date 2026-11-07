@@ -1,4 +1,4 @@
-const { getCommand, toListed } = require('../clients/modules/commands.js');
+const { getCommand } = require('../clients/modules/commands.js');
 const { formatUsage } = require('../misc/command-listing.js');
 
 /**

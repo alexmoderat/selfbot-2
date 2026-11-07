@@ -7,14 +7,20 @@ module.exports = {
 	flags: ['mod'],
 	execute: async (client, msg) => {
 		const selfName = bot.Twitch.selfName;
-		const base = (rs) => rs.from('selfbot_data', 'Moderation_Ban_Log').where('Type = %s', 'ban').where('Mod_Name = %s', selfName);
+		// Mod_Name verglich MariaDB ohne Gross-/Kleinschreibung
+		const match = { type: 'ban', modName: new RegExp(`^${bot.Utils.escapeRegExp(selfName)}$`, 'i') };
+		const groupBy = (field, limit) => [
+			{ $match: match },
+			{ $group: { _id: `$${field}`, Count: { $sum: 1 } } },
+			{ $sort: { Count: -1 } },
+			...(limit ? [{ $limit: limit }] : []),
+			{ $project: { _id: 0, Label: '$_id', Count: 1 } },
+		];
 
 		const [total, byStatus, byChannel] = await Promise.all([
-			core.Query.getRecordset((rs) => base(rs).select('COUNT(*) AS Count').single().flat('Count')), // TODO(port)
-			core.Query.getRecordset((rs) => base(rs).select('Status AS Label', 'COUNT(*) AS Count').groupBy('Status').orderBy('Count DESC')), // TODO(port)
-			core.Query.getRecordset((rs) =>
-				base(rs).select('Channel_Name AS Label', 'COUNT(*) AS Count').groupBy('Channel_Name').orderBy('Count DESC').limit(5),
-			), // TODO(port)
+			bot.DB.ModerationBanLog.countDocuments(match),
+			bot.DB.ModerationBanLog.aggregate(groupBy('status')),
+			bot.DB.ModerationBanLog.aggregate(groupBy('channelName', 5)),
 		]);
 
 		const statusParts = byStatus.map((i) => `${i.Label || 'unknown'}: ${i.Count}`).join(', ');

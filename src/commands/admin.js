@@ -18,15 +18,7 @@ module.exports = {
 		const target = targetRaw?.toLowerCase().replace('@', '');
 
 		if (action === 'list') {
-			const rows = await core.Query.getRecordset((rs) =>
-				rs // TODO(port)
-					.select('User_Alias.name AS Name')
-					.from('selfbot_core', 'User_Alias_Data')
-					.join({ toDatabase: 'selfbot_core', toTable: 'User_Alias', on: 'User_Alias_Data.User_Alias = User_Alias.id' })
-					.where('Property = %s', 'administrator')
-					.where('Value = %s', 'true')
-					.orderBy('User_Alias.name ASC'),
-			);
+			const rows = (await bot.DB.User.find({ 'data.administrator': true }, { name: 1 }).sort({ name: 1 }).lean()).map((i) => ({ Name: i.name }));
 
 			return {
 				text:

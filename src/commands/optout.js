@@ -1,4 +1,4 @@
-const { getCommand, commands } = require('../clients/modules/commands.js');
+const { getCommand } = require('../clients/modules/commands.js');
 const { Filter } = require('../services/filter.js');
 
 // Supibots commands/optout (mit parseGenericFilterOptions/handleGenericFilter aus Supibots utils/command-utils.ts):
@@ -65,11 +65,10 @@ module.exports = {
 				}
 				data.channel = channelData.id;
 			} else if (params.platform) {
-				const platformData = sb.Platform.get(params.platform); // TODO(port)
-				if (!platformData) {
+				// Es gibt nur Twitch - ein Filter fuer "twitch" ist derselbe wie ohne Plattform
+				if (params.platform.toLowerCase() !== 'twitch') {
 					return { success: false, text: `Platform ${params.platform} does not exist!` };
 				}
-				data.platform = platformData.ID;
 			}
 
 			filter =

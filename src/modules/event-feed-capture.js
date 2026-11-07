@@ -17,7 +17,7 @@ module.exports = defineChatModule({
 			push({
 				ts: Date.now(),
 				prefix: parseTopic(context.topic).prefix,
-				channel: msg.channelData?.name ?? context.broadcasterId,
+				channel: context.channel?.name ?? context.broadcasterId,
 				payload: context.payload,
 			});
 		},

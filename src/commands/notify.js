@@ -1,5 +1,5 @@
 const { uploadToOwnHaste } = require('../misc/haste.js');
-const { escape, resolveStreamer, watchStreamer, watchTitle } = require('../services/notifications.js');
+const { resolveStreamer, watchStreamer, watchTitle } = require('../services/notifications.js');
 
 /**
  * Benachrichtigungen einrichten, aus sb-v2:
@@ -14,20 +14,11 @@ const cleanLogin = (s) =>
 		.replace(/^[@#]+/, '');
 
 const listAll = async (channelId, channelName, display) => {
-	const live = await core.Query.getRecordset((rs) =>
-		rs // TODO(port)
-			.select('Streamer_Login', 'Message')
-			.from('selfbot_data', 'Notify_Live')
-			.where('Channel = %n', channelId)
-			.orderBy('Added ASC'),
-	);
-	const ban = await core.Query.getRecordset((rs) =>
-		rs // TODO(port)
-			.select('Login', 'Message')
-			.from('selfbot_data', 'Notify_Ban')
-			.where('Channel = %n', channelId)
-			.orderBy('Added ASC'),
-	);
+	const live = (await bot.DB.NotifyLive.find({ channel: channelId }).sort({ added: 1 }).lean()).map((i) => ({
+		Streamer_Login: i.streamerLogin,
+		Message: i.message,
+	}));
+	const ban = (await bot.DB.NotifyBan.find({ channel: channelId }).sort({ added: 1 }).lean()).map((i) => ({ Login: i.login, Message: i.message }));
 
 	if (live.length === 0 && ban.length === 0) {
 		return { text: `@${display}, no active event notifications in #${channelName}.` };
@@ -83,26 +74,23 @@ module.exports = {
 
 		if (mode === 'unnotify') {
 			if (sub === 'live') {
-				const result = await core.Query.raw(
-					`DELETE FROM selfbot_data.Notify_Live WHERE Channel = ${channel.id} AND Streamer_Login = ${escape(target)}`,
-				); // TODO(port)
+				const result = await bot.DB.NotifyLive.deleteMany({ channel: channel.id, streamerLogin: target });
 				return {
 					text:
-						result.affectedRows > 0
+						result.deletedCount > 0
 							? `@${display}, Live notification for ${target} removed.`
 							: `@${display}, ${target} was not on the live notify list.`,
 				};
 			}
 
-			const result = await core.Query.raw(`DELETE FROM selfbot_data.Notify_Ban WHERE Channel = ${channel.id} AND Login = ${escape(target)}`); // TODO(port)
+			const result = await bot.DB.NotifyBan.deleteMany({ channel: channel.id, login: target });
 			return {
-				text: result.affectedRows > 0 ? `@${display}, ✅ ${target} removed from ban watch.` : `@${display}, ${target} was not on ban watch.`,
+				text: result.deletedCount > 0 ? `@${display}, ✅ ${target} removed from ban watch.` : `@${display}, ${target} was not on ban watch.`,
 			};
 		}
 
 		const customMessage = args.slice(2).join(' ').trim() || null;
 		const extra = customMessage ? ` Message: "${customMessage}"` : '';
-		const message = customMessage ? escape(customMessage) : 'NULL';
 
 		if (sub === 'live') {
 			const streamer = await resolveStreamer(target);
@@ -111,11 +99,11 @@ module.exports = {
 				return { text: `@${display}, ${target} could not be resolved — please check the name.` };
 			}
 
-			await core.Query.raw(` // TODO(port)
-				INSERT INTO selfbot_data.Notify_Live (Channel, Streamer_ID, Streamer_Login, Message)
-				VALUES (${channel.id}, ${escape(streamer.id)}, ${escape(streamer.login)}, ${message})
-				ON DUPLICATE KEY UPDATE Streamer_Login = VALUES(Streamer_Login), Message = VALUES(Message)
-			`);
+			await bot.DB.NotifyLive.updateOne(
+				{ channel: channel.id, streamerId: streamer.id },
+				{ $set: { streamerLogin: streamer.login, message: customMessage }, $setOnInsert: { added: new Date() } },
+				{ upsert: true },
+			);
 			// Sofort abonnieren, sonst greift es erst mit notify-resync
 			watchStreamer(streamer.id);
 			watchTitle(streamer.id);
@@ -123,10 +111,11 @@ module.exports = {
 			return { text: `@${display}, ✅ Live notification for ${target} added.${extra}` };
 		}
 
-		await core.Query.raw(` // TODO(port)
-			INSERT INTO selfbot_data.Notify_Ban (Channel, Login, Message) VALUES (${channel.id}, ${escape(target)}, ${message})
-			ON DUPLICATE KEY UPDATE Message = VALUES(Message), Notified = NULL
-		`);
+		await bot.DB.NotifyBan.updateOne(
+			{ channel: channel.id, login: target },
+			{ $set: { message: customMessage, notified: null }, $setOnInsert: { added: new Date() } },
+			{ upsert: true },
+		);
 		console.log(`[notify] ban ${target} in #${channel.name}`);
 		return { text: `@${display}, ✅ Watching ${target} for Twitch bans.${extra}` };
 	},

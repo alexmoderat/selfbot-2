@@ -184,3 +184,6 @@ module.exports = {
 	sqlDateTime,
 	tag,
 };
+
+// supi-core reicht parseDuration aus Supinics duration-parser durch (Utils.parseDuration) - hier genauso
+module.exports.parseDuration = require('duration-parser');

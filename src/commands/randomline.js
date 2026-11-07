@@ -1,38 +1,21 @@
-const { commands } = require('../clients/modules/commands.js');
-
 const { randomInt } = require('../misc/command-utils.js');
 const { fetchUserTwitchId } = require('../misc/commands/randomline/twitch-id.js');
 const Rustlog = require('../misc/commands/randomline/rustlog.js');
 
-// Supibots commands/randomline: aus dem eigenen Zeilen-Log (selfbot_chat_line), fuer Channels ohne Zeilen-Log
+// Supibots commands/randomline: aus dem eigenen Zeilen-Log (chatLines), fuer Channels ohne Zeilen-Log
 // ueber Rustlog-kompatible Dienste (eigener justlog, dann IVR). "rq" waehlt nur aus den eigenen Zeilen.
 
 const fetchUserRandomLine = async (userData, channelData) => {
-	const table = channelData.getDatabaseName();
-	const count = await core.Query.getRecordset((rs) =>
-		rs // TODO(port)
-			.select('Message_Count AS Count')
-			.from('selfbot_data', 'Message_Meta_User_Alias')
-			.where('User_Alias = %n', userData.id)
-			.where('Channel = %n', channelData.id)
-			.single()
-			.flat('Count'),
-	);
-
-	if (!count || !userData.twitchId || !(await core.Query.isTablePresent('selfbot_chat_line', table))) {
-		// TODO(port)
+	const count = (await bot.DB.MessageMetaUserAlias.findOne({ userAlias: userData.id, channel: channelData.id }, { messageCount: 1 }).lean())?.messageCount;
+	if (!count || !userData.twitchId) {
 		return { success: false, text: 'That user has not posted any messages in this channel!' };
 	}
 
-	const line = await core.Query.getRecordset((rs) =>
-		rs // TODO(port)
-			.select('Text', 'Posted')
-			.from('selfbot_chat_line', table)
-			.where('Platform_ID = %s', userData.twitchId)
-			.limit(1)
-			.offset(randomInt(1, count) - 1)
-			.single(),
-	);
+	const doc = await bot.DB.ChatLine.findOne({ channel: channelData.id, userId: userData.twitchId })
+		.sort({ posted: 1, _id: 1 })
+		.skip(randomInt(1, count) - 1)
+		.lean();
+	const line = doc ? { Text: doc.text, Posted: doc.posted } : null;
 
 	// Meta zaehlt auch Nachrichten, die noch nicht geschrieben sind -> Offset kann ins Leere zeigen
 	if (!line) {
@@ -43,28 +26,12 @@ const fetchUserRandomLine = async (userData, channelData) => {
 };
 
 const fetchChannelRandomLine = async (channelData) => {
-	const table = channelData.getDatabaseName();
-	const max = (await core.Query.isTablePresent('selfbot_chat_line', table)) // TODO(port)
-		? await core.Query.getRecordset((rs) => rs.select('MAX(ID) AS Total').from('selfbot_chat_line', table).single().flat('Total')) // TODO(port)
-		: undefined;
-
-	if (!max) {
+	// Zufaellige Zeile des Channels ($sample statt "ID >= zufaellige Zahl" ueber eine eigene Tabelle)
+	const [doc] = await bot.DB.ChatLine.aggregate([{ $match: { channel: channelData.id } }, { $sample: { size: 1 } }]);
+	if (!doc) {
 		return { success: false, text: 'This channel does not have enough chat lines saved just yet! Try again in a minute or so.' };
 	}
-
-	const line = await core.Query.getRecordset((rs) =>
-		rs // TODO(port)
-			.select('Text', 'Posted', 'Platform_ID')
-			.from('selfbot_chat_line', table)
-			.where('ID >= %n', randomInt(1, Number(max)))
-			.orderBy('ID ASC')
-			.limit(1)
-			.single(),
-	);
-
-	if (!line) {
-		return { success: false, text: 'No chat lines found for this user!' };
-	}
+	const line = { Text: doc.text, Posted: doc.posted, Platform_ID: doc.userId };
 
 	const user = await bot.Users.getByTwitchId(line.Platform_ID);
 	return { success: true, text: line.Text, date: line.Posted, username: user?.name ?? `(${line.Platform_ID})` };

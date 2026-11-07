@@ -1,5 +1,4 @@
 const { got } = require('../token/got.js');
-const { commands } = require('../clients/modules/commands.js');
 const z = require('zod');
 
 // Supibots commands/topgames (Block 7: Supibot-Version)

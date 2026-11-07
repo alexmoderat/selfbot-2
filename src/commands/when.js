@@ -1,4 +1,4 @@
-const { getCommand, commands } = require('../clients/modules/commands.js');
+const { getCommand } = require('../clients/modules/commands.js');
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 

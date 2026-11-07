@@ -1,5 +1,4 @@
 const { got } = require('../token/got.js');
-const { commands } = require('../clients/modules/commands.js');
 
 const { ivrUserDataSchema } = require('../misc/schemas.js');
 
@@ -32,15 +31,8 @@ module.exports = {
 			return { success: false, text: `${emote} I'm right here ${emote}` };
 		}
 
-		const stalkData = await core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('Last_Message_Text AS Text', 'Last_Message_Posted AS Date', 'Channel AS ChannelID')
-				.from('selfbot_data', 'Message_Meta_User_Alias')
-				.where('User_Alias = %n', targetUser.id)
-				.orderBy('Last_Message_Posted DESC')
-				.limit(1)
-				.single(),
-		);
+		const last = await bot.DB.MessageMetaUserAlias.findOne({ userAlias: targetUser.id }).sort({ lastMessagePosted: -1 }).lean();
+		const stalkData = last ? { Text: last.lastMessageText, Date: last.lastMessagePosted, ChannelID: last.channel } : null;
 
 		if (!stalkData) {
 			return {

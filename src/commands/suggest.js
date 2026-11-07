@@ -1,4 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
 const SupiDate = require('../misc/date.js');
 const unsetSuggestionSubcommand = require('../misc/commands/set/subcommands/suggestion.js');
 
@@ -17,14 +16,7 @@ module.exports = {
 		const args = [...msg.args];
 		const prefix = bot.Config.prefix;
 		if (args.length === 0 || msg.invocation === 'suggestions') {
-			const count = await core.Query.getRecordset((rs) =>
-				rs // TODO(port)
-					.select('COUNT(*) AS Count')
-					.from('selfbot_data', 'Suggestion')
-					.where('User_Alias = %n', msg.sender.id)
-					.single()
-					.flat('Count'),
-			);
+			const count = await bot.DB.Suggestion.countDocuments({ userAlias: msg.sender.id });
 
 			return {
 				success: false,
@@ -38,7 +30,7 @@ module.exports = {
 		}
 
 		const text = args.join(' ');
-		const row = await core.Query.getRow('selfbot_data', 'Suggestion'); // TODO(port)
+		const row = await bot.DB.getRow('Suggestion');
 		if (msg.params.amend) {
 			await row.load(msg.params.amend, true);
 			if (!row.loaded) {

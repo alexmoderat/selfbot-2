@@ -1,4 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
 const { fetchUserEmotes } = require('../misc/twitch-lists.js');
 
 // Supibots commands/botsubs: gesubbte Channels aus den Sub-Emotes des Bot-Accounts, je ein Beispiel-Emote.

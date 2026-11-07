@@ -1,5 +1,4 @@
 const { got } = require('../token/got.js');
-const { commands } = require('../clients/modules/commands.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 const { twitchChannelSchema } = require('../misc/schemas.js');
 

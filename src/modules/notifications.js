@@ -3,7 +3,7 @@ const { announceStreamState, announceTitleChange, recordGameChange } = require('
 
 /**
  * Loest die notify-live- und titlenotify-Ansagen aus (sb-v2: Teil von stream-status). PubSub-Topics der beobachteten
- * Streamer kommen auch ohne gejointen Channel an (msg.channelData ist dann null), entscheidend ist broadcasterId.
+ * Streamer kommen auch ohne gejointen Channel an (context.channel ist dann null), entscheidend ist broadcasterId.
  */
 
 module.exports = defineChatModule({

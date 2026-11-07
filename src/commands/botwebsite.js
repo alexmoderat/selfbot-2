@@ -1,4 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
 const { baseUrl } = require('../misc/user-tokens.js');
 
 /**

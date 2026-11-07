@@ -1,4 +1,3 @@
-const { commands } = require('../../../../clients/modules/commands.js');
 const { fetchGeoLocationData, toUserLocation } = require('../../../command-utils.js');
 
 module.exports = {

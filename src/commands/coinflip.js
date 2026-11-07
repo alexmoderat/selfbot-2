@@ -29,7 +29,7 @@ module.exports = {
 
 		return {
 			success,
-			reply,
+			text: reply,
 		};
 	},
 	dynamicDescription: (prefix) => [

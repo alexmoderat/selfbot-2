@@ -50,8 +50,8 @@ module.exports = defineChatModule({
 	scope: 'global',
 	handlers: {
 		userJoin: async (context) => {
-			if (USERNAME_EVADER_PATTERNS[msg.channelData.name] && msg.channelData.mode === 'Moderator') {
-				await handle(bot.Twitch, msg.channelData, context.userName, null);
+			if (USERNAME_EVADER_PATTERNS[context.channel.name] && context.channel.mode === 'Moderator') {
+				await handle(bot.Twitch, context.channel, context.userName, null);
 			}
 		},
 		lowTrust: async (context) => {

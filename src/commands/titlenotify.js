@@ -1,5 +1,5 @@
 const { listOrLink } = require('../misc/list-reply.js');
-const { escape, resolveStreamer, watchTitle } = require('../services/notifications.js');
+const { resolveStreamer, watchTitle } = require('../services/notifications.js');
 
 /**
  * Alarm auf Titelwechsel eines Streamers, aus sb-v2 - Vorwarnung, die meisten setzen den Titel kurz vor dem
@@ -29,14 +29,7 @@ module.exports = {
 
 		const first = clean(args[0]);
 		if (first === 'list') {
-			const list = await core.Query.getRecordset((rs) =>
-				rs // TODO(port)
-					.select('Streamer_Login')
-					.from('selfbot_data', 'Title_Notify')
-					.where('Channel = %n', channel.id)
-					.where('User_Alias = %n', user.id)
-					.flat('Streamer_Login'),
-			);
+			const list = (await bot.DB.TitleNotify.find({ channel: channel.id, userAlias: user.id }, { streamerLogin: 1 }).lean()).map((i) => i.streamerLogin);
 			return {
 				text:
 					list.length > 0
@@ -51,10 +44,10 @@ module.exports = {
 				return { text: `@${display}, I don't know your Twitch ID yet.` };
 			}
 
-			const id = escape(user.twitchId);
+			const id = user.twitchId;
 			if (first === 'optout') {
-				await core.Query.raw(`INSERT IGNORE INTO selfbot_data.Title_Notify_Optout (Streamer_ID) VALUES (${id})`); // TODO(port)
-				const removed = await core.Query.raw(`DELETE FROM selfbot_data.Title_Notify WHERE Streamer_ID = ${id}`); // TODO(port)
+				await bot.DB.TitleNotifyOptout.updateOne({ streamerId: id }, { $setOnInsert: { added: new Date() } }, { upsert: true });
+				const removed = { affectedRows: (await bot.DB.TitleNotify.deleteMany({ streamerId: id })).deletedCount };
 				return {
 					text:
 						`@${display}, you're opted out — nobody can subscribe to your title changes anymore` +
@@ -62,10 +55,10 @@ module.exports = {
 				};
 			}
 
-			const result = await core.Query.raw(`DELETE FROM selfbot_data.Title_Notify_Optout WHERE Streamer_ID = ${id}`); // TODO(port)
+			const result = await bot.DB.TitleNotifyOptout.deleteOne({ streamerId: id });
 			return {
 				text:
-					result.affectedRows > 0
+					result.deletedCount > 0
 						? `@${display}, you're opted back in — others can subscribe to your title changes again.`
 						: `@${display}, you weren't opted out.`,
 			};
@@ -77,11 +70,9 @@ module.exports = {
 				return { text: `@${display}, Usage: ${msg.invocation} remove <streamer>` };
 			}
 
-			const result = await core.Query.raw(
-				`DELETE FROM selfbot_data.Title_Notify WHERE Channel = ${channel.id} AND User_Alias = ${user.id} AND Streamer_Login = ${escape(streamer)}`,
-			); // TODO(port)
+			const result = await bot.DB.TitleNotify.deleteMany({ channel: channel.id, userAlias: user.id, streamerLogin: streamer });
 			return {
-				text: result.affectedRows > 0 ? `@${display}, title alert for ${streamer} removed.` : `@${display}, you had no alert for ${streamer}.`,
+				text: result.deletedCount > 0 ? `@${display}, title alert for ${streamer} removed.` : `@${display}, you had no alert for ${streamer}.`,
 			};
 		}
 
@@ -97,23 +88,17 @@ module.exports = {
 			return { text: `@${display}, streamer "${first}" not found.` };
 		}
 
-		const optedOut = await core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('Streamer_ID')
-				.from('selfbot_data', 'Title_Notify_Optout')
-				.where('Streamer_ID = %s', streamer.id)
-				.single()
-				.flat('Streamer_ID'),
-		);
+		const optedOut = await bot.DB.TitleNotifyOptout.exists({ streamerId: streamer.id });
 		if (optedOut) {
 			return { text: `@${display}, ${first} opted out of title alerts.` };
 		}
 
 		watchTitle(streamer.id);
-		await core.Query.raw(` // TODO(port)
-			INSERT IGNORE INTO selfbot_data.Title_Notify (Channel, Streamer_ID, Streamer_Login, User_Alias)
-			VALUES (${channel.id}, ${escape(streamer.id)}, ${escape(streamer.login)}, ${user.id})
-		`);
+		await bot.DB.TitleNotify.updateOne(
+			{ channel: channel.id, streamerId: streamer.id, userAlias: user.id },
+			{ $setOnInsert: { streamerLogin: streamer.login, added: new Date() } },
+			{ upsert: true },
+		);
 		console.log(`[titlenotify] ${user.name} -> ${streamer.login} in #${channel.name}`);
 		return { text: `@${display}, ✅ Title alert for ${first} set. You'll be pinged when they change their title — usually shortly before going live.` };
 	},

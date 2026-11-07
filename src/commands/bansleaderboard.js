@@ -13,16 +13,13 @@ module.exports = {
 		const requested = msg.params.top;
 		const limit = requested !== undefined && Number.isFinite(requested) ? Math.min(Math.max(Math.trunc(requested), 1), 100) : 25;
 
-		const rows = await core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('Channel_Name', 'COUNT(*) AS Count')
-				.from('selfbot_data', 'Moderation_Ban_Log')
-				.where('Automated = %b', true)
-				.where('Mod_Name = %s', bot.Twitch.selfName)
-				.groupBy('Channel_Name')
-				.orderBy('Count DESC')
-				.limit(limit),
-		);
+		const rows = await bot.DB.ModerationBanLog.aggregate([
+			{ $match: { automated: true, modName: new RegExp(`^${bot.Utils.escapeRegExp(bot.Twitch.selfName)}$`, 'i') } },
+			{ $group: { _id: '$channelName', Count: { $sum: 1 } } },
+			{ $sort: { Count: -1 } },
+			{ $limit: limit },
+			{ $project: { _id: 0, Channel_Name: '$_id', Count: 1 } },
+		]);
 
 		if (rows.length === 0) {
 			return { text: `@${display}, No auto-bans recorded yet.` };

@@ -2,7 +2,7 @@ const { fetchTwitchUser } = require('../../../util/twitch/twitch-utils.js');
 const { banUser, resolveTarget, restrictUser, unbanUser } = require('../../../services/moderation.js');
 
 // Moderations-Kuerzel fuer den eval (alexmoderat, 05.11.2026: "dieser bot hat ueberall kuerzer" - dort
-// sb.svc.twitch.gql.manageChatRestriction({ channelID, targetID, treatment })). Hier mit Logins statt IDs: // TODO(port)
+// sb.svc.twitch.gql.manageChatRestriction({ channelID, targetID, treatment })). Hier mit Logins statt IDs:
 // "=js return mod.restrict('kattah', 'forsen')". Bans/Timeouts laufen ueber banUser() (Ban-Log, autoban-Schalter).
 
 const TREATMENTS = {

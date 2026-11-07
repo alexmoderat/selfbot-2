@@ -29,33 +29,33 @@ module.exports = defineChatModule({
 			await setStreamState(channel, game).catch((e) => console.warn('[stream-status]', e));
 		},
 		offline: async (context) => {
-			console.log(`[stream-status] Stream down: #${msg.channelData.name}`);
-			await clearStreamState(msg.channelData).catch((e) => console.warn('[stream-status]', e));
+			console.log(`[stream-status] Stream down: #${context.channel.name}`);
+			await clearStreamState(context.channel).catch((e) => console.warn('[stream-status]', e));
 		},
 		raid: (context) => {
 			const payload = context.payload;
-			if (!msg.channelData || !payload?.raid) {
+			if (!context.channel || !payload?.raid) {
 				return;
 			} else if (payload.type === 'raid_go_v2') {
 				console.log(
-					`[stream-status] Raid: #${msg.channelData.name} -> ${payload.raid.target_login ?? '?'} (${payload.raid.viewer_count ?? '?'} Viewer)`,
+					`[stream-status] Raid: #${context.channel.name} -> ${payload.raid.target_login ?? '?'} (${payload.raid.viewer_count ?? '?'} Viewer)`,
 				);
 			} else if (payload.type === 'raid_cancel_v2') {
-				console.log(`[stream-status] Raid abgebrochen: #${msg.channelData.name} -> ${payload.raid.target_login ?? '?'}`);
+				console.log(`[stream-status] Raid abgebrochen: #${context.channel.name} -> ${payload.raid.target_login ?? '?'}`);
 			}
 		},
 		shieldMode: (context) => {
 			const data = context.payload?.data;
-			if (!msg.channelData || !data) {
+			if (!context.channel || !data) {
 				return;
 			}
 
 			const active = Boolean(data.is_shield_mode_active);
 			const by = active ? data.shield_mode_last_activated_by?.login : data.shield_mode_last_deactivated_by?.login;
-			console.log(`[stream-status] Shield Mode ${active ? 'AN' : 'AUS'} in #${msg.channelData.name} (by ${by ?? '?'})`);
+			console.log(`[stream-status] Shield Mode ${active ? 'AN' : 'AUS'} in #${context.channel.name} (by ${by ?? '?'})`);
 		},
 		broadcastSettings: async (context) => {
-			const channel = msg.channelData;
+			const channel = context.channel;
 			const payload = context.payload;
 			if (!channel || !payload) {
 				return;

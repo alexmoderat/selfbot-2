@@ -1,5 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
-
 // Supibots commands/lastline. Supibots Alias "ll" bleibt fuer lastlive (Block 6), wie schon in sb-v2 ("llog")
 module.exports = {
 	name: 'lastline',
@@ -30,14 +28,8 @@ module.exports = {
 			return { success: false, text: "You're right here! 👻 I can see you" };
 		}
 
-		const data = await core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('Last_Message_Text AS message', 'Last_Message_Posted AS posted')
-				.from('selfbot_data', 'Message_Meta_User_Alias')
-				.where('User_Alias = %n', targetUser.id)
-				.where('Channel = %n', channel.id)
-				.single(),
-		);
+		const meta = await bot.DB.MessageMetaUserAlias.findOne({ userAlias: targetUser.id, channel: channel.id }).lean();
+		const data = meta ? { message: meta.lastMessageText, posted: meta.lastMessagePosted } : null;
 
 		if (!data) {
 			return { success: false, text: 'That user has not said anything in this channel!' };

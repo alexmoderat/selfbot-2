@@ -1,3 +1,4 @@
+const sbv2 = require('../database/sbv2.js');
 const { got } = require('../token/got.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 const { uploadToHaste } = require('../misc/haste.js');
@@ -68,13 +69,10 @@ module.exports = {
 			return { text: `@${display}, user "${login}" not found.` };
 		}
 
-		const rows = await core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('channel AS Channel_Name', 'Seen_At', 'Normalized_Text')
-				.from('chat_data', 'first_message_sightings')
-				.where('User_ID = %s', user.id)
-				.orderBy('Seen_At ASC')
-				.limit(MAX_ROWS + 1),
+		// chat_data gehoert sb-v2/utility-bot (geteilte Daten in MariaDB)
+		const rows = await sbv2.query(
+			'SELECT channel AS Channel_Name, seen_at AS Seen_At, normalized_text AS Normalized_Text FROM chat_data.first_message_sightings WHERE user_id = ? ORDER BY seen_at ASC LIMIT ?',
+			[user.id, MAX_ROWS + 1],
 		);
 
 		const truncated = rows.length > MAX_ROWS;

@@ -1,5 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
-
 // Supibots commands/firstline (alexmoderat, 23.10.2026: Supibot-Modell fuer Chat-Logs)
 module.exports = {
 	name: 'firstline',
@@ -35,15 +33,8 @@ module.exports = {
 			return { success: false, text: "Couldn't find that user in my database!" };
 		}
 
-		const metadata = await core.Query.getRecordset((rs) =>
-			rs // TODO(port)
-				.select('First_Message_Posted', 'First_Message_Text')
-				.from('selfbot_data', 'Message_Meta_User_Alias')
-				.where('User_Alias = %n', targetUser.id)
-				.where('Channel = %n', targetChannel.id)
-				.limit(1)
-				.single(),
-		);
+		const meta = await bot.DB.MessageMetaUserAlias.findOne({ userAlias: targetUser.id, channel: targetChannel.id }).lean();
+		const metadata = meta ? { First_Message_Posted: meta.firstMessagePosted, First_Message_Text: meta.firstMessageText } : null;
 
 		if (!metadata) {
 			return {
@@ -57,30 +48,21 @@ module.exports = {
 
 		let { First_Message_Posted: posted, First_Message_Text: text } = metadata;
 		if (!posted || !text) {
-			const tableName = targetChannel.getDatabaseName();
-			if (!(await core.Query.isTablePresent('selfbot_chat_line', tableName)) || !targetUser.twitchId) {
-				// TODO(port)
+			if (!targetUser.twitchId) {
 				const userArticle = targetUser === msg.sender ? 'You have' : 'That user has';
 				return { success: false, text: `${userArticle} no first line data available in ${channelArticle} channel!` };
 			}
 
-			const lineData = await core.Query.getRecordset((rs) =>
-				rs // TODO(port)
-					.select('Text', 'Posted')
-					.from('selfbot_chat_line', tableName)
-					.where('Platform_ID = %s', targetUser.twitchId)
-					.orderBy('ID ASC')
-					.limit(1)
-					.single(),
-			);
+			const line = await bot.DB.ChatLine.findOne({ channel: targetChannel.id, userId: targetUser.twitchId }).sort({ posted: 1, _id: 1 }).lean();
+			const lineData = line ? { Text: line.text, Posted: line.posted } : null;
 			if (!lineData) {
 				return { success: false, text: `That user has no first line data available in ${channelArticle} channel!` };
 			}
 
-			const row = await core.Query.getRow('selfbot_data', 'Message_Meta_User_Alias'); // TODO(port)
-			await row.load({ User_Alias: targetUser.id, Channel: targetChannel.id });
-			row.setValues({ First_Message_Posted: lineData.Posted, First_Message_Text: lineData.Text });
-			await row.save({ skipLoad: true });
+			await bot.DB.MessageMetaUserAlias.updateOne(
+				{ userAlias: targetUser.id, channel: targetChannel.id },
+				{ $set: { firstMessagePosted: lineData.Posted, firstMessageText: lineData.Text } },
+			);
 
 			posted = lineData.Posted;
 			text = lineData.Text;

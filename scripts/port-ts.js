@@ -134,6 +134,14 @@ const API_RENAMES = [
 	[/\bbot\.Channels\.data\.values\(\)/g, 'bot.Channels.all()'],
 	[/\bsb\.ChatModule\.dispatchPubSub\(/g, 'bot.ChatModules.dispatchPubSub('],
 	[/\bsb\.ChatModule\.isAttached\(/g, 'bot.ChatModules.isAttached('],
+	// core.Query.getRow -> bot.DB.getRow (gleiche Bedienung, Collection statt Tabelle)
+	[
+		/\bcore\.Query\.getRow(?:<[^>]*>)?\(\s*["'](selfbot_core|selfbot_data)["']\s*,\s*["']([A-Za-z_]+)["']\s*\)(\s*;?\s*\/\/ TODO\(port\))?/g,
+		(_m, schema, table) => {
+			const core = { User_Alias: 'User', Reminder_History: 'ReminderHistory', Error: 'ErrorLog', Command_Execution: 'CommandExecution' };
+			return `bot.DB.getRow('${schema === 'selfbot_core' ? (core[table] ?? table) : table.replaceAll('_', '')}')`;
+		},
+	],
 	// supi-core Got -> src/token/got.js (gleiche Aufrufform)
 	[/\bcore\.Got\.get\(/g, 'got('],
 	[/\bcore\.Got\.gql\(/g, 'got.gql('],

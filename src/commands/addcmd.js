@@ -1,4 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
 const triggers = require('../services/trigger-commands.js');
 const { uuidPrefix } = require('../services/moderation-phrases.js');
 const { uploadToHaste } = require('../misc/haste.js');

@@ -1,4 +1,3 @@
-const { commands } = require('../clients/modules/commands.js');
 const { uploadToOwnHaste } = require('../misc/haste.js');
 const { formatCountryList, formatTimezoneList } = require('../misc/timezones.js');
 
