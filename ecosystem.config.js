@@ -2,7 +2,7 @@
 module.exports = {
 	apps: [
 		{
-			name: 'selfbot-next',
+			name: 'selfbot',
 			cwd: '/root/selfbot-next',
 			script: './src/main.js',
 			interpreter: '/root/.nvm/versions/node/v24.22.1/bin/node',
