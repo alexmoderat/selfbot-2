@@ -3,57 +3,92 @@ const path = require('node:path');
 const { filterByConfig } = require('../../config.js');
 const { Logger } = require('../../misc/logger.js');
 
-// Chat-Module (bisher classes/chat-module.ts): Dateien in src/modules/ mit
-//   { name, description, scope: 'global' | 'channel', events: { message(data, args) {}, usernotice(...) {}, ... } }
-// scope 'channel' laeuft nur in Channels mit Eintrag in channelChatModules (args = dort gespeicherte Argumente).
-// Events: message, usernotice, clearchat, clearmsg, notice, channelState, online, offline, raw PubSub-Namen
+// Chat-Module (bisher classes/chat-module.ts, gleiche Schnittstelle): Dateien in src/modules/ mit
+//   module.exports = { name, description, scope: 'global' | 'channel', initialize?, destroy?, handlers: { message(context, runtime) {}, ... } }
+// scope 'channel' laeuft nur in Channels mit Eintrag in channelChatModules (runtime.args = dort gespeicherte Argumente).
+// Events: message, online, offline, usernotice, userJoin, follow, channelState, clearchat, clearmsg sowie die
+// PubSub-Namen (raw, modAction, automodQueue, lowTrust, ...). context enthaelt immer platform (bot.Twitch) und channel.
 
 const MODULE_DIR = path.join(__dirname, '..', '..', 'modules');
-const modules = [];
-const channelModules = new Map(); // channelId -> Map(moduleName -> args)
+const definitions = new Map();
+const channelAttachments = new Map(); // channelId -> Map(name -> { args })
+
+const reloadAttachments = async () => {
+	channelAttachments.clear();
+	const names = [...definitions.values()].filter((i) => i.scope === 'channel').map((i) => i.name);
+	if (names.length === 0) {
+		return;
+	}
+	for (const doc of await bot.DB.ChannelChatModule.find({ module: { $in: names } }).lean()) {
+		if (!channelAttachments.has(doc.channelId)) {
+			channelAttachments.set(doc.channelId, new Map());
+		}
+		channelAttachments.get(doc.channelId).set(doc.module, { args: doc.args ?? null });
+	}
+};
 
 const load = async (config) => {
-	modules.length = 0;
+	definitions.clear();
 	const files = existsSync(MODULE_DIR) ? readdirSync(MODULE_DIR).filter((file) => file.endsWith('.js')) : [];
-	const definitions = files.map((file) => require(path.join(MODULE_DIR, file)));
-	for (const definition of filterByConfig(definitions, (i) => i.name, config.modules.modules)) {
-		modules.push(definition);
-		await definition.init?.();
+	const all = files.map((file) => require(path.join(MODULE_DIR, file)));
+	for (const definition of filterByConfig(all, (i) => i.name, config.modules.modules)) {
+		if (definitions.has(definition.name)) {
+			throw new Error(`Doppelter Modulname ${definition.name}`);
+		}
+		definitions.set(definition.name, definition);
 	}
 
-	channelModules.clear();
-	for (const doc of await bot.DB.ChannelChatModule.find({}).lean()) {
-		if (!channelModules.has(doc.channelId)) {
-			channelModules.set(doc.channelId, new Map());
-		}
-		channelModules.get(doc.channelId).set(doc.module, doc.args ?? null);
+	await reloadAttachments();
+	for (const definition of definitions.values()) {
+		await definition.initialize?.();
 	}
-	return modules.length;
+	return definitions.size;
+};
+
+const isAttached = (name, channel) => {
+	const definition = definitions.get(name);
+	if (!definition) {
+		return false;
+	}
+	return definition.scope === 'global' || Boolean(channelAttachments.get(channel?.id)?.has(name));
 };
 
 /** Event an alle passenden Module verteilen; Fehler eines Moduls stoppen die anderen nicht */
-const dispatch = (event, data) => {
-	for (const module of modules) {
-		const handler = module.events?.[event];
+const dispatch = (event, context) => {
+	const channel = context.channel ?? null;
+	const full = { platform: bot.Twitch, ...context };
+	for (const definition of definitions.values()) {
+		const handler = definition.handlers?.[event];
 		if (!handler) {
 			continue;
 		}
 
-		let args = null;
-		if (module.scope === 'channel') {
-			const assigned = data.channel ? channelModules.get(data.channel.id) : null;
-			if (!assigned?.has(module.name)) {
-				continue;
-			}
-			args = assigned.get(module.name);
+		let runtime;
+		if (definition.scope === 'global') {
+			runtime = { args: null };
+		} else if (channel) {
+			runtime = channelAttachments.get(channel.id)?.get(definition.name);
+		}
+		if (!runtime) {
+			continue;
 		}
 
 		Promise.resolve()
-			.then(() => handler(data, args))
-			.catch((e) => Logger.warn(`[module] ${module.name}/${event} fehlgeschlagen`, e));
+			.then(() => handler(full, runtime))
+			.catch((e) => Logger.warn('Chat-Modul-Fehler', { module: definition.name, event, channel: channel?.name ?? null, error: e }));
 	}
 };
 
-const list = () => [...modules];
+/** PubSub-Events: ohne Channel nur an globale Module (gleiche Verteilung wie dispatch) */
+const dispatchPubSub = (event, context) => dispatch(event, context);
 
-module.exports = { load, dispatch, list };
+const names = () => [...definitions.keys()];
+const list = () => [...definitions.values()];
+
+const destroy = () => {
+	for (const definition of definitions.values()) {
+		definition.destroy?.();
+	}
+};
+
+module.exports = { load, reloadAttachments, isAttached, dispatch, dispatchPubSub, names, list, destroy };

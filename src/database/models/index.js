@@ -200,4 +200,27 @@ const ChannelChatModule = define(
 	[[{ channelId: 1, module: 1 }, { unique: true }]],
 );
 
-module.exports = { Counter, Channel, User, CommandExecution, ErrorLog, Filter, AFK, Reminder, ReminderHistory, Banphrase, ChannelChatModule };
+/** Chat-Zeilen (bisher eine Tabelle je Channel in selfbot_chat_line): channel = Channel-ID, userId = Twitch-User-ID */
+const ChatLine = define(
+	'ChatLine',
+	{
+		channel: { type: Number, required: true },
+		userId: { type: String, required: true },
+		text: { type: String, required: true },
+		posted: { type: Date, required: true },
+		/** ID aus MariaDB (Migration), je Channel eindeutig */
+		legacyId: { type: Number, default: undefined },
+	},
+	{ collection: 'chatLines' },
+	[
+		[{ channel: 1, posted: -1 }, {}],
+		[{ channel: 1, userId: 1, posted: -1 }, {}],
+		[{ userId: 1, posted: -1 }, {}],
+		[
+			{ channel: 1, legacyId: 1 },
+			{ unique: true, partialFilterExpression: { legacyId: { $type: 'number' } } },
+		],
+	],
+);
+
+module.exports = { Counter, Channel, User, CommandExecution, ErrorLog, Filter, AFK, Reminder, ReminderHistory, Banphrase, ChannelChatModule, ChatLine };

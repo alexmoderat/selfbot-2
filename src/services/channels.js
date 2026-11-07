@@ -69,7 +69,9 @@ const saveProperty = async (channel, property, value) => {
 	channel[field] = value;
 };
 
-const add = async (name, mode, twitchId) => {
+/** Neuer Channel; auch in der alten Form add(name, platform, mode, twitchId) aufrufbar */
+const add = async (name, ...rest) => {
+	const [mode, twitchId] = rest[0] && typeof rest[0] === 'object' ? rest.slice(1) : rest;
 	if (getByTwitchId(twitchId)) {
 		throw new Error(`Channel already exists (${name}, ${twitchId})`);
 	}
@@ -87,7 +89,7 @@ const send = async (channel, message, options = {}) => {
 	if (!isWritable(channel)) {
 		return;
 	}
-	await bot.Twitch.send(channel, message, options);
+	await bot.Twitch.send(message, channel, options);
 };
 
 module.exports = { load, get, getByTwitchId, all, getJoinable, isWritable, getData, setData, saveProperty, add, isLive, send, fromDoc };

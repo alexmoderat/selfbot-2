@@ -17,12 +17,12 @@ global.bot = {
 };
 
 const { client, connect } = require('./util/twitch/connections.js');
-const { Twitch, send, sendToLogin, whisper, join, part, loadLiveChannels } = require('./clients/twitch.js');
+const { Twitch, platform } = require('./clients/twitch.js');
 const { startCmds, commands } = require('./clients/modules/commands.js');
 const ChatModules = require('./clients/modules/chat-modules.js');
 
 bot.Client = client;
-bot.Twitch = { send, sendToLogin, whisper, join, part };
+bot.Twitch = platform;
 bot.Channels = require('./services/channels.js');
 bot.Users = require('./services/users.js');
 bot.Filter = require('./services/filter.js');
@@ -65,7 +65,7 @@ const start = async () => {
 	await connect();
 
 	// Live-Status: beim Start und alle 2 Minuten per Helix (bis PubSub stream-up/-down portiert ist)
-	const refreshLive = () => loadLiveChannels().catch((e) => Logger.warn('[twitch] Live-Status nicht ladbar', e.message));
+	const refreshLive = () => platform.loadLiveChannels().catch((e) => Logger.warn('[twitch] Live-Status nicht ladbar', e.message));
 	await refreshLive();
 	setInterval(refreshLive, 2 * 60_000).unref();
 

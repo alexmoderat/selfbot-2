@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { Logger } = require('../misc/logger.js');
 const coreModels = require('./models/index.js');
-const { dataModels, dataSpecs, counterOf } = require('./models/data.js');
+const { dataModels, dataSpecs, counterOf, toRow, fromRow } = require('./models/data.js');
 
 const models = { ...coreModels, ...dataModels };
 
@@ -40,4 +40,4 @@ const createWithId = async (modelName, data) => {
 	return await models[modelName].create({ _id: await nextId(counter), ...data });
 };
 
-module.exports = { ...models, connect, disconnect, nextId, ensureCounterAtLeast, createWithId, dataSpecs, mongoose };
+module.exports = { ...models, connect, disconnect, nextId, ensureCounterAtLeast, createWithId, dataSpecs, toRow, fromRow, mongoose };

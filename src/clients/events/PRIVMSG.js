@@ -70,7 +70,7 @@ const buildMsgData = (msg, channel) => {
 
 		send: async function (message, reply = false) {
 			try {
-				await bot.Twitch.send(this.channelData, message, { replyTo: reply ? this.id : null });
+				await bot.Twitch.send(message, this.channelData, { replyTo: reply ? this.id : null });
 			} catch (err) {
 				Logger.log(LogLevel.ERROR, `Error while sending message: ${err.message}`);
 			}
@@ -112,11 +112,21 @@ const onMessage = async (msg) => {
 
 	const isCommand = await handler(msgData);
 
+	// Form wie bisher (TwitchMessageData), damit die portierten Chat-Module gleich lesen
 	ChatModules.dispatch('message', {
 		channel,
 		user: msgData.sender,
 		message: msgData.text,
 		messageId: msgData.id,
+		data: {
+			messageId: msgData.id,
+			displayName: msgData.displayName,
+			badges: msgData.user.badges,
+			color: msgData.user.colorRaw || null,
+			replyParentMessageId: msgData.replyParentId,
+			messageType: msgData.isAction ? 'action' : 'text',
+			isFirstMessage: msgData.firstMessage,
+		},
 		msg: msgData,
 		isCommand,
 	});

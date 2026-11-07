@@ -26,6 +26,7 @@
 		"chrono-node": "^2",
 		"ioredis": "^5",
 		"jimp": "^1.6.0",
+		"mariadb": "^3",
 		"mongoose": "^8",
 		"node-cron": "^4",
 		"transliteration": "^2",
@@ -36,7 +37,6 @@
 		"@eslint/js": "^9",
 		"eslint": "^9",
 		"globals": "^16",
-		"mariadb": "^3",
 		"prettier": "^3"
 	}
 }

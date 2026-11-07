@@ -46,8 +46,13 @@ const API_RENAMES = [
 	[/\bcore\.Cache\.getByPrefix\(/g, 'bot.Redis.getJSON('],
 	[/\bcore\.Cache\.setByPrefix\(/g, 'bot.Redis.setJSON( /* TODO(port): expiry-Objekt -> ms */ '],
 	[/\bsb\.Channel\.getJoinableForPlatform\([^)]*\)/g, 'bot.Channels.getJoinable()'],
-	[/\bsb\.Channel\.getBySpecificId\(([^,()]+),[^)]*\)/g, 'bot.Channels.getByTwitchId($1)'],
-	[/\bsb\.Channel\.get\(([^,()]+)(?:,[^)]*)?\)/g, 'bot.Channels.get($1)'],
+	// Plattform-Argument (immer Twitch) entfaellt; zuerst die Form mit sb.Platform.get(...), dann der Rest
+	[
+		/\bsb\.Channel\.(get|getBySpecificId)\(([^,()]+),\s*(?:sb\.Platform\.get(?:Asserted)?\("twitch"\)|this|platform|twitch|context\.platform)\)/g,
+		(_m, kind, arg) => `bot.Channels.${kind === 'get' ? 'get' : 'getByTwitchId'}(${arg})`,
+	],
+	[/\bsb\.Channel\.getBySpecificId\(([^,()]+)\)/g, 'bot.Channels.getByTwitchId($1)'],
+	[/\bsb\.Channel\.get\(([^,()]+)\)/g, 'bot.Channels.get($1)'],
 	[/\bsb\.Channel\b/g, 'bot.Channels'],
 	[/\bsb\.User\.getOrCreate\(/g, 'bot.Users.getOrCreate('],
 	[/\bsb\.User\.get\(/g, 'bot.Users.get('],
@@ -83,7 +88,7 @@ const API_RENAMES = [
 	[/\bcontext\.platform\b/g, 'TODO_PORT_PLATFORM'],
 	// Entitaeten: Felder von Channel-/User-Objekten in camelCase
 	[
-		/\b(\w*(?:[cC]hannel|[uU]ser|sender|target|author|from|to)\w*)(\??)\.(Name|ID|Mode|Description)\b/g,
+		/\b(\w*(?:[cC]hannel|[uU]ser)\w*|sender)(\??)\.(Name|ID|Mode|Description)\b/g,
 		(_m, receiver, optional, field) => `${receiver}${optional}.${{ Name: 'name', ID: 'id', Mode: 'mode', Description: 'description' }[field]}`,
 	],
 	[/\.Specific_ID\b/g, '.twitchId'],
@@ -100,6 +105,17 @@ const API_RENAMES = [
 	// Redis mit Ablaufzeit: setByPrefix(key, value, { expiry: x }) -> setJSON(key, value, x)
 	[/bot\.Redis\.setJSON\( \/\* TODO\(port\): expiry-Objekt -> ms \*\/ ([^;]*?), \{ expiry: ([^{}]+?) \}\)/g, 'bot.Redis.setJSON($1, $2)'],
 	[/bot\.Redis\.setJSON\( \/\* TODO\(port\): expiry-Objekt -> ms \*\/ ([^;{}]*?)\)/g, 'bot.Redis.setJSON($1)'],
+	// Plattform-Objekt -> bot.Twitch (gleiche Methodennamen)
+	[/TODO_PORT_PLATFORM/g, 'bot.Twitch'],
+	[/\bsb\.Platform\.list\b/g, '[bot.Twitch]'],
+	// Channel-Methoden -> Service-Funktionen
+	[/\b([\w.]+)\.saveProperty\(/g, 'bot.Channels.saveProperty($1, '],
+	[/\b(\w*[cC]hannel\w*)\.send\(/g, 'bot.Channels.send($1, '],
+	[/\b(\w*[cC]hannel\w*)\.isLive\(\)/g, 'bot.Channels.isLive($1)'],
+	[/\b(\w*[cC]hannel\w*)\.writable\b/g, 'bot.Channels.isWritable($1)'],
+	[/\bbot\.Channels\.data\.values\(\)/g, 'bot.Channels.all()'],
+	[/\bsb\.ChatModule\.dispatchPubSub\(/g, 'bot.ChatModules.dispatchPubSub('],
+	[/\bsb\.ChatModule\.isAttached\(/g, 'bot.ChatModules.isAttached('],
 	// supi-core Got -> src/token/got.js (gleiche Aufrufform)
 	[/\bcore\.Got\.get\(/g, 'got('],
 	[/\bcore\.Got\.gql\(/g, 'got.gql('],
