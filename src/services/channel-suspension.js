@@ -20,10 +20,13 @@ const suspendChannel = async (channel, reason) => {
 	return true;
 };
 
-/** Wieder aktiv: vorherigen Mode herstellen und neu joinen; nur fuer vom Bot verwaltete Gruende */
-const reactivateChannel = async (channel, platform = bot.Twitch) => {
+/**
+ * Wieder aktiv: vorherigen Mode herstellen und neu joinen; nur fuer die angegebenen Gruende (Standard: die vom Bot
+ * verwalteten). "bot_banned" gibt nur das Unban-Event aus chatrooms-user-v1 frei.
+ */
+const reactivateChannel = async (channel, platform = bot.Twitch, reasons = AUTO_MANAGED_REASONS) => {
 	const suspension = await getSuspension(channel);
-	if (!suspension || !AUTO_MANAGED_REASONS.has(suspension.reason)) {
+	if (!suspension || !reasons.has(suspension.reason)) {
 		return false;
 	}
 

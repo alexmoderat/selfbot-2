@@ -1,6 +1,6 @@
 const { defineChatModule } = require('../clients/modules/chat-modules.js');
 
-const { suspendChannel } = require('../services/channel-suspension.js');
+const { reactivateChannel, suspendChannel } = require('../services/channel-suspension.js');
 
 /**
  * Wertet Meldungen zum Zustand eines Channels aus, aus sb-v2 (dort IRC-NOTICEs). Ohne IRC kommen sie hier als
@@ -12,8 +12,11 @@ const { suspendChannel } = require('../services/channel-suspension.js');
  *   msg_banned              Bot selbst gebannt -> Channel inaktiv setzen wie DontAddThisBot (isChannel: false), kein
  *                           Auto-Ban des Owners mehr (alexmoderat, 08.11.2026). Grund "bot_banned" holt ban-check nicht
  *                           automatisch zurueck - ob der Bot entbannt wurde, sieht er nicht; zurueck nur per Hand (join).
+ * Dazu wie DontAddThisBot (pubSubHandler, user_moderation_action) die Bans des eigenen Kontos aus PubSub
+ * chatrooms-user-v1: ban -> inaktiv (bot_banned), unban -> wieder aktiv mit dem vorherigen Mode.
  * Ein gesperrter Channel, in dem der Bot schon ist, meldet sich nicht zwingend - das uebernimmt der Cron ban-check.
  */
+const BOT_BANNED = new Set(['bot_banned']);
 const flcChannels = new Map();
 
 const getFlcChannels = () => flcChannels;
@@ -45,6 +48,24 @@ module.exports = defineChatModule({
 			}
 
 			console.log(`[channel-suspension] #${channel.name}: ${msgId} - "${text}"`);
+		},
+		chatroomsUser: async (context) => {
+			const { type, data } = context.payload ?? {};
+			if (type !== 'user_moderation_action' || !data?.channel_id) {
+				return;
+			}
+
+			const channel = bot.Channels.getByTwitchId(String(data.channel_id));
+			console.warn(`[channel-suspension] Eigenes Konto: ${data.action} in #${channel?.name ?? data.channel_id}`);
+			if (!channel) {
+				return;
+			}
+
+			if (data.action === 'ban') {
+				await suspendChannel(channel, 'bot_banned');
+			} else if (data.action === 'unban' && (await reactivateChannel(channel, bot.Twitch, BOT_BANNED))) {
+				console.log(`[channel-suspension] #${channel.name}: Bot entbannt, wieder aktiv`);
+			}
 		},
 	},
 });
