@@ -198,15 +198,17 @@
     .stat-sub { font-size: 14px; color: #777777; margin-top: 4px; }
     #page-overview { max-width: none; padding-top: 20px; }
     #page-use { max-width: none; padding: 0; }
-    #page-reminders { max-width: 1600px; }
+    #page-reminders { max-width: 1500px; }
     /* ninou2, 07.11.2026: "should be the same space between WHEN, WHERE, CREATED, REMOVE" - eine Tabelle (subgrid), die
        Spalten sind so breit wie ihr laengster Inhalt, dazwischen ueberall derselbe Abstand */
     /* ninou2, 08.11.2026: "Reminder TEXT should [have] a way bigger space", "status size perfect", "the remaining space devided evenly between WHEN/WHERE/CREATED" */
-    /* danach: "[reminders] size a bit bigger", "[where] waay smaller", "WHEN AND CREATED divide the lefting space" */
-    .reminder-table { display: grid; grid-template-columns: minmax(180px, 2.4fr) minmax(0, 1fr) minmax(0, 190px) minmax(0, 1fr) auto; column-gap: 48px; }
-    .reminder-table .data-table-head, .reminder-table .data-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; column-gap: 48px; }
+    /* danach: "the exact space right between WHEN AND WHERE, this exact space should be the same between WHERE AND CREATED",
+       "move STATUS a bit close to CREATED", "so the dashbord table will be a bit smaller", "WHEN move a little bit to REMINDER" */
+    /* Spaltenbreiten aus ninou2s Layout-Screenshot, 08.11.2026 ("build the layout so [you] copy"): 43 / 17 / 15,6 / 13,4 / 10,4 Prozent */
+    .reminder-table { display: grid; grid-template-columns: minmax(180px, 43.2fr) minmax(0, 16.9fr) minmax(0, 15.6fr) minmax(0, 13.4fr) minmax(max-content, 10.4fr); column-gap: 12px; }
+    .reminder-table .data-table-head, .reminder-table .data-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; column-gap: 12px; }
+    .reminder-table .data-row > :first-child { margin-right: 24px; }
     /* schmale Fenster: Spalten duerfen umbrechen, sonst bleibt fuer den Reminder-Text kein Platz */
-    @media (max-width: 1199px) { .reminder-table { column-gap: 24px; } .reminder-table .data-table-head, .reminder-table .data-row { column-gap: 24px; } }
     .reminder-text { overflow-wrap: anywhere; }
     /* ninou2, 08.11.2026: "the history button be orange background" */
     /* ninou2, 08.11.2026: "all three should [be] same size", "the button should not [change] size" - aktiv und inaktiv gleich gross */
@@ -215,9 +217,20 @@
     .history-toolbar .btn-cancel { border-color: #282828; }
     #reminderHistoryBtn { background: #ff9f43; border-color: #ff9f43; color: #111111; }
     #reminderHistoryBtn:hover { background: #f08a24; border-color: #f08a24; color: #111111; }
-    /* ninou2, 08.11.2026: "when u are [in] the history tab the button become glowing or something" */
-    /* danach: "glow even [more] AND get that lighting thingy over its box outline", "it glow purple AND its text become white" */
-    #reminderHistoryBtn.btn-primary { color: #ffffff; border-color: #c9a6ff; box-shadow: 0 0 6px 1px #c9a6ff, 0 0 22px 7px #9b6bdfcc; }
+    /* ninou2, 08.11.2026, in der History: "for the button ,, just make the background purple", "remove the glow that outline the button" */
+    /* danach: "history purple [a bit] dark", "lightning that should cirle the button outline" - ein Lichtpunkt laeuft am Rand um den Button */
+    #reminderHistoryBtn.btn-primary { background: #7a4fc0; border-color: #7a4fc0; color: #ffffff; position: relative; }
+    #reminderHistoryBtn.btn-primary:hover { background: #6a42ab; border-color: #6a42ab; color: #ffffff; }
+    @property --rem-bolt { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+    @keyframes rem-bolt { to { --rem-bolt: 360deg; } }
+    #reminderHistoryBtn.btn-primary::before {
+      content: ''; position: absolute; inset: -3px; border-radius: 10px; padding: 2px; pointer-events: none;
+      background: conic-gradient(from var(--rem-bolt), transparent 0 68%, #c9a6ff 86%, #ffffff 97%, transparent 100%);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+      animation: rem-bolt 1.8s linear infinite;
+    }
+    @media (prefers-reduced-motion: reduce) { #reminderHistoryBtn.btn-primary::before { animation: none; } }
     /* ninou2, 08.11.2026: "My Reminders should be Clickable too", "that bring back also to active reminders dashbord" */
     .reminder-title-link { background: none; border: none; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; cursor: pointer; }
     .reminder-title-link:hover { color: #3a9bd0; }
@@ -231,7 +244,12 @@
     .reminder-table .rem-when { color: #ff5c5c; }
     .reminder-table .rem-where { color: #3fb950; overflow-wrap: anywhere; }
     .reminder-table .rem-created { color: #9b6bdf; }
-    .reminder-table .rem-date { color: #ffffff; } /* ninou2, 08.11.2026: "(X/X/X) should be another color", "white" */
+    /* ninou2, 08.11.2026: "(X/X/X) both should be always [in] the line under", "the exact middle [of] the text above them" */
+    /* danach: "WHEN WHERE CREATED STATUS , all should be exactly [in] the middle [of] their content" */
+    .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created, .reminder-table .rem-status { justify-self: center; text-align: center; }
+    .reminder-table .data-table-head > div:not(:first-child) { text-align: center; }
+    @media (max-width: 1000px) { .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created, .reminder-table .rem-status { justify-self: start; text-align: left; } }
+    .reminder-table .rem-date { display: block; color: #ffffff; } /* ninou2, 08.11.2026: "(X/X/X) should be another color", "white" */
     .supibot-only-link { color: #3a9bd0; font-size: 19.5px; font-weight: 700; letter-spacing: 0; text-decoration: none; border: 1px solid #282828; border-radius: 8px; padding: 4px 12px; }
     .supibot-only-link:hover { border-color: #1f7fb3; color: #8cc6e6; }
     .reminder-text.editable { cursor: text; border-radius: 6px; margin: -4px -6px; padding: 4px 6px; }
@@ -1590,7 +1608,7 @@
               <div class="cell-muted rem-when">${esc(item.when)}${reminderDate(item.dueAt)}</div>
               <div class="cell-muted rem-where">${esc(item.where)}</div>
               <div class="cell-muted rem-created" title="created">${esc(item.created)}${reminderDate(item.createdAt)}</div>
-              <div class="cell-muted">${item.cancelled ? 'Removed' : 'Delivered'}</div>
+              <div class="cell-muted rem-status">${item.cancelled ? 'Removed' : 'Delivered'}</div>
             </div>`).join('')}
         </div>` : buildEmpty('No past reminders in this period.');
       document.getElementById('reminderHistory').innerHTML = toolbar + table;
