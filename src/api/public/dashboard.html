@@ -1458,6 +1458,13 @@
     // ── Stats / Overview ───────────────────────────────────────────────────────
     // ninou2, 07.11.2026: "there when and where, i suggest to add a 3rd option to sort them date they were created"
     let reminderCache = [];
+    // ninou2, 08.11.2026: "next to the red text should be something similar to this (day/month/year)", "exemple : (05/11/26)"
+    const reminderDate = ms => {
+      if (ms === null || ms === undefined) return '';
+      const date = new Date(ms);
+      const part = value => String(value).padStart(2, '0');
+      return ` (${part(date.getDate())}/${part(date.getMonth() + 1)}/${part(date.getFullYear() % 100)})`;
+    };
     // Ueberschriften When/Where/Created klicken = danach sortieren, nochmal klicken = umgekehrt
     // (ninou2, 07.11.2026: "make the words : WHEN WHERE CREATED clickable with another color", "from near to far" / "or contrary")
     const REMINDER_SORTS = {
@@ -1498,7 +1505,7 @@
               ${item.editable
                 ? `<div class="reminder-text editable" id="rtext-${esc(item.source)}-${Number(item.id)}" title="click to edit" onclick="editWebReminder('${esc(item.source)}', ${Number(item.id)})">${esc(item.text)}</div>`
                 : `<div class="reminder-text">${esc(item.text)}</div>`}
-              <div class="cell-muted rem-when">${esc(item.when)}</div>
+              <div class="cell-muted rem-when">${esc(item.when)}${reminderDate(item.dueAt)}</div>
               <div class="cell-muted rem-where">${esc(item.where)}</div>
               <div class="cell-muted rem-created" title="created">${esc(item.created)}</div>
               <div class="cell-actions" id="ract-${esc(item.source)}-${Number(item.id)}">
@@ -1513,9 +1520,17 @@
     let reminderHistoryOpen = false;
     let reminderHistory = [];
     let historyPeriod = { mode: 'all', value: null };
+    // ninou2, 08.11.2026: "the defaut sort by should be from the near when happened to the very far", "Status word should be clickable",
+    // "sort them by deivred/removed". Ohne Zeitpunkt zaehlt das Erstellungsdatum, damit solche Eintraege nicht ganz oben landen.
+    const historyMoment = item => item.dueAt ?? item.createdAt;
+    const HISTORY_SORTS = {
+      ...REMINDER_SORTS,
+      when: (a, b) => historyMoment(b) - historyMoment(a) || b.createdAt - a.createdAt,
+      status: (a, b) => Number(a.cancelled) - Number(b.cancelled) || historyMoment(b) - historyMoment(a)
+    };
     let historySort = (() => {
-      try { const saved = JSON.parse(localStorage.getItem('reminderHistorySort')); if (REMINDER_SORTS[saved?.key]) return saved; } catch {}
-      return { key: 'created', desc: false };
+      try { const saved = JSON.parse(localStorage.getItem('reminderHistoryOrder')); if (HISTORY_SORTS[saved?.key]) return saved; } catch {}
+      return { key: 'when', desc: false };
     })();
     const HISTORY_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const historyYear = item => String(new Date(item.createdAt).getFullYear());
@@ -1529,7 +1544,7 @@
 
     function setHistorySort(key) {
       historySort = (historySort.key === key) ? { key, desc: !historySort.desc } : { key, desc: false };
-      try { localStorage.setItem('reminderHistorySort', JSON.stringify(historySort)); } catch {}
+      try { localStorage.setItem('reminderHistoryOrder', JSON.stringify(historySort)); } catch {}
       renderReminderHistory();
     }
     function setHistoryPeriod(mode) {
@@ -1544,7 +1559,7 @@
     function renderReminderHistory() {
       const { mode, value } = historyPeriod;
       const shown = reminderHistory.filter(item => mode === 'all' || (mode === 'year' ? historyYear(item) : historyMonth(item)) === value);
-      const list = [...shown].sort(REMINDER_SORTS[historySort.key]);
+      const list = [...shown].sort(HISTORY_SORTS[historySort.key]);
       if (historySort.desc) list.reverse();
       const periodBtn = (key, label) => `<button type="button" class="btn ${mode === key ? 'btn-primary' : 'btn-cancel'}" onclick="setHistoryPeriod('${key}')">${label}</button>`;
       const select = (mode === 'all') ? '' : `<select class="level-select history-select" onchange="setHistoryValue(this.value)">${historyOptions(mode).map(option =>
@@ -1552,11 +1567,11 @@
       const toolbar = `<div class="history-toolbar">${periodBtn('all', 'All time')}${periodBtn('year', 'Per year')}${periodBtn('month', 'Per month')}${select}<span class="count-pill">${list.length}</span></div>`;
       const table = list.length ? `
         <div class="data-table reminder-table">
-          <div class="data-table-head"><div>Reminder</div><div>${sortHead('when', 'When', historySort, 'setHistorySort')}</div><div>${sortHead('where', 'Where', historySort, 'setHistorySort')}</div><div>${sortHead('created', 'Created', historySort, 'setHistorySort')}</div><div>Status</div></div>
+          <div class="data-table-head"><div>Reminder</div><div>${sortHead('when', 'When', historySort, 'setHistorySort')}</div><div>${sortHead('where', 'Where', historySort, 'setHistorySort')}</div><div>${sortHead('created', 'Created', historySort, 'setHistorySort')}</div><div>${sortHead('status', 'Status', historySort, 'setHistorySort')}</div></div>
           ${list.map(item => `
             <div class="data-row">
               <div class="reminder-text">${esc(item.text)}</div>
-              <div class="cell-muted rem-when">${esc(item.when)}</div>
+              <div class="cell-muted rem-when">${esc(item.when)}${reminderDate(item.dueAt)}</div>
               <div class="cell-muted rem-where">${esc(item.where)}</div>
               <div class="cell-muted rem-created" title="created">${esc(item.created)}</div>
               <div class="cell-muted">${item.cancelled ? 'Removed' : 'Delivered'}</div>
