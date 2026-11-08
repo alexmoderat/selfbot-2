@@ -158,6 +158,23 @@ const listReminderHistory = async (user) => {
 	];
 };
 
+const PERIOD_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/** Anzahl pro Zeitraum nach Erstellungsdatum (UTC), fuer !howmanyreminders */
+const reminderPeriodCounts = (createdAts, now = new Date()) => {
+	const year = now.getUTCFullYear();
+	const month = now.getUTCMonth();
+	const dates = createdAts.map((i) => new Date(i));
+	const inYear = dates.filter((i) => i.getUTCFullYear() === year);
+	return {
+		all: dates.length,
+		year: inYear.length,
+		yearLabel: String(year),
+		month: inYear.filter((i) => i.getUTCMonth() === month).length,
+		monthLabel: `${PERIOD_MONTHS[month]} ${year}`,
+	};
+};
+
 /** Entfernte Utility-Reminder landen als "Removed" in der History (die Zustellung archiviert der utility-bot selbst) */
 const archiveRemoved = async (sql, values) => {
 	try {
@@ -210,4 +227,4 @@ const editReminder = async (user, source, id, text) => {
 	return true;
 };
 
-module.exports = { MAX_REMINDER_TEXT, isReminderSource, listReminders, listReminderHistory, historyWhere, removeReminder, editReminder };
+module.exports = { MAX_REMINDER_TEXT, isReminderSource, listReminders, listReminderHistory, reminderPeriodCounts, historyWhere, removeReminder, editReminder };

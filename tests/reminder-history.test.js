@@ -16,3 +16,17 @@ describe('Reminder-History: Spalte Where', () => {
 		assert.equal(historyWhere('zzquser', 'zzquser', null, '#zzq'), '#zzq');
 	});
 });
+
+describe('Reminder-History: Zaehlung pro Zeitraum', () => {
+	const { reminderPeriodCounts } = require('../src/api/reminders.js');
+	it('trennt all time, Jahr und Monat', () => {
+		const dates = ['2025-11-08T10:00:00Z', '2026-10-31T23:59:59Z', '2026-11-01T00:00:00Z', '2026-11-08T10:00:00Z'];
+		assert.deepEqual(reminderPeriodCounts(dates, new Date('2026-11-08T18:00:00Z')), {
+			all: 4,
+			year: 3,
+			yearLabel: '2026',
+			month: 2,
+			monthLabel: 'November 2026',
+		});
+	});
+});
