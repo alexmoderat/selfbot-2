@@ -208,6 +208,10 @@
     @media (max-width: 1199px) { .reminder-table { column-gap: 24px; } .reminder-table .data-table-head, .reminder-table .data-row { column-gap: 24px; } }
     .reminder-text { overflow-wrap: anywhere; }
     /* ninou2, 08.11.2026: "the history button be orange background" */
+    /* ninou2, 08.11.2026: "all three should [be] same size", "the button should not [change] size" - aktiv und inaktiv gleich gross */
+    #reminderHistoryBtn, .history-toolbar .btn { padding: 7px 14px; font-size: 14px; font-weight: 600; border: 1px solid transparent; border-radius: 7px; }
+    .history-toolbar .btn { min-width: 100px; justify-content: center; }
+    .history-toolbar .btn-cancel { border-color: #282828; }
     #reminderHistoryBtn { background: #ff9f43; border-color: #ff9f43; color: #111111; }
     #reminderHistoryBtn:hover { background: #f08a24; border-color: #f08a24; color: #111111; }
     #reminderHistoryBtn.btn-primary { box-shadow: 0 0 0 2px #ffffff55; }
@@ -1293,17 +1297,22 @@
     // ninou2, 03.11.2026: "when u [open] a new tab/button on the website and it show something different, the website link should [change]"
     function pageFromHash() {
       const name = location.hash.slice(1);
-      const button = (/^[a-z-]+$/.test(name)) ? document.querySelector(`.nav-item[onclick="showPage('${name}')"]`) : null;
+      const navName = (name === 'reminders-history') ? 'reminders' : name;
+      const button = (/^[a-z-]+$/.test(name)) ? document.querySelector(`.nav-item[onclick="showPage('${navName}')"]`) : null;
       // Versteckte Eintraege (Admin-Bereich ohne Rechte) fuehren zur Uebersicht
       return (button && !button.closest('[style*="display:none"]')) ? name : 'overview';
     }
     window.addEventListener('hashchange', () => {
-      if (pageFromHash() !== currentPage) showPage(pageFromHash());
+      const current = (currentPage === 'reminders' && reminderHistoryOpen) ? 'reminders-history' : currentPage;
+      if (pageFromHash() !== current) showPage(pageFromHash());
     });
 
     function showPage(name) {
       const hash = (name === 'overview') ? '' : '#' + name;
       if (location.hash !== hash) history.pushState(null, '', location.pathname + hash);
+      // ninou2, 08.11.2026: "when u [open] history, the website link should [change] too"
+      const showHistory = (name === 'reminders-history');
+      if (showHistory) name = 'reminders';
       document.querySelectorAll('.page').forEach(p => p.classList.add('page-hidden'));
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       const pageEl = document.getElementById('page-' + name);
@@ -1321,7 +1330,7 @@
 
       const useFrame = document.getElementById('useFrame');
       if (name === 'use' && !useFrame.getAttribute('src')) useFrame.setAttribute('src', 'commands?embed=1#use');
-      if (name === 'reminders') { loadReminders(); if (reminderHistoryOpen) loadReminderHistory(); }
+      if (name === 'reminders') { loadReminders(); setReminderHistoryOpen(showHistory); }
       if (name === 'leaderboard') loadLeaderboard();
 
       // Lazy-load data on first visit
@@ -1602,7 +1611,11 @@
     }
 
     function toggleReminderHistory() {
-      reminderHistoryOpen = !reminderHistoryOpen;
+      showPage(reminderHistoryOpen ? 'reminders' : 'reminders-history');
+    }
+
+    function setReminderHistoryOpen(open) {
+      reminderHistoryOpen = open;
       document.getElementById('reminderList').style.display = reminderHistoryOpen ? 'none' : '';
       document.getElementById('reminderHistory').style.display = reminderHistoryOpen ? '' : 'none';
       const button = document.getElementById('reminderHistoryBtn');
