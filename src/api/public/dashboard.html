@@ -204,10 +204,11 @@
     /* ninou2, 08.11.2026: "Reminder TEXT should [have] a way bigger space", "status size perfect", "the remaining space devided evenly between WHEN/WHERE/CREATED" */
     /* danach: "the exact space right between WHEN AND WHERE, this exact space should be the same between WHERE AND CREATED",
        "move STATUS a bit close to CREATED", "so the dashbord table will be a bit smaller", "WHEN move a little bit to REMINDER" */
-    /* Spaltenbreiten aus ninou2s Layout-Screenshot, 08.11.2026 ("build the layout so [you] copy"): 43 / 17 / 15,6 / 13,4 / 10,4 Prozent */
-    .reminder-table { display: grid; grid-template-columns: minmax(180px, 43.2fr) minmax(0, 16.9fr) minmax(0, 15.6fr) minmax(0, 13.4fr) minmax(max-content, 10.4fr); column-gap: 12px; }
-    .reminder-table .data-table-head, .reminder-table .data-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; column-gap: 12px; }
-    .reminder-table .data-row > :first-child { margin-right: 24px; }
+    /* ninou2, 08.11.2026: "between the categories there [is] an empty space (the blue space), this space should be the same AND never [change]
+       whenever [you] are in windowed size browser tab or [full] screen", "the same size AND smaller": die Spalten sind so breit wie ihr Inhalt,
+       der Abstand ist fest, nur die Reminder-Spalte waechst mit dem Fenster. Where begrenzt, damit ein langer Channelname nicht alles verschiebt. */
+    .reminder-table { display: grid; grid-template-columns: minmax(180px, 1fr) max-content fit-content(210px) max-content max-content; column-gap: 40px; }
+    .reminder-table .data-table-head, .reminder-table .data-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; column-gap: 40px; }
     /* schmale Fenster: Spalten duerfen umbrechen, sonst bleibt fuer den Reminder-Text kein Platz */
     .reminder-text { overflow-wrap: anywhere; }
     /* ninou2, 08.11.2026: "the history button be orange background" */
@@ -248,7 +249,7 @@
     /* danach: "WHEN WHERE CREATED STATUS , all should be exactly [in] the middle [of] their content" */
     .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created, .reminder-table .rem-status { justify-self: center; text-align: center; }
     .reminder-table .data-table-head > div:not(:first-child) { text-align: center; }
-    @media (max-width: 1000px) { .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created, .reminder-table .rem-status { justify-self: start; text-align: left; } }
+    @media (max-width: 1200px) { .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created, .reminder-table .rem-status { justify-self: start; text-align: left; } }
     .reminder-table .rem-date { display: block; color: #ffffff; } /* ninou2, 08.11.2026: "(X/X/X) should be another color", "white" */
     .supibot-only-link { color: #3a9bd0; font-size: 19.5px; font-weight: 700; letter-spacing: 0; text-decoration: none; border: 1px solid #282828; border-radius: 8px; padding: 4px 12px; }
     .supibot-only-link:hover { border-color: #1f7fb3; color: #8cc6e6; }
@@ -260,7 +261,7 @@
     .confirm-label { font-size: 14px; color: #adafae; align-self: center; }
     .sort-head { background: none; border: 0; padding: 0; text-align: left; font-size: 12.5px; font: inherit; text-transform: inherit; letter-spacing: inherit; color: #3a9bd0; cursor: pointer; }
     .sort-head:hover, .sort-head.active { color: #8cc6e6; text-decoration: underline; }
-    @media (max-width: 1000px) { .reminder-table { display: block; } .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created { white-space: normal; } .reminder-table .data-table-head { display: flex; gap: 14px; } .reminder-table .data-table-head > div:empty, .reminder-table .data-table-head > div:first-child { display: none; } .reminder-table .data-row { grid-template-columns: 1fr; } }
+    @media (max-width: 1200px) { .reminder-table { display: block; } .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created { white-space: normal; } .reminder-table .data-table-head { display: flex; gap: 14px; } .reminder-table .data-table-head > div:empty, .reminder-table .data-table-head > div:first-child { display: none; } .reminder-table .data-row { grid-template-columns: 1fr; } }
     .use-frame { border: none; display: block; height: calc(100vh - 60px); width: 100%; }
     @keyframes addBeam { to { transform: translate(-50%, -50%) rotate(360deg); } }
     @keyframes addPulse {
