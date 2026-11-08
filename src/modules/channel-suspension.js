@@ -9,7 +9,9 @@ const { suspendChannel } = require('../services/channel-suspension.js');
  *   msg_channel_suspended   Account gesperrt/geloescht -> Channel still verlassen (ban-check holt ihn zurueck)
  *   msg_channel_restricted  Feature-Sperre (FLC) -> drinbleiben, nur melden
  *   msg_suspended_channel   dito
- *   msg_banned              Bot selbst gebannt -> nur melden (kein Auto-Ban des Owners mehr, alexmoderat 08.11.2026)
+ *   msg_banned              Bot selbst gebannt -> Channel inaktiv setzen wie DontAddThisBot (isChannel: false), kein
+ *                           Auto-Ban des Owners mehr (alexmoderat, 08.11.2026). Grund "bot_banned" holt ban-check nicht
+ *                           automatisch zurueck - ob der Bot entbannt wurde, sieht er nicht; zurueck nur per Hand (join).
  * Ein gesperrter Channel, in dem der Bot schon ist, meldet sich nicht zwingend - das uebernimmt der Cron ban-check.
  */
 const flcChannels = new Map();
@@ -18,7 +20,7 @@ const getFlcChannels = () => flcChannels;
 
 module.exports = defineChatModule({
 	name: 'channel-suspension',
-	description: 'Handles channel state notices (suspension, feature restriction).',
+	description: 'Handles channel state notices (suspension, feature restriction, bot banned).',
 	scope: 'global',
 	handlers: {
 		channelState: async (context) => {
@@ -34,6 +36,11 @@ module.exports = defineChatModule({
 				console.warn(`[channel-suspension] #${channel.name} ist feature-restricted (${msgId})`);
 				flcChannels.set(channel.id, { type: msgId, detectedAt: new Date().toISOString() });
 				await platform.sendToBroadcaster(`⚠️ FLC-Restriction in ${channel.name}: ${msgId}`, platform.selfId).catch(() => {});
+				return;
+			} else if (msgId === 'msg_banned') {
+				if (await suspendChannel(channel, 'bot_banned')) {
+					console.warn(`[channel-suspension] Bot ist in #${channel.name} gebannt, Channel inaktiv`);
+				}
 				return;
 			}
 
