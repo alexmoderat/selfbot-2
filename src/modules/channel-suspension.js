@@ -1,6 +1,6 @@
 const { defineChatModule } = require('../clients/modules/chat-modules.js');
 
-const { reactivateChannel, suspendChannel } = require('../services/channel-suspension.js');
+const { getSuspension, reactivateChannel, suspendChannel } = require('../services/channel-suspension.js');
 
 /**
  * Wertet Meldungen zum Zustand eines Channels aus, aus sb-v2 (dort IRC-NOTICEs). Ohne IRC kommen sie hier als
@@ -63,8 +63,16 @@ module.exports = defineChatModule({
 
 			if (data.action === 'ban') {
 				await suspendChannel(channel, 'bot_banned');
-			} else if (data.action === 'unban' && (await reactivateChannel(channel, bot.Twitch, BOT_BANNED))) {
-				console.log(`[channel-suspension] #${channel.name}: Bot entbannt, wieder aktiv`);
+			} else if (data.action === 'unban') {
+				// Der Ban hat Mod- und VIP-Status genommen (Twitch) -> als normaler User zurueck, ohne Mod-Topics
+				const suspension = await getSuspension(channel);
+				if (suspension?.reason === 'bot_banned' && (suspension.previousMode === 'Moderator' || suspension.previousMode === 'VIP')) {
+					await bot.Channels.setData(channel, 'inactive', { ...suspension, previousMode: 'Write' });
+				}
+
+				if (await reactivateChannel(channel, bot.Twitch, BOT_BANNED)) {
+					console.log(`[channel-suspension] #${channel.name}: Bot entbannt, wieder aktiv`);
+				}
 			}
 		},
 	},
