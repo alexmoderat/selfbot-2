@@ -1,6 +1,7 @@
 const { defineChatModule } = require('../clients/modules/chat-modules.js');
 
 const { getSuspension, reactivateChannel, suspendChannel } = require('../services/channel-suspension.js');
+const { setModerator } = require('../services/channel-manager.js');
 
 /**
  * Wertet Meldungen zum Zustand eines Channels aus, aus sb-v2 (dort IRC-NOTICEs). Ohne IRC kommen sie hier als
@@ -14,6 +15,7 @@ const { getSuspension, reactivateChannel, suspendChannel } = require('../service
  *                           automatisch zurueck - ob der Bot entbannt wurde, sieht er nicht; zurueck nur per Hand (join).
  * Dazu wie DontAddThisBot (pubSubHandler, user_moderation_action) die Bans des eigenen Kontos aus PubSub
  * chatrooms-user-v1: ban -> inaktiv (bot_banned), unban -> wieder aktiv mit dem vorherigen Mode.
+ * Eigenes Unmod (chat_moderator_actions) -> sofort Mode Write; neue Mod-Rechte erkennt auto-join (alle 2 min).
  * Ein gesperrter Channel, in dem der Bot schon ist, meldet sich nicht zwingend - das uebernimmt der Cron ban-check.
  */
 const BOT_BANNED = new Set(['bot_banned']);
@@ -48,6 +50,13 @@ module.exports = defineChatModule({
 			}
 
 			console.log(`[channel-suspension] #${channel.name}: ${msgId} - "${text}"`);
+		},
+		modAction: async (context) => {
+			const data = context.payload?.data;
+			const target = String(data?.args?.[0] ?? data?.target_user_login ?? '').toLowerCase();
+			if (data?.moderation_action === 'unmod' && context.channel && target === bot.Twitch.selfName.toLowerCase()) {
+				await setModerator(context.channel, false);
+			}
 		},
 		chatroomsUser: async (context) => {
 			const { type, data } = context.payload ?? {};

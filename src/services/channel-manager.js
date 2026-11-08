@@ -98,6 +98,60 @@ const findMissing = async () => {
 	return missing;
 };
 
+/**
+ * Mode an den Mod-Status des Bots anpassen: Moderator <-> Write, PubSub neu (Mod-Topics nur mit Mod-Rechten).
+ * false, wenn der Mode schon stimmt.
+ */
+const setModerator = async (channel, isMod) => {
+	const mode = isMod ? 'Moderator' : 'Write';
+	if (channel.mode === mode) {
+		return false;
+	}
+
+	const previous = channel.mode;
+	await bot.Channels.saveProperty(channel, 'Mode', mode);
+	bot.PubSub?.unsubscribeChannel(channel);
+	bot.PubSub?.subscribeChannel(channel);
+	console.log(`[channels] #${channel.name}: ${previous} -> ${mode}`);
+	return true;
+};
+
+// Mehr Wechsel auf einmal sind eher eine unvollstaendige Helix-Antwort als echte Mod-Wechsel
+const MAX_MODE_CHANGES = 20;
+
+/**
+ * Mode aller aktiven Channels mit Helix "moderated channels" abgleichen (auto-join, alle 2 min). Read-Channels und der
+ * eigene Channel bleiben, wie sie sind.
+ */
+const syncModeratorModes = async () => {
+	const mods = await moderatedIds();
+	if (!mods) {
+		return null;
+	}
+
+	const changes = [];
+	for (const channel of bot.Channels.getJoinable()) {
+		if (isProtected(channel) || !channel.twitchId || channel.mode === 'Read') {
+			continue;
+		}
+
+		const isMod = mods.has(channel.twitchId);
+		if (isMod !== (channel.mode === 'Moderator')) {
+			changes.push({ channel, isMod });
+		}
+	}
+
+	if (changes.length > MAX_MODE_CHANGES) {
+		console.warn(`[channels] ${changes.length} Mod-Wechsel auf einmal - uebersprungen (Helix-Antwort unvollstaendig?)`);
+		return null;
+	}
+
+	for (const { channel, isMod } of changes) {
+		await setModerator(channel, isMod);
+	}
+	return changes;
+};
+
 /** Aktive Channels, in denen der Bot nicht (mehr) Mod ist - ohne den eigenen (sb-v2: extrachannels) */
 const findExtra = async () => {
 	const platform = getTwitch();
@@ -109,4 +163,15 @@ const findExtra = async () => {
 	return bot.Channels.getJoinable().filter((i) => !mods.has(i.twitchId ?? '') && !isProtected(i));
 };
 
-module.exports = { isProtected, joinByLogin, JOIN_MESSAGE_DELAY, joinMessages, markModerator, partChannel, findMissing, findExtra };
+module.exports = {
+	isProtected,
+	joinByLogin,
+	JOIN_MESSAGE_DELAY,
+	joinMessages,
+	markModerator,
+	partChannel,
+	findMissing,
+	findExtra,
+	setModerator,
+	syncModeratorModes,
+};
