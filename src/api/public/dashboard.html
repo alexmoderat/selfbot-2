@@ -198,11 +198,11 @@
     .stat-sub { font-size: 14px; color: #777777; margin-top: 4px; }
     #page-overview { max-width: none; padding-top: 20px; }
     #page-use { max-width: none; padding: 0; }
-    #page-reminders { max-width: 1200px; }
+    #page-reminders { max-width: 1600px; }
     /* ninou2, 07.11.2026: "should be the same space between WHEN, WHERE, CREATED, REMOVE" - eine Tabelle (subgrid), die
        Spalten sind so breit wie ihr laengster Inhalt, dazwischen ueberall derselbe Abstand */
-    /* ninou2, 08.11.2026: "when/ WHER AND CREATED should be the same size" - drei gleich breite Spalten, langer Text bricht um */
-    .reminder-table { display: grid; grid-template-columns: minmax(180px, 1fr) repeat(3, minmax(0, 220px)) auto; column-gap: 48px; }
+    /* ninou2, 08.11.2026: "Reminder TEXT should [have] a way bigger space", "status size perfect", "the remaining space devided evenly between WHEN/WHERE/CREATED" */
+    .reminder-table { display: grid; grid-template-columns: minmax(180px, 2fr) repeat(3, minmax(0, 1fr)) auto; column-gap: 48px; }
     .reminder-table .data-table-head, .reminder-table .data-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; column-gap: 48px; }
     /* schmale Fenster: Spalten duerfen umbrechen, sonst bleibt fuer den Reminder-Text kein Platz */
     @media (max-width: 1199px) { .reminder-table { column-gap: 24px; } .reminder-table .data-table-head, .reminder-table .data-row { column-gap: 24px; } }
@@ -214,7 +214,11 @@
     .history-toolbar .btn-cancel { border-color: #282828; }
     #reminderHistoryBtn { background: #ff9f43; border-color: #ff9f43; color: #111111; }
     #reminderHistoryBtn:hover { background: #f08a24; border-color: #f08a24; color: #111111; }
-    #reminderHistoryBtn.btn-primary { box-shadow: 0 0 0 2px #ffffff55; }
+    /* ninou2, 08.11.2026: "when u are [in] the history tab the button become glowing or something" */
+    #reminderHistoryBtn.btn-primary { box-shadow: 0 0 14px 3px #ff9f43b3; }
+    /* ninou2, 08.11.2026: "My Reminders should be Clickable too", "that bring back also to active reminders dashbord" */
+    .reminder-title-link { background: none; border: none; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; cursor: pointer; }
+    .reminder-title-link:hover { color: #3a9bd0; }
     .history-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
     .history-toolbar .history-select { width: auto; }
     /* ninou2, 07.11.2026: "its data should [have] its own color" - when rot, where gruen, created dunkellila */
@@ -791,7 +795,7 @@
     <!-- ═══ Reminders ═══ -->
     <div class="page page-hidden" id="page-reminders">
       <div class="section-header">
-        <div class="section-title">My reminders <span class="count-pill" id="countReminders">0</span>
+        <div class="section-title"><button type="button" class="reminder-title-link" onclick="showActiveReminders()">My reminders</button> <span class="count-pill" id="countReminders">0</span>
           <!-- ninou2, 08.11.2026: "next to My reminders (number) add a button called HISTORY" -->
           <button type="button" class="btn btn-cancel" id="reminderHistoryBtn" onclick="toggleReminderHistory()">History</button>
         </div>
@@ -1609,6 +1613,8 @@
         showToast('Could not reach the bot, try again later.', 'error');
       }
     }
+
+    function showActiveReminders() { showPage('reminders'); }
 
     function toggleReminderHistory() {
       showPage(reminderHistoryOpen ? 'reminders' : 'reminders-history');
