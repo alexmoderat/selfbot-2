@@ -207,6 +207,10 @@
     @media (min-width: 1200px) { .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created { white-space: nowrap; } }
     @media (max-width: 1199px) { .reminder-table { column-gap: 24px; } .reminder-table .data-table-head, .reminder-table .data-row { column-gap: 24px; } }
     .reminder-text { overflow-wrap: anywhere; }
+    /* ninou2, 08.11.2026: "the history button be orange background" */
+    #reminderHistoryBtn { background: #ff9f43; border-color: #ff9f43; color: #111111; }
+    #reminderHistoryBtn:hover { background: #f08a24; border-color: #f08a24; color: #111111; }
+    #reminderHistoryBtn.btn-primary { box-shadow: 0 0 0 2px #ffffff55; }
     .history-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
     .history-toolbar .history-select { width: auto; }
     /* ninou2, 07.11.2026: "its data should [have] its own color" - when rot, where gruen, created dunkellila */
