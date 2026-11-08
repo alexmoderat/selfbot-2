@@ -221,6 +221,7 @@
     .reminder-table .rem-when { color: #ff5c5c; }
     .reminder-table .rem-where { color: #3fb950; }
     .reminder-table .rem-created { color: #9b6bdf; }
+    .reminder-table .rem-date { color: #ffffff; } /* ninou2, 08.11.2026: "(X/X/X) should be another color", "white" */
     .supibot-only-link { color: #3a9bd0; font-size: 19.5px; font-weight: 700; letter-spacing: 0; text-decoration: none; border: 1px solid #282828; border-radius: 8px; padding: 4px 12px; }
     .supibot-only-link:hover { border-color: #1f7fb3; color: #8cc6e6; }
     .reminder-text.editable { cursor: text; border-radius: 6px; margin: -4px -6px; padding: 4px 6px; }
@@ -1463,7 +1464,7 @@
       if (ms === null || ms === undefined) return '';
       const date = new Date(ms);
       const part = value => String(value).padStart(2, '0');
-      return ` (${part(date.getDate())}/${part(date.getMonth() + 1)}/${part(date.getFullYear() % 100)})`;
+      return ` <span class="rem-date">(${part(date.getDate())}/${part(date.getMonth() + 1)}/${part(date.getFullYear() % 100)})</span>`;
     };
     // Ueberschriften When/Where/Created klicken = danach sortieren, nochmal klicken = umgekehrt
     // (ninou2, 07.11.2026: "make the words : WHEN WHERE CREATED clickable with another color", "from near to far" / "or contrary")
