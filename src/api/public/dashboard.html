@@ -207,6 +207,8 @@
     @media (min-width: 1200px) { .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created { white-space: nowrap; } }
     @media (max-width: 1199px) { .reminder-table { column-gap: 24px; } .reminder-table .data-table-head, .reminder-table .data-row { column-gap: 24px; } }
     .reminder-text { overflow-wrap: anywhere; }
+    .history-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .history-toolbar .history-select { width: auto; }
     /* ninou2, 07.11.2026: "its data should [have] its own color" - when rot, where gruen, created dunkellila */
     /* ninou2, 07.11.2026: "make the space between the [reminder] content and when a little [bigger]" */
     /* ninou2, 07.11.2026: "remove button background red color", dann "Dark" statt "very light color" */
@@ -780,10 +782,14 @@
     <!-- ═══ Reminders ═══ -->
     <div class="page page-hidden" id="page-reminders">
       <div class="section-header">
-        <div class="section-title">My reminders <span class="count-pill" id="countReminders">0</span></div>
+        <div class="section-title">My reminders <span class="count-pill" id="countReminders">0</span>
+          <!-- ninou2, 08.11.2026: "next to My reminders (number) add a button called HISTORY" -->
+          <button type="button" class="btn btn-cancel" id="reminderHistoryBtn" onclick="toggleReminderHistory()">History</button>
+        </div>
       </div>
-      <p class="section-desc">Your pending reminders, from every channel. Only you can see this page.</p>
+      <p class="section-desc" id="reminderDesc">Your pending reminders, from every channel. Only you can see this page.</p>
       <div id="reminderList"></div>
+      <div id="reminderHistory" style="display:none"></div>
     </div>
 
     <!-- ═══ Join ═══ -->
@@ -1310,7 +1316,7 @@
 
       const useFrame = document.getElementById('useFrame');
       if (name === 'use' && !useFrame.getAttribute('src')) useFrame.setAttribute('src', 'commands?embed=1#use');
-      if (name === 'reminders') loadReminders();
+      if (name === 'reminders') { loadReminders(); if (reminderHistoryOpen) loadReminderHistory(); }
       if (name === 'leaderboard') loadLeaderboard();
 
       // Lazy-load data on first visit
@@ -1464,9 +1470,9 @@
       try { localStorage.setItem('reminderSort', JSON.stringify(reminderSort)); } catch {}
       renderReminders(reminderCache);
     }
-    const sortHead = (key, label) => {
-      const arrow = (reminderSort.key === key) ? (reminderSort.desc ? ' ▲' : ' ▼') : '';
-      return `<button type="button" class="sort-head${reminderSort.key === key ? ' active' : ''}" onclick="setReminderSort('${key}')">${label}${arrow}</button>`;
+    const sortHead = (key, label, state = reminderSort, setter = 'setReminderSort') => {
+      const arrow = (state.key === key) ? (state.desc ? ' ▲' : ' ▼') : '';
+      return `<button type="button" class="sort-head${state.key === key ? ' active' : ''}" onclick="${setter}('${key}')">${label}${arrow}</button>`;
     };
 
     function renderReminders(rawList) {
@@ -1496,6 +1502,95 @@
               </div>
             </div>`).join('')}
         </div>`;
+    }
+
+    // ── History ── ninou2, 08.11.2026: "it show all previous reminders", "same layout with all features ( when , where ,, created )
+    // sort by", "shows all person from the past", "a button when you choose to show them per monthYEAR / or year", "ALLtime too"
+    let reminderHistoryOpen = false;
+    let reminderHistory = [];
+    let historyPeriod = { mode: 'all', value: null };
+    let historySort = (() => {
+      try { const saved = JSON.parse(localStorage.getItem('reminderHistorySort')); if (REMINDER_SORTS[saved?.key]) return saved; } catch {}
+      return { key: 'created', desc: false };
+    })();
+    const HISTORY_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const historyYear = item => String(new Date(item.createdAt).getFullYear());
+    const historyMonth = item => {
+      const date = new Date(item.createdAt);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    };
+    const historyMonthLabel = value => `${HISTORY_MONTHS[Number(value.slice(5)) - 1]} ${value.slice(0, 4)}`;
+    // Neueste zuerst; der Zeitraum richtet sich nach dem Erstellungsdatum
+    const historyOptions = mode => [...new Set(reminderHistory.map(mode === 'year' ? historyYear : historyMonth))].sort().reverse();
+
+    function setHistorySort(key) {
+      historySort = (historySort.key === key) ? { key, desc: !historySort.desc } : { key, desc: false };
+      try { localStorage.setItem('reminderHistorySort', JSON.stringify(historySort)); } catch {}
+      renderReminderHistory();
+    }
+    function setHistoryPeriod(mode) {
+      historyPeriod = { mode, value: (mode === 'all') ? null : historyOptions(mode)[0] ?? null };
+      renderReminderHistory();
+    }
+    function setHistoryValue(value) {
+      historyPeriod.value = value;
+      renderReminderHistory();
+    }
+
+    function renderReminderHistory() {
+      const { mode, value } = historyPeriod;
+      const shown = reminderHistory.filter(item => mode === 'all' || (mode === 'year' ? historyYear(item) : historyMonth(item)) === value);
+      const list = [...shown].sort(REMINDER_SORTS[historySort.key]);
+      if (historySort.desc) list.reverse();
+      const periodBtn = (key, label) => `<button type="button" class="btn ${mode === key ? 'btn-primary' : 'btn-cancel'}" onclick="setHistoryPeriod('${key}')">${label}</button>`;
+      const select = (mode === 'all') ? '' : `<select class="level-select history-select" onchange="setHistoryValue(this.value)">${historyOptions(mode).map(option =>
+        `<option value="${esc(option)}"${option === value ? ' selected' : ''}>${esc(mode === 'year' ? option : historyMonthLabel(option))}</option>`).join('')}</select>`;
+      const toolbar = `<div class="history-toolbar">${periodBtn('all', 'All time')}${periodBtn('year', 'Per year')}${periodBtn('month', 'Per month')}${select}<span class="count-pill">${list.length}</span></div>`;
+      const table = list.length ? `
+        <div class="data-table reminder-table">
+          <div class="data-table-head"><div>Reminder</div><div>${sortHead('when', 'When', historySort, 'setHistorySort')}</div><div>${sortHead('where', 'Where', historySort, 'setHistorySort')}</div><div>${sortHead('created', 'Created', historySort, 'setHistorySort')}</div><div>Status</div></div>
+          ${list.map(item => `
+            <div class="data-row">
+              <div class="reminder-text">${esc(item.text)}</div>
+              <div class="cell-muted rem-when">${esc(item.when)}</div>
+              <div class="cell-muted rem-where">${esc(item.where)}</div>
+              <div class="cell-muted rem-created" title="created">${esc(item.created)}</div>
+              <div class="cell-muted">${item.cancelled ? 'Removed' : 'Delivered'}</div>
+            </div>`).join('')}
+        </div>` : buildEmpty('No past reminders in this period.');
+      document.getElementById('reminderHistory').innerHTML = toolbar + table;
+    }
+
+    async function loadReminderHistory() {
+      const el = document.getElementById('reminderHistory');
+      try {
+        const res = await fetch('api/my/reminders/history', { cache: 'no-store' });
+        if (res.status === 401) {
+          el.innerHTML = '<p class="section-desc">Log in to see your reminders. <a href="login" style="color:#3a9bd0">Log in with Twitch</a></p>';
+          return;
+        }
+        const data = await res.json();
+        if (!res.ok) { showToast(data.error || 'That did not work.', 'error'); return; }
+        reminderHistory = data.reminders;
+        // Der gewaehlte Monat/das Jahr kann nach dem Neuladen fehlen
+        if (historyPeriod.mode !== 'all' && !historyOptions(historyPeriod.mode).includes(historyPeriod.value)) setHistoryPeriod('all');
+        else renderReminderHistory();
+      }
+      catch {
+        showToast('Could not reach the bot, try again later.', 'error');
+      }
+    }
+
+    function toggleReminderHistory() {
+      reminderHistoryOpen = !reminderHistoryOpen;
+      document.getElementById('reminderList').style.display = reminderHistoryOpen ? 'none' : '';
+      document.getElementById('reminderHistory').style.display = reminderHistoryOpen ? '' : 'none';
+      const button = document.getElementById('reminderHistoryBtn');
+      button.className = `btn ${reminderHistoryOpen ? 'btn-primary' : 'btn-cancel'}`;
+      document.getElementById('reminderDesc').textContent = reminderHistoryOpen
+        ? 'Your past reminders, from every channel, including the ones you set for others. Only you can see this page.'
+        : 'Your pending reminders, from every channel. Only you can see this page.';
+      if (reminderHistoryOpen) loadReminderHistory();
     }
 
     // Kein apiFetch: dessen 401 schickt zur Startseite, hier reicht der Hinweis auf den Login

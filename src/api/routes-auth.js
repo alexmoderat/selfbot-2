@@ -22,7 +22,7 @@ const { isResultFailure } = require('../clients/modules/commands.js');
 const { fetchGeoLocationData, toUserLocation } = require('../misc/command-utils.js');
 const { detectTimezone } = require('../misc/timezones.js');
 const { checkRunLimits } = require('./command-runner.js');
-const { MAX_REMINDER_TEXT, editReminder, isReminderSource, listReminders, removeReminder } = require('./reminders.js');
+const { MAX_REMINDER_TEXT, editReminder, isReminderSource, listReminderHistory, listReminders, removeReminder } = require('./reminders.js');
 const {
 	COOKIE,
 	LOGIN_COOKIE,
@@ -211,6 +211,12 @@ const createAuthRouter = (publicDir, basePath) => {
 		}),
 	);
 
+	router.get(
+		'/api/my/reminders/history',
+		locationRoute(async (user, _req, res) => {
+			res.json({ reminders: await listReminderHistory(user) });
+		}),
+	);
 	router.get(
 		'/api/my/reminders',
 		locationRoute(async (user, _req, res) => {

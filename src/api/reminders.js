@@ -98,12 +98,89 @@ const listReminders = async (user) => {
 	];
 };
 
+/**
+ * Vergangene Reminder (ninou2, 08.11.2026: "add a button called HISTORY", "it show all previous reminders", "same layout with all
+ * features", "shows all person from the past"): empfangene und fuer andere gesetzte, aus beiden Bots. Die Zeitraum-Auswahl
+ * (Monat/Jahr/All time) laeuft auf der Seite, damit sie in der Zeitzone des Betrachters rechnet.
+ */
+
+/** "from @x, #channel" / "for @x, #channel" / "#channel" - wie in der Liste der offenen Reminder */
+const historyWhere = (me, to, from, place) => {
+	const self = me.toLowerCase();
+	if (to.toLowerCase() !== self) {
+		return `for @${to}, ${place}`;
+	}
+
+	return from && from.toLowerCase() !== self ? `from @${from}, ${place}` : place;
+};
+
+const pastDate = (value) => {
+	const date = value ? new SupiDate(value) : null;
+	return { when: date ? delta(date) : 'on the next message', dueAt: date?.valueOf() ?? null };
+};
+
+const listReminderHistory = async (user) => {
+	const name = user.name.toLowerCase();
+	const [utility, selfbot] = await Promise.all([
+		sbv2.query(
+			'SELECT id, channel, username, set_by, message, created_at, due_at, finished_at, cancelled FROM chat_data.reminder_history WHERE LOWER(username) = ? OR LOWER(set_by) = ?',
+			[name, name],
+		),
+		bot.DB.ReminderHistory.find({ $or: [{ userTo: user.id }, { userFrom: user.id }] }).lean(),
+	]);
+
+	const otherIds = [...new Set(selfbot.flatMap((i) => [i.userFrom, i.userTo]).filter((i) => i && i !== user.id))];
+	const others = new Map((await bot.DB.User.find({ _id: { $in: otherIds } }, { name: 1 }).lean()).map((i) => [i._id, i.name]));
+	const nameOf = (id) => (id === user.id ? user.name : (others.get(id) ?? null));
+
+	return [
+		...utility.map((i) => ({
+			source: 'utility',
+			id: Number(i.id),
+			text: i.message,
+			...pastDate(i.finished_at ?? i.due_at),
+			where: historyWhere(user.name, i.username, i.set_by, `#${i.channel}`),
+			...createdFields(i.created_at),
+			cancelled: Boolean(i.cancelled),
+		})),
+		...selfbot.map((i) => {
+			const channel = i.channelId ? bot.Channels.get(i.channelId)?.Name : null;
+			return {
+				source: 'selfbot',
+				id: Number(i._id),
+				text: i.text ?? '(ping)',
+				...pastDate(i.schedule),
+				where: historyWhere(user.name, nameOf(i.userTo) ?? 'unknown', nameOf(i.userFrom), channel ? `#${channel}` : 'private'),
+				...createdFields(i.created),
+				cancelled: Boolean(i.cancelled),
+			};
+		}),
+	];
+};
+
+/** Entfernte Utility-Reminder landen als "Removed" in der History (die Zustellung archiviert der utility-bot selbst) */
+const archiveRemoved = async (sql, values) => {
+	try {
+		await sbv2.query(sql, values);
+	} catch (e) {
+		console.warn('reminder_history: Archivieren fehlgeschlagen', e);
+	}
+};
+
 /** Nur eigene Reminder: die WHERE-Klausel bzw. der Vergleich prueft den Besitzer, fremde IDs tun nichts */
 const removeReminder = async (user, source, id) => {
 	const name = user.name.toLowerCase();
 	if (source === 'utility-timed') {
+		await archiveRemoved(
+			"INSERT IGNORE INTO chat_data.reminder_history (original_id, kind, channel, username, set_by, message, created_at, due_at, finished_at, cancelled) SELECT id, 'timed', channel, username, username, message, created_at, due_at, NOW(3), 1 FROM chat_data.reminders WHERE id = ? AND LOWER(username) = ?",
+			[Number(id), name],
+		);
 		await sbv2.query('DELETE FROM chat_data.reminders WHERE id = ? AND LOWER(username) = ?', [Number(id), name]);
 	} else if (source === 'utility-next') {
+		await archiveRemoved(
+			"INSERT IGNORE INTO chat_data.reminder_history (original_id, kind, channel, username, set_by, message, created_at, finished_at, cancelled) SELECT id, 'next', channel, target_user, set_by, message, created_at, NOW(3), 1 FROM chat_data.user_reminders WHERE id = ? AND (LOWER(target_user) = ? OR LOWER(set_by) = ?)",
+			[Number(id), name, name],
+		);
 		await sbv2.query('DELETE FROM chat_data.user_reminders WHERE id = ? AND (LOWER(target_user) = ? OR LOWER(set_by) = ?)', [Number(id), name, name]);
 	} else {
 		const reminder = bot.Reminders.get(id);
@@ -133,4 +210,4 @@ const editReminder = async (user, source, id, text) => {
 	return true;
 };
 
-module.exports = { MAX_REMINDER_TEXT, isReminderSource, listReminders, removeReminder, editReminder };
+module.exports = { MAX_REMINDER_TEXT, isReminderSource, listReminders, listReminderHistory, historyWhere, removeReminder, editReminder };
