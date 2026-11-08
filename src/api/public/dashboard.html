@@ -202,7 +202,8 @@
     /* ninou2, 07.11.2026: "should be the same space between WHEN, WHERE, CREATED, REMOVE" - eine Tabelle (subgrid), die
        Spalten sind so breit wie ihr laengster Inhalt, dazwischen ueberall derselbe Abstand */
     /* ninou2, 08.11.2026: "Reminder TEXT should [have] a way bigger space", "status size perfect", "the remaining space devided evenly between WHEN/WHERE/CREATED" */
-    .reminder-table { display: grid; grid-template-columns: minmax(180px, 2fr) repeat(3, minmax(0, 1fr)) auto; column-gap: 48px; }
+    /* danach: "[reminders] size a bit bigger", "[where] waay smaller", "WHEN AND CREATED divide the lefting space" */
+    .reminder-table { display: grid; grid-template-columns: minmax(180px, 2.4fr) minmax(0, 1fr) minmax(0, 190px) minmax(0, 1fr) auto; column-gap: 48px; }
     .reminder-table .data-table-head, .reminder-table .data-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; column-gap: 48px; }
     /* schmale Fenster: Spalten duerfen umbrechen, sonst bleibt fuer den Reminder-Text kein Platz */
     @media (max-width: 1199px) { .reminder-table { column-gap: 24px; } .reminder-table .data-table-head, .reminder-table .data-row { column-gap: 24px; } }
@@ -215,7 +216,8 @@
     #reminderHistoryBtn { background: #ff9f43; border-color: #ff9f43; color: #111111; }
     #reminderHistoryBtn:hover { background: #f08a24; border-color: #f08a24; color: #111111; }
     /* ninou2, 08.11.2026: "when u are [in] the history tab the button become glowing or something" */
-    #reminderHistoryBtn.btn-primary { box-shadow: 0 0 14px 3px #ff9f43b3; }
+    /* danach: "glow even [more] AND get that lighting thingy over its box outline", "it glow purple AND its text become white" */
+    #reminderHistoryBtn.btn-primary { color: #ffffff; border-color: #c9a6ff; box-shadow: 0 0 6px 1px #c9a6ff, 0 0 22px 7px #9b6bdfcc; }
     /* ninou2, 08.11.2026: "My Reminders should be Clickable too", "that bring back also to active reminders dashbord" */
     .reminder-title-link { background: none; border: none; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; cursor: pointer; }
     .reminder-title-link:hover { color: #3a9bd0; }
@@ -227,7 +229,7 @@
     .reminder-table .btn-danger { background: #7f1d1d; border-color: #7f1d1d; color: #ffffff; }
     .reminder-table .btn-danger:hover { background: #991b1b; border-color: #991b1b; color: #ffffff; }
     .reminder-table .rem-when { color: #ff5c5c; }
-    .reminder-table .rem-where { color: #3fb950; }
+    .reminder-table .rem-where { color: #3fb950; overflow-wrap: anywhere; }
     .reminder-table .rem-created { color: #9b6bdf; }
     .reminder-table .rem-date { color: #ffffff; } /* ninou2, 08.11.2026: "(X/X/X) should be another color", "white" */
     .supibot-only-link { color: #3a9bd0; font-size: 19.5px; font-weight: 700; letter-spacing: 0; text-decoration: none; border: 1px solid #282828; border-radius: 8px; padding: 4px 12px; }
