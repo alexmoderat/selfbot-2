@@ -201,10 +201,10 @@
     #page-reminders { max-width: 1200px; }
     /* ninou2, 07.11.2026: "should be the same space between WHEN, WHERE, CREATED, REMOVE" - eine Tabelle (subgrid), die
        Spalten sind so breit wie ihr laengster Inhalt, dazwischen ueberall derselbe Abstand */
-    .reminder-table { display: grid; grid-template-columns: minmax(180px, 1fr) auto auto auto auto; column-gap: 48px; }
+    /* ninou2, 08.11.2026: "when/ WHER AND CREATED should be the same size" - drei gleich breite Spalten, langer Text bricht um */
+    .reminder-table { display: grid; grid-template-columns: minmax(180px, 1fr) repeat(3, minmax(0, 220px)) auto; column-gap: 48px; }
     .reminder-table .data-table-head, .reminder-table .data-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; column-gap: 48px; }
     /* schmale Fenster: Spalten duerfen umbrechen, sonst bleibt fuer den Reminder-Text kein Platz */
-    @media (min-width: 1200px) { .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created { white-space: nowrap; } }
     @media (max-width: 1199px) { .reminder-table { column-gap: 24px; } .reminder-table .data-table-head, .reminder-table .data-row { column-gap: 24px; } }
     .reminder-text { overflow-wrap: anywhere; }
     /* ninou2, 08.11.2026: "the history button be orange background" */
@@ -1507,7 +1507,7 @@
                 : `<div class="reminder-text">${esc(item.text)}</div>`}
               <div class="cell-muted rem-when">${esc(item.when)}${reminderDate(item.dueAt)}</div>
               <div class="cell-muted rem-where">${esc(item.where)}</div>
-              <div class="cell-muted rem-created" title="created">${esc(item.created)}</div>
+              <div class="cell-muted rem-created" title="created">${esc(item.created)}${reminderDate(item.createdAt)}</div>
               <div class="cell-actions" id="ract-${esc(item.source)}-${Number(item.id)}">
                 <button class="btn btn-danger" onclick="askRemoveReminder('${esc(item.source)}', ${Number(item.id)})">Remove</button>
               </div>
@@ -1573,7 +1573,7 @@
               <div class="reminder-text">${esc(item.text)}</div>
               <div class="cell-muted rem-when">${esc(item.when)}${reminderDate(item.dueAt)}</div>
               <div class="cell-muted rem-where">${esc(item.where)}</div>
-              <div class="cell-muted rem-created" title="created">${esc(item.created)}</div>
+              <div class="cell-muted rem-created" title="created">${esc(item.created)}${reminderDate(item.createdAt)}</div>
               <div class="cell-muted">${item.cancelled ? 'Removed' : 'Delivered'}</div>
             </div>`).join('')}
         </div>` : buildEmpty('No past reminders in this period.');
