@@ -68,6 +68,15 @@ Predictions und Kanalpunkte werden nicht abonniert.
 `chat_data` (first_message_sightings, known_bots, longest_sub, global_sub_counter, ...) gehoert sb-v2, utility-bot und
 autojoin-bot, die es laufend schreiben. Es bleibt in MariaDB; Zugriff nur ueber `src/database/sbv2.js` mit Platzhaltern.
 
+## Website (Dashboard, `src/api/public/dashboard.html`)
+- **Regel: Zeigt die Seite etwas anderes, aendert sich auch der Link** (ninou2, 10.11.2026: "set it as a rule for
+  the website project", vorher 03.11. und 08.11.2026). Jede neue Ansicht, jeder Tab, Umschalter, Filter-Modus und
+  jede Seitenzahl bekommt einen eigenen Hash, z. B. `#reminders`, `#reminders-history/pages/2`,
+  `#reminders-history/infinite`. Ein Direktlink muss genau diesen Zustand oeffnen, Zurueck/Vor muss ihn
+  wiederherstellen (`pushState` bei Klicks, `replaceState` nur beim Korrigieren, `hashchange`/`popstate` auswerten).
+  Vorbild: `pageFromHash`, `showPage`, `readHistoryHash`/`syncHistoryHash`.
+- Statische Dateien sind sofort live (kein Neustart); vor dem Melden mit `curl -s https://auth.alexmoderat.eu/dashboard | grep …` pruefen.
+
 ## Konventionen
 - Plain JavaScript (CommonJS), Node 24, kein Build. Prettier wie DontAddThisBot (Tabs, einfache Anfuehrungszeichen).
 - Chat-Antworten Englisch wie bisher, Kommentare und Logs Deutsch.
