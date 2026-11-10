@@ -10,7 +10,8 @@ const DEFAULT_DELAY = 250;
 // Grosse Pyramiden langsamer und nur eine je Channel zur Zeit (alexmoderat, 24.10.2026: "mach beides") - das
 // Rate-Limit (100 Nachrichten / 30 s) gilt fuer den ganzen Account, nicht pro Channel
 const SLOW_FROM_SIZE = 20;
-const SLOW_DELAY = 1000;
+// ninou2, 08.11.2026: ueber 20 schneller. 400 ms = hoechstens 75 Nachrichten / 30 s, Luft fuer alles andere, was das Konto sendet
+const SLOW_DELAY = 400;
 const CHANNEL_COOLDOWN = 60_000;
 
 const lineDelay = (size) => (size >= SLOW_FROM_SIZE ? SLOW_DELAY : DEFAULT_DELAY);
