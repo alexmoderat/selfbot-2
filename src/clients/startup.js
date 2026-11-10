@@ -5,10 +5,11 @@ const { subscribeAll: subscribeNotifications } = require('../services/notificati
 const firehose = require('../services/catquery-firehose.js');
 const joinPoller = require('../services/join-poller.js');
 const { chatLogger } = require('../services/chat-logger.js');
+const eventSub = require('../util/twitch/eventSub.js');
 const { recordWatchStreak } = require('../services/channel-stats.js');
 
 // Alles, was nach dem IRC-Connect hochfaehrt (bisher TwitchPlatform.connect im alten selfbot, transport "irc"):
-// PubSub-Abos, Notify-Streamer, CatQuery-Firehose, Join-Poller und Chat-Logger.
+// PubSub-Abos, EventSub (Follows), Notify-Streamer, CatQuery-Firehose, Join-Poller und Chat-Logger.
 // Parallelbetrieb: PubSub nur fuer die bedienten Channels, kein Firehose (CatQuery laesst nur wenige Verbindungen
 // je IP zu, der alte selfbot haelt schon eine).
 
@@ -71,6 +72,8 @@ const startFirehose = () => {
 /** Nach dem ersten "ready" von dank-twitch-irc */
 const startServices = () => {
 	startPubSub();
+	bot.EventSub = eventSub;
+	eventSub.start();
 	startFirehose();
 	joinPoller.start(bot.Twitch);
 	chatLogger.start();

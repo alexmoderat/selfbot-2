@@ -27,6 +27,8 @@ kommen aus selfbot; Aufbau, IRC-Anbindung und Stil von DontAddThisBot. Bauplan: 
   `src/clients/modules/timers.js` (node-cron wie DontAddThisBot, Ausdruck mit Sekunden-Feld).
 - `src/util/twitch/pubSub.js` — altes Twitch-PubSub wie DontAddThisBot (50 Themen je Verbindung, Mod-Themen mit
   `TWITCH_WEB_TOKEN`); `hermes-client.js` als Ausweg, Auswahl per `config.json` `"pubsub": "legacy" | "hermes"`.
+- `src/util/twitch/eventSub.js` + `eventSubEvents.js` — EventSub-WebSocket wie DontAddThisBot, `channel.follow` v2
+  (Event `follow` fuer die Chat-Module) in allen Moderator-Channels; hoechstens 300 Abos je WebSocket.
 - `src/clients/startup.js` — nach dem IRC-Connect: PubSub-Abos, Notify-Streamer, CatQuery-Firehose, Join-Poller,
   Chat-Logger.
 - `src/services/` — Channels, Users, Filter, Banphrase, AFK, Reminder, Datenschalter (`data-properties.js`: jede neue

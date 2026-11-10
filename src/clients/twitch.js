@@ -106,16 +106,18 @@ const platform = {
 		}
 	},
 
-	/** Channel joinen (IRC) und PubSub abonnieren */
+	/** Channel joinen (IRC), PubSub und EventSub abonnieren */
 	async joinChannel(channel) {
 		if (isServed(channel.name)) {
 			await client.join(channel.name).catch((e) => Logger.log(LogLevel.WARN, `[join] ${channel.name}: ${e.message}`));
 		}
 		bot.PubSub?.subscribeChannel(channel);
+		void bot.EventSub?.syncChannel(channel);
 	},
 
 	async leaveChannel(channel) {
 		bot.PubSub?.unsubscribeChannel(channel);
+		void bot.EventSub?.unsubscribeChannel(channel);
 		if (client.joinedChannels.has(channel.name)) {
 			await client.part(channel.name).catch(() => {});
 		}

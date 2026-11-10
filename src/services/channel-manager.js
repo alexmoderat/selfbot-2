@@ -99,7 +99,8 @@ const findMissing = async () => {
 };
 
 /**
- * Mode an den Mod-Status des Bots anpassen: Moderator <-> Write, PubSub neu (Mod-Topics nur mit Mod-Rechten).
+ * Mode an den Mod-Status des Bots anpassen: Moderator <-> Write, PubSub und EventSub neu (Mod-Topics und Follows nur
+ * mit Mod-Rechten).
  * false, wenn der Mode schon stimmt.
  */
 const setModerator = async (channel, isMod) => {
@@ -112,6 +113,7 @@ const setModerator = async (channel, isMod) => {
 	await bot.Channels.saveProperty(channel, 'Mode', mode);
 	bot.PubSub?.unsubscribeChannel(channel);
 	bot.PubSub?.subscribeChannel(channel);
+	void bot.EventSub?.syncChannel(channel);
 	console.log(`[channels] #${channel.name}: ${previous} -> ${mode}`);
 	return true;
 };
