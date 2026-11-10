@@ -15,6 +15,7 @@ const {
  * Bevorzugt Start und Laenge des neuesten VODs (minutengenau), sonst die Startzeit des Crons mit zuletzt-live als Ende,
  * sonst nur das Datum; ohne Tracking und ohne VOD Twitchs lastBroadcast. Mehrere VODs am selben Tag werden einzeln
  * aufgelistet (ninou2, 14.10.2026: "went live twice today, but the bot only mentioned the last").
+ * Streamer mit @ genannt (ninou2, 10.11.2026: "make it @ the streamer").
  */
 /**
  * Gerade live: laufender Stream plus der Stream davor (ninou2, 03.11.2026: "xqc [is live] right now [15:00 UTC to ...],
@@ -25,11 +26,11 @@ const describeLive = async (channel, userId, startedAt) => {
 	const now = new Date();
 	const startMs = Date.parse(startedAt);
 	if (Number.isNaN(startMs)) {
-		return `${channel} is live right now.`;
+		return `@${channel} is live right now.`;
 	}
 
 	const today = now.toISOString().slice(0, 10);
-	const head = `${channel} is live right now [${startedAt.slice(11, 16)} UTC to now, ⏱${fmtLengthShort(now.getTime() - startMs)}]`;
+	const head = `@${channel} is live right now [${startedAt.slice(11, 16)} UTC to now, ⏱${fmtLengthShort(now.getTime() - startMs)}]`;
 	const [days, vods] = await Promise.all([streamData.getDays(userId), streamData.fetchRecentVods(channel, 5).catch(() => [])]);
 
 	const year = Number(today.slice(0, 4));
@@ -87,7 +88,7 @@ module.exports = {
 
 			const iso = new Date(startedAt).toISOString();
 			return {
-				text: `@${display}, ${channel} went live last time on ${fmtDateTimeUtc(iso)} (${daysAgoText(iso.slice(0, 10), new Date().toISOString().slice(0, 10))})`,
+				text: `@${display}, @${channel} went live last time on ${fmtDateTimeUtc(iso)} (${daysAgoText(iso.slice(0, 10), new Date().toISOString().slice(0, 10))})`,
 			};
 		}
 
@@ -135,10 +136,10 @@ module.exports = {
 			const totalMs = todaysVods.reduce((total, i) => total + i.lengthSeconds * 1000, 0);
 
 			return {
-				text: `@${display}, ${channel} went live last time on ${fmtDate(day)} for "${todaysVods.length}" times : ${sessions} , THEY streamed for a total of ${fmtLengthShort(totalMs)} ${dayLabel === 'today' ? 'today' : 'that day'}.${streamed}`,
+				text: `@${display}, @${channel} went live last time on ${fmtDate(day)} for "${todaysVods.length}" times : ${sessions} , THEY streamed for a total of ${fmtLengthShort(totalMs)} ${dayLabel === 'today' ? 'today' : 'that day'}.${streamed}`,
 			};
 		}
 
-		return { text: `@${display}, ${channel} went live last time on ${when} (${daysAgoText(day, today)})${streamed}` };
+		return { text: `@${display}, @${channel} went live last time on ${when} (${daysAgoText(day, today)})${streamed}` };
 	},
 };
