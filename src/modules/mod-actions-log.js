@@ -1,5 +1,19 @@
 const { defineChatModule } = require('../clients/modules/chat-modules.js');
-const { recordModAction, wasRecentlyRecorded } = require('../services/moderation.js');
+const { recordModAction, sayModLog, wasRecentlyRecorded } = require('../services/moderation.js');
+const spamDomains = require('../services/spam-domains.js');
+
+/** Gelernte Domains in den Modlog-Channel melden, damit ein Fehlgriff auffaellt (entfernen im Dashboard) */
+const learnFromBan = async (channel, channelName, userId, username, modName) => {
+	try {
+		const learned = await spamDomains.learnFromBan({ channel, channelName, userId, username, modName });
+		if (learned.length > 0) {
+			console.log(`[spam-domains] gelernt: ${learned.join(', ')} (Ban von ${username} in #${channelName} durch ${modName})`);
+			await sayModLog(`📚 learned spam domain ${learned.join(', ')} from the ban of @${username} in #${channelName} — will be auto-banned from now on`);
+		}
+	} catch (e) {
+		console.warn('[spam-domains] Lernen fehlgeschlagen', e);
+	}
+};
 
 /**
  * Protokolliert Moderationsaktionen aus chat_moderator_actions (Hermes) und schreibt Bans/Timeouts/Warns
@@ -56,6 +70,12 @@ module.exports = defineChatModule({
 			// Nur echte Sanktionen - und nicht doppelt, wenn der Bot sie selbst ausgeloest hat (steht dann schon im Log)
 			if (!spec.record || wasRecentlyRecorded(targetUser, channelName)) {
 				return;
+			}
+
+			// Manueller Ban von alexmoderat: Links aus den letzten Nachrichten des Gebannten als Spam-Domain lernen
+			// (nicht bei Bans, die der Bot selbst ausgeloest hat - die stehen schon im Log)
+			if (action === 'ban' && modName.toLowerCase() === bot.Twitch.selfName?.toLowerCase() && !wasRecentlyRecorded(targetUser, channelName)) {
+				void learnFromBan(context.channel, channelName, data.target_user_id, targetUser, modName);
 			}
 
 			const reason = action === 'timeout' ? `${args[1] ?? '?'}s${args[2] ? `: ${args[2]}` : ''}` : String(args[1] || '');

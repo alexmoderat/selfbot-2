@@ -223,4 +223,37 @@ const ChatLine = define(
 	],
 );
 
-module.exports = { Counter, Channel, User, CommandExecution, ErrorLog, Filter, AFK, Reminder, ReminderHistory, Banphrase, ChannelChatModule, ChatLine };
+/**
+ * Gelernte Spam-Domains (alexmoderat, 10.11.2026: "eigenes System ... koennen ja nicht staendig neue banphrases adden").
+ * _id = Domain; gelernt aus einem manuellen Ban, wenn die letzte Nachricht des Gebannten einen Link enthielt.
+ */
+const SpamDomain = define(
+	'SpamDomain',
+	{
+		_id: String,
+		learnedBy: { type: String, default: null },
+		sourceChannel: { type: String, default: null },
+		sourceUser: { type: String, default: null },
+		sourceMessage: { type: String, default: null },
+		created: { type: Date, default: Date.now },
+		hits: { type: Number, default: 0 },
+		lastHit: { type: Date, default: null },
+	},
+	{ collection: 'spamDomains' },
+);
+
+module.exports = {
+	Counter,
+	Channel,
+	User,
+	CommandExecution,
+	ErrorLog,
+	Filter,
+	AFK,
+	Reminder,
+	ReminderHistory,
+	Banphrase,
+	ChannelChatModule,
+	ChatLine,
+	SpamDomain,
+};

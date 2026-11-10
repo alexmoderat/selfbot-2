@@ -3,6 +3,7 @@ const { Router } = require('express');
 
 const Filter = require('../services/filter.js');
 const phrases = require('../services/moderation-phrases.js');
+const spamDomains = require('../services/spam-domains.js');
 const customCommands = require('../services/custom-commands.js');
 const { partChannel } = require('../services/channel-manager.js');
 const { resolveStreamer, watchStreamer, watchTitle } = require('../services/notifications.js');
@@ -494,6 +495,36 @@ const createDashboardRouter = () => {
 		requireAdmin,
 		route(async (req, res) => {
 			await removeChannelPhrase(req, res, null);
+		}),
+	);
+
+	// Gelernte Spam-Domains (services/spam-domains.js, alexmoderat 10.11.2026)
+	const spamDomainRows = async () =>
+		(await spamDomains.list()).map((i) => ({
+			domain: i._id,
+			learnedBy: i.learnedBy,
+			channel: i.sourceChannel,
+			user: i.sourceUser,
+			message: i.sourceMessage,
+			created: i.created,
+			hits: i.hits ?? 0,
+			lastHit: i.lastHit,
+		}));
+	router.get(
+		'/api/admin/spam-domains',
+		requireSession,
+		requireAdmin,
+		route(async (_req, res) => {
+			res.json(await spamDomainRows());
+		}),
+	);
+	router.delete(
+		'/api/admin/spam-domains/:domain',
+		requireSession,
+		requireAdmin,
+		route(async (req, res) => {
+			await spamDomains.remove(req.params.domain ?? '');
+			res.json(await spamDomainRows());
 		}),
 	);
 

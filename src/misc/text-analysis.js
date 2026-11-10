@@ -284,6 +284,63 @@ const LOWTRUST_PROMO_KEYWORDS = ['top viewers', 'best viewers', 'cheap viewers',
 
 const collapseDomainSpaces = (text) => text.replace(/([a-z0-9-])\s*\.\s*([a-z]{2,})/g, '$1.$2');
 
+// ── Versteckte Links ─────────────────────────────────────────────────────────
+//
+// Vorfall #pearsbott, 10.11.2026: "Have you checked out d       o        v        i        e .tv yet?" lief an allen
+// Banphrases und am Link-Spam vorbei (kein Werbewort, und collapseDomainSpaces machte nur "e.tv" daraus); vorher
+// 02.11.2026 "Check out dovie .tv". Wer einen Link absichtlich zerlegt, ist ein Spam-Bot (alexmoderat, 10.11.2026:
+// "die Methode die der typ genutzt hat ist ja auch schon bot artig") - das Verstecken selbst ist das Signal.
+//
+// Bewusst NICHT als versteckt zaehlt "wort. tld" (Leerzeichen nur NACH dem Punkt): das ist ein normales Satzende in
+// kleingeschriebenem Chat ("ok. live soon", Vorfall #rileylume). Versteckt heisst: Leerzeichen VOR dem Punkt
+// ("dovie .tv"), Einzelbuchstaben mit Leerraum ("d o v i e") oder ein ausgeschriebener Punkt ("dovie (dot) tv").
+
+// Mindestens drei Einzelzeichen hintereinander, damit "a b" in normalen Saetzen stehen bleibt
+const joinSpacedLetters = (text) =>
+	text
+		.replace(/(?<![a-z0-9])[a-z0-9](?:\s+[a-z0-9](?![a-z0-9])){2,}/gi, (m) => m.replace(/\s+/g, ''))
+		// TLD in Einzelbuchstaben hinter einem Punkt: ". t v"
+		.replace(/\.\s*((?:[a-z]\s+){1,5}[a-z])(?![a-z0-9])/gi, (_, tld) => `.${tld.replace(/\s+/g, '')}`);
+
+// TLDs, die im Chat als eigenes Wort mit Punkt davor vorkommen ("nice .gg", "that was .lol") - fuer die
+// Versteckt-Erkennung zu riskant. Gelernte Spam-Domains mit diesen Endungen greifen trotzdem (getMessageDomains).
+const CHAT_WORD_TLDS = new Set(['gg', 'lol', 'live', 'top', 'win', 'fun', 'wtf', 'pro', 'vip', 'club', 'stream', 'rest', 'quest', 'monster', 'shop']);
+
+const DOT_WORD = /\s*(?:[([{]\s*(?:dot|\.)\s*[)\]}]|\s+dot\s+)\s*/gi;
+const collapseSpaceBeforeDot = (text) => text.replace(/([a-z0-9-])\s+\.\s*([a-z]{2,})/g, '$1.$2');
+
+const domainsIn = (text) => [...new Set((text.match(DOMAIN_REGEX) || []).map(normalizeDomain).filter(Boolean))];
+
+/** Text mit wieder zusammengesetzten versteckten Links, kleingeschrieben */
+const revealLinks = (messageText) => collapseSpaceBeforeDot(joinSpacedLetters(deobfuscate(deleetify(messageText)).toLowerCase()).replace(DOT_WORD, '.'));
+
+/**
+ * Domains (nicht auf der Allowlist), die nur durch Zusammensetzen sichtbar werden - also absichtlich versteckt sind.
+ * @returns {string[]}
+ */
+function getHiddenDomains(messageText) {
+	const plain = new Set(domainsIn(deobfuscate(deleetify(messageText)).toLowerCase()));
+	return domainsIn(revealLinks(messageText)).filter((d) => {
+		const parts = d.split('.');
+		return !plain.has(d) && !isAllowlistedDomain(d) && !CHAT_WORD_TLDS.has(parts.at(-1)) && parts.at(-2).length >= 3;
+	});
+}
+
+/**
+ * Alle Domains einer Nachricht (offen, versteckt, "wort. tld"), ohne Allowlist - fuer den Abgleich mit gelernten
+ * Spam-Domains, wo die Domain selbst schon feststeht und die grosszuegige Erkennung kein Risiko ist.
+ * @returns {string[]}
+ */
+function getMessageDomains(messageText) {
+	const base = deobfuscate(deleetify(messageText));
+	const all = [
+		...domainsIn(base.toLowerCase()),
+		...domainsIn(revealLinks(messageText)),
+		...domainsIn(collapseDomainSpaces(joinSpacedLetters(base.toLowerCase()).replace(DOT_WORD, '.'))),
+	];
+	return [...new Set(all)].filter((d) => !isAllowlistedDomain(d));
+}
+
 /** Ohne stripInvisible — genau wie im alten suspicious-handler. */
 const deobfuscateLoose = (text) =>
 	normalizeSmallCaps(normalizeSyllabics(normalizeStrokeLetters(text))).replace(/\b([a-z])(\.[a-z]){2,}\b/gi, (m) => m.replace(/\./g, ''));
@@ -370,4 +427,7 @@ module.exports = {
 	deobfuscateLoose,
 	getSuspiciousLinkReason,
 	getFollowFarmReason,
+	getHiddenDomains,
+	getMessageDomains,
+	revealLinks,
 };

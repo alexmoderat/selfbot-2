@@ -476,6 +476,8 @@
     .notify-table .data-table-head,
     .notify-table .data-row { grid-template-columns: 160px 1fr 80px; }
     /* Live/Title Notify mit Spalte Added */
+    .spam-domain-table .data-table-head,
+    .spam-domain-table .data-row { grid-template-columns: 150px 1fr 150px 60px 90px 80px; }
     .notify-table.with-added .data-table-head,
     .notify-table.with-added .data-row { grid-template-columns: 160px 1fr 110px 80px; }
 
@@ -734,6 +736,10 @@
         <button class="nav-item" onclick="showPage('global-banphrases')" id="navGlobalPhrases" style="display:none">
           <span class="nav-icon">🌐</span> Global Phrases
           <span class="nav-badge" id="navGlobalCount">0</span>
+        </button>
+        <button class="nav-item" onclick="showPage('spam-domains')" id="navSpamDomains" style="display:none">
+          <span class="nav-icon">🧠</span> Spam Domains
+          <span class="nav-badge" id="navSpamDomainCount">0</span>
         </button>
         <button class="nav-item" id="navAdminUsers" onclick="showPage('adminusers')">
           <span class="nav-icon">👤</span> Admin Users
@@ -1234,6 +1240,19 @@
       <div id="globalPhraseList"></div>
     </div>
 
+    <!-- ═══ Spam Domains (alexmoderat, 10.11.2026: eigenes System statt staendig neuer Banphrases) ═══ -->
+    <div class="page page-hidden" id="page-spam-domains">
+      <div class="section-header">
+        <div class="section-title">
+          Spam Domains
+          <span class="badge badge-admin">ADMIN</span>
+          <span class="count-pill" id="countSpamDomains">0</span>
+        </div>
+      </div>
+      <p class="section-desc">Learned automatically: when you ban someone by hand, links from their last messages land here; links hidden like <code>d o v i e .tv</code> are banned right away and land here too. Every listed domain is auto-banned in <b>all</b> channels (also as subdomain). Delete a wrong entry to stop it.</p>
+      <div id="spamDomainList"></div>
+    </div>
+
   </div><!-- /content -->
 
   <script>
@@ -1335,6 +1354,7 @@
       admin: 'All Channels',
       blacklist: 'Blacklist',
       'global-banphrases': 'Global Banphrases',
+      'spam-domains': 'Spam Domains',
       adminusers: 'Admin Users',
     };
 
@@ -1398,6 +1418,7 @@
           admin:               loadAdminChannels,
           blacklist:           loadBlacklist,
           'global-banphrases': loadGlobalPhrases,
+          'spam-domains':      loadSpamDomains,
           adminusers:          loadAdminUsers,
         };
         if (loaders[name]) loaders[name]();
@@ -1505,6 +1526,7 @@
         isAdmin = true;
         document.getElementById('navAdminSection').style.display = '';
         document.getElementById('navGlobalPhrases').style.display = '';
+        document.getElementById('navSpamDomains').style.display = '';
         document.getElementById('navAdminUsers').style.display = '';
       }
       // Load overview on start
@@ -2999,6 +3021,49 @@
       }
       html += '</div>';
       document.getElementById('globalPhraseList').innerHTML = html;
+    }
+
+    // ── Spam Domains ───────────────────────────────────────────────────────────
+    async function loadSpamDomains() {
+      loading('spamDomainList');
+      const result = await apiFetch('api/admin/spam-domains');
+      if (result === null) { loadError('spamDomainList'); return; }
+      data.spamDomains = result;
+      renderSpamDomains();
+    }
+
+    function renderSpamDomains() {
+      const list = data.spamDomains || [];
+      document.getElementById('countSpamDomains').textContent = list.length;
+      document.getElementById('navSpamDomainCount').textContent = list.length;
+      const el = document.getElementById('spamDomainList');
+      if (!list.length) {
+        el.innerHTML = buildEmpty('No spam domains learned yet.');
+        return;
+      }
+      el.innerHTML = `
+        <div class="data-table spam-domain-table">
+          <div class="data-table-head"><div>Domain</div><div>Learned from</div><div>By</div><div>Hits</div><div>Added</div><div></div></div>
+          ${list.map(item => `
+            <div class="data-row">
+              <div class="cell-mono">${esc(item.domain)}</div>
+              <div class="cell-muted" title="${esc(item.message || '')}">${item.user ? `@${esc(item.user)} in #${esc(item.channel || '?')}: ` : ''}${esc(item.message || '—')}</div>
+              <div class="cell-muted">${esc(item.learnedBy || '—')}</div>
+              <div class="cell-muted">${Number(item.hits) || 0}</div>
+              <div class="cell-muted" title="added">${addedDate(item.created)}</div>
+              <div class="cell-actions">
+                <button class="btn btn-danger" onclick="deleteSpamDomain('${esc(item.domain)}')">Delete</button>
+              </div>
+            </div>`).join('')}
+        </div>`;
+    }
+
+    async function deleteSpamDomain(domain) {
+      const result = await apiFetch(`api/admin/spam-domains/${encodeURIComponent(domain)}`, { method: 'DELETE' });
+      if (result === null) return;
+      data.spamDomains = result;
+      renderSpamDomains();
+      showToast('Spam domain removed.', 'success');
     }
 
     async function deleteGlobalPhrase(id) {

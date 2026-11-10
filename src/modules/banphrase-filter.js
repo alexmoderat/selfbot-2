@@ -2,7 +2,8 @@ const { defineChatModule } = require('../clients/modules/chat-modules.js');
 const phrases = require('../services/moderation-phrases.js');
 const { isBanEvader, isSuspicious } = require('../services/low-trust-state.js');
 const { announceAutobanCount, announceBan, banUser, targetFromChannel } = require('../services/moderation.js');
-const { deobfuscate, getLinkSpamReason, isTrustedSender, rolesFromBadges } = require('../misc/text-analysis.js');
+const { deobfuscate, getHiddenDomains, getLinkSpamReason, isTrustedSender, rolesFromBadges } = require('../misc/text-analysis.js');
+const spamDomains = require('../services/spam-domains.js');
 const { formatBanphraseReason, localizeViewbotReason } = require('../misc/ban-reason.js');
 
 /**
@@ -61,6 +62,7 @@ module.exports = defineChatModule({
 	scope: 'global',
 	initialize: async () => {
 		await phrases.initialize();
+		await spamDomains.initialize();
 	},
 	handlers: {
 		message: async (context) => {
@@ -78,6 +80,10 @@ module.exports = defineChatModule({
 
 			const lowerMessage = deobfuscate(message.toLowerCase());
 			const bufferKey = `${channel.id}:${userId}`;
+			// Fuer das Lernen aus manuellen Bans (spam-domains.learnFromBan)
+			if (!trusted) {
+				spamDomains.rememberMessage(channel.id, userId, message);
+			}
 			const previous = lastMessage.get(bufferKey);
 			rememberMessage(bufferKey, lowerMessage);
 
@@ -119,6 +125,43 @@ module.exports = defineChatModule({
 				}
 
 				return;
+			}
+
+			// Gelernte Spam-Domains und absichtlich versteckte Links (alexmoderat, 10.11.2026, Vorfall dovie.tv)
+			if (!trusted) {
+				const learned = spamDomains.findInMessage(message);
+				const hidden = learned ? null : getHiddenDomains(message)[0];
+				const domain = learned ?? hidden;
+				if (domain) {
+					lastMessage.delete(bufferKey);
+					const publicReason = learned ? `Spam link (${domain})` : `Hidden link (${domain})`;
+					const status = evader ? 'BAN EVADER LINKSPAM' : suspicious ? 'SUSPICIOUS LINKSPAM' : 'REGULAR LINKSPAM';
+					const ok = await banUser(targetFromChannel(channel, userId, user.name), {
+						reason: formatBanphraseReason(publicReason, bot.Twitch.selfName),
+						status,
+						automated: true,
+					});
+					if (learned) {
+						spamDomains.recordHit(learned);
+					} else {
+						// Versteckt gepostete Domain gleich lernen, damit sie auch offen geschrieben greift
+						await spamDomains
+							.addDomain(hidden, {
+								learnedBy: `${bot.Twitch.selfName} (hidden link)`,
+								sourceChannel: channel.name,
+								sourceUser: user.name,
+								sourceMessage: message,
+							})
+							.catch((e) => console.warn('[banphrase-filter] Spam-Domain speichern fehlgeschlagen', e));
+					}
+
+					console.log(`[banphrase-filter] ${learned ? 'Gelernte Spam-Domain' : 'Versteckter Link'} ${domain} von ${user.name} in #${channel.name}`);
+					if (ok) {
+						await announceBan(channel.name, user.name, publicReason, null);
+						await announceAutobanCount(channel);
+					}
+					return;
+				}
 			}
 
 			// Link-Spam
