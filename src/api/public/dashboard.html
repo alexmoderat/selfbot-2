@@ -198,7 +198,7 @@
     .stat-sub { font-size: 14px; color: #777777; margin-top: 4px; }
     #page-overview { max-width: none; padding-top: 20px; }
     #page-use { max-width: none; padding: 0; }
-    #page-reminders { max-width: 1500px; }
+    #page-reminders { max-width: 1156px; } /* ninou2, 08.11.2026: "make REMINDER size [a bit] smaller", danach "more smaller" */
     /* ninou2, 07.11.2026: "should be the same space between WHEN, WHERE, CREATED, REMOVE" - eine Tabelle (subgrid), die
        Spalten sind so breit wie ihr laengster Inhalt, dazwischen ueberall derselbe Abstand */
     /* ninou2, 08.11.2026: "Reminder TEXT should [have] a way bigger space", "status size perfect", "the remaining space devided evenly between WHEN/WHERE/CREATED" */
@@ -207,7 +207,9 @@
     /* ninou2, 08.11.2026: "between the categories there [is] an empty space (the blue space), this space should be the same AND never [change]
        whenever [you] are in windowed size browser tab or [full] screen", "the same size AND smaller": die Spalten sind so breit wie ihr Inhalt,
        der Abstand ist fest, nur die Reminder-Spalte waechst mit dem Fenster. Where begrenzt, damit ein langer Channelname nicht alles verschiebt. */
-    .reminder-table { display: grid; grid-template-columns: minmax(180px, 1fr) max-content fit-content(210px) max-content max-content; column-gap: 40px; }
+    /* danach: "on the current My [reminders] layout make my [reminder more] smaller", "then copy the same layout to History": feste Spalten, damit beide Tabellen
+       unabhaengig vom Inhalt gleich aussehen; langer Text bricht um */
+    .reminder-table { display: grid; grid-template-columns: minmax(180px, 1fr) 110px 110px 110px minmax(100px, max-content); column-gap: 40px; }
     .reminder-table .data-table-head, .reminder-table .data-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; column-gap: 40px; }
     /* schmale Fenster: Spalten duerfen umbrechen, sonst bleibt fuer den Reminder-Text kein Platz */
     .reminder-text { overflow-wrap: anywhere; }
@@ -233,7 +235,11 @@
     }
     @media (prefers-reduced-motion: reduce) { #reminderHistoryBtn.btn-primary::before { animation: none; } }
     /* ninou2, 08.11.2026: "My Reminders should be Clickable too", "that bring back also to active reminders dashbord" */
-    .reminder-title-link { background: none; border: none; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; cursor: pointer; }
+    /* danach: "History AND [my reminders] should [be] the same size(width)", "make [my reminders] size a bit smaller" */
+    .reminder-title-link { background: none; border: none; padding: 0; color: inherit; font: inherit; font-size: 20px; letter-spacing: inherit; cursor: pointer; }
+    #reminderHistoryBtn { box-sizing: border-box; justify-content: center; }
+    .history-state { font-size: 14px; font-weight: 700; color: #ff5c5c; }
+    .history-state.on { color: #3fb950; }
     .reminder-title-link:hover { color: #3a9bd0; }
     .history-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
     .history-toolbar .history-select { width: auto; }
@@ -249,7 +255,7 @@
     /* danach: "WHEN WHERE CREATED STATUS , all should be exactly [in] the middle [of] their content" */
     .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created, .reminder-table .rem-status { justify-self: center; text-align: center; }
     .reminder-table .data-table-head > div:not(:first-child) { text-align: center; }
-    @media (max-width: 1200px) { .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created, .reminder-table .rem-status { justify-self: start; text-align: left; } }
+    @media (max-width: 1100px) { .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created, .reminder-table .rem-status { justify-self: start; text-align: left; } }
     .reminder-table .rem-date { display: block; color: #ffffff; } /* ninou2, 08.11.2026: "(X/X/X) should be another color", "white" */
     .supibot-only-link { color: #3a9bd0; font-size: 19.5px; font-weight: 700; letter-spacing: 0; text-decoration: none; border: 1px solid #282828; border-radius: 8px; padding: 4px 12px; }
     .supibot-only-link:hover { border-color: #1f7fb3; color: #8cc6e6; }
@@ -261,7 +267,7 @@
     .confirm-label { font-size: 14px; color: #adafae; align-self: center; }
     .sort-head { background: none; border: 0; padding: 0; text-align: left; font-size: 12.5px; font: inherit; text-transform: inherit; letter-spacing: inherit; color: #3a9bd0; cursor: pointer; }
     .sort-head:hover, .sort-head.active { color: #8cc6e6; text-decoration: underline; }
-    @media (max-width: 1200px) { .reminder-table { display: block; } .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created { white-space: normal; } .reminder-table .data-table-head { display: flex; gap: 14px; } .reminder-table .data-table-head > div:empty, .reminder-table .data-table-head > div:first-child { display: none; } .reminder-table .data-row { grid-template-columns: 1fr; } }
+    @media (max-width: 1100px) { .reminder-table { display: block; } .reminder-table .rem-when, .reminder-table .rem-where, .reminder-table .rem-created { white-space: normal; } .reminder-table .data-table-head { display: flex; gap: 14px; } .reminder-table .data-table-head > div:empty, .reminder-table .data-table-head > div:first-child { display: none; } .reminder-table .data-row { grid-template-columns: 1fr; } }
     .use-frame { border: none; display: block; height: calc(100vh - 60px); width: 100%; }
     @keyframes addBeam { to { transform: translate(-50%, -50%) rotate(360deg); } }
     @keyframes addPulse {
@@ -819,6 +825,8 @@
         <div class="section-title"><button type="button" class="reminder-title-link" onclick="showActiveReminders()">My reminders</button> <span class="count-pill" id="countReminders">0</span>
           <!-- ninou2, 08.11.2026: "next to My reminders (number) add a button called HISTORY" -->
           <button type="button" class="btn btn-cancel" id="reminderHistoryBtn" onclick="toggleReminderHistory()">History</button>
+          <!-- ninou2, 08.11.2026: "a text red saying OFF just next to the history button", in der History "this OFF text turn to ON with Green color" -->
+          <span class="history-state" id="reminderHistoryState">OFF</span>
         </div>
       </div>
       <p class="section-desc" id="reminderDesc">Your pending reminders, from every channel. Only you can see this page.</p>
@@ -1641,8 +1649,19 @@
       showPage(reminderHistoryOpen ? 'reminders' : 'reminders-history');
     }
 
+    // Der Button ist so breit wie der Titel; messen statt festlegen, weil die Schrift je nach Browser anders ausfaellt
+    function syncHistoryButtonWidth() {
+      const width = document.querySelector('.reminder-title-link').offsetWidth;
+      if (width) document.getElementById('reminderHistoryBtn').style.width = `${width}px`;
+    }
+
     function setReminderHistoryOpen(open) {
+      syncHistoryButtonWidth();
+      document.fonts?.ready.then(syncHistoryButtonWidth);
       reminderHistoryOpen = open;
+      const state = document.getElementById('reminderHistoryState');
+      state.textContent = open ? 'ON' : 'OFF';
+      state.classList.toggle('on', open);
       document.getElementById('reminderList').style.display = reminderHistoryOpen ? 'none' : '';
       document.getElementById('reminderHistory').style.display = reminderHistoryOpen ? '' : 'none';
       const button = document.getElementById('reminderHistoryBtn');
