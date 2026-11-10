@@ -33,4 +33,14 @@ function formatMonthlyBreakdown(rows) {
 	return rows.map(({ month, seconds }) => `*${MONTHS[month - 1]}* —>[${Math.round(seconds / 3600)}h]`).join(' // ');
 }
 
-module.exports = { MONTHS, parseMonthYear, formatPeriodLabel, formatMonthlyBreakdown };
+/**
+ * Zeitraum-Wort, wie es !hoursstreamedcategories versteht: "november2026", "2026", "monthly", "monthly2026",
+ * "alltime"/"all"/"total". !hsch und !chsc reichen damit an !hsc weiter (ninou2, 10.11.2026: "why it didnt detect that
+ * we wanted the month only" nach "!hsch im_row1 november2026" / "!chsc im_row1 november2026").
+ */
+function isPeriodWord(raw) {
+	const low = String(raw).toLowerCase();
+	return Boolean(parseMonthYear(low)) || /^\d{4}$/.test(low) || /^monthly(\d{4})?$/.test(low) || ['alltime', 'all', 'total'].includes(low);
+}
+
+module.exports = { MONTHS, parseMonthYear, formatPeriodLabel, formatMonthlyBreakdown, isPeriodWord };

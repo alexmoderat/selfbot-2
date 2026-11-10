@@ -1,6 +1,6 @@
 const { streamData } = require('../services/stream-tracking.js');
 const { formatCategoryParts } = require('../misc/category-hours.js');
-const { MONTHS } = require('../misc/stream-hours.js');
+const { MONTHS, isPeriodWord } = require('../misc/stream-hours.js');
 const { fmtDate } = require('../misc/streamer-streak.js');
 const { replyInChunks } = require('../misc/tracking-format.js');
 
@@ -18,6 +18,11 @@ module.exports = {
 	description: 'Hours streamed per category for a channel, broken down by year (full tracked history, newest year first). Defaults to the current channel.',
 	usage: 'hoursstreamedcategorieshistory [channel]',
 	execute: async (client, msg) => {
+		// Mit Zeitraum ("!hsch im_row1 november2026") ist die Verlaufsansicht falsch, das kann !hsc
+		if (msg.args.some(isPeriodWord)) {
+			return await require('./hoursstreamedcategories.js').execute(client, msg);
+		}
+
 		const [channelRaw] = msg.args;
 		const display = msg.displayName;
 		const channel = (channelRaw ?? msg.channelData?.name ?? '').replace(/^[@#]+/, '').toLowerCase();

@@ -1,6 +1,6 @@
 const { streamData } = require('../services/stream-tracking.js');
 const { formatCategoryDuration, matchCategories } = require('../misc/category-hours.js');
-const { MONTHS, parseMonthYear } = require('../misc/stream-hours.js');
+const { MONTHS, parseMonthYear, isPeriodWord } = require('../misc/stream-hours.js');
 const { packLines, replyInChunks } = require('../misc/tracking-format.js');
 
 /**
@@ -76,6 +76,14 @@ module.exports = {
 				userId = candidateId;
 				rows = candidateRows;
 				query = words.slice(1).join(' ');
+			}
+		}
+
+		// Nur ein Channel ohne Kategorie ("!chsc im_row1 november2026"): alle Kategorien des Channels, wie !hsc
+		if (words.length === 1 && matchCategories(rows, query).length === 0 && args.slice(1).every(isPeriodWord)) {
+			const candidateId = await streamData.fetchUserId(words[0].replace(/^[@#]+/, '').toLowerCase());
+			if (candidateId && (await streamData.getCategoryYears(candidateId)).length > 0) {
+				return await require('./hoursstreamedcategories.js').execute(client, msg);
 			}
 		}
 
