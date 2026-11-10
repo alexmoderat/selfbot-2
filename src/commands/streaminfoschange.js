@@ -15,13 +15,6 @@ const { parseStreamInfosLine } = require('../modules/stream-infos-restore.js');
 const formatStreamInfosChange = (game, title) => `the current stream infos are : /setgame ${game} /settitle ${title}`;
 const formatSavedStreamInfos = (game, title) => `stream infos are : /setgame ${game} /settitle ${title}`;
 
-/**
- * Ausloesender Befehl ans Ende (ninou2, 10.11.2026: "at the end [of the] responde message the [bot should] add the alias
- * [of] the command that triggered him", Beispiel '... part 16. "!csi"', "to make it easy when [searching] the logs ... for a
- * specific response", "i prefer if the [bot] does not post the alias at the end" bei anderen Commands - nur !csi).
- */
-const withTrigger = (text, msg) => (msg.invocation ? `${text}. "${(msg.prefix ?? '!').trim()}${msg.invocation}"` : text);
-
 const SLOT_PATTERN = /^[\p{L}\p{N}_-]{1,20}$/u;
 const QUOTED_SLOT = /\s*["“”](?<slot>[^"“”]{1,20})["“”]\s*$/;
 
@@ -121,7 +114,7 @@ module.exports = {
 				};
 			}
 
-			return { text: withTrigger(formatSavedStreamInfos(saved.game, saved.title), msg) };
+			return { text: formatSavedStreamInfos(saved.game, saved.title) };
 		}
 
 		const current = await fetchCurrent(channel.twitchId);
@@ -129,8 +122,8 @@ module.exports = {
 			return { success: false, text: 'Could not fetch the current stream infos.' };
 		}
 
-		return { text: withTrigger(formatStreamInfosChange(current.game, current.title), msg) };
+		return { text: formatStreamInfosChange(current.game, current.title) };
 	},
 };
 
-Object.assign(module.exports, { formatStreamInfosChange, formatSavedStreamInfos, parseSaveArgs, withTrigger });
+Object.assign(module.exports, { formatStreamInfosChange, formatSavedStreamInfos, parseSaveArgs });

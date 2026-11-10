@@ -1,3 +1,4 @@
+const { withTrigger } = require('../misc/trigger-suffix.js');
 const { commands } = require('../clients/modules/commands.js');
 const { setTimeout: sleep } = require('node:timers/promises');
 
@@ -101,7 +102,7 @@ module.exports = {
 				await sleep(SEND_DELAY);
 			}
 
-			await msg.send(chunks[i]);
+			await msg.send(i === chunks.length - 1 ? withTrigger(chunks[i], msg) : chunks[i]);
 		}
 
 		return { text: null };

@@ -1,3 +1,4 @@
+const { withTrigger } = require('../misc/trigger-suffix.js');
 const { setTimeout: sleep } = require('node:timers/promises');
 const { listOrLink } = require('../misc/list-reply.js');
 const Filter = require('../services/filter.js');
@@ -137,7 +138,7 @@ module.exports = {
 				await sleep(SEND_DELAY);
 			}
 
-			await msg.send(chunks[i]);
+			await msg.send(i === chunks.length - 1 ? withTrigger(chunks[i], msg) : chunks[i]);
 		}
 
 		console.log(

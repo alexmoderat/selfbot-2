@@ -1,3 +1,4 @@
+const { withTrigger } = require('../misc/trigger-suffix.js');
 const { promisify } = require('node:util');
 const { exec } = require('node:child_process');
 const path = require('node:path');
@@ -58,7 +59,7 @@ module.exports = {
 			}
 		}
 
-		await msg.send('Restarting...');
+		await msg.send(withTrigger('Restarting...', msg));
 		setTimeout(() => process.exit(0), 1000);
 		return { text: null };
 	},
