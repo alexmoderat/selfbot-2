@@ -10,7 +10,8 @@ const { rolesFromBadges } = require('../misc/text-analysis.js');
  * chat" - sie will dabei nichts tippen. Das Aufheben selbst (Zeile mit den gerade aktiven Werten) bleibt still.
  */
 // Vorspann der !sic-Antwort ("the current stream infos are :") oder eines Speicherplatzes ("stream infos are :")
-const PATTERN = /^(?:(?:the current )?stream infos are\s*:\s*)?\/setgame\s+(.+?)\s+\/settitle\s+(.+)$/i;
+// Endung '. "!csi"' (ausloesender Befehl, siehe !sic) gehoert nicht zum Titel
+const PATTERN = /^(?:(?:the current )?stream infos are\s*:\s*)?\/setgame\s+(.+?)\s+\/settitle\s+(.+?)(?:\.\s*"![^"\s]+")?$/i;
 
 const parseStreamInfosLine = (message) => {
 	const match = PATTERN.exec(message.trim());
