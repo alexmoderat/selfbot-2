@@ -1,6 +1,7 @@
 const { got } = require('../token/got.js');
 
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
+const { fmtLengthShort } = require('../misc/streamer-streak.js');
 const { pubsub } = require('./pubsub.js');
 
 /**
@@ -92,16 +93,27 @@ const gamesPlayedText = (startedMs, startGame, changes, now = Date.now()) => {
 /** "Streaming (Kategorie) : Titel" (ninou2, 13.10.2026: "say the category between ( )") */
 const formatStreamingPart = (info) => (info.gameName ? `Streaming (${info.gameName}) : ${info.title}` : info.title);
 
+// Streamer mit @ wie bei der Live-Meldung (ninou2, 10.11.2026: "the offline message @ people too")
 const formatOfflineText = (login, gamesPart, lastGame, durationMs) => {
 	const durationPart = durationMs !== null ? ` ⏱️They streamed for ${formatNotifyDuration(durationMs)} ⏱️` : '';
 	return gamesPart
-		? `${login} is now offline! games played: ${gamesPart}.${durationPart}`
-		: `${login} is now offline!${lastGame ? ` Last game played: [${lastGame}].` : ''}${durationPart}`;
+		? `@${login} is now offline! games played: ${gamesPart}.${durationPart}`
+		: `@${login} is now offline!${lastGame ? ` Last game played: [${lastGame}].` : ''}${durationPart}`;
 };
 
-// Leerzeichen in den Anfuehrungszeichen, damit Emotes am Titelrand erkannt werden; Streamer mit @
-const formatTitleChange = (users, login, title, game) =>
-	`${users.map((i) => `@${i}`).join(' ')} — @${login} changed their title: " ${title.trim()} "${game ? ` (Category: ${game})` : ''}`;
+// Leerzeichen in den Anfuehrungszeichen, damit Emotes am Titelrand erkannt werden; Streamer mit @.
+// Live: wie lange schon (ninou2, 10.11.2026: "if the streamer [is live] it tells for how long [they] has been [live]",
+// "(Category: World of Warcraft) [⏱1h20min]"; "if the streamer offline this bracket part does not show")
+const formatTitleChange = (users, login, title, game, liveMs = null) =>
+	`${users.map((i) => `@${i}`).join(' ')} — @${login} changed their title: " ${title.trim()} "${game ? ` (Category: ${game})` : ''}${liveMs !== null ? ` [⏱${fmtLengthShort(liveMs)}]` : ''}`;
+
+/** Seit wann live (ms), offline/unbekannt null */
+const fetchLiveSince = async (streamerId) => {
+	const response = await got('Helix')({ url: 'streams', searchParams: { user_id: streamerId } }).catch(() => null);
+	const startedAt = response?.ok ? response.body.data[0]?.started_at : undefined;
+	const startedMs = startedAt ? Date.parse(startedAt) : Number.NaN;
+	return Number.isNaN(startedMs) ? null : Math.max(0, Date.now() - startedMs);
+};
 
 /* ---------- live ---------- */
 
@@ -220,6 +232,7 @@ const announceTitleChange = async (streamerId, title, game) => {
 		return;
 	}
 
+	const liveMs = await fetchLiveSince(streamerId);
 	const perChannel = new Map();
 	for (const row of rows) {
 		const user = await bot.Users.get(row.User_Alias);
@@ -229,7 +242,7 @@ const announceTitleChange = async (streamerId, title, game) => {
 	}
 
 	for (const [channelId, users] of perChannel) {
-		await sendTo(channelId, formatTitleChange(users, rows[0].Streamer_Login, title, game));
+		await sendTo(channelId, formatTitleChange(users, rows[0].Streamer_Login, title, game, liveMs));
 	}
 	console.log(`[notifications] Titelwechsel ${rows[0].Streamer_Login} -> ${rows.length} Abonnent(en) in ${perChannel.size} Channel(s)`);
 };
@@ -254,6 +267,7 @@ module.exports = {
 	formatStreamingPart,
 	formatOfflineText,
 	formatTitleChange,
+	fetchLiveSince,
 	announceStreamState,
 	recordGameChange,
 	announceTitleChange,
