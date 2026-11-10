@@ -184,7 +184,7 @@ const commandOptions = (body) => ({
 /* ---------- notify / banwatch ---------- */
 
 const notifyRows = async (channel) =>
-	(await bot.DB.NotifyLive.find({ channel: channel.id }).sort({ added: 1 }).lean()).map((i) => ({ streamer: i.streamerLogin, message: i.message ?? '' }));
+	(await bot.DB.NotifyLive.find({ channel: channel.id }).sort({ added: 1 }).lean()).map((i) => ({ streamer: i.streamerLogin, message: i.message ?? '', added: i.added }));
 
 const addNotify = async (channel, streamerLogin, message) => {
 	const streamer = await resolveStreamer(streamerLogin);

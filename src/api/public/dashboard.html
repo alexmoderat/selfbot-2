@@ -475,6 +475,9 @@
     /* Notify / banwatch: 3 cols */
     .notify-table .data-table-head,
     .notify-table .data-row { grid-template-columns: 160px 1fr 80px; }
+    /* Live/Title Notify mit Spalte Added */
+    .notify-table.with-added .data-table-head,
+    .notify-table.with-added .data-row { grid-template-columns: 160px 1fr 110px 80px; }
 
     /* Blacklist: 2 cols */
     .bl-table .data-table-head,
@@ -1613,7 +1616,13 @@
     /** Zeitraum, Ansicht und Seite aus dem Link uebernehmen; true, wenn sich etwas geaendert hat */
     function readHistoryHash() {
       const parts = location.hash.slice(1).split('/').slice(1);
-      if (!parts.length) return false;
+      // ninou2, 10.11.2026: "whenever u switch from PAGES AND comeback to it, it should always put [you] on page [1]" -
+      // ohne Seitenzahl im Link (History-Button, Seitenleiste) also Seite 1
+      if (!parts.length) {
+        const changed = historyPage !== 1;
+        historyPage = 1;
+        return changed;
+      }
       const before = historyState();
       const period = parts[0];
       if (/^\d{4}$/.test(period)) historyPeriod = { mode: 'year', value: period };
@@ -1648,7 +1657,9 @@
       // Erst neuer Verlaufseintrag, dann rendern (das ersetzt den Link nur noch, z. B. beim Begrenzen der Seite)
       syncHistoryHash(true);
       renderReminderHistory();
-      document.getElementById('reminderHistory').scrollIntoView({ block: 'start', behavior: 'smooth' });
+      // ninou2, 10.11.2026: "when u [click] next / previous, the website should always scroll to the top [of] the page showed"
+      window.scrollTo(0, 0);
+      document.querySelector('.content')?.scrollTo(0, 0);
     }
 
     function setHistorySort(key) {
@@ -2308,6 +2319,40 @@
           : '<div class="cell-muted">Nobody used it yet.</div>'}`;
     }
 
+    // ninou2, 10.11.2026: "Live notify / title [notify] should also [have] a sort by button [for] when added" - Spalte Added,
+    // Streamer/Added anklickbar wie bei den Remindern (nochmal klicken = umgekehrt). Added zuerst die neuesten.
+    const NOTIFY_SORTS = {
+      streamer: (a, b) => a.streamer.localeCompare(b.streamer) || String(a.user ?? '').localeCompare(String(b.user ?? '')),
+      added: (a, b) => new Date(b.added ?? 0) - new Date(a.added ?? 0) || a.streamer.localeCompare(b.streamer)
+    };
+    const loadSort = (key, fallback) => {
+      try { const saved = JSON.parse(localStorage.getItem(key)); if (NOTIFY_SORTS[saved?.key]) return saved; } catch {}
+      return fallback;
+    };
+    let notifySort = loadSort('notifySort', { key: 'added', desc: true });
+    let titleNotifySort = loadSort('titleNotifySort', { key: 'streamer', desc: false });
+    const nextSort = (state, key) => (state.key === key) ? { key, desc: !state.desc } : { key, desc: false };
+    function setNotifySort(key) {
+      notifySort = nextSort(notifySort, key);
+      try { localStorage.setItem('notifySort', JSON.stringify(notifySort)); } catch {}
+      renderNotify();
+    }
+    function setTitleNotifySort(key) {
+      titleNotifySort = nextSort(titleNotifySort, key);
+      try { localStorage.setItem('titleNotifySort', JSON.stringify(titleNotifySort)); } catch {}
+      renderTitleNotify();
+    }
+    const sortedBy = (list, state) => {
+      const sorted = [...list].sort(NOTIFY_SORTS[state.key]);
+      return state.desc ? sorted.reverse() : sorted;
+    };
+    const addedDate = value => {
+      if (!value) return '—';
+      const date = new Date(value);
+      const part = n => String(n).padStart(2, '0');
+      return `${part(date.getDate())}/${part(date.getMonth() + 1)}/${part(date.getFullYear() % 100)}`;
+    };
+
     // ── Live Notify ────────────────────────────────────────────────────────────
     async function loadNotify() {
       loading('notifyList');
@@ -2328,12 +2373,13 @@
         return;
       }
       el.innerHTML = `
-        <div class="data-table notify-table">
-          <div class="data-table-head"><div>Streamer</div><div>Custom message</div><div></div></div>
-          ${data.notify.map(item => `
+        <div class="data-table notify-table with-added">
+          <div class="data-table-head"><div>${sortHead('streamer', 'Streamer', notifySort, 'setNotifySort')}</div><div>Custom message</div><div>${sortHead('added', 'Added', notifySort, 'setNotifySort')}</div><div></div></div>
+          ${sortedBy(data.notify.map(item => ({ ...item, streamer: item.streamer || item.target || item.login || '' })), notifySort).map(item => `
             <div class="data-row">
-              <div class="cell-mono">${esc(item.streamer || item.target || item.login || '')}</div>
+              <div class="cell-mono">${esc(item.streamer)}</div>
               <div class="cell-muted">${esc(item.message || '—')}</div>
+              <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
                 <button class="btn btn-danger" onclick="deleteNotify('${esc(item.streamer || item.target || item.login || '')}')">Delete</button>
               </div>
@@ -2385,12 +2431,13 @@
         return;
       }
       el.innerHTML = `
-        <div class="data-table notify-table">
-          <div class="data-table-head"><div>Streamer</div><div>Pings</div><div></div></div>
-          ${data.titlenotify.map(item => `
+        <div class="data-table notify-table with-added">
+          <div class="data-table-head"><div>${sortHead('streamer', 'Streamer', titleNotifySort, 'setTitleNotifySort')}</div><div>Pings</div><div>${sortHead('added', 'Added', titleNotifySort, 'setTitleNotifySort')}</div><div></div></div>
+          ${sortedBy(data.titlenotify, titleNotifySort).map(item => `
             <div class="data-row">
               <div class="cell-mono">${esc(item.streamer)}</div>
               <div class="cell-muted">@${esc(item.user)}</div>
+              <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
                 <button class="btn btn-danger" onclick="deleteTitleNotify('${esc(item.streamer)}', '${esc(item.user)}')">Delete</button>
               </div>
