@@ -24,6 +24,9 @@ test('offene Links, Allowlist und normale Saetze sind nicht versteckt', () => {
 	assert.deepEqual(getHiddenDomains('i am at twitch .tv/zzq'), []);
 	assert.deepEqual(getHiddenDomains('join d i s c o r d .gg/zzq'), []);
 	assert.deepEqual(getHiddenDomains('a b c and I. Love. You'), []);
+	// kick.com ausgenommen (frueherer Fehlalarm)
+	assert.deepEqual(getHiddenDomains('watch me on kick .com/zzq'), []);
+	assert.deepEqual(getMessageDomains('k i c k .com/zzq and kick.com/zzq'), []);
 });
 
 test('getMessageDomains findet offene und versteckte Schreibweisen', () => {

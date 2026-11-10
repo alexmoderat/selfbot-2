@@ -306,6 +306,11 @@ const joinSpacedLetters = (text) =>
 // Versteckt-Erkennung zu riskant. Gelernte Spam-Domains mit diesen Endungen greifen trotzdem (getMessageDomains).
 const CHAT_WORD_TLDS = new Set(['gg', 'lol', 'live', 'top', 'win', 'fun', 'wtf', 'pro', 'vip', 'club', 'stream', 'rest', 'quest', 'monster', 'shop']);
 
+// Nur fuer versteckte Links und gelernte Spam-Domains ausgenommen, nicht fuer den normalen Link-Spam
+// (alexmoderat, 10.11.2026: "das mit kick da gabs schon 1x fehlalarm")
+const SPAM_DOMAIN_EXEMPT = ['kick.com'];
+const isSpamDomainExempt = (domain) => isAllowlistedDomain(domain) || SPAM_DOMAIN_EXEMPT.some((s) => domain === s || domain.endsWith(`.${s}`));
+
 const DOT_WORD = /\s*(?:[([{]\s*(?:dot|\.)\s*[)\]}]|\s+dot\s+)\s*/gi;
 const collapseSpaceBeforeDot = (text) => text.replace(/([a-z0-9-])\s+\.\s*([a-z]{2,})/g, '$1.$2');
 
@@ -322,7 +327,7 @@ function getHiddenDomains(messageText) {
 	const plain = new Set(domainsIn(deobfuscate(deleetify(messageText)).toLowerCase()));
 	return domainsIn(revealLinks(messageText)).filter((d) => {
 		const parts = d.split('.');
-		return !plain.has(d) && !isAllowlistedDomain(d) && !CHAT_WORD_TLDS.has(parts.at(-1)) && parts.at(-2).length >= 3;
+		return !plain.has(d) && !isSpamDomainExempt(d) && !CHAT_WORD_TLDS.has(parts.at(-1)) && parts.at(-2).length >= 3;
 	});
 }
 
@@ -338,7 +343,7 @@ function getMessageDomains(messageText) {
 		...domainsIn(revealLinks(messageText)),
 		...domainsIn(collapseDomainSpaces(joinSpacedLetters(base.toLowerCase()).replace(DOT_WORD, '.'))),
 	];
-	return [...new Set(all)].filter((d) => !isAllowlistedDomain(d));
+	return [...new Set(all)].filter((d) => !isSpamDomainExempt(d));
 }
 
 /** Ohne stripInvisible — genau wie im alten suspicious-handler. */
