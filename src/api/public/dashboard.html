@@ -243,6 +243,14 @@
     .reminder-title-link:hover { color: #3a9bd0; }
     .history-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
     .history-toolbar .history-select { width: auto; }
+    /* ninou2, 10.11.2026: Umschalter "pages/Infinite", aktiver Teil farbig mit Pfeil, etwas Abstand zu Per month und Zahl */
+    .history-view { display: inline-flex; margin-left: 24px; border: 1px solid #282828; border-radius: 7px; overflow: hidden; }
+    .history-view button { min-width: 104px; padding: 7px 14px; font-size: 14px; font-weight: 600; background: transparent; color: #c9c9c9; border: 0; cursor: pointer; font-family: inherit; }
+    .history-view button + button { border-left: 1px solid #282828; }
+    .history-view button.active { background: #1f7fb3; color: #fff; }
+    .history-pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 14px; font-size: 14px; }
+    .history-pager .btn { min-width: 90px; padding: 7px 14px; font-size: 14px; font-weight: 600; justify-content: center; border: 1px solid #282828; border-radius: 7px; }
+    .history-pager .btn:disabled { opacity: .4; cursor: default; }
     /* ninou2, 07.11.2026: "its data should [have] its own color" - when rot, where gruen, created dunkellila */
     /* ninou2, 07.11.2026: "make the space between the [reminder] content and when a little [bigger]" */
     /* ninou2, 07.11.2026: "remove button background red color", dann "Dark" statt "very light color" */
@@ -1585,16 +1593,35 @@
     // Neueste zuerst; der Zeitraum richtet sich nach dem Erstellungsdatum
     const historyOptions = mode => [...new Set(reminderHistory.map(mode === 'year' ? historyYear : historyMonth))].sort().reverse();
 
+    // ninou2, 10.11.2026: "make it pages", "each page show 20 reminders AND this OG infinite one", "a button called pages/Infinite"
+    const HISTORY_PAGE_SIZE = 20;
+    let historyView = (() => { try { return localStorage.getItem('reminderHistoryView') === 'pages' ? 'pages' : 'infinite'; } catch { return 'infinite'; } })();
+    let historyPage = 1;
+    function setHistoryView(view) {
+      historyView = view;
+      historyPage = 1;
+      try { localStorage.setItem('reminderHistoryView', view); } catch {}
+      renderReminderHistory();
+    }
+    function setHistoryPage(page) {
+      historyPage = page;
+      renderReminderHistory();
+      document.getElementById('reminderHistory').scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
+
     function setHistorySort(key) {
+      historyPage = 1;
       historySort = (historySort.key === key) ? { key, desc: !historySort.desc } : { key, desc: false };
       try { localStorage.setItem('reminderHistoryOrder', JSON.stringify(historySort)); } catch {}
       renderReminderHistory();
     }
     function setHistoryPeriod(mode) {
+      historyPage = 1;
       historyPeriod = { mode, value: (mode === 'all') ? null : historyOptions(mode)[0] ?? null };
       renderReminderHistory();
     }
     function setHistoryValue(value) {
+      historyPage = 1;
       historyPeriod.value = value;
       renderReminderHistory();
     }
@@ -1607,11 +1634,21 @@
       const periodBtn = (key, label) => `<button type="button" class="btn ${mode === key ? 'btn-primary' : 'btn-cancel'}" onclick="setHistoryPeriod('${key}')">${label}</button>`;
       const select = (mode === 'all') ? '' : `<select class="level-select history-select" onchange="setHistoryValue(this.value)">${historyOptions(mode).map(option =>
         `<option value="${esc(option)}"${option === value ? ' selected' : ''}>${esc(mode === 'year' ? option : historyMonthLabel(option))}</option>`).join('')}</select>`;
-      const toolbar = `<div class="history-toolbar">${periodBtn('all', 'All time')}${periodBtn('year', 'Per year')}${periodBtn('month', 'Per month')}${select}<span class="count-pill">${list.length}</span></div>`;
+      const viewBtn = (key, label) => `<button type="button" class="${historyView === key ? 'active' : ''}" onclick="setHistoryView('${key}')">${historyView === key ? '&#10140; ' : ''}${label}</button>`;
+      const viewToggle = `<span class="history-view">${viewBtn('pages', 'Pages')}${viewBtn('infinite', 'Infinite')}</span>`;
+      const toolbar = `<div class="history-toolbar">${periodBtn('all', 'All time')}${periodBtn('year', 'Per year')}${periodBtn('month', 'Per month')}${select}<span class="count-pill">${list.length}</span>${viewToggle}</div>`;
+      const pages = Math.max(1, Math.ceil(list.length / HISTORY_PAGE_SIZE));
+      historyPage = Math.min(Math.max(1, historyPage), pages);
+      const visible = (historyView === 'pages') ? list.slice((historyPage - 1) * HISTORY_PAGE_SIZE, historyPage * HISTORY_PAGE_SIZE) : list;
+      const pager = (historyView === 'pages' && pages > 1) ? `<div class="history-pager">
+          <button type="button" class="btn btn-cancel" onclick="setHistoryPage(${historyPage - 1})"${historyPage === 1 ? ' disabled' : ''}>&larr; Prev</button>
+          <span>Page ${historyPage} / ${pages}</span>
+          <button type="button" class="btn btn-cancel" onclick="setHistoryPage(${historyPage + 1})"${historyPage === pages ? ' disabled' : ''}>Next &rarr;</button>
+        </div>` : '';
       const table = list.length ? `
         <div class="data-table reminder-table">
           <div class="data-table-head"><div>Reminder</div><div>${sortHead('when', 'When', historySort, 'setHistorySort')}</div><div>${sortHead('where', 'Where', historySort, 'setHistorySort')}</div><div>${sortHead('created', 'Created', historySort, 'setHistorySort')}</div><div>${sortHead('status', 'Status', historySort, 'setHistorySort')}</div></div>
-          ${list.map(item => `
+          ${visible.map(item => `
             <div class="data-row">
               <div class="reminder-text">${esc(item.text)}</div>
               <div class="cell-muted rem-when">${esc(item.when)}${reminderDate(item.dueAt)}</div>
@@ -1619,7 +1656,7 @@
               <div class="cell-muted rem-created" title="created">${esc(item.created)}${reminderDate(item.createdAt)}</div>
               <div class="cell-muted rem-status">${item.cancelled ? 'Removed' : 'Delivered'}</div>
             </div>`).join('')}
-        </div>` : buildEmpty('No past reminders in this period.');
+        </div>${pager}` : buildEmpty('No past reminders in this period.');
       document.getElementById('reminderHistory').innerHTML = toolbar + table;
     }
 
