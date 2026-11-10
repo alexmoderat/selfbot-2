@@ -1249,7 +1249,7 @@
           <span class="count-pill" id="countSpamDomains">0</span>
         </div>
       </div>
-      <p class="section-desc">Learned automatically: when you ban someone by hand, links from their last messages land here; links hidden like <code>d o v i e .tv</code> are banned right away and land here too. Every listed domain is auto-banned in <b>all</b> channels (also as subdomain). Delete a wrong entry to stop it.</p>
+      <p class="section-desc">Filled automatically: links hidden like <code>d o v i e .tv</code> are banned right away and their domain lands here, so it is also caught when written normally (<code>dovie.tv</code>). Every listed domain is auto-banned in <b>all</b> channels (also as subdomain). Delete a wrong entry to stop it.</p>
       <div id="spamDomainList"></div>
     </div>
 
@@ -3038,12 +3038,12 @@
       document.getElementById('navSpamDomainCount').textContent = list.length;
       const el = document.getElementById('spamDomainList');
       if (!list.length) {
-        el.innerHTML = buildEmpty('No spam domains learned yet.');
+        el.innerHTML = buildEmpty('No spam domains yet.');
         return;
       }
       el.innerHTML = `
         <div class="data-table spam-domain-table">
-          <div class="data-table-head"><div>Domain</div><div>Learned from</div><div>By</div><div>Hits</div><div>Added</div><div></div></div>
+          <div class="data-table-head"><div>Domain</div><div>Found in</div><div>By</div><div>Hits</div><div>Added</div><div></div></div>
           ${list.map(item => `
             <div class="data-row">
               <div class="cell-mono">${esc(item.domain)}</div>

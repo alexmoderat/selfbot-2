@@ -80,10 +80,6 @@ module.exports = defineChatModule({
 
 			const lowerMessage = deobfuscate(message.toLowerCase());
 			const bufferKey = `${channel.id}:${userId}`;
-			// Fuer das Lernen aus manuellen Bans (spam-domains.learnFromBan)
-			if (!trusted) {
-				spamDomains.rememberMessage(channel.id, userId, message);
-			}
 			const previous = lastMessage.get(bufferKey);
 			rememberMessage(bufferKey, lowerMessage);
 

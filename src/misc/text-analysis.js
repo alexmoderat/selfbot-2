@@ -298,6 +298,12 @@ const collapseDomainSpaces = (text) => text.replace(/([a-z0-9-])\s*\.\s*([a-z]{2
 // Mindestens drei Einzelzeichen hintereinander, damit "a b" in normalen Saetzen stehen bleibt
 const joinSpacedLetters = (text) =>
 	text
+		// Wortreste mit MEHREREN Leerzeichen dazwischen direkt vor einem Punkt: "do      vie .tv", "d   o    vie .tv",
+		// "dov        ie .tv" (Firehose-Messung 10.11.2026, dovie-Welle). Einfache Leerzeichen bleiben normaler Text.
+		// Hoechstens 4 Zeichen je Teil: Shoutout-Bots schreiben "CoolCat  twitch.tv/name" (zweite Messung 10.11.2026)
+		.replace(/(?<![a-z0-9])[a-z0-9]{1,4}(?:\s{2,}[a-z0-9]{1,4})+(?![a-z0-9])(?=\s*\.)/gi, (m) => m.replace(/\s+/g, ''))
+		// Einzelbuchstaben plus kurzer Wortrest direkt vor dem Punkt, einfache Leerzeichen: "Descubra d o vie .tv"
+		.replace(/(?<![a-z0-9])(?:[a-z0-9]\s+){2,}[a-z0-9]{1,4}(?![a-z0-9])(?=\s*\.)/gi, (m) => m.replace(/\s+/g, ''))
 		.replace(/(?<![a-z0-9])[a-z0-9](?:\s+[a-z0-9](?![a-z0-9])){2,}/gi, (m) => m.replace(/\s+/g, ''))
 		// TLD in Einzelbuchstaben hinter einem Punkt: ". t v"
 		.replace(/\.\s*((?:[a-z]\s+){1,5}[a-z])(?![a-z0-9])/gi, (_, tld) => `.${tld.replace(/\s+/g, '')}`);
@@ -311,23 +317,34 @@ const CHAT_WORD_TLDS = new Set(['gg', 'lol', 'live', 'top', 'win', 'fun', 'wtf',
 const SPAM_DOMAIN_EXEMPT = ['kick.com'];
 const isSpamDomainExempt = (domain) => isAllowlistedDomain(domain) || SPAM_DOMAIN_EXEMPT.some((s) => domain === s || domain.endsWith(`.${s}`));
 
-const DOT_WORD = /\s*(?:[([{]\s*(?:dot|\.)\s*[)\]}]|\s+dot\s+)\s*/gi;
-const collapseSpaceBeforeDot = (text) => text.replace(/([a-z0-9-])\s+\.\s*([a-z]{2,})/g, '$1.$2');
+// Nur geklammert: "speedrun dot com", "pornhub dot com?" schreiben normale Chatter (Firehose-Messung 10.11.2026)
+const DOT_WORD = /\s*[([{]\s*(?:dot|\.)\s*[)\]}]\s*/gi;
+// Gross-/kleinschreibungsbewusst: komplett grosse Endungen sind Begriffe ("som går .NET utbildningen"), Spam schreibt
+// ".com" / ". Com"
+const collapseSpaceBeforeDot = (text) =>
+	text.replace(/([a-z0-9-])\s+\.\s*([a-z][a-zA-Z]+|[A-Z][a-z]+)\b/gi, (m, a, tld) => (/^[A-Z]{2,}$/.test(tld) ? m : `${a}.${tld}`));
 
 const domainsIn = (text) => [...new Set((text.match(DOMAIN_REGEX) || []).map(normalizeDomain).filter(Boolean))];
 
 /** Text mit wieder zusammengesetzten versteckten Links, kleingeschrieben */
-const revealLinks = (messageText) => collapseSpaceBeforeDot(joinSpacedLetters(deobfuscate(deleetify(messageText)).toLowerCase()).replace(DOT_WORD, '.'));
+// Kleinschreiben erst am Ende: collapseSpaceBeforeDot braucht die echte Schreibweise der Endung
+// Leetspeak nur zwischen zwei Buchstaben ("d0vie", "c0m"): sonst wird aus "250e . 10 ans" die Domain "2soe.io"
+// (zweite Messung 10.11.2026)
+const deleetifyInner = (text) => text.replace(/(?<=[a-z])[013457](?=[a-z])/gi, (c) => LEET_MAP[c] ?? c);
+const revealLinks = (messageText) => collapseSpaceBeforeDot(joinSpacedLetters(deobfuscate(deleetifyInner(messageText))).replace(DOT_WORD, '.')).toLowerCase();
 
 /**
  * Domains (nicht auf der Allowlist), die nur durch Zusammensetzen sichtbar werden - also absichtlich versteckt sind.
  * @returns {string[]}
  */
 function getHiddenDomains(messageText) {
-	const plain = new Set(domainsIn(deobfuscate(deleetify(messageText)).toLowerCase()));
+	const plain = new Set(domainsIn(deobfuscate(deleetifyInner(messageText)).toLowerCase()));
+	// Steht die Domain (oder ihr hinterer Teil) schon offen in der Nachricht, ist das Zusammensetzen nur ein Artefakt:
+	// "LUL twitch.tv/x" -> "lultwitch.tv", "mismag2Pog mismagpie.com" (zweite Messung 10.11.2026)
+	const isArtifact = (d) => [...plain].some((p) => d !== p && d.endsWith(p));
 	return domainsIn(revealLinks(messageText)).filter((d) => {
 		const parts = d.split('.');
-		return !plain.has(d) && !isSpamDomainExempt(d) && !CHAT_WORD_TLDS.has(parts.at(-1)) && parts.at(-2).length >= 3;
+		return !plain.has(d) && !isArtifact(d) && !isSpamDomainExempt(d) && !CHAT_WORD_TLDS.has(parts.at(-1)) && parts.at(-2).length >= 3;
 	});
 }
 
