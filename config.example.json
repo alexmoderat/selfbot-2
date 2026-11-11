@@ -44,9 +44,7 @@
 	"modules": {
 		"commands": {
 			"disableAll": false,
-			"blacklist": [
-				"vstop"
-			],
+			"blacklist": [],
 			"whitelist": []
 		},
 		"modules": {

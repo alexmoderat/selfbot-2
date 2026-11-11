@@ -1,3 +1,4 @@
+const { categoryHoursReport } = require('../misc/category-hours-report.js');
 const { streamData } = require('../services/stream-tracking.js');
 const { formatCategoryDuration, matchCategories } = require('../misc/category-hours.js');
 const { MONTHS, parseMonthYear, isPeriodWord } = require('../misc/stream-hours.js');
@@ -83,7 +84,7 @@ module.exports = {
 		if (words.length === 1 && matchCategories(rows, query).length === 0 && args.slice(1).every(isPeriodWord)) {
 			const candidateId = await streamData.fetchUserId(words[0].replace(/^[@#]+/, '').toLowerCase());
 			if (candidateId && (await streamData.getCategoryYears(candidateId)).length > 0) {
-				return await require('./hoursstreamedcategories.js').execute(client, msg);
+				return await categoryHoursReport(msg);
 			}
 		}
 

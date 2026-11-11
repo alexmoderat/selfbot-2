@@ -7,17 +7,11 @@ const { getCommand } = require('../clients/modules/commands.js');
  */
 const PUBLIC_RUN_COMMANDS = new Set([
 	'hoursstreamed',
-	'hoursstreamedhistory',
 	'daysstreamed',
 	'streamerstreak',
-	'streamerstreakhistory',
-	'hoursstreamedcategories',
-	'hoursstreamedcategorieshistory',
 	'checkhoursstreamedcategory',
 	'getdata',
 	'lastlive',
-	'peak',
-	'raids',
 ]);
 
 const WEB_DISPLAY_NAME = 'web';
