@@ -1,4 +1,3 @@
-const { withTrigger } = require('../misc/trigger-suffix.js');
 const { setTimeout: sleep } = require('node:timers/promises');
 
 /**
@@ -36,7 +35,7 @@ module.exports = {
 			}
 
 			const line = `${text} ${ZWS.repeat(i + 1)}`;
-			await msg.send(i === count - 1 ? withTrigger(line, msg) : line);
+			await msg.send(line);
 		}
 
 		return { text: null };

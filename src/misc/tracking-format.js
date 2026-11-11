@@ -1,4 +1,3 @@
-const { withTrigger } = require('./trigger-suffix.js');
 const { fmtDate } = require('./streamer-streak.js');
 // Format-Helfer fuer Watchtime, Watch-Streaks und Ranglisten, aus sb-v2s src/services/watchtime.js (formatMinutes),
 // v2/utils/watch-streak.ts und v2/utils/topclips.ts (packLines). Reine Funktionen.
@@ -111,7 +110,7 @@ const replyInChunks = async (msg, chunks, delay = 400) => {
 		if (i > 0) {
 			await new Promise((resolve) => setTimeout(resolve, delay));
 		}
-		await msg.send(i === chunks.length - 1 ? withTrigger(chunks[i], msg) : chunks[i]);
+		await msg.send(chunks[i]);
 	}
 
 	return { text: null };

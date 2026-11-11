@@ -3,7 +3,6 @@ const { Logger } = require('../../misc/logger.js');
 const { replaceLinks, round, sqlDateTime } = require('../../misc/utility.js');
 const { isHttpError } = require('../../token/http.js');
 const { trimMessage } = require('../../util/twitch/utils.js');
-const { withTrigger } = require('../../misc/trigger-suffix.js');
 const { getCommand, permissionOf } = require('./commands.js');
 const { CooldownManager } = require('./cooldown.js');
 const { parseParametersFromArguments, formatParams } = require('./parameters.js');
@@ -163,7 +162,6 @@ const checkAndExecute = async (msg, options = {}) => {
 	let execution;
 	try {
 		const start = process.hrtime.bigint();
-		msg.commandName = command.name;
 		const response = (await command.execute(bot.Client, msg)) ?? {};
 		const end = process.hrtime.bigint();
 
@@ -256,8 +254,7 @@ const handler = async (msg) => {
 		return result.reason !== 'no-command';
 	}
 
-	// Ausloesender Befehl am Ende (siehe misc/trigger-suffix.js)
-	const text = withTrigger(trimMessage(result.text, config.messageLimit), msg, config.messageLimit);
+	const text = trimMessage(result.text, config.messageLimit);
 	if (result.whisper || !msg.channelData) {
 		await msg.whisper(text);
 	} else {

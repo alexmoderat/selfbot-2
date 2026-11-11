@@ -1,4 +1,3 @@
-const { withTrigger } = require('../misc/trigger-suffix.js');
 const { setTimeout: sleep } = require('node:timers/promises');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 const { getTopWatchStreaks } = require('../services/channel-stats.js');
@@ -65,7 +64,7 @@ module.exports = {
 			if (i > 0) {
 				await sleep(SEND_DELAY);
 			}
-			await msg.send(i === chunks.length - 1 ? withTrigger(chunks[i], msg) : chunks[i]);
+			await msg.send(chunks[i]);
 		}
 
 		return { text: null };
