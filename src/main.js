@@ -20,7 +20,7 @@ const { client, connect } = require('./util/twitch/connections.js');
 const { Twitch, platform } = require('./clients/twitch.js');
 const { startCmds, commands } = require('./clients/modules/commands.js');
 const ChatModules = require('./clients/modules/chat-modules.js');
-const { startServices, chatLogger } = require('./clients/startup.js');
+const { startServices, chatLogger, joiner } = require('./clients/startup.js');
 const { getTimers } = require('./clients/modules/timers.js');
 
 bot.Client = client;
@@ -97,8 +97,7 @@ process.on('unhandledRejection', (reason) => {
 // pm2 stoppt mit SIGINT: Gepuffertes noch schreiben (bis zu einer Minute Zeilen, fuenf Minuten Meta)
 process.once('SIGINT', () => {
 	client.close();
-	void chatLogger
-		.flush()
+	void Promise.all([chatLogger.flush(), joiner.stop()])
 		.catch(() => {})
 		.finally(() => bot.DB.disconnect())
 		.finally(() => process.exit(0));

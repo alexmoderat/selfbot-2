@@ -242,6 +242,25 @@ const SpamDomain = define(
 	{ collection: 'spamDomains' },
 );
 
+// Joiner (services/random-joiner.js): Nachrichten aus zufaellig gejointen fremden Channels, 7 Tage
+const JoinerMessage = define(
+	'JoinerMessage',
+	{
+		channelId: String,
+		channel: String,
+		userId: String,
+		user: String,
+		text: String,
+		messageId: String,
+		posted: { type: Date, default: Date.now },
+	},
+	{ collection: 'joinerMessages' },
+	[
+		[{ posted: 1 }, { expireAfterSeconds: 7 * 24 * 60 * 60 }],
+		[{ user: 1, posted: -1 }, {}],
+	],
+);
+
 module.exports = {
 	Counter,
 	Channel,
@@ -256,4 +275,5 @@ module.exports = {
 	ChannelChatModule,
 	ChatLine,
 	SpamDomain,
+	JoinerMessage,
 };

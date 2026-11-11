@@ -6,6 +6,7 @@ const firehose = require('../services/catquery-firehose.js');
 const joinPoller = require('../services/join-poller.js');
 const { chatLogger } = require('../services/chat-logger.js');
 const eventSub = require('../util/twitch/eventSub.js');
+const joiner = require('../services/random-joiner.js');
 const { recordWatchStreak } = require('../services/channel-stats.js');
 
 // Alles, was nach dem IRC-Connect hochfaehrt (bisher TwitchPlatform.connect im alten selfbot, transport "irc"):
@@ -69,6 +70,16 @@ const startFirehose = () => {
 	);
 };
 
+// Joiner: zufaellige fremde Channels per EventSub mitlesen (JOINER=0 schaltet ab)
+const startJoiner = () => {
+	if (bot.Config.parallelMode || process.env.JOINER === '0') {
+		Logger.info('[joiner] aus (Parallelbetrieb bzw. JOINER=0)');
+		return;
+	}
+	bot.Joiner = joiner;
+	joiner.start();
+};
+
 /** Nach dem ersten "ready" von dank-twitch-irc */
 const startServices = () => {
 	startPubSub();
@@ -77,6 +88,7 @@ const startServices = () => {
 	startFirehose();
 	joinPoller.start(bot.Twitch);
 	chatLogger.start();
+	startJoiner();
 };
 
-module.exports = { startServices, chatLogger, firehose };
+module.exports = { startServices, chatLogger, firehose, joiner };
