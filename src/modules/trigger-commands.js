@@ -72,12 +72,14 @@ module.exports = defineChatModule({
 
 				console.log(`[trigger-commands] Treffer "${row.Pattern}" von ${user.name} in #${channel.name}`);
 				const response = formatTriggerResponse(row.Response, user.name, channel.name, message);
-				await platform.send(response, channel, { replyTo: row.Reply ? messageId : null }).catch(() => {});
-
-				recentlySent.set(`${channel.id}::${response}`, Date.now());
+				// Vor dem Senden merken: das Echo der eigenen Nachricht kann eintreffen, bevor send() zurueckkehrt, und
+				// loeste den Trigger sonst ein zweites Mal aus (alexmoderat, 12.11.2026: "hi" in #kickster1010 doppelt)
+				const sentKey = `${channel.id}::${response}`;
+				recentlySent.set(sentKey, Date.now());
 				if (recentlySent.size > 500) {
 					recentlySent.clear();
 				}
+				await platform.send(response, channel, { replyTo: row.Reply ? messageId : null }).catch(() => recentlySent.delete(sentKey));
 				break;
 			}
 		},
