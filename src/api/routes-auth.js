@@ -349,7 +349,10 @@ const createAuthRouter = (publicDir, basePath) => {
 	// Bot-Konto ueber die eigene App, mit denselben Scopes wie der aktuelle Token
 	router.get('/bot-auth', async (_req, res) => {
 		noStore(res);
-		const current = await validateToken(await getUserToken()).catch(() => null);
+		// Auch ein widerrufener Token darf den Login nicht blockieren - genau dafuer ist die Route da
+		const current = await getUserToken()
+			.then(validateToken)
+			.catch(() => null);
 		const state = await createState({ type: 'bot' });
 		res.redirect(
 			buildAuthorizeUrl({

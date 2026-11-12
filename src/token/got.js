@@ -1,5 +1,5 @@
 const { request, HttpError } = require('./http.js');
-const { getAppToken, getUserToken } = require('./helix.js');
+const { getAppToken, getUserToken, getUserClientId } = require('./helix.js');
 
 // Ersatz fuer supi-core GotRegistry mit derselben Aufrufform wie bisher:
 //   await got('Helix')({ url: 'users', searchParams: { login } })  ->  { ok, statusCode, body, headers }
@@ -11,7 +11,7 @@ const RETRY_STATUS = new Set([408, 429, 500, 502, 503, 504, 521, 522, 524]);
 const RETRY_METHODS = new Set(['GET', 'PUT', 'HEAD', 'DELETE', 'OPTIONS']);
 
 const helixHeaders = async (kind) => ({
-	'Client-Id': process.env.TWITCH_CLIENT_ID,
+	'Client-Id': kind === 'app' ? process.env.TWITCH_CLIENT_ID : getUserClientId(),
 	Authorization: `Bearer ${kind === 'app' ? await getAppToken() : await getUserToken()}`,
 });
 

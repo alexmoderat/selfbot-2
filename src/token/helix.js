@@ -49,8 +49,15 @@ const getAppToken = async () => {
  */
 const resolveRefreshToken = (envToken, stored) => (stored && stored.source === envToken ? stored.current : envToken);
 
+// Fester Bot-Token ohne Refresh (alexmoderat, 09.11.2026). Er gehoert zu einer anderen App, Helix braucht dann deren Client-ID.
+const getUserClientId = () => process.env.TWITCH_USER_CLIENT_ID || requireEnv('TWITCH_CLIENT_ID');
+
 let userTokenPromise = null;
 const getUserToken = async () => {
+	if (process.env.TWITCH_USER_TOKEN) {
+		return process.env.TWITCH_USER_TOKEN;
+	}
+
 	const cached = await bot.Redis.getJSON(USER_TOKEN_KEY);
 	if (cached) {
 		return cached;
@@ -92,7 +99,7 @@ const helix = async (path, options = {}) => {
 		return await request({
 			...rest,
 			url: path.startsWith('http') ? path : HELIX + path,
-			headers: { 'Client-Id': requireEnv('TWITCH_CLIENT_ID'), Authorization: `Bearer ${token}`, ...rest.headers },
+			headers: { 'Client-Id': app ? requireEnv('TWITCH_CLIENT_ID') : getUserClientId(), Authorization: `Bearer ${token}`, ...rest.headers },
 		});
 	};
 
@@ -107,6 +114,7 @@ const helix = async (path, options = {}) => {
 module.exports = {
 	getAppToken,
 	getUserToken,
+	getUserClientId,
 	resolveRefreshToken,
 	storeBotRefreshToken,
 	invalidateUserToken,
