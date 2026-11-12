@@ -1,5 +1,6 @@
 const { got } = require('../token/got.js');
 const { SupiError } = require('./error.js');
+const { gqlPostWithFingerprint } = require('./fingerprint-client.js');
 
 // Twitch-GQL wie in sb-v2 (src/services/twitch-api.ts): oeffentlich ohne Login (gqlPublic) und mit dem
 // Web-Session-Token von alexmoderat (TWITCH_WEB_TOKEN) fuer Felder/Mutationen, die anonym nicht gehen.
@@ -132,12 +133,29 @@ const getBanStatusBatch = async (logins) => {
 		headers: { 'Client-Id': GQL_PUBLIC_CLIENT_ID },
 		json: body,
 		timeout: { request: 10_000 },
-	});
+	}).catch((e) => ({ ok: false, statusCode: 0, body: null, error: e }));
 
-	const answers = Array.isArray(response.body) ? response.body : [];
-	const failed = groups.findIndex((_group, index) => !answers[index]?.data);
+	let answers = Array.isArray(response.body) ? response.body : [];
+	let failed = groups.findIndex((_group, index) => !answers[index]?.data);
 	if (!response.ok || failed !== -1) {
-		throw new SupiError({ message: `getBanStatusBatch: ${answers[failed]?.errors?.[0]?.message ?? `HTTP ${response.statusCode}`}` });
+		// Fallback ueber Chrome-TLS-Fingerprint (sb-v2: gqlPostWithFingerprint); ohne gebautes Addon wirft der Aufruf sofort
+		// und der Fehler bleibt wie zuvor
+		try {
+			const viaChrome = await gqlPostWithFingerprint(body, GQL_PUBLIC_CLIENT_ID);
+			const chromeAnswers = Array.isArray(viaChrome) ? viaChrome : [];
+			if (groups.every((_group, index) => chromeAnswers[index]?.data)) {
+				console.warn('[twitch-gql] getBanStatusBatch: Standard-Request blockiert, Chrome-Fingerprint-Fallback erfolgreich');
+				answers = chromeAnswers;
+				failed = -1;
+			}
+		} catch {
+			// Fallback nicht verfuegbar oder ebenfalls fehlgeschlagen
+		}
+	}
+	if (failed !== -1) {
+		throw new SupiError({
+			message: `getBanStatusBatch: ${answers[failed]?.errors?.[0]?.message ?? response.error?.message ?? `HTTP ${response.statusCode}`}`,
+		});
 	}
 
 	groups.forEach((group, groupIndex) => {

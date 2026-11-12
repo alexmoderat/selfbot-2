@@ -3,3 +3,7 @@ node_modules/
 config.json
 .yarn/
 *.log
+
+# Rust-Addon: Build-Artefakte (npm run build-linux in native/boring-ssl-client)
+native/*/target/
+native/*/build/
