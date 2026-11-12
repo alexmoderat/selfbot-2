@@ -1,13 +1,13 @@
 const { defineCron } = require('../clients/modules/timers.js');
 const { got } = require('../token/got.js');
 const { formatGithubEvent } = require('../misc/github-events.js');
+const { sendAlert } = require('../services/moderation.js');
 
 /**
- * Meldet neue Sterne, Forks, Issues, PRs und Releases beobachteter GitHub-Repos im Channel (alexmoderat, 12.11.2026:
+ * Meldet neue Sterne, Forks, Issues, PRs und Releases beobachteter GitHub-Repos per Discord (alexmoderat, 12.11.2026:
  * EEVA-inc/Moltorino, kein Admin-Zugriff fuer einen Webhook -> Polling der oeffentlichen Events-API, kein Token noetig,
  * ETag-Abfragen zaehlen nicht gegen das Limit von 60/h). Erster Lauf nach dem Start setzt nur den Stand.
- * GITHUB_WATCH_REPOS: Komma-Liste "owner/repo" (leer = aus, Standard EEVA-inc/Moltorino), GITHUB_WATCH_CHANNEL
- * (Standard alexmoderat), optional GITHUB_TOKEN. Fuer Repos mit Admin-Zugriff gibt es den Webhook (api/routes-github.js).
+ * GITHUB_WATCH_REPOS: Komma-Liste "owner/repo" (leer = aus, Standard EEVA-inc/Moltorino), optional GITHUB_TOKEN. Fuer Repos mit Admin-Zugriff gibt es den Webhook (api/routes-github.js).
  */
 const MAX_MESSAGES_PER_RUN = 5;
 const EVENT_NAMES = {
@@ -58,7 +58,6 @@ module.exports = defineCron({
 	expression: '30 */5 * * * *',
 	description: 'Announces new stars, forks, issues, pull requests and releases of watched GitHub repos.',
 	code: async function githubWatch() {
-		const channel = bot.Channels.get(process.env.GITHUB_WATCH_CHANNEL || 'alexmoderat');
 		for (const repo of repos()) {
 			const s = state.get(repo) ?? { lastId: null, etag: null };
 			const headers = { 'User-Agent': 'selfbot-github-watch', Accept: 'application/vnd.github+json' };
@@ -82,12 +81,8 @@ module.exports = defineCron({
 			const events = response.body;
 			const fresh = newEvents(events, s.lastId);
 			state.set(repo, { lastId: latestId(events, s.lastId ?? '0'), etag: response.headers?.etag ?? null });
-			if (!channel) {
-				continue;
-			}
-
 			for (const text of fresh.map(formatApiEvent).filter(Boolean).slice(-MAX_MESSAGES_PER_RUN)) {
-				await bot.Channels.send(channel, text).catch((e) => console.warn(`[github-watch] senden: ${e?.message}`));
+				await sendAlert(text).catch((e) => console.warn(`[github-watch] senden: ${e?.message}`));
 			}
 		}
 	},

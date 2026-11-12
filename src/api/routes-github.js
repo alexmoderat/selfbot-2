@@ -1,11 +1,11 @@
 const crypto = require('node:crypto');
 const express = require('express');
 const { formatGithubEvent } = require('../misc/github-events.js');
+const { sendAlert } = require('../services/moderation.js');
 
 /**
  * POST /github/webhook: GitHub-Webhook (Content type application/json, Secret GITHUB_WEBHOOK_SECRET). Prueft die Signatur
- * (X-Hub-Signature-256 ueber den Rohtext), dedupliziert ueber X-GitHub-Delivery und schreibt den Text in den Channel
- * GITHUB_WATCH_CHANNEL (Standard alexmoderat). Ohne Secret antwortet die Route mit 503.
+ * (X-Hub-Signature-256 ueber den Rohtext), dedupliziert ueber X-GitHub-Delivery und schickt den Text per Discord (sendAlert). Ohne Secret antwortet die Route mit 503.
  */
 const SEEN_MAX = 200;
 const seen = new Set();
@@ -48,9 +48,8 @@ const createGithubRouter = () => {
 			return;
 		}
 		const text = formatGithubEvent(req.get('x-github-event'), req.body);
-		const channel = bot.Channels.get(process.env.GITHUB_WATCH_CHANNEL || 'alexmoderat');
-		if (text && channel) {
-			await bot.Channels.send(channel, text).catch((e) => console.warn(`[github] senden: ${e?.message}`));
+		if (text) {
+			await sendAlert(text).catch((e) => console.warn(`[github] senden: ${e?.message}`));
 		}
 	});
 	return router;
