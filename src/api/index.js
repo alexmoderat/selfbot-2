@@ -6,6 +6,7 @@ const { createAuthRouter } = require('./routes-auth.js');
 const { createDashboardRouter } = require('./routes-dashboard.js');
 const { createPublicRouter } = require('./routes-public.js');
 const { createV1Router } = require('./routes-v1.js');
+const { createGithubRouter } = require('./routes-github.js');
 const { createOpenApiSpec } = require('./openapi.js');
 const { cleanExpiredSessions } = require('./sessions.js');
 const { baseUrl } = require('../misc/user-tokens.js');
@@ -28,7 +29,14 @@ const startWebServer = (port) => {
 
 	const app = express();
 	app.set('trust proxy', 'loopback');
-	app.use(express.json());
+	// Rohtext nur fuer den GitHub-Webhook (Signaturpruefung)
+	app.use(
+		express.json({
+			verify: (req, res, buf) => {
+				if (req.url.startsWith('/github/')) req.rawBody = buf;
+			},
+		}),
+	);
 	app.use(
 		express.static(PUBLIC_DIR, {
 			etag: false,
@@ -40,6 +48,7 @@ const startWebServer = (port) => {
 	);
 	app.use('/docs', swaggerUi.serve, swaggerUi.setup(createOpenApiSpec()));
 
+	app.use(createGithubRouter());
 	app.use(createAuthRouter(PUBLIC_DIR, basePath));
 	app.use(createPublicRouter());
 	app.use(createDashboardRouter());
