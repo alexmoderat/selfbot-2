@@ -15,7 +15,7 @@ const { recentChat } = require('../modules/chat-console-log.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 const { fetchChannelRoleList, fetchUserRoleList } = require('../misc/roles-tv.js');
 const { getValidToken, helixAsUser } = require('../misc/user-tokens.js');
-const { buildEntries } = require('../commands/botcommands.js');
+const { buildEntries } = require('../misc/command-catalog.js');
 const { PUBLIC_RUN_COMMANDS, runPublicCommand } = require('./command-runner.js');
 const { uploadToOwnHaste } = require('../misc/haste.js');
 const { formatSupibotOnly, loadSupibotCommands, supibotOnly } = require('../misc/supibot-only.js');
@@ -317,7 +317,7 @@ const createPublicRouter = () => {
 		);
 	});
 
-	// Oeffentliche Command-Seite /commands (alexmoderat, 01.11.2026): dieselbe Liste wie botcommands, ohne Owner-Commands
+	// Oeffentliche Command-Seite /commands (alexmoderat, 01.11.2026): Liste aus misc/command-catalog.js, ohne Owner-Commands
 	// Dashboard-Link "Commands only working with Supibot": Liste frisch berechnen, als Tabelle auf den eigenen Haste-Server,
 	// gleicher Inhalt = gleicher Link (keine neue Paste pro Klick)
 	router.get(
