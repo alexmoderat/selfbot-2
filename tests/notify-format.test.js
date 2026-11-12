@@ -5,7 +5,7 @@ const { formatTitleChange, formatOfflineText } = require('../src/services/notifi
 test('Titel-Meldung: Live-Dauer nur wenn live (ninou2, 10.11.2026)', () => {
 	assert.equal(
 		formatTitleChange(['zzquser'], 'zzqstreamer', 'zzq title', 'World of Warcraft', 80 * 60_000),
-		'@zzquser — @zzqstreamer changed their title: " zzq title " (Category: World of Warcraft) [⏱1h20min]',
+		'@zzquser — @zzqstreamer changed their title: " zzq title " (Category: World of Warcraft) [at ⏱1h20min]',
 	);
 	assert.equal(formatTitleChange(['zzquser'], 'zzqstreamer', 'zzq title', null, null), '@zzquser — @zzqstreamer changed their title: " zzq title "');
 });

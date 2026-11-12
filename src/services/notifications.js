@@ -103,9 +103,9 @@ const formatOfflineText = (login, gamesPart, lastGame, durationMs) => {
 
 // Leerzeichen in den Anfuehrungszeichen, damit Emotes am Titelrand erkannt werden; Streamer mit @.
 // Live: wie lange schon (ninou2, 10.11.2026: "if the streamer [is live] it tells for how long [they] has been [live]",
-// "(Category: World of Warcraft) [⏱1h20min]"; "if the streamer offline this bracket part does not show")
+// "(Category: World of Warcraft) [⏱1h20min]", 12.11.2026 auf "[at ⏱1h20min]" geaendert (ninou2 tippt es so vor); "if the streamer offline this bracket part does not show")
 const formatTitleChange = (users, login, title, game, liveMs = null) =>
-	`${users.map((i) => `@${i}`).join(' ')} — @${login} changed their title: " ${title.trim()} "${game ? ` (Category: ${game})` : ''}${liveMs !== null ? ` [⏱${fmtLengthShort(liveMs)}]` : ''}`;
+	`${users.map((i) => `@${i}`).join(' ')} — @${login} changed their title: " ${title.trim()} "${game ? ` (Category: ${game})` : ''}${liveMs !== null ? ` [at ⏱${fmtLengthShort(liveMs)}]` : ''}`;
 
 /** Seit wann live (ms), offline/unbekannt null */
 const fetchLiveSince = async (streamerId) => {
