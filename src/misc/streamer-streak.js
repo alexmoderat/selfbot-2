@@ -180,6 +180,17 @@ function daysAgoText(day, today) {
 	return n === 1 ? '1 day ago' : `${n} days ago`;
 }
 
+/** "10/11/26" (Tag/Monat/Jahr) aus "2026-11-10" */
+function fmtShortDate(day) {
+	const [year, month, date] = String(day).slice(0, 10).split('-');
+	return `${date}/${month}/${year.slice(2)}`;
+}
+
+/** "2 days ago 10/11/26": Tagesabstand plus Datum (ninou2, 12.11.2026: "to add the date as X/X/X") */
+function daysAgoWithDate(day, today) {
+	return `${daysAgoText(day, today)} ${fmtShortDate(day)}`;
+}
+
 /** "october 1st 2026 18:59 UTC" aus einem ISO-Zeitstempel. */
 function fmtDateTimeUtc(iso) {
 	const d = new Date(iso);
@@ -224,6 +235,8 @@ module.exports = {
 	fmtDate,
 	tiesNote,
 	daysAgoText,
+	daysAgoWithDate,
+	fmtShortDate,
 	fmtDateTimeUtc,
 	fmtLengthShort,
 	fmtStreamSpanUtc,

@@ -2,7 +2,7 @@ const { streamData } = require('../services/stream-tracking.js');
 const {
 	MIN_STREAM_SECONDS,
 	countDaysInYear,
-	daysAgoText,
+	daysAgoWithDate,
 	daysInYear,
 	fmtDate,
 	fmtDateTimeUtc,
@@ -22,6 +22,16 @@ const {
  * Last [live] before this Current stream was on november 2nd 2026 [...]"). Der gespeicherte Start wird vom laufenden Stream
  * ueberschrieben, deshalb kommt der vorherige aus den VODs, ohne VOD bleibt nur der letzte Streamtag.
  */
+/**
+ * "[they streamed 286/365,1500h soo far this year]": Streamtage und Gesamtstunden des Jahres (ninou2, 12.11.2026:
+ * "total hours streamed this year"). Stunden nur, wenn welche aufgezeichnet sind.
+ */
+const yearStreamedText = async (userId, days, year) => {
+	const seconds = await streamData.getYearSeconds(userId, year).catch(() => null);
+	const hours = seconds ? `,${Math.round(seconds / 3600)}h` : '';
+	return ` [they streamed ${countDaysInYear(days, year)}/${daysInYear(year)}${hours} soo far this year]`;
+};
+
 const describeLive = async (channel, userId, startedAt) => {
 	const now = new Date();
 	const startMs = Date.parse(startedAt);
@@ -34,18 +44,18 @@ const describeLive = async (channel, userId, startedAt) => {
 	const [days, vods] = await Promise.all([streamData.getDays(userId), streamData.fetchRecentVods(channel, 5).catch(() => [])]);
 
 	const year = Number(today.slice(0, 4));
-	const streamed = days.length > 0 ? ` [they streamed ${countDaysInYear(days, year)}/${daysInYear(year)} soo far this year]` : '';
+	const streamed = days.length > 0 ? await yearStreamedText(userId, days, year) : '';
 	const previous = vods.find((i) => i.lengthSeconds >= MIN_STREAM_SECONDS && Date.parse(i.createdAt) < startMs - 10 * 60_000);
 	if (previous) {
 		const previousStart = new Date(previous.createdAt).toISOString();
 		const previousEnd = new Date(Date.parse(previous.createdAt) + previous.lengthSeconds * 1000).toISOString();
-		return `${head}, Last live before this current stream was on ${fmtStreamSpanUtc(previousStart, previousEnd)} (${daysAgoText(previousStart.slice(0, 10), today)})${streamed}`;
+		return `${head}, Last live before this current stream was on ${fmtStreamSpanUtc(previousStart, previousEnd)} (${daysAgoWithDate(previousStart.slice(0, 10), today)})${streamed}`;
 	}
 
 	const startDay = new Date(startMs).toISOString().slice(0, 10);
 	const previousDay = days.filter((i) => i < startDay).at(-1);
 	return previousDay
-		? `${head}, Last live before this current stream was on ${fmtDate(previousDay)} (${daysAgoText(previousDay, today)})${streamed}`
+		? `${head}, Last live before this current stream was on ${fmtDate(previousDay)} (${daysAgoWithDate(previousDay, today)})${streamed}`
 		: `${head}${streamed}`;
 };
 
@@ -88,7 +98,7 @@ module.exports = {
 
 			const iso = new Date(startedAt).toISOString();
 			return {
-				text: `@${display}, @${channel} went live last time on ${fmtDateTimeUtc(iso)} (${daysAgoText(iso.slice(0, 10), new Date().toISOString().slice(0, 10))})`,
+				text: `@${display}, @${channel} went live last time on ${fmtDateTimeUtc(iso)} (${daysAgoWithDate(iso.slice(0, 10), new Date().toISOString().slice(0, 10))})`,
 			};
 		}
 
@@ -120,12 +130,12 @@ module.exports = {
 		const day = start ? start.slice(0, 10) : last;
 		// ninou2, 03.10.2026: "add how many days they streamed this year to !ll" (nur getrackte Channels)
 		const year = Number(today.slice(0, 4));
-		const streamed = tracked ? ` [they streamed ${countDaysInYear(days, year)}/${daysInYear(year)} soo far this year]` : '';
+		const streamed = tracked ? await yearStreamedText(userId, days, year) : '';
 
 		const todaysVods = vodMatches ? vods.filter((i) => i.createdAt.slice(0, 10) === day) : [];
 		if (todaysVods.length > 1) {
 			// ninou2, 16.10.2026: Tagesabstand statt hart "(today)"
-			const dayLabel = daysAgoText(day, today);
+			const dayLabel = daysAgoWithDate(day, today);
 			const sessions = [...todaysVods]
 				.reverse()
 				.map((v, i) => {
@@ -136,10 +146,10 @@ module.exports = {
 			const totalMs = todaysVods.reduce((total, i) => total + i.lengthSeconds * 1000, 0);
 
 			return {
-				text: `@${display}, @${channel} went live last time on ${fmtDate(day)} for "${todaysVods.length}" times : ${sessions} , THEY streamed for a total of ${fmtLengthShort(totalMs)} ${dayLabel === 'today' ? 'today' : 'that day'}.${streamed}`,
+				text: `@${display}, @${channel} went live last time on ${fmtDate(day)} for "${todaysVods.length}" times : ${sessions} , THEY streamed for a total of ${fmtLengthShort(totalMs)} ${day >= today ? 'today' : 'that day'}.${streamed}`,
 			};
 		}
 
-		return { text: `@${display}, @${channel} went live last time on ${when} (${daysAgoText(day, today)})${streamed}` };
+		return { text: `@${display}, @${channel} went live last time on ${when} (${daysAgoWithDate(day, today)})${streamed}` };
 	},
 };
