@@ -65,7 +65,7 @@ module.exports = defineChatModule({
 			}
 
 			const channel = bot.Channels.getByTwitchId(String(data.channel_id));
-			console.warn(`[channel-suspension] Eigenes Konto: ${data.action} in #${channel?.name ?? data.channel_id}`);
+			console.warn(`[channel-suspension] ${new Date().toISOString()} Eigenes Konto: ${data.action} in #${channel?.name ?? data.channel_id}`);
 			if (!channel) {
 				return;
 			}

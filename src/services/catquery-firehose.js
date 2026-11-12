@@ -18,6 +18,24 @@ const HANDSHAKE_TIMEOUT = 15_000;
 /** Usernotices, die EventSub (channel.chat.notification) nicht abdeckt: Mod-Jubilaeum, Zuschauer-Meilensteine */
 const FORWARD_NOTICES = new Set(['modiversary', 'viewermilestone']);
 
+// Eigenes Konto in fremden Nachrichten aller Channels, ins Log (alexmoderat, 09.11.2026): damit laesst sich nach einer
+// Warnung nachsehen, was kurz davor lief, ohne Log-Seiten zu scannen. Geprueft wird die Rohnachricht, so zaehlen auch
+// Antworten auf eigene Nachrichten (Reply-Tags).
+const OWN_USER_ID = '1153381727';
+const OWN_MENTION = /alexmoderat|1153381727/i;
+const MENTION_TEXT_LIMIT = 300;
+
+const logOwnMention = (raw, json, tags) => {
+	if (String(tags['user-id'] ?? '') === OWN_USER_ID || !OWN_MENTION.test(raw)) {
+		return;
+	}
+
+	const channel = String(json.channel ?? tags['room-id'] ?? '?').replace('#', '');
+	const sender = String(tags['display-name'] || tags.login || json.user || '?');
+	const text = String(json.text ?? json.message ?? raw).slice(0, MENTION_TEXT_LIMIT);
+	console.log(`[catquery] Erwaehnung ${new Date().toISOString()} #${channel} ${sender}: ${text}`);
+};
+
 const firstFlags = new Map();
 const noticeSeen = new Map();
 const coverage = new Map();
@@ -50,6 +68,8 @@ const handleMessage = (raw) => {
 	if (!json.id || !tags || typeof tags !== 'object') {
 		return;
 	}
+
+	logOwnMention(raw, json, tags);
 
 	const id = String(json.id);
 	const roomId = String(tags['room-id'] ?? '');
