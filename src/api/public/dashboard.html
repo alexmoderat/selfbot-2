@@ -486,6 +486,9 @@
     .spam-domain-table .data-row { grid-template-columns: 150px 1fr 150px 60px 90px 80px; }
     .notify-table.with-added .data-table-head,
     .notify-table.with-added .data-row { grid-template-columns: 160px 1fr 110px 80px; }
+    /* Tweet Notify: Account, Pings, Message, Added, Delete */
+    .notify-table.tweet-table .data-table-head,
+    .notify-table.tweet-table .data-row { grid-template-columns: 160px 150px 1fr 110px 80px; }
 
     /* Blacklist: 2 cols */
     .bl-table .data-table-head,
@@ -1094,6 +1097,10 @@
             <label>X / Twitter account</label>
             <input type="text" id="tweetAccount" placeholder="username" required maxlength="100">
           </div>
+          <div class="field">
+            <label>Custom message (optional)</label>
+            <input type="text" id="tweetMessage" placeholder="added to the alert" maxlength="200">
+          </div>
           <div style="display:flex;align-items:flex-end">
             <button type="submit" class="btn btn-primary">+ Add</button>
           </div>
@@ -1526,6 +1533,8 @@
       });
       document.getElementById('navJoin').removeAttribute('style');
       document.querySelector('#page-overview .stats-grid').classList.add('guest-grid');
+      // ninou2, 13.11.2026: Tweet Notify "only show to users by log in"
+      document.querySelector('#page-overview .stat-card[onclick*="tweetnotify"]')?.setAttribute('style', 'display:none');
       if (!login) showGuestPrompt();
       document.getElementById('overviewHint').hidden = true;
       document.getElementById('guestBox').hidden = false;
@@ -2610,12 +2619,13 @@
         return;
       }
       el.innerHTML = `
-        <div class="data-table notify-table with-added">
-          <div class="data-table-head"><div>Account</div><div>Pings</div><div>Added</div><div></div></div>
+        <div class="data-table notify-table with-added tweet-table">
+          <div class="data-table-head"><div>Account</div><div>Pings</div><div>Message</div><div>Added</div><div></div></div>
           ${data.tweetnotify.map(item => `
             <div class="data-row">
               <div class="cell-mono">@${esc(item.account)}</div>
               <div class="cell-muted">@${esc(item.user)}</div>
+              <div class="cell-muted">${esc(item.message || '—')}</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
                 <button class="btn btn-danger" onclick="deleteTweetNotify('${esc(item.account)}', '${esc(item.user)}')">Delete</button>
@@ -2635,15 +2645,17 @@
     document.getElementById('addTweetForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const account = document.getElementById('tweetAccount').value.trim();
+      const message = document.getElementById('tweetMessage').value.trim();
       if (!account) return;
       const result = await apiFetch('api/tweetnotify', {
         method: 'POST',
-        body: JSON.stringify({ account }),
+        body: JSON.stringify({ account, message }),
       });
       if (result === null) return;
       data.tweetnotify = result;
       renderTweetNotify();
       document.getElementById('tweetAccount').value = '';
+      document.getElementById('tweetMessage').value = '';
       showToast('Tweet alert added!', 'success');
     });
 

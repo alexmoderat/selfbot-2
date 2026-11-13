@@ -7,7 +7,7 @@ const spamDomains = require('../services/spam-domains.js');
 const customCommands = require('../services/custom-commands.js');
 const { partChannel } = require('../services/channel-manager.js');
 const { resolveStreamer, watchStreamer, watchTitle } = require('../services/notifications.js');
-const { cleanHandle, accountExists, HANDLE } = require('../services/tweet-notify.js');
+const { cleanHandle, cleanMessage, accountExists, HANDLE } = require('../services/tweet-notify.js');
 const sbv2 = require('../database/sbv2.js');
 const { getPrefix } = require('../clients/modules/handler.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
@@ -898,7 +898,7 @@ const createDashboardRouter = () => {
 		const names = new Map(users.map((i) => [i._id, i.name]));
 		return rows
 			.filter((i) => names.has(i.userAlias))
-			.map((i) => ({ account: i.account, user: names.get(i.userAlias), added: i.added }))
+			.map((i) => ({ account: i.account, user: names.get(i.userAlias), message: i.message ?? '', added: i.added }))
 			.sort((a, b) => a.account.localeCompare(b.account) || a.user.localeCompare(b.user));
 	};
 
@@ -927,7 +927,7 @@ const createDashboardRouter = () => {
 			}
 			await bot.DB.TweetNotify.updateOne(
 				{ channel: channel.id, account, userAlias: await issuer(req) },
-				{ $setOnInsert: { added: new Date() } },
+				{ $set: { message: cleanMessage(req.body.message) }, $setOnInsert: { added: new Date() } },
 				{ upsert: true },
 			);
 			res.json(await tweetNotifyRows(channel));

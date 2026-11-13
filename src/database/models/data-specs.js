@@ -1561,6 +1561,11 @@ module.exports = [
 				type: 'String',
 				required: true,
 			},
+			message: {
+				column: 'Message',
+				type: 'String',
+				required: false,
+			},
 			userAlias: {
 				column: 'User_Alias',
 				type: 'Number',

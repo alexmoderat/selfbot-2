@@ -16,18 +16,22 @@ const sendTo = async (channelId, text) => {
 
 const announce = async (account, tweet) => {
 	const rows = await bot.DB.TweetNotify.find({ account }).lean();
-	const perChannel = new Map();
+	// Je Channel und Zusatztext eine Meldung (Abonnenten mit demselben Text werden zusammen angepingt)
+	const groups = new Map();
 	for (const row of rows) {
 		const user = await bot.Users.get(row.userAlias);
 		if (user) {
-			perChannel.set(row.channel, [...(perChannel.get(row.channel) ?? []), user.name]);
+			const key = `${row.channel}\u0000${row.message ?? ''}`;
+			const group = groups.get(key) ?? { channel: row.channel, message: row.message ?? '', users: [] };
+			group.users.push(user.name);
+			groups.set(key, group);
 		}
 	}
 
-	for (const [channelId, users] of perChannel) {
-		await sendTo(channelId, formatTweetAlert(users, account, tweet));
+	for (const { channel, message, users } of groups.values()) {
+		await sendTo(channel, formatTweetAlert(users, account, tweet, message));
 	}
-	console.log(`[tweet-notify] @${account}: ${tweet.id} -> ${perChannel.size} Channel(s)`);
+	console.log(`[tweet-notify] @${account}: ${tweet.id} -> ${groups.size} Meldung(en)`);
 };
 
 const runTweetNotify = async () => {

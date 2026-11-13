@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 global.bot = global.bot ?? {};
-const { cleanHandle, HANDLE, isStandalone, freshTweets, formatTweetAlert } = require('../src/services/tweet-notify.js');
+const { cleanHandle, cleanMessage, HANDLE, isStandalone, freshTweets, formatTweetAlert } = require('../src/services/tweet-notify.js');
 
 test('cleanHandle: @, URL und Gross-/Kleinschreibung', () => {
 	assert.equal(cleanHandle('@XQC'), 'xqc');
@@ -30,4 +30,11 @@ test('formatTweetAlert: Ping, Text gekuerzt, Link', () => {
 	assert.equal(text, '@ninou2 @alex — @xqc tweeted: hi https://x.com/xqc/status/77');
 	const long = formatTweetAlert(['a'], 'x', { id: '1', text: 'y'.repeat(300) });
 	assert.ok(long.includes('…') && long.endsWith('https://x.com/x/status/1'));
+});
+
+test('Zusatztext: wird bereinigt, gekuerzt und an die Meldung gehaengt', () => {
+	assert.equal(cleanMessage('  hi \n  there  '), 'hi there');
+	assert.equal(cleanMessage(undefined), '');
+	assert.equal(cleanMessage('x'.repeat(500)).length, 200);
+	assert.equal(formatTweetAlert(['a'], 'xqc', { id: '1', text: 'hi' }, 'LETSGO'), '@a — @xqc tweeted: hi https://x.com/xqc/status/1 LETSGO');
 });

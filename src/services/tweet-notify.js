@@ -19,10 +19,15 @@ const cleanHandle = (input) =>
 /** Retweets ("RT @...") und Antworten ("@...") sind keine eigenen Tweets */
 const isStandalone = (tweet) => !/^RT @/.test(tweet.text) && !tweet.text.startsWith('@');
 
-const formatTweetAlert = (users, account, tweet) => {
+// custom: eigener Zusatztext der Abonnenten (ninou2, 13.11.2026: "add the option to add a custom message with it")
+const formatTweetAlert = (users, account, tweet, custom = '') => {
 	const text = tweet.text.length > TEXT_LIMIT ? `${tweet.text.slice(0, TEXT_LIMIT - 1)}…` : tweet.text;
-	return `${users.map((i) => `@${i}`).join(' ')} — @${account} tweeted${text ? `: ${text}` : ''} https://x.com/${account}/status/${tweet.id}`;
+	const base = `${users.map((i) => `@${i}`).join(' ')} — @${account} tweeted${text ? `: ${text}` : ''} https://x.com/${account}/status/${tweet.id}`;
+	return custom ? `${base} ${custom}` : base;
 };
+
+const MAX_MESSAGE = 200;
+const cleanMessage = (input) => String(input ?? '').replaceAll(/\s+/g, ' ').trim().slice(0, MAX_MESSAGE);
 
 /** Neue Tweets gegenueber dem gemerkten Stand (null = Erstlauf, nichts melden), aelteste zuerst */
 const freshTweets = (tweets, seen, now = Date.now()) =>
@@ -51,4 +56,4 @@ const accountExists = async (account) => {
 	return Array.isArray(tweets) && tweets.length > 0;
 };
 
-module.exports = { HANDLE, cleanHandle, isStandalone, formatTweetAlert, freshTweets, checkAccount, accountExists };
+module.exports = { HANDLE, MAX_MESSAGE, cleanMessage, cleanHandle, isStandalone, formatTweetAlert, freshTweets, checkAccount, accountExists };

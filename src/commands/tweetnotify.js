@@ -1,5 +1,5 @@
 const { listOrLink } = require('../misc/list-reply.js');
-const { HANDLE, cleanHandle, accountExists } = require('../services/tweet-notify.js');
+const { HANDLE, MAX_MESSAGE, cleanHandle, cleanMessage, accountExists } = require('../services/tweet-notify.js');
 
 /**
  * Tweet-Alarm: Ping mit Link, sobald ein X/Twitter-Account einen neuen Tweet postet (ninou2, 13.11.2026: "a twitter command,
@@ -10,7 +10,7 @@ module.exports = {
 	aliases: ['tn2', 'tweetalert', 'twitternotify'],
 	cooldown: 3000,
 	description: 'Alerts you with the link when an X/Twitter account posts a new tweet — and pings you.',
-	usage: 'tweetnotify <account> | remove <account> | list',
+	usage: 'tweetnotify <account> [message] | remove <account> | list',
 	flags: ['no-prefix'],
 	execute: async (client, msg) => {
 		const args = [...msg.args];
@@ -50,8 +50,20 @@ module.exports = {
 			return { text: `@${display}, no tweets found for "${first}" (unknown account or no public tweets).` };
 		}
 
-		await bot.DB.TweetNotify.updateOne({ channel: channel.id, account: first, userAlias: user.id }, { $setOnInsert: { added: new Date() } }, { upsert: true });
+		// Alles nach dem Account ist der eigene Zusatztext (ninou2, 13.11.2026), erneutes Eintragen aendert ihn
+		const message = cleanMessage(args.slice(1).join(' '));
+		if (args.slice(1).join(' ').trim().length > MAX_MESSAGE) {
+			return { text: `@${display}, the message is too long (max ${MAX_MESSAGE} characters).` };
+		}
+
+		await bot.DB.TweetNotify.updateOne(
+			{ channel: channel.id, account: first, userAlias: user.id },
+			{ $set: { message }, $setOnInsert: { added: new Date() } },
+			{ upsert: true },
+		);
 		console.log(`[tweetnotify] ${user.name} -> ${first} in #${channel.name}`);
-		return { text: `@${display}, ✅ Tweet alert for ${first} set. You'll be pinged with the link when they post a new tweet.` };
+		return {
+			text: `@${display}, ✅ Tweet alert for ${first} set${message ? ` with your message "${message}"` : ''}. You'll be pinged with the link when they post a new tweet.`,
+		};
 	},
 };
