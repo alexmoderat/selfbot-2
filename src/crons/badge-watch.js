@@ -43,7 +43,7 @@ const enabledChannels = async () => {
 	return result;
 };
 
-const runSource = async (source, targets) => {
+const runSource = async (source, getTargets) => {
 	const items = await source.fetch();
 	const stored = await bot.Redis.getJSON(source.stateKey).catch(() => null);
 	const known = Array.isArray(stored) ? new Set(stored) : null;
@@ -60,6 +60,7 @@ const runSource = async (source, targets) => {
 		return 0;
 	}
 
+	const targets = await getTargets();
 	const format = source.kind === 'emote' ? formatEmote : formatBadge;
 	// Wie/bis wann (nur Badges); faellt die Aktionen-Seite aus, kommt die Meldung ohne diese Angaben
 	const events = source.kind === 'badge' ? await fetchBadgeEvents().catch(() => new Map()) : new Map();
@@ -74,11 +75,13 @@ const runSource = async (source, targets) => {
 };
 
 const runBadgeWatch = async () => {
-	const targets = await enabledChannels();
+	// Channel-Liste nur holen, wenn es etwas zu melden gibt; der Stand wird in jedem Fall gemerkt
+	let cached = null;
+	const getTargets = async () => (cached ??= await enabledChannels());
 	let total = 0;
 	for (const source of SOURCES) {
 		// Eine Quelle darf ausfallen, ohne die andere zu blockieren
-		total += await runSource(source, targets).catch((e) => {
+		total += await runSource(source, getTargets).catch((e) => {
 			console.warn(`[badge-watch] ${source.kind}: ${e?.message ?? e}`);
 			return 0;
 		});

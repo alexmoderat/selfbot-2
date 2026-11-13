@@ -72,3 +72,9 @@ test('Aktionen: wie und bis wann', () => {
 	assert.ok(text.includes('[watch 30 min, until 2026-11-13]'));
 	assert.ok(!formatBadge({ title: 'X', description: '' }).includes('['));
 });
+
+test('badgeAlerts ist als Channel-Eigenschaft deklariert (sonst "Unknown channel data property")', () => {
+	const { channelDataSchema, checkValue } = require('../src/services/data-properties.js');
+	assert.equal(channelDataSchema.badgeAlerts, 'object');
+	assert.ok(checkValue('object', { enabled: true, message: 'hi' }));
+});

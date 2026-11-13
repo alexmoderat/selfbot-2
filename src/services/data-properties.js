@@ -48,6 +48,8 @@ const channelDataSchema = {
 	// Supibots 7tv: rotierende Emote-Liste je Channel
 	sevenTvRotatingEmotes: 'object',
 	sevenTvStreamerOnly: 'boolean',
+	// Dashboard: neue globale Badges/Emotes melden - { enabled, message } (Default aus)
+	badgeAlerts: 'object',
 	// strengere Rechte-Stufe je Command: Name -> "mod" | "streamer"
 	commandLevels: 'object',
 	// !sic-Speicherplaetze: Platz -> { game, title }
