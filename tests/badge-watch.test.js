@@ -91,3 +91,30 @@ test('formatMany: mehrere neue in einer Sammelmeldung, lange Listen werden aufge
 	assert.ok(many.length > 1);
 	assert.ok(many.every((m) => m.length < 500));
 });
+
+test('!lastbadge: Anzahl 1-5, Ausgabe einzeln und als Liste', () => {
+	const { parseCount, formatRecent } = require('../src/commands/lastbadge.js');
+	assert.equal(parseCount([]), 1);
+	assert.equal(parseCount(['3']), 3);
+	assert.equal(parseCount(['9']), 5);
+	assert.equal(parseCount(['0']), 1);
+	assert.equal(parseCount(['abc']), 1);
+	const at = new Date(Date.now() - 125 * 60_000).toISOString();
+	const one = formatRecent('badge', [{ title: 'Alpha', description: 'Desc', how: 'watch 30 min', until: '2026-11-15', at }]);
+	assert.equal(one, 'Last global Twitch badge: Alpha - Desc [watch 30 min, until 2026-11-15] (2h5min ago)');
+	const many = formatRecent('emote', [{ title: 'A', at }, { title: 'B', at }]);
+	assert.equal(many, 'Last 2 global Twitch emotes: A (2h5min ago), B (2h5min ago)');
+});
+
+test('badge-history: neueste zuerst, nach KEEP abgeschnitten', async () => {
+	const store = new Map();
+	global.bot.Redis = { getJSON: async (k) => store.get(k) ?? null, setJSON: async (k, v) => store.set(k, v) };
+	const { recordRecent, getRecent, KEEP } = require('../src/misc/badge-history.js');
+	await recordRecent('badge', [{ title: 'A' }, { title: 'B' }], '2026-11-13T10:00:00.000Z');
+	await recordRecent('badge', [{ title: 'C' }], '2026-11-13T11:00:00.000Z');
+	assert.deepEqual((await getRecent('badge', 5)).map((i) => i.title), ['C', 'B', 'A']);
+	assert.equal((await getRecent('badge', 2)).length, 2);
+	await recordRecent('badge', Array.from({ length: 30 }, (_, i) => ({ title: `x${i}` })));
+	assert.equal((await getRecent('badge', 99)).length, KEEP);
+	assert.deepEqual(await getRecent('emote', 3), []);
+});

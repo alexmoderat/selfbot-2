@@ -1,4 +1,5 @@
 const { defineCron } = require('../clients/modules/timers.js');
+const { recordRecent } = require('../misc/badge-history.js');
 const { fetchGlobalBadges, fetchGlobalEmotes, fetchBadgeEvents, BADGES_URL, EMOTES_URL } = require('../misc/streamdatabase.js');
 
 /**
@@ -94,6 +95,11 @@ const runSource = async (source, getTargets) => {
 	const format = source.kind === 'emote' ? formatEmote : formatBadge;
 	// Wie/bis wann (nur Badges); faellt die Aktionen-Seite aus, kommt die Meldung ohne diese Angaben
 	const events = source.kind === 'badge' ? await fetchBadgeEvents().catch(() => new Map()) : new Map();
+	// Verlauf fuer !lastbadge/!lastemote, auch wenn gerade kein Channel den Alert eingeschaltet hat
+	await recordRecent(
+		source.kind,
+		fresh.map((i) => ({ title: i.title, description: source.kind === 'badge' ? i.description : '', ...(events.get(i.key) ?? {}) })),
+	).catch((e) => console.warn(`[badge-watch] Verlauf: ${e?.message ?? e}`));
 	for (const item of fresh) {
 		console.log(`[badge-watch] Neues ${source.kind}: ${item.key} - ${item.title} -> ${targets.length} Channel(s)`);
 	}
