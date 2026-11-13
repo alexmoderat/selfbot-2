@@ -13,8 +13,15 @@ const { rolesFromBadges } = require('../misc/text-analysis.js');
 // Endung '. "!csi"' (ausloesender Befehl, siehe !sic) gehoert nicht zum Titel
 const PATTERN = /^(?:(?:the current )?stream infos are\s*:\s*)?\/setgame\s+(.+?)\s+\/settitle\s+(.+?)(?:\.\s*"![^"\s]+")?$/i;
 
-const parseStreamInfosLine = (message) => {
-	const match = PATTERN.exec(message.trim());
+// !csi2 (ninou2, 13.11.2026): dieselbe Zeile mit !setgame/!settitle, fuer Chats, in denen sie als Mod/Editor den Bot-Befehl nutzt.
+// Mit Vorspann ("the current stream infos are : !setgame ...") kein Befehl, deshalb greift hier das Modul; ohne Vorspann (nur
+// "!setgame X !settitle Y") ist es ein Befehl und wird von setgame behandelt (bare = true: auch fuer "!csi2 save ...").
+const BANG_PREFIXED = /^(?:the current )?stream infos are\s*:\s*!setgame\s+(.+?)\s+!settitle\s+(.+?)$/i;
+const BANG_BARE = /^!setgame\s+(.+?)\s+!settitle\s+(.+?)$/i;
+
+const parseStreamInfosLine = (message, { bare = false } = {}) => {
+	const text = message.trim();
+	const match = PATTERN.exec(text) ?? BANG_PREFIXED.exec(text) ?? (bare ? BANG_BARE.exec(text) : null);
 	return match ? { game: match[1].trim(), title: match[2].trim() } : null;
 };
 
@@ -76,4 +83,4 @@ module.exports = defineChatModule({
 	},
 });
 
-Object.assign(module.exports, { parseStreamInfosLine });
+Object.assign(module.exports, { parseStreamInfosLine, findGame });

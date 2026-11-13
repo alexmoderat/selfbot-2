@@ -1,4 +1,8 @@
 const { describeFailure, searchGameId, updateBroadcastSettings } = require('../misc/broadcast-settings.js');
+const { findGame } = require('../modules/stream-infos-restore.js');
+
+// Eingefuegte !csi2-Zeile: "!setgame X !settitle Y" setzt beides (ninou2, 13.11.2026)
+const COMBINED = /^(.+?)\s+!settitle\s+(.+)$/i;
 
 /** Kategorie des aktuellen Channels setzen, aus sb-v2 (ninou2, 06.10.2026: !gamechange / !gc) */
 module.exports = {
@@ -15,6 +19,18 @@ module.exports = {
 		const gameName = words.join(' ').trim();
 		if (!channel || !gameName) {
 			return { text: `@${display}, Usage: ${msg.invocation} <game>` };
+		}
+
+		const combined = COMBINED.exec(gameName);
+		if (combined) {
+			const [, wantedGame, title] = combined;
+			const found = await findGame(wantedGame.trim());
+			if (!found) {
+				return { text: `@${display}, game "${wantedGame.trim()}" not found.` };
+			}
+
+			const both = await updateBroadcastSettings(channel, { title: title.trim(), gameId: found.id, gameName: found.name });
+			return { text: both.ok ? `@${display}, stream infos restored: "${found.name}" - "${title.trim()}"` : describeFailure(both, display) };
 		}
 
 		const gameId = await searchGameId(gameName);

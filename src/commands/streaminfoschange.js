@@ -12,8 +12,9 @@ const { parseStreamInfosLine } = require('../modules/stream-infos-restore.js');
  * "!csi save 1" ohne Infos speichert die gerade aktiven (sie will nichts tippen). Mit Infos muss der Platz in
  * Anfuehrungszeichen stehen - sonst waere "part 07" am Titelende nicht von einem Platz zu unterscheiden.
  */
-const formatStreamInfosChange = (game, title) => `the current stream infos are : /setgame ${game} /settitle ${title}`;
-const formatSavedStreamInfos = (game, title) => `stream infos are : /setgame ${game} /settitle ${title}`;
+// !csi2/!sic2/!sci2 (ninou2, 13.11.2026: "the response should be : the current stream infos are : !setgame ... !settitle ...")
+const formatStreamInfosChange = (game, title, bang = false) => `the current stream infos are : ${bang ? '!' : '/'}setgame ${game} ${bang ? '!' : '/'}settitle ${title}`;
+const formatSavedStreamInfos = (game, title, bang = false) => `stream infos are : ${bang ? '!' : '/'}setgame ${game} ${bang ? '!' : '/'}settitle ${title}`;
 
 const SLOT_PATTERN = /^[\p{L}\p{N}_-]{1,20}$/u;
 const QUOTED_SLOT = /\s*["“”](?<slot>[^"“”]{1,20})["“”]\s*$/;
@@ -31,7 +32,7 @@ const parseSaveArgs = (args) => {
 		return null;
 	}
 
-	const infos = parseStreamInfosLine(text.slice(0, quoted.index));
+	const infos = parseStreamInfosLine(text.slice(0, quoted.index), { bare: true });
 	return infos ? { slot: slot.toLowerCase(), infos } : null;
 };
 
@@ -52,10 +53,10 @@ const isManager = async (msg) => {
 module.exports = {
 	name: 'streaminfoschange',
 	// csi/sci: so vertippt sich ninou2 dauernd ("!csi", "!sci" beim Erklaeren, 27.10.2026)
-	aliases: ['sic', 'csi', 'sci'],
+	aliases: ['sic', 'csi', 'sci', 'sic2', 'csi2', 'sci2'],
 	cooldown: 5000,
 	description: "Posts the channel's current category and title as ready-to-copy /setgame and /settitle commands, and keeps saved slots of them.",
-	usage: 'sic | sic <slot> | sic save <slot> | sic save /setgame <game> /settitle <title> "<slot>" | sic delete <slot> (also csi, sci)',
+	usage: 'sic | sic <slot> | sic save <slot> | sic save /setgame <game> /settitle <title> "<slot>" | sic delete <slot> (also csi, sci; csi2 = same with !setgame/!settitle)',
 	execute: async (client, msg) => {
 		const [action, ...args] = msg.args;
 		const channel = msg.channelData;
@@ -66,6 +67,7 @@ module.exports = {
 		const display = msg.displayName;
 		const slots = (await bot.Channels.getData(channel, 'streamInfoSlots')) ?? {};
 		const keyword = action?.toLowerCase();
+		const bang = /2$/.test(msg.invocation ?? '');
 
 		if (keyword === 'save' || keyword === 'delete') {
 			if (!(await isManager(msg))) {
@@ -100,7 +102,7 @@ module.exports = {
 
 			slots[parsed.slot] = infos;
 			await bot.Channels.setData(channel, 'streamInfoSlots', slots);
-			return { text: `@${display}, saved to slot ${parsed.slot}: ${formatSavedStreamInfos(infos.game, infos.title)}` };
+			return { text: `@${display}, saved to slot ${parsed.slot}: ${formatSavedStreamInfos(infos.game, infos.title, bang)}` };
 		}
 
 		if (action) {
@@ -114,7 +116,7 @@ module.exports = {
 				};
 			}
 
-			return { text: formatSavedStreamInfos(saved.game, saved.title) };
+			return { text: formatSavedStreamInfos(saved.game, saved.title, bang) };
 		}
 
 		const current = await fetchCurrent(channel.twitchId);
@@ -122,7 +124,7 @@ module.exports = {
 			return { success: false, text: 'Could not fetch the current stream infos.' };
 		}
 
-		return { text: formatStreamInfosChange(current.game, current.title) };
+		return { text: formatStreamInfosChange(current.game, current.title, bang) };
 	},
 };
 
