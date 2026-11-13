@@ -96,7 +96,7 @@
       display: flex; align-items: center; gap: 10px;
       padding: 5px 10px; /* ninou2, 07.11.2026: "too much space between categories" (Tabs unter den TITLES), danach "its too tight" - Mitte */
       border-radius: 8px;
-      font-size: 15px; font-weight: 500;
+      font-size: 15px; font-weight: 500; white-space: nowrap;
       color: #adafae;
       cursor: pointer;
       transition: background 0.12s, color 0.12s;
@@ -185,7 +185,7 @@
 
     /* ── Stat cards ── */
     .stats-grid {
-      display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 14px; margin-bottom: 28px;
+      display: grid; grid-auto-flow: column; grid-auto-columns: max-content; justify-content: start; gap: 14px; margin-bottom: 28px;
     }
     .stat-card {
       background: #111111; border: 1px solid #282828; border-radius: 10px;
@@ -298,8 +298,7 @@
     .guest-prompt .guest-login { background: #282828; color: #ffffff; margin-top: 10px; }
     .guest-ignore { background: none; border: none; color: #adafae; cursor: pointer; display: block; font-size: 16px; margin: 12px auto 0; text-decoration: underline; }
     .guest-ignore:hover { color: #ffffff; }
-    .guest-grid { grid-template-columns: repeat(5, 1fr) !important; max-width: 950px !important; }
-    @media (max-width: 800px) { .guest-grid { grid-template-columns: 1fr 1fr !important; } }
+    @media (max-width: 800px) { .guest-grid { grid-auto-flow: row !important; grid-template-columns: 1fr 1fr !important; } }
     .add-frame { animation: addPulse 3.5s ease-in-out infinite; background: #1f7fb3; border-radius: 13px; color: inherit; display: block; isolation: isolate; overflow: hidden; padding: 3px; position: relative; text-decoration: none; }
     .add-frame::before { animation: addBeam 4s linear infinite; aspect-ratio: 1; background: linear-gradient(90deg, transparent 50%, rgba(255, 255, 255, .95) 50%, rgba(255, 255, 255, .95) 58%, transparent 58%); content: ""; left: 50%; position: absolute; top: 50%; transform: translate(-50%, -50%); width: 170%; z-index: -1; }
     .add-inner { border: none !important; height: 100%; }
@@ -644,7 +643,7 @@
       .nav-item.active { border-bottom-color: #1f7fb3; border-left: none; }
       .content { min-height: 0; }
       .page { padding: 16px; }
-      .stats-grid { grid-auto-flow: row; grid-template-columns: 1fr 1fr; }
+      .stats-grid { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: 1fr 1fr; justify-content: stretch; }
       .cmd-table .data-table-head, .cmd-table .data-row { grid-template-columns: 120px 1fr 80px; }
     }
   </style>
