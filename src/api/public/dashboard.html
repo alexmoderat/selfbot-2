@@ -2096,6 +2096,9 @@
         `</div>`;
     }
 
+    // !raidping / !raidreminder: Vorlagen fuer den Raid-Ping mit Anzahl 1-5 (ninou2, 14.11.2026)
+    const isRaidTemplate = name => ['raidping', 'raidreminder'].includes(String(name).replace(/^!/, '').toLowerCase());
+
     function renderCmdRow(cmd) {
       if (editingCmd === cmd.name) {
         return `<div class="edit-inline" id="editRow-${esc(cmd.name)}">
@@ -2108,6 +2111,10 @@
               <label>Cooldown (s)</label>
               <input type="number" id="editCd-${esc(cmd.name)}" value="${esc(cmd.cooldown ?? 5)}" min="0" max="3600">
             </div>
+            ${isRaidTemplate(cmd.name) ? `<div class="field-sm" style="min-width:80px;max-width:90px">
+              <label>Number</label>
+              <input type="number" id="editTimes-${esc(cmd.name)}" value="${esc(cmd.times ?? 1)}" min="1" max="5" title="How many times the bot posts the message (1-5)">
+            </div>` : ''}
           </div>
           <div class="checkbox-row">
             <label class="checkbox-label">
@@ -2124,7 +2131,7 @@
       return `<div class="data-row" style="grid-template-columns:140px 1fr auto auto 120px">
         <div class="cell-mono" style="color:#3a9bd0">!${esc(String(cmd.name).replace(/^!/, ""))}</div>
         <div class="cell-muted" style="white-space:pre-wrap;word-break:break-word">${esc(cmd.response)}</div>
-        <div style="font-size:14px;color:#9a9c9b">${esc(cmd.cooldown ?? 5)}s<br><span class="uses-link" title="who used it in your channel (since 23.10.2026)" onclick="showCommandUsers('${esc(String(cmd.name).replace(/^!/, ""))}', true)">${esc(cmd.uses ?? 0)} use${cmd.uses === 1 ? '' : 's'}</span></div>
+        <div style="font-size:14px;color:#9a9c9b">${esc(cmd.cooldown ?? 5)}s${isRaidTemplate(cmd.name) ? ` · ${esc(cmd.times ?? 1)}×` : ''}<br><span class="uses-link" title="who used it in your channel (since 23.10.2026)" onclick="showCommandUsers('${esc(String(cmd.name).replace(/^!/, ""))}', true)">${esc(cmd.uses ?? 0)} use${cmd.uses === 1 ? '' : 's'}</span></div>
         <div style="display:flex;gap:5px;align-items:center">
           ${cmd.mod_only ? '<span class="badge badge-mod">MOD</span>' : ''}
           ${cmd.reply    ? '<span class="badge badge-reply">REPLY</span>' : ''}
@@ -2151,10 +2158,12 @@
       const cooldown  = parseInt(document.getElementById(`editCd-${name}`).value) || 0;
       const mod_only  = document.getElementById(`editMod-${name}`).checked;
       const reply     = document.getElementById(`editReply-${name}`).checked;
+      const timesEl   = document.getElementById(`editTimes-${name}`);
+      const times     = timesEl ? Math.min(5, Math.max(1, parseInt(timesEl.value, 10) || 1)) : undefined;
       if (!response) { showToast('Response cannot be empty.', 'error'); return; }
       const result = await apiFetch(`api/commands/${encodeURIComponent(name)}`, {
         method: 'PUT',
-        body: JSON.stringify({ response, cooldown, mod_only, reply }),
+        body: JSON.stringify({ response, cooldown, mod_only, reply, times }),
       });
       if (result === null) return;
       editingCmd = null;

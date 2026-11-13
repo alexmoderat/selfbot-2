@@ -335,6 +335,12 @@ module.exports = [
 				required: false,
 				default: false,
 			},
+			times: {
+				column: 'Times',
+				type: 'Number',
+				required: false,
+				comment: 'nur !raidping/!raidreminder: wie oft die Meldung gepostet wird (1-5); leer = Standard',
+			},
 			created: {
 				column: 'Created',
 				type: 'Date',

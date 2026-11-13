@@ -1,6 +1,7 @@
 const { defineChatModule } = require('../clients/modules/chat-modules.js');
 
 const customCommands = require('../services/custom-commands.js');
+const { cleanTimes } = require('../services/tweet-notify.js');
 
 /**
  * Raid-Event-Ankuendigung (Bot-Konto 883453487, "A Raid Event at Level") -> alle per subraid angemeldeten User
@@ -47,9 +48,14 @@ const getSubscribers = async () => {
 	return result;
 };
 
+// times: wie oft jede Meldung gepostet wird (ninou2, 14.11.2026: "both commands should get the times feature"); null = nie
+// eingestellt, dann gilt das alte Verhalten (ein Mal, fuer ninou2 zusaetzlich ihr Einzel-Ping)
 const getTemplate = async (channel, reminder) => {
 	const custom = await customCommands.get(channel, reminder ? RAID_TEMPLATE_COMMANDS.reminder : RAID_TEMPLATE_COMMANDS.ping).catch(() => null);
-	return custom?.Response ?? (reminder ? DEFAULT_RAID_REMINDER : DEFAULT_RAID_MESSAGE);
+	return {
+		text: custom?.Response ?? (reminder ? DEFAULT_RAID_REMINDER : DEFAULT_RAID_MESSAGE),
+		times: custom?.Times ? cleanTimes(custom.Times) : null,
+	};
 };
 
 const pingAll = async (subscribers, reminder) => {
@@ -59,13 +65,16 @@ const pingAll = async (subscribers, reminder) => {
 		if (!channel || channel.mode === 'Inactive') {
 			continue;
 		}
-		const template = await getTemplate(channel, reminder);
+		const { text: template, times } = await getTemplate(channel, reminder);
 		for (const text of raidPingMessages(users, template)) {
-			await bot.Channels.send(channel, text).catch(() => {});
+			for (let i = 0; i < (times ?? 1); i++) {
+				await bot.Channels.send(channel, text).catch(() => {});
+			}
 			batches++;
 		}
-		// ninou2 moechte zweimal gepingt werden (01.08.2026) - bewusst nur dieser eine User
-		if (channel.name === 'ninou2' && users.includes('ninou2')) {
+		// ninou2 moechte zweimal gepingt werden (01.08.2026) - bewusst nur dieser eine User; sobald die Anzahl im Dashboard
+		// eingestellt ist, gilt diese und der Einzel-Ping entfaellt
+		if (times === null && channel.name === 'ninou2' && users.includes('ninou2')) {
 			await bot.Channels.send(channel, formatRaidText(template, ['ninou2'], REMINDER_LEAD_S)).catch(() => {});
 		}
 	}

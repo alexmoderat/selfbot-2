@@ -189,6 +189,7 @@ const commandRows = async (channel) => {
 		cooldown: i.Cooldown,
 		mod_only: Boolean(i.Mod_Only),
 		reply: Boolean(i.Reply),
+		times: i.Times ? cleanTimes(i.Times) : null,
 		uses: uses.get(`custom:${channel.id}:${i.Name.replace(/^!/, '')}`) ?? 0,
 	}));
 };
@@ -197,6 +198,8 @@ const commandOptions = (body) => ({
 	Cooldown: Number(body.cooldown ?? 5) || 0,
 	Mod_Only: Boolean(body.mod_only),
 	Reply: Boolean(body.reply),
+	// Nur fuer !raidping/!raidreminder (ninou2, 14.11.2026: "both commands ... the times feature"); ohne Angabe unveraendert
+	...(body.times === undefined || body.times === null ? {} : { Times: cleanTimes(body.times) }),
 });
 
 /* ---------- notify / banwatch ---------- */
