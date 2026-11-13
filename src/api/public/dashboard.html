@@ -513,7 +513,10 @@
     .notify-table.tweet-table .data-row { grid-template-columns: 160px 150px 1fr 80px 80px; }
     /* Title/Tweet Notify (ninou2, 13.11.2026): Channel-Spalte genau so breit wie der laengste Channel-Name (Subgrid, alle Zeilen teilen
        die Spalten), Message rueckt direkt daneben und bekommt den freien Platz; Added/Delete eng beieinander, Tabellenbreite gleich */
-    .notify-table.tweet-times { display: grid; grid-template-columns: 160px fit-content(160px) 1fr 60px 68px 68px; column-gap: 12px; }
+    .notify-table.tweet-times { display: grid; grid-template-columns: 160px fit-content(160px) 1fr 60px 68px 88px; column-gap: 12px; }
+    /* ninou2, 14.11.2026: Times und Added ein Stueck nach links (Abstand zum Delete-Knopf), Ueberschrift MESSAGE mittig, Inhalt etwas nach rechts */
+    .notify-table.tweet-times .data-table-head > :nth-child(3) { text-align: center; }
+    .notify-table.tweet-times .data-row > :nth-child(3) { padding-left: 10px; }
     .notify-table.tweet-times .data-table-head,
     .notify-table.tweet-times .data-row { grid-column: 1 / -1; grid-template-columns: subgrid; }
     .chan-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
