@@ -74,10 +74,13 @@ const channelSettings = async (channel) => ({
 	crossban: (await bot.Channels.getData(channel, 'crossbanOptIn')) === true,
 	// !add/!remove (7tv) nur fuer den Streamer - wie "7tv access streamer|mods" (ninou2, 29.10.2026: auch im Dashboard)
 	sevenTvAccess: (await bot.Channels.getData(channel, 'sevenTvStreamerOnly')) === true ? 'streamer' : 'mods',
+	// ninou2, 13.11.2026: neue globale Badges im Chat melden, standardmaessig aus, eigener Textteil
+	badgeAlerts: (await bot.Channels.getData(channel, 'badgeAlerts'))?.enabled === true,
+	badgeAlertsMessage: (await bot.Channels.getData(channel, 'badgeAlerts'))?.message ?? '',
 });
 
 const applyChannelSettings = async (req, channel) => {
-	const { commandsAllowed, moderation, crossban, sevenTvAccess } = req.body;
+	const { commandsAllowed, moderation, crossban, sevenTvAccess, badgeAlerts, badgeAlertsMessage } = req.body;
 	if (typeof commandsAllowed === 'boolean') {
 		const by = await issuer(req);
 		await setBlock(channelBlock(channel), !commandsAllowed, () =>
@@ -92,6 +95,19 @@ const applyChannelSettings = async (req, channel) => {
 	}
 	if (sevenTvAccess === 'streamer' || sevenTvAccess === 'mods') {
 		await bot.Channels.setData(channel, 'sevenTvStreamerOnly', sevenTvAccess === 'streamer');
+	}
+	if (typeof badgeAlerts === 'boolean' || typeof badgeAlertsMessage === 'string') {
+		const current = (await bot.Channels.getData(channel, 'badgeAlerts')) ?? {};
+		await bot.Channels.setData(channel, 'badgeAlerts', {
+			enabled: typeof badgeAlerts === 'boolean' ? badgeAlerts : current.enabled === true,
+			message:
+				typeof badgeAlertsMessage === 'string'
+					? badgeAlertsMessage
+							.replaceAll(/[\r\n]+/g, ' ')
+							.trim()
+							.slice(0, 200)
+					: (current.message ?? ''),
+		});
 	}
 	return await channelSettings(channel);
 };
@@ -185,7 +201,11 @@ const commandOptions = (body) => ({
 /* ---------- notify / banwatch ---------- */
 
 const notifyRows = async (channel) =>
-	(await bot.DB.NotifyLive.find({ channel: channel.id }).sort({ added: 1 }).lean()).map((i) => ({ streamer: i.streamerLogin, message: i.message ?? '', added: i.added }));
+	(await bot.DB.NotifyLive.find({ channel: channel.id }).sort({ added: 1 }).lean()).map((i) => ({
+		streamer: i.streamerLogin,
+		message: i.message ?? '',
+		added: i.added,
+	}));
 
 const addNotify = async (channel, streamerLogin, message) => {
 	const streamer = await resolveStreamer(streamerLogin);

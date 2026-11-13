@@ -996,6 +996,18 @@
           </div>
           <div class="toggle-pair" id="toggleSevenTvAccess"></div>
         </div>
+        <!-- ninou2, 13.11.2026: "command disabled by default, the user enable from the website, add a custom message part" -->
+        <div class="data-row" style="grid-template-columns:1fr auto">
+          <div>
+            <div class="cell-mono" style="color:#3a9bd0">Global badge alerts</div>
+            <div class="cell-muted" style="font-size:14px">Posts in your chat when Twitch adds a new global badge (data from streamdatabase.com). Off by default.</div>
+            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+              <input type="text" id="badgeAlertsMessage" placeholder="Custom text added to the message (optional)" maxlength="200" style="flex:1;min-width:220px">
+              <button type="button" class="btn btn-primary btn-sm" onclick="saveBadgeAlertsMessage()">Save text</button>
+            </div>
+          </div>
+          <div class="toggle-pair" id="toggleBadgeAlerts"></div>
+        </div>
       </div>
 
       <div class="section-header" style="margin-top:28px">
@@ -2094,6 +2106,11 @@
       document.getElementById('toggleSevenTvAccess').innerHTML =
         toggleBtn(s.sevenTvAccess !== 'streamer', 'Mods + streamer', `setChannelSetting('sevenTvAccess', 'mods')`) +
         toggleBtn(s.sevenTvAccess === 'streamer', 'Streamer only',   `setChannelSetting('sevenTvAccess', 'streamer')`);
+      document.getElementById('toggleBadgeAlerts').innerHTML =
+        toggleBtn(!s.badgeAlerts, 'Off', `setChannelSetting('badgeAlerts', false)`) +
+        toggleBtn(s.badgeAlerts,  'On',  `setChannelSetting('badgeAlerts', true)`);
+      const badgeText = document.getElementById('badgeAlertsMessage');
+      if (badgeText && document.activeElement !== badgeText) badgeText.value = s.badgeAlertsMessage ?? '';
     }
 
     async function setChannelSetting(key, value) {
@@ -2105,6 +2122,10 @@
       data.channelSettings = result;
       renderChannelSettings();
       showToast('Saved.', 'success');
+    }
+
+    function saveBadgeAlertsMessage() {
+      setChannelSetting('badgeAlertsMessage', document.getElementById('badgeAlertsMessage').value);
     }
 
     // ── Bot Commands (built-in, on/off per channel) ────────────────────────────
