@@ -86,7 +86,7 @@
     .sidebar-editing .nav-label { display: flex; align-items: center; color: #3a9bd0; }
     .sidebar-editing .nav-section { outline: 1px dashed #2a2a2a; border-radius: 8px; margin: 4px 6px; }
     .sidebar-editing .nav-item .nav-badge { display: none; }
-    .sidebar-edit-bar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    .sidebar-edit-bar { display: flex; gap: 6px; flex-wrap: wrap; }
     .nav-label {
       font-size: 11.5px; font-weight: 700; letter-spacing: 1px;
       text-transform: uppercase; color: #9b6bdf; /* ninou2, 07.11.2026: Bereichsnamen lila wie Created bei den Remindern */
@@ -113,16 +113,17 @@
     .nav-icon { font-size: 17px; width: 18px; text-align: center; flex-shrink: 0; }
     .nav-badge {
       margin-left: auto;
-      background: #222222; color: #9a9c9b;
+      background: #1f7fb322; color: #3a9bd0;
       font-size: 11.5px; font-weight: 700;
       padding: 2px 7px; border-radius: 10px;
     }
-    .nav-item.active .nav-badge { background: #1f7fb322; color: #1f7fb3; }
+    .nav-item.active .nav-badge { background: #1f7fb333; color: #5ab4ea; }
 
     .sidebar-footer {
       margin-top: auto;
       padding: 12px 10px;
       border-top: 1px solid #282828;
+      display: flex; flex-direction: column; gap: 10px;
     }
     .logout-btn {
       display: flex; align-items: center; gap: 10px;
@@ -754,10 +755,10 @@
         <button class="btn btn-cancel" type="button" onclick="resetSidebarOrder()">Reset</button>
         <button class="btn btn-cancel" type="button" onclick="cancelSidebarEdit()">Cancel</button>
       </div>
-      <button class="logout-btn" id="sidebarCustomize" type="button" hidden onclick="startSidebarEdit()" style="margin-bottom:8px">
+      <button class="logout-btn" id="sidebarCustomize" type="button" hidden onclick="startSidebarEdit()">
         <span>↕</span> Customize sidebar
       </button>
-      <a class="logout-btn stream-btn" id="streamLink" href="https://www.twitch.tv/" target="_blank" rel="noopener" style="text-decoration:none;margin-bottom:8px">
+      <a class="logout-btn stream-btn" id="streamLink" href="https://www.twitch.tv/" target="_blank" rel="noopener" style="text-decoration:none">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.3 3 3 6.4V20h4.6v2.5h2.6L12.7 20h3.7l5-5V3H4.3zm15.4 11.2-2.9 2.9h-4.6l-2.5 2.5v-2.5H5.9V4.8h13.8v9.4zM16 7.6h-1.8v5.1H16V7.6zm-4.9 0H9.3v5.1h1.8V7.6z"/></svg>
         Bot Stream
       </a>
