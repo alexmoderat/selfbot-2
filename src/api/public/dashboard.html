@@ -1006,7 +1006,9 @@
             <div class="cell-muted" style="font-size:14px">Posts in your chat when Twitch adds a new global badge or emote (data from streamdatabase.com). Off by default.</div>
             <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
               <input type="text" id="badgeAlertsMessage" placeholder="Custom text added to the message (optional)" maxlength="200" style="flex:1;min-width:220px">
-              <button type="button" class="btn btn-primary btn-sm" id="badgeAlertsButton" onclick="saveBadgeAlertsMessage()">Save text</button>
+              <button type="button" class="btn btn-primary btn-sm" id="badgeAlertsEdit" onclick="editBadgeAlertsMessage()">Edit</button>
+              <button type="button" class="btn btn-primary btn-sm" id="badgeAlertsConfirm" onclick="confirmBadgeAlertsMessage()" hidden>Confirm</button>
+              <button type="button" class="btn btn-sm" id="badgeAlertsUndo" onclick="undoBadgeAlertsMessage()" hidden>Undo</button>
             </div>
           </div>
           <div class="toggle-pair" id="toggleBadgeAlerts"></div>
@@ -2113,12 +2115,12 @@
         toggleBtn(!s.badgeAlerts, 'Off', `setChannelSetting('badgeAlerts', false)`) +
         toggleBtn(s.badgeAlerts,  'On',  `setChannelSetting('badgeAlerts', true)`);
       const badgeText = document.getElementById('badgeAlertsMessage');
-      if (badgeText && document.activeElement !== badgeText) badgeText.value = s.badgeAlertsMessage ?? '';
-      // ninou2, 13.11.2026: nach dem Speichern wird "Save text" zu "Edit" und das Feld ist gesperrt, bis man auf Edit klickt
-      const locked = !badgeTextEditing && Boolean(s.badgeAlertsMessage);
-      if (badgeText) badgeText.readOnly = locked;
-      const badgeButton = document.getElementById('badgeAlertsButton');
-      if (badgeButton) badgeButton.textContent = locked ? 'Edit' : 'Save text';
+      if (badgeText && !badgeTextEditing) badgeText.value = s.badgeAlertsMessage ?? '';
+      // ninou2, 13.11.2026: Seite oeffnen -> Knopf "Edit", Feld gesperrt; Klick auf Edit -> Knoepfe "Confirm" und "Undo"
+      if (badgeText) badgeText.readOnly = !badgeTextEditing;
+      document.getElementById('badgeAlertsEdit').hidden = badgeTextEditing;
+      document.getElementById('badgeAlertsConfirm').hidden = !badgeTextEditing;
+      document.getElementById('badgeAlertsUndo').hidden = !badgeTextEditing;
     }
 
     let badgeTextEditing = false;
@@ -2134,16 +2136,21 @@
       showToast('Saved.', 'success');
     }
 
-    function saveBadgeAlertsMessage() {
-      const input = document.getElementById('badgeAlertsMessage');
-      if (input.readOnly) {
-        badgeTextEditing = true;
-        renderChannelSettings();
-        input.focus();
-        return;
-      }
+    function editBadgeAlertsMessage() {
+      badgeTextEditing = true;
+      renderChannelSettings();
+      document.getElementById('badgeAlertsMessage').focus();
+    }
+
+    function confirmBadgeAlertsMessage() {
       badgeTextEditing = false;
-      setChannelSetting('badgeAlertsMessage', input.value);
+      setChannelSetting('badgeAlertsMessage', document.getElementById('badgeAlertsMessage').value);
+    }
+
+    function undoBadgeAlertsMessage() {
+      badgeTextEditing = false;
+      document.getElementById('badgeAlertsMessage').value = data.channelSettings?.badgeAlertsMessage ?? '';
+      renderChannelSettings();
     }
 
     // ── Bot Commands (built-in, on/off per channel) ────────────────────────────
