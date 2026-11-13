@@ -1070,7 +1070,7 @@
       <div class="section-header">
         <div class="section-title">Title Notify <span class="count-pill" id="countTitle">0</span></div>
       </div>
-      <p class="section-desc">Get pinged in your channel chat when a streamer changes their title — usually shortly before they go live. Same as <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">!titlenotify &lt;streamer&gt;</code>.</p>
+      <p class="section-desc">Get pinged in your channel chat when a streamer changes their title — usually shortly before they go live. Same as <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">!titlenotify &lt;streamer&gt;</code>. This list only shows <strong>your own</strong> alerts, in whichever channel you set them.</p>
 
       <form class="add-card" id="addTitleForm">
         <div class="add-card-row">
@@ -1096,7 +1096,7 @@
       <div class="section-header">
         <div class="section-title">Tweet Notify <span class="count-pill" id="countTweet">0</span></div>
       </div>
-      <p class="section-desc">Get pinged in your channel chat with the link when an X/Twitter account posts a new tweet. Same as <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">!tweetnotify &lt;account&gt;</code>. Checked every 2 minutes; retweets and replies are ignored.</p>
+      <p class="section-desc">Get pinged in your channel chat with the link when an X/Twitter account posts a new tweet. Same as <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">!tweetnotify &lt;account&gt;</code>. Checked every 2 minutes; retweets and replies are ignored. This list only shows <strong>your own</strong> alerts, in whichever channel you set them.</p>
 
       <form class="add-card" id="addTweetForm">
         <div class="add-card-row">
@@ -2459,10 +2459,10 @@
     // ninou2, 10.11.2026: "Live notify / title [notify] should also [have] a sort by button [for] when added" - Spalte Added,
     // Streamer/Added anklickbar wie bei den Remindern (nochmal klicken = umgekehrt). Added zuerst die neuesten.
     const NOTIFY_SORTS = {
-      streamer: (a, b) => a.streamer.localeCompare(b.streamer) || String(a.user ?? '').localeCompare(String(b.user ?? '')),
+      streamer: (a, b) => a.streamer.localeCompare(b.streamer) || String(a.channel ?? a.user ?? '').localeCompare(String(b.channel ?? b.user ?? '')),
       added: (a, b) => new Date(b.added ?? 0) - new Date(a.added ?? 0) || String(a.streamer ?? a.account).localeCompare(String(b.streamer ?? b.account)),
       // Tweet Notify (ninou2, 13.11.2026: "tweet notify the sort by does not work")
-      account: (a, b) => a.account.localeCompare(b.account) || String(a.user ?? '').localeCompare(String(b.user ?? '')),
+      account: (a, b) => a.account.localeCompare(b.account) || String(a.channel ?? a.user ?? '').localeCompare(String(b.channel ?? b.user ?? '')),
     };
     const loadSort = (key, fallback) => {
       try { const saved = JSON.parse(localStorage.getItem(key)); if (NOTIFY_SORTS[saved?.key]) return saved; } catch {}
@@ -2635,22 +2635,22 @@
       }
       el.innerHTML = `
         <div class="data-table notify-table with-added tweet-table">
-          <div class="data-table-head"><div>${sortHead('streamer', 'Streamer', titleNotifySort, 'setTitleNotifySort')}</div><div>Pings</div><div>Message</div><div>${sortHead('added', 'Added', titleNotifySort, 'setTitleNotifySort')}</div><div></div></div>
+          <div class="data-table-head"><div>${sortHead('streamer', 'Streamer', titleNotifySort, 'setTitleNotifySort')}</div><div>Channel</div><div>Message</div><div>${sortHead('added', 'Added', titleNotifySort, 'setTitleNotifySort')}</div><div></div></div>
           ${sortedBy(data.titlenotify, titleNotifySort).map(item => `
             <div class="data-row">
               <div class="cell-mono">${esc(item.streamer)}</div>
-              <div class="cell-muted">@${esc(item.user)}</div>
-              <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'title', '${esc(item.streamer)}', '${esc(item.user)}')">${esc(item.message || '—')}</div>
+              <div class="cell-muted">#${esc(item.channel)}</div>
+              <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'title', '${esc(item.streamer)}', '${esc(item.channel)}')">${esc(item.message || '—')}</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
-                <button class="btn btn-danger" onclick="deleteTitleNotify('${esc(item.streamer)}', '${esc(item.user)}')">Delete</button>
+                <button class="btn btn-danger" onclick="deleteTitleNotify('${esc(item.streamer)}', '${esc(item.channel)}')">Delete</button>
               </div>
             </div>`).join('')}
         </div>`;
     }
 
-    async function deleteTitleNotify(streamer, user) {
-      const result = await apiFetch(`api/titlenotify/${encodeURIComponent(streamer)}/${encodeURIComponent(user)}`, { method: 'DELETE' });
+    async function deleteTitleNotify(streamer, channel) {
+      const result = await apiFetch(`api/titlenotify/${encodeURIComponent(streamer)}/${encodeURIComponent(channel)}`, { method: 'DELETE' });
       if (result === null) return;
       data.titlenotify = result;
       renderTitleNotify();
@@ -2695,22 +2695,22 @@
       }
       el.innerHTML = `
         <div class="data-table notify-table with-added tweet-table">
-          <div class="data-table-head"><div>${sortHead('account', 'Account', tweetNotifySort, 'setTweetNotifySort')}</div><div>Pings</div><div>Message</div><div>${sortHead('added', 'Added', tweetNotifySort, 'setTweetNotifySort')}</div><div></div></div>
+          <div class="data-table-head"><div>${sortHead('account', 'Account', tweetNotifySort, 'setTweetNotifySort')}</div><div>Channel</div><div>Message</div><div>${sortHead('added', 'Added', tweetNotifySort, 'setTweetNotifySort')}</div><div></div></div>
           ${sortedBy(data.tweetnotify, tweetNotifySort).map(item => `
             <div class="data-row">
               <div class="cell-mono">@${esc(item.account)}</div>
-              <div class="cell-muted">@${esc(item.user)}</div>
-              <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'tweet', '${esc(item.account)}', '${esc(item.user)}')">${esc(item.message || '—')}</div>
+              <div class="cell-muted">#${esc(item.channel)}</div>
+              <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'tweet', '${esc(item.account)}', '${esc(item.channel)}')">${esc(item.message || '—')}</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
-                <button class="btn btn-danger" onclick="deleteTweetNotify('${esc(item.account)}', '${esc(item.user)}')">Delete</button>
+                <button class="btn btn-danger" onclick="deleteTweetNotify('${esc(item.account)}', '${esc(item.channel)}')">Delete</button>
               </div>
             </div>`).join('')}
         </div>`;
     }
 
-    async function deleteTweetNotify(account, user) {
-      const result = await apiFetch(`api/tweetnotify/${encodeURIComponent(account)}/${encodeURIComponent(user)}`, { method: 'DELETE' });
+    async function deleteTweetNotify(account, channel) {
+      const result = await apiFetch(`api/tweetnotify/${encodeURIComponent(account)}/${encodeURIComponent(channel)}`, { method: 'DELETE' });
       if (result === null) return;
       data.tweetnotify = result;
       renderTweetNotify();

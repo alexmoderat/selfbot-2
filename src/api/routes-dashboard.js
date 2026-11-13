@@ -816,27 +816,26 @@ const createDashboardRouter = () => {
 		}),
 	);
 
-	/* ---------- titlenotify ---------- */
-	// ninou2, 27.10.2026: "need to add the title notification tab too". Alarme gehoeren je einer Person: neue legt die
-	// angemeldete Person fuer sich an, die Channel-Besitzerin kann jeden Alarm in ihrem Channel entfernen.
-	const titleNotifyRows = async (channel) => {
-		const rows = await bot.DB.TitleNotify.find({ channel: channel.id }).lean();
-		const users = await bot.DB.User.find({ _id: { $in: rows.map((i) => i.userAlias) } }, { name: 1 }).lean();
-		const names = new Map(users.map((i) => [i._id, i.name]));
-		return rows
-			.filter((i) => names.has(i.userAlias))
-			.map((i) => ({ streamer: i.streamerLogin, user: names.get(i.userAlias), message: i.message ?? '', added: i.added }))
-			.sort((a, b) => a.streamer.localeCompare(b.streamer) || a.user.localeCompare(b.user));
-	};
+	/* ---------- titlenotify / tweetnotify ---------- */
+	// ninou2, 27.10./13.11.2026: Alarme gehoeren der Person, die sie angelegt hat, nicht dem Channel: "everything should be account
+	// related and not shared", "even if the command is created from another chat, it should only show [to] the person ... his
+	// own notifications on the website". Die Seite zeigt deshalb alle Alarme der angemeldeten Person (ueber alle Channels, in
+	// denen sie welche angelegt hat); die Meldung selbst erscheint in dem Channel, in dem der Alarm angelegt wurde.
+	const channelLabel = (channelId) => bot.Channels.get(channelId)?.name ?? String(channelId);
+	const ownRows = async (model, userAlias, fields) =>
+		(await model.find({ userAlias }).lean())
+			.map((i) => ({ ...fields(i), channel: channelLabel(i.channel), message: i.message ?? '', added: i.added }))
+			.sort((a, b) => (a.streamer ?? a.account).localeCompare(b.streamer ?? b.account) || a.channel.localeCompare(b.channel));
+	const titleNotifyRows = async (userAlias) => await ownRows(bot.DB.TitleNotify, userAlias, (i) => ({ streamer: i.streamerLogin }));
+	const tweetNotifyRows = async (userAlias) => await ownRows(bot.DB.TweetNotify, userAlias, (i) => ({ account: i.account }));
+	// Kanalname aus der URL -> Channel-ID (nur Channels, in denen der Bot ist)
+	const urlChannelId = (req) => findChannel(String(req.params.channel ?? '').toLowerCase())?.id ?? null;
 
 	router.get(
 		'/api/titlenotify',
 		requireSession,
 		route(async (req, res) => {
-			const channel = sessionChannel(req, res);
-			if (channel) {
-				res.json(await titleNotifyRows(channel));
-			}
+			res.json(await titleNotifyRows(await issuer(req)));
 		}),
 	);
 	router.post(
@@ -861,73 +860,52 @@ const createDashboardRouter = () => {
 				return;
 			}
 			watchTitle(streamer.id);
+			const me = await issuer(req);
 			await bot.DB.TitleNotify.updateOne(
-				{ channel: channel.id, streamerId: streamer.id, userAlias: await issuer(req) },
+				{ channel: channel.id, streamerId: streamer.id, userAlias: me },
 				{ $set: { message: cleanMessage(req.body.message) }, $setOnInsert: { streamerLogin: streamer.login, added: new Date() } },
 				{ upsert: true },
 			);
-			res.json(await titleNotifyRows(channel));
+			res.json(await titleNotifyRows(me));
 		}),
 	);
 	router.put(
-		'/api/titlenotify/:streamer/:user',
+		'/api/titlenotify/:streamer/:channel',
 		requireSession,
 		route(async (req, res) => {
-			const channel = sessionChannel(req, res);
-			if (!channel) {
-				return;
-			}
-			const user = await bot.Users.get(req.params.user ?? '');
-			if (user) {
+			const me = await issuer(req);
+			const channelId = urlChannelId(req);
+			if (channelId !== null) {
 				await bot.DB.TitleNotify.updateOne(
-					{ channel: channel.id, userAlias: user.id, streamerLogin: String(req.params.streamer ?? '').toLowerCase() },
+					{ channel: channelId, userAlias: me, streamerLogin: String(req.params.streamer ?? '').toLowerCase() },
 					{ $set: { message: cleanMessage(req.body.message) } },
 				);
 			}
-			res.json(await titleNotifyRows(channel));
+			res.json(await titleNotifyRows(me));
 		}),
 	);
 	router.delete(
-		'/api/titlenotify/:streamer/:user',
+		'/api/titlenotify/:streamer/:channel',
 		requireSession,
 		route(async (req, res) => {
-			const channel = sessionChannel(req, res);
-			if (!channel) {
-				return;
-			}
-			const user = await bot.Users.get(req.params.user ?? '');
-			if (user) {
+			const me = await issuer(req);
+			const channelId = urlChannelId(req);
+			if (channelId !== null) {
 				await bot.DB.TitleNotify.deleteMany({
-					channel: channel.id,
-					userAlias: user.id,
+					channel: channelId,
+					userAlias: me,
 					streamerLogin: String(req.params.streamer ?? '').toLowerCase(),
 				});
 			}
-			res.json(await titleNotifyRows(channel));
+			res.json(await titleNotifyRows(me));
 		}),
 	);
-
-	/* ---------- tweetnotify ---------- */
-	// ninou2, 13.11.2026: "a twitter command, just like the title and live notifications" - wie titlenotify, Alarme gehoeren
-	// je einer Person; neue legt die angemeldete Person fuer sich an, die Channel-Besitzerin kann jeden entfernen.
-	const tweetNotifyRows = async (channel) => {
-		const rows = await bot.DB.TweetNotify.find({ channel: channel.id }).lean();
-		const users = await bot.DB.User.find({ _id: { $in: rows.map((i) => i.userAlias) } }, { name: 1 }).lean();
-		const names = new Map(users.map((i) => [i._id, i.name]));
-		return rows
-			.filter((i) => names.has(i.userAlias))
-			.map((i) => ({ account: i.account, user: names.get(i.userAlias), message: i.message ?? '', added: i.added }))
-			.sort((a, b) => a.account.localeCompare(b.account) || a.user.localeCompare(b.user));
-	};
 
 	router.get(
 		'/api/tweetnotify',
 		requireSession,
 		route(async (req, res) => {
-			const channel = sessionChannel(req, res);
-			if (channel) {
-				res.json(await tweetNotifyRows(channel));
-			}
+			res.json(await tweetNotifyRows(await issuer(req)));
 		}),
 	);
 	router.post(
@@ -943,50 +921,41 @@ const createDashboardRouter = () => {
 				res.status(404).json({ error: 'account not found or has no public tweets' });
 				return;
 			}
+			const me = await issuer(req);
 			await bot.DB.TweetNotify.updateOne(
-				{ channel: channel.id, account, userAlias: await issuer(req) },
+				{ channel: channel.id, account, userAlias: me },
 				{ $set: { message: cleanMessage(req.body.message) }, $setOnInsert: { added: new Date() } },
 				{ upsert: true },
 			);
-			res.json(await tweetNotifyRows(channel));
+			res.json(await tweetNotifyRows(me));
 		}),
 	);
-	// Zusatztext eines bestehenden Alarms aendern (ninou2, 13.11.2026: "content area of the message ... should be clickable so you can modify your text")
+	// Zusatztext eines bestehenden Alarms aendern (ninou2, 13.11.2026: "content area of the message ... should be clickable")
 	router.put(
-		'/api/tweetnotify/:account/:user',
+		'/api/tweetnotify/:account/:channel',
 		requireSession,
 		route(async (req, res) => {
-			const channel = sessionChannel(req, res);
-			if (!channel) {
-				return;
-			}
-			const user = await bot.Users.get(req.params.user ?? '');
-			if (user) {
+			const me = await issuer(req);
+			const channelId = urlChannelId(req);
+			if (channelId !== null) {
 				await bot.DB.TweetNotify.updateOne(
-					{ channel: channel.id, userAlias: user.id, account: cleanHandle(req.params.account) },
+					{ channel: channelId, userAlias: me, account: cleanHandle(req.params.account) },
 					{ $set: { message: cleanMessage(req.body.message) } },
 				);
 			}
-			res.json(await tweetNotifyRows(channel));
+			res.json(await tweetNotifyRows(me));
 		}),
 	);
 	router.delete(
-		'/api/tweetnotify/:account/:user',
+		'/api/tweetnotify/:account/:channel',
 		requireSession,
 		route(async (req, res) => {
-			const channel = sessionChannel(req, res);
-			if (!channel) {
-				return;
+			const me = await issuer(req);
+			const channelId = urlChannelId(req);
+			if (channelId !== null) {
+				await bot.DB.TweetNotify.deleteMany({ channel: channelId, userAlias: me, account: cleanHandle(req.params.account) });
 			}
-			const user = await bot.Users.get(req.params.user ?? '');
-			if (user) {
-				await bot.DB.TweetNotify.deleteMany({
-					channel: channel.id,
-					userAlias: user.id,
-					account: cleanHandle(req.params.account),
-				});
-			}
-			res.json(await tweetNotifyRows(channel));
+			res.json(await tweetNotifyRows(me));
 		}),
 	);
 
@@ -1274,8 +1243,8 @@ const createDashboardRouter = () => {
 				commands: (await customCommands.list(channel)).length,
 				notify: (await notifyRows(channel)).length,
 				// ninou2, 28.10.2026: Zahl am Title-Notify-Tab stand bis zum Anklicken auf 0
-				titlenotify: (await titleNotifyRows(channel)).length,
-				tweetnotify: (await tweetNotifyRows(channel)).length,
+				titlenotify: (await titleNotifyRows(await issuer(req))).length,
+				tweetnotify: (await tweetNotifyRows(await issuer(req))).length,
 				banwatch: (await banwatchRows(channel)).length,
 			});
 		}),
