@@ -23,12 +23,13 @@ const {
  * ueberschrieben, deshalb kommt der vorherige aus den VODs, ohne VOD bleibt nur der letzte Streamtag.
  */
 /**
- * "[they streamed 286/365,1500h soo far this year]": Streamtage und Gesamtstunden des Jahres (ninou2, 12.11.2026:
- * "total hours streamed this year"). Stunden nur, wenn welche aufgezeichnet sind.
+ * "[they streamed 286/365; 1500h soo far this year]": Streamtage und Gesamtstunden des Jahres (ninou2, 12.11.2026:
+ * "total hours streamed this year"; 13.11.2026: "this format please : [they streamed 159/365; 581h soo far this year]").
+ * Stunden nur, wenn welche aufgezeichnet sind.
  */
 const yearStreamedText = async (userId, days, year) => {
 	const seconds = await streamData.getYearSeconds(userId, year).catch(() => null);
-	const hours = seconds ? `,${Math.round(seconds / 3600)}h` : '';
+	const hours = seconds ? `; ${Math.round(seconds / 3600)}h` : '';
 	return ` [they streamed ${countDaysInYear(days, year)}/${daysInYear(year)}${hours} soo far this year]`;
 };
 
