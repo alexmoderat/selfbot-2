@@ -52,6 +52,11 @@ const runTweetNotify = async () => {
 			}
 		} catch (e) {
 			console.warn(`[tweet-notify] @${account}: ${e?.message ?? e}`);
+			// Faellt supinics API aus (HTTP 5xx), den Rest dieses Laufs nicht auch noch anfragen
+			if (/HTTP 5\d\d/.test(String(e?.message))) {
+				console.warn('[tweet-notify] API nicht erreichbar, Rest dieses Laufs uebersprungen');
+				break;
+			}
 		}
 		await new Promise((resolve) => setTimeout(resolve, PAUSE_MS));
 	}
