@@ -53,6 +53,15 @@ const runTweetWatch = async () => {
 	const targets = await enabledChannels();
 	let sent = 0;
 	for (const { tweet, info } of fresh) {
+		// "now available": pro Badge und Tag nur eine Meldung, auch gegenueber crons/event-watch (Aktionen von StreamDatabase)
+		if (info.what === 'now available') {
+			const marker = `avail:${info.kind}:${titleOf(info.rest).toLowerCase()}:${new Date().toISOString().slice(0, 10)}`;
+			if (await wasAnnounced(marker).catch(() => false)) {
+				console.log(`[tweet-watch] ${tweet.id} schon gemeldet: ${titleOf(info.rest)}`);
+				continue;
+			}
+			await markAnnounced(marker).catch(() => {});
+		}
 		// "added"-Tweets gegen die Seite abgleichen; "now available" (Bedingungen) sind eigene Meldungen
 		if (info.what === 'added') {
 			const marker = `added:${info.kind}:${titleOf(info.rest).toLowerCase()}`;

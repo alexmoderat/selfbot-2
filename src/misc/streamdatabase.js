@@ -104,6 +104,70 @@ const parseEvents = (json) => {
 	return result;
 };
 
+/**
+ * Zeitfenster aus den Aktionen: jedes Badge mit Start und Ende ("start_at_date" + "start_at_time", Zeiten als UTC angenommen;
+ * ohne Uhrzeit Start 00:00 und Ende 23:59). -> [{ key, setId, version, event, how, startMs, endMs, endText }]
+ */
+const toMs = (date, time, fallbackTime) => {
+	if (!date) {
+		return null;
+	}
+
+	const ms = Date.parse(`${date}T${/^\d{1,2}:\d{2}$/.test(String(time ?? '')) ? String(time).padStart(5, '0') : fallbackTime}:00Z`);
+	return Number.isNaN(ms) ? null : ms;
+};
+
+const parseWindows = (json) => {
+	const windows = [];
+	for (const event of json?.data ?? []) {
+		if (event?.hidden) {
+			continue;
+		}
+		for (const badge of event?.twitch_global_badges ?? []) {
+			const setId = badge?.current?.set_id;
+			const version = badge?.current?.version?.id;
+			if (!setId || version === undefined) {
+				continue;
+			}
+			for (const availability of badge.availability ?? []) {
+				if (availability?.hidden) {
+					continue;
+				}
+				const startDate = availability.start_at_date ?? event.start_at_date;
+				const endDate = availability.end_at_date ?? event.end_at_date;
+				const startMs = toMs(startDate, availability.start_at_time ?? event.start_at_time, '00:00');
+				const endMs = toMs(endDate, availability.end_at_time ?? event.end_at_time, '23:59');
+				if (startMs === null || endMs === null) {
+					continue;
+				}
+				windows.push({
+					key: `${setId}:${version}|${startMs}|${endMs}`,
+					setId,
+					version: String(version),
+					title: String(badge.current.version?.title ?? setId),
+					event: event.title ? String(event.title).trim() : null,
+					how: requirementOf(availability),
+					startMs,
+					endMs,
+				});
+			}
+		}
+	}
+
+	return windows;
+};
+
+const activeWindows = (windows, now = Date.now()) => windows.filter((i) => i.startMs <= now && now <= i.endMs);
+
+const fetchWindows = async () => {
+	const response = await got('Global')({ url: EVENTS_URL, headers: { 'User-Agent': 'selfbot-badge-watch' }, responseType: 'json', timeout: { request: 20_000 } });
+	if (!response.ok) {
+		throw new Error(`streamdatabase events: HTTP ${response.statusCode}`);
+	}
+
+	return parseWindows(response.body);
+};
+
 const fetchBadgeEvents = async () => {
 	const response = await got('Global')({
 		url: EVENTS_URL,
@@ -119,6 +183,9 @@ const fetchBadgeEvents = async () => {
 };
 
 module.exports = {
+	parseWindows,
+	activeWindows,
+	fetchWindows,
 	BADGES_URL,
 	EMOTES_URL,
 	EVENTS_URL,

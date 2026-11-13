@@ -177,3 +177,37 @@ test('!badgeinfo: Tweet mit Status hinter dem Text', () => {
 	const entry = { kind: 'tweet', title, link: 'https://x.com/s/1', at: new Date(Date.now() - 60_000).toISOString() };
 	assert.equal(formatRecent([entry]), `Last global Twitch info: ${title} [ENDED!] https://x.com/s/1 (1min ago)`);
 });
+
+test('Zeitfenster aus den Aktionen: parseWindows und activeWindows', () => {
+	const { parseWindows, activeWindows } = require('../src/misc/streamdatabase.js');
+	const json = {
+		data: [
+			{
+				title: 'K/DA Fan',
+				start_at_date: '2026-11-13',
+				start_at_time: '16:00',
+				end_at_date: '2026-11-15',
+				end_at_time: '15:59',
+				twitch_global_badges: [
+					{
+						current: { set_id: 'kda-fan', version: { id: '1', title: 'K/DA Fan' } },
+						availability: [{ watch: true, watch_minutes: 30, start_at_date: '2026-11-13', start_at_time: '16:00', end_at_date: '2026-11-15', end_at_time: '15:59' }],
+					},
+				],
+			},
+			{ title: 'Versteckt', hidden: true, twitch_global_badges: [{ current: { set_id: 'x', version: { id: '1' } }, availability: [{ end_at_date: '2026-11-15' }] }] },
+		],
+	};
+	const windows = parseWindows(json);
+	assert.equal(windows.length, 1);
+	assert.equal(windows[0].how, 'watch 30 min');
+	assert.equal(windows[0].startMs, Date.parse('2026-11-13T16:00:00Z'));
+	assert.equal(windows[0].endMs, Date.parse('2026-11-15T15:59:00Z'));
+	assert.equal(activeWindows(windows, Date.parse('2026-11-13T15:59:00Z')).length, 0);
+	assert.equal(activeWindows(windows, Date.parse('2026-11-13T16:00:00Z')).length, 1);
+	assert.equal(activeWindows(windows, Date.parse('2026-11-15T16:00:00Z')).length, 0);
+	const { formatWindow } = require('../src/crons/event-watch.js');
+	assert.equal(formatWindow(windows[0]), 'Twitch global badge now available: K/DA Fan [watch 30 min] The event ends November 15, 2026 at 15:59. (UTC)');
+	const { eventStatus } = require('../src/misc/streamdatabase.js');
+	assert.equal(eventStatus(formatWindow(windows[0]), Date.parse('2026-11-14T00:00:00Z')), '[AVAILABLE!]');
+});
