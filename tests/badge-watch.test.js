@@ -151,3 +151,13 @@ test('badge-history: wasAnnounced/markAnnounced', async () => {
 	await markAnnounced('added:badge:x');
 	assert.equal(await wasAnnounced('added:badge:x'), true);
 });
+
+test('!badgeinfo: Verfuegbarkeits-Tweet mit Link', () => {
+	const { mergeRecent, formatRecent } = require('../src/commands/badgeinfo.js');
+	const at = (min) => new Date(Date.now() - min * 60_000).toISOString();
+	const tweet = { title: 'Twitch global badge now available: Jordan', link: 'https://x.com/StreamDatabase/status/1', at: at(10) };
+	const merged = mergeRecent([{ title: 'B', at: at(60) }], [], 2, [tweet]);
+	assert.deepEqual(merged.map((i) => i.kind), ['tweet', 'badge']);
+	assert.equal(formatRecent([merged[0]]), 'Last global Twitch info: Twitch global badge now available: Jordan https://x.com/StreamDatabase/status/1 (10min ago)');
+	assert.ok(formatRecent(merged).includes('tweet https://x.com/StreamDatabase/status/1 (10min ago), badge B (1h0min ago)'));
+});

@@ -1,6 +1,6 @@
 const { defineCron } = require('../clients/modules/timers.js');
 const { fetchTweets, parseGlobalTweet } = require('../misc/streamdatabase.js');
-const { wasAnnounced, markAnnounced } = require('../misc/badge-history.js');
+const { wasAnnounced, markAnnounced, recordRecent } = require('../misc/badge-history.js');
 const { enabledChannels } = require('./badge-watch.js');
 
 /**
@@ -42,6 +42,12 @@ const runTweetWatch = async () => {
 	if (fresh.length === 0) {
 		return 0;
 	}
+
+	// Verfuegbarkeits-Tweets ("now available ...") fuer !bi merken, auch wenn kein Channel den Alert eingeschaltet hat
+	await recordRecent(
+		'tweet',
+		fresh.filter((i) => i.info.what === 'now available').map(({ tweet }) => ({ title: tweet.text, link: `https://x.com/StreamDatabase/status/${tweet.id}` })),
+	).catch((e) => console.warn(`[tweet-watch] Verlauf: ${e?.message ?? e}`));
 
 	const targets = await enabledChannels();
 	let sent = 0;
