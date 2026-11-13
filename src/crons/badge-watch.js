@@ -1,5 +1,5 @@
 const { defineCron } = require('../clients/modules/timers.js');
-const { fetchGlobalBadges, fetchGlobalEmotes, BADGES_URL, EMOTES_URL } = require('../misc/streamdatabase.js');
+const { fetchGlobalBadges, fetchGlobalEmotes, fetchBadgeEvents, BADGES_URL, EMOTES_URL } = require('../misc/streamdatabase.js');
 
 /**
  * Meldet neue globale Twitch-Badges und Emotes in den Channels, die es im Dashboard eingeschaltet haben (ninou2, 13.11.2026:
@@ -16,8 +16,10 @@ const MAX_PER_RUN = 3; // mehr auf einmal = vermutlich Umbau der Seite, nicht ec
 /** Neue Badges gegenueber dem bekannten Stand; known null = Erstlauf */
 const newBadges = (badges, known) => (known ? badges.filter((i) => !known.has(i.key)) : []);
 
-const formatBadge = (badge, custom = '') => {
-	const text = `New global Twitch badge: ${badge.title}${badge.description ? ` - ${badge.description}` : ''} (${BADGES_URL})`;
+/** extra: optional { how, until } aus den Aktionen ("watch 30 min, until 2026-11-15") */
+const formatBadge = (badge, custom = '', extra = null) => {
+	const detail = [extra?.how, extra?.until ? `until ${extra.until}` : ''].filter(Boolean).join(', ');
+	const text = `New global Twitch badge: ${badge.title}${badge.description ? ` - ${badge.description}` : ''}${detail ? ` [${detail}]` : ''} (${BADGES_URL})`;
 	return custom ? `${text} ${custom}` : text;
 };
 
@@ -59,10 +61,12 @@ const runSource = async (source, targets) => {
 	}
 
 	const format = source.kind === 'emote' ? formatEmote : formatBadge;
+	// Wie/bis wann (nur Badges); faellt die Aktionen-Seite aus, kommt die Meldung ohne diese Angaben
+	const events = source.kind === 'badge' ? await fetchBadgeEvents().catch(() => new Map()) : new Map();
 	for (const item of fresh) {
 		console.log(`[badge-watch] Neues ${source.kind}: ${item.key} - ${item.title} -> ${targets.length} Channel(s)`);
 		for (const { channel, message } of targets) {
-			await bot.Channels.send(channel, format(item, message)).catch(() => {});
+			await bot.Channels.send(channel, format(item, message, events.get(item.key) ?? null)).catch(() => {});
 		}
 	}
 

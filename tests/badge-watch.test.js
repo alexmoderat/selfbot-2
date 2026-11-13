@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 global.bot = global.bot ?? {};
-const { parseBadges, parseEmotes } = require('../src/misc/streamdatabase.js');
+const { parseBadges, parseEmotes, parseEvents } = require('../src/misc/streamdatabase.js');
 const { newBadges, formatBadge, formatEmote } = require('../src/crons/badge-watch.js');
 
 const page = (list) =>
@@ -48,4 +48,27 @@ test('Emotes aus der Seite lesen und melden', () => {
 	);
 	assert.ok(formatEmote(emotes[1], 'Pog').startsWith('New global Twitch emote: TakisAllIntense'));
 	assert.ok(formatEmote(emotes[1], 'Pog').endsWith('Pog'));
+});
+
+test('Aktionen: wie und bis wann', () => {
+	const events = parseEvents({
+		data: [
+			{
+				title: 'Pentakill Fan',
+				end_at_date: '2026-11-13',
+				twitch_global_badges: [
+					{
+						current: { set_id: 'pentakill-fan', version: { id: '1' } },
+						availability: [{ watch: true, watch_minutes: 30, end_at_date: '2026-11-13' }],
+					},
+				],
+			},
+			{ title: 'Ohne Badges' },
+		],
+	});
+	assert.deepEqual(events.get('pentakill-fan:1'), { how: 'watch 30 min', until: '2026-11-13', event: 'Pentakill Fan' });
+	assert.equal(events.size, 1);
+	const text = formatBadge({ title: 'Pentakill Fan', description: 'Fan badge' }, '', events.get('pentakill-fan:1'));
+	assert.ok(text.includes('[watch 30 min, until 2026-11-13]'));
+	assert.ok(!formatBadge({ title: 'X', description: '' }).includes('['));
 });
