@@ -869,6 +869,24 @@ const createDashboardRouter = () => {
 			res.json(await titleNotifyRows(channel));
 		}),
 	);
+	router.put(
+		'/api/titlenotify/:streamer/:user',
+		requireSession,
+		route(async (req, res) => {
+			const channel = sessionChannel(req, res);
+			if (!channel) {
+				return;
+			}
+			const user = await bot.Users.get(req.params.user ?? '');
+			if (user) {
+				await bot.DB.TitleNotify.updateOne(
+					{ channel: channel.id, userAlias: user.id, streamerLogin: String(req.params.streamer ?? '').toLowerCase() },
+					{ $set: { message: cleanMessage(req.body.message) } },
+				);
+			}
+			res.json(await titleNotifyRows(channel));
+		}),
+	);
 	router.delete(
 		'/api/titlenotify/:streamer/:user',
 		requireSession,
@@ -930,6 +948,25 @@ const createDashboardRouter = () => {
 				{ $set: { message: cleanMessage(req.body.message) }, $setOnInsert: { added: new Date() } },
 				{ upsert: true },
 			);
+			res.json(await tweetNotifyRows(channel));
+		}),
+	);
+	// Zusatztext eines bestehenden Alarms aendern (ninou2, 13.11.2026: "content area of the message ... should be clickable so you can modify your text")
+	router.put(
+		'/api/tweetnotify/:account/:user',
+		requireSession,
+		route(async (req, res) => {
+			const channel = sessionChannel(req, res);
+			if (!channel) {
+				return;
+			}
+			const user = await bot.Users.get(req.params.user ?? '');
+			if (user) {
+				await bot.DB.TweetNotify.updateOne(
+					{ channel: channel.id, userAlias: user.id, account: cleanHandle(req.params.account) },
+					{ $set: { message: cleanMessage(req.body.message) } },
+				);
+			}
 			res.json(await tweetNotifyRows(channel));
 		}),
 	);

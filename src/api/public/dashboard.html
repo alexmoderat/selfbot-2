@@ -468,6 +468,9 @@
     .data-row:hover { background: #1a1a1a; }
     .cell-mono { font-size: 15px; font-weight: 600; font-family: 'Consolas', 'Monaco', monospace; word-break: break-all; }
     .cell-muted { font-size: 15px; color: #9a9c9b; }
+    .msg-cell { cursor: text; border-radius: 6px; }
+    .msg-cell:hover { background: #262626; color: #ffffff; }
+    .msg-cell input { background: #2e2e2e; border: 1px solid #1f7fb3; border-radius: 6px; color: #ffffff; font-size: 15px; padding: 4px 8px; width: 100%; }
     .cell-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
 
     /* Banphrases: 3 cols */
@@ -2520,7 +2523,7 @@
           ${sortedBy(data.notify.map(item => ({ ...item, streamer: item.streamer || item.target || item.login || '' })), notifySort).map(item => `
             <div class="data-row">
               <div class="cell-mono">${esc(item.streamer)}</div>
-              <div class="cell-muted">${esc(item.message || '—')}</div>
+              <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'live', '${esc(item.streamer)}', '')">${esc(item.message || '—')}</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
                 <button class="btn btn-danger" onclick="deleteNotify('${esc(item.streamer || item.target || item.login || '')}')">Delete</button>
@@ -2553,6 +2556,41 @@
       document.getElementById('notifyMessage').value  = '';
       showToast('Notification added!', 'success');
     });
+
+    // ── Zusatztext in der Tabelle anklicken und aendern ────────────────────────
+    // ninou2, 13.11.2026: "content area of the message in tweet notify should be clickable so you can modify your text", dasselbe bei
+    // Live Notify ("so you can change even your default ping"). Enter/Haken speichert, Escape verwirft.
+    function editMessageCell(cell, kind, key, user) {
+      if (cell.querySelector('input')) return;
+      const original = cell.textContent === '—' ? '' : cell.textContent;
+      cell.classList.remove('msg-cell');
+      cell.removeAttribute('onclick');
+      cell.innerHTML = '<input type="text" maxlength="200" placeholder="added to the alert">';
+      const input = cell.querySelector('input');
+      input.value = original;
+      input.focus();
+      let done = false;
+      const restore = () => { if (kind === 'tweet') renderTweetNotify(); else if (kind === 'title') renderTitleNotify(); else renderNotify(); };
+      const save = async () => {
+        if (done) return;
+        done = true;
+        const message = input.value.trim();
+        if (message === original) { restore(); return; }
+        let result;
+        if (kind === 'tweet') result = await apiFetch(`api/tweetnotify/${encodeURIComponent(key)}/${encodeURIComponent(user)}`, { method: 'PUT', body: JSON.stringify({ message }) });
+        else if (kind === 'title') result = await apiFetch(`api/titlenotify/${encodeURIComponent(key)}/${encodeURIComponent(user)}`, { method: 'PUT', body: JSON.stringify({ message }) });
+        else result = await apiFetch('api/notify', { method: 'POST', body: JSON.stringify({ streamer: key, message }) });
+        if (result === null) { restore(); return; }
+        if (kind === 'tweet') data.tweetnotify = result; else if (kind === 'title') data.titlenotify = result; else data.notify = result;
+        restore();
+        showToast('Message saved.', 'success');
+      };
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); save(); }
+        else if (e.key === 'Escape') { done = true; restore(); }
+      });
+      input.addEventListener('blur', save);
+    }
 
     // ── Loeschen nur mit Bestaetigung ──────────────────────────────────────────
     // ninou2, 13.11.2026: "any remove button on the website should have a confirm button". Erster Klick auf einen roten
@@ -2602,7 +2640,7 @@
             <div class="data-row">
               <div class="cell-mono">${esc(item.streamer)}</div>
               <div class="cell-muted">@${esc(item.user)}</div>
-              <div class="cell-muted">${esc(item.message || '—')}</div>
+              <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'title', '${esc(item.streamer)}', '${esc(item.user)}')">${esc(item.message || '—')}</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
                 <button class="btn btn-danger" onclick="deleteTitleNotify('${esc(item.streamer)}', '${esc(item.user)}')">Delete</button>
@@ -2662,7 +2700,7 @@
             <div class="data-row">
               <div class="cell-mono">@${esc(item.account)}</div>
               <div class="cell-muted">@${esc(item.user)}</div>
-              <div class="cell-muted">${esc(item.message || '—')}</div>
+              <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'tweet', '${esc(item.account)}', '${esc(item.user)}')">${esc(item.message || '—')}</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
                 <button class="btn btn-danger" onclick="deleteTweetNotify('${esc(item.account)}', '${esc(item.user)}')">Delete</button>
