@@ -182,4 +182,29 @@ const parseGlobalTweet = (text) => {
 	return match ? { kind: match.groups.kind.toLowerCase(), what: match.groups.what.toLowerCase(), rest: match.groups.rest.trim() } : null;
 };
 
-Object.assign(module.exports, { TWEETS_URL, parseTweets, fetchTweets, fetchTweetsOf, parseGlobalTweet });
+/**
+ * "The event ends November 13, 2026 at 21:59. (UTC)" -> Zeitpunkt in ms, sonst null.
+ * eventStatus: "[AVAILABLE!]" solange das Zeitfenster laeuft, "[ENDED!]" danach (ninou2, 13.11.2026: "the bot add [ENDED!] after
+ * Good luck! ... if not it posts [AVAILABLE!] if the frame to get the badge is still on"); ohne Endzeit null.
+ */
+const EVENT_END = /ends?\s+(?<date>[A-Z][a-z]+ \d{1,2}, \d{4}) at (?<time>\d{1,2}:\d{2})\.?\s*\(UTC\)/i;
+const parseEventEnd = (text) => {
+	const match = EVENT_END.exec(String(text));
+	if (!match) {
+		return null;
+	}
+
+	const ms = Date.parse(`${match.groups.date} ${match.groups.time} UTC`);
+	return Number.isNaN(ms) ? null : ms;
+};
+
+const eventStatus = (text, now = Date.now()) => {
+	const end = parseEventEnd(text);
+	if (end === null) {
+		return null;
+	}
+
+	return now > end ? '[ENDED!]' : '[AVAILABLE!]';
+};
+
+Object.assign(module.exports, { TWEETS_URL, parseTweets, fetchTweets, fetchTweetsOf, parseGlobalTweet, parseEventEnd, eventStatus });

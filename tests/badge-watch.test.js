@@ -161,3 +161,19 @@ test('!badgeinfo: Verfuegbarkeits-Tweet mit Link', () => {
 	assert.equal(formatRecent([merged[0]]), 'Last global Twitch info: Twitch global badge now available: Jordan https://x.com/StreamDatabase/status/1 (10min ago)');
 	assert.ok(formatRecent(merged).includes('tweet https://x.com/StreamDatabase/status/1 (10min ago), badge B (1h0min ago)'));
 });
+
+test('Zeitfenster: [AVAILABLE!] solange offen, [ENDED!] danach', () => {
+	const { parseEventEnd, eventStatus } = require('../src/misc/streamdatabase.js');
+	const text = 'Twitch global badge now available: Jordan Objective - Watch 15 minutes. The event ends November 13, 2026 at 21:59. (UTC) Good luck!';
+	assert.equal(parseEventEnd(text), Date.parse('2026-11-13T21:59:00Z'));
+	assert.equal(eventStatus(text, Date.parse('2026-11-13T21:00:00Z')), '[AVAILABLE!]');
+	assert.equal(eventStatus(text, Date.parse('2026-11-13T22:00:00Z')), '[ENDED!]');
+	assert.equal(eventStatus('Twitch global badge added: Silver Chain'), null);
+});
+
+test('!badgeinfo: Tweet mit Status hinter dem Text', () => {
+	const { formatRecent } = require('../src/commands/badgeinfo.js');
+	const title = 'Twitch global badge now available: Jordan The event ends November 13, 2000 at 21:59. (UTC) Good luck!';
+	const entry = { kind: 'tweet', title, link: 'https://x.com/s/1', at: new Date(Date.now() - 60_000).toISOString() };
+	assert.equal(formatRecent([entry]), `Last global Twitch info: ${title} [ENDED!] https://x.com/s/1 (1min ago)`);
+});

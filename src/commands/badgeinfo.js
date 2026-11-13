@@ -1,5 +1,6 @@
 const { getRecent } = require('../misc/badge-history.js');
 const { fmtLengthShort } = require('../misc/streamer-streak.js');
+const { eventStatus } = require('../misc/streamdatabase.js');
 
 /**
  * Die zuletzt gemeldeten globalen Twitch-Badges und -Emotes noch einmal ausgeben (ninou2, 13.11.2026: "command should be
@@ -24,8 +25,12 @@ const mergeRecent = (badges, emotes, count, tweets = []) =>
 const agoOf = (entry) => `${fmtLengthShort(Date.now() - Date.parse(entry.at))} ago`;
 
 const TWEET_TEXT_LIMIT = 200;
-const describeTweet = (entry) =>
-	`${entry.title.length > TWEET_TEXT_LIMIT ? `${entry.title.slice(0, TWEET_TEXT_LIMIT - 1)}…` : entry.title} ${entry.link} (${agoOf(entry)})`;
+// [ENDED!] / [AVAILABLE!] hinter dem Tweet-Text, je nach Ende des Zeitfensters (ninou2, 13.11.2026)
+const describeTweet = (entry) => {
+	const status = eventStatus(entry.title);
+	const text = entry.title.length > TWEET_TEXT_LIMIT ? `${entry.title.slice(0, TWEET_TEXT_LIMIT - 1)}…` : entry.title;
+	return `${text}${status ? ` ${status}` : ''} ${entry.link} (${agoOf(entry)})`;
+};
 
 const describeFull = (entry) => {
 	if (entry.kind === 'tweet') {
@@ -40,7 +45,7 @@ const describeFull = (entry) => {
 const formatRecent = (entries) =>
 	entries.length === 1
 		? `Last global Twitch ${entries[0].kind === 'tweet' ? 'info' : entries[0].kind}: ${describeFull(entries[0])}`
-		: `Last ${entries.length} global Twitch infos: ${entries.map((i) => (i.kind === 'tweet' ? `tweet ${i.link} (${agoOf(i)})` : `${i.kind} ${i.title} (${agoOf(i)})`)).join(', ')}`;
+		: `Last ${entries.length} global Twitch infos: ${entries.map((i) => (i.kind === 'tweet' ? `tweet${eventStatus(i.title) ? ` ${eventStatus(i.title)}` : ''} ${i.link} (${agoOf(i)})` : `${i.kind} ${i.title} (${agoOf(i)})`)).join(', ')}`;
 
 module.exports = {
 	name: 'badgeinfo',
