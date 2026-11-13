@@ -205,17 +205,26 @@ const notifyRows = async (channel) =>
 	(await bot.DB.NotifyLive.find({ channel: channel.id }).sort({ added: 1 }).lean()).map((i) => ({
 		streamer: i.streamerLogin,
 		message: i.message ?? '',
+		times: cleanTimes(i.times),
 		added: i.added,
 	}));
 
-const addNotify = async (channel, streamerLogin, message) => {
+// message/times nur setzen, wenn angegeben (undefined = unveraendert), damit das Aendern eines Felds das andere nicht ueberschreibt
+const addNotify = async (channel, streamerLogin, message, times) => {
 	const streamer = await resolveStreamer(streamerLogin);
 	if (!streamer) {
 		return false;
 	}
 	await bot.DB.NotifyLive.updateOne(
 		{ channel: channel.id, streamerId: streamer.id },
-		{ $set: { streamerLogin: streamer.login, message: message || null }, $setOnInsert: { added: new Date() } },
+		{
+			$set: {
+				streamerLogin: streamer.login,
+				...(message === undefined ? {} : { message: message || null }),
+				...(times === undefined ? {} : { times: cleanTimes(times) }),
+			},
+			$setOnInsert: { added: new Date() },
+		},
 		{ upsert: true },
 	);
 	watchStreamer(streamer.id);
@@ -826,8 +835,13 @@ const createDashboardRouter = () => {
 		(await model.find({ userAlias }).lean())
 			.map((i) => ({ ...fields(i), channel: channelLabel(i.channel), message: i.message ?? '', added: i.added }))
 			.sort((a, b) => (a.streamer ?? a.account).localeCompare(b.streamer ?? b.account) || a.channel.localeCompare(b.channel));
-	const titleNotifyRows = async (userAlias) => await ownRows(bot.DB.TitleNotify, userAlias, (i) => ({ streamer: i.streamerLogin }));
+	const titleNotifyRows = async (userAlias) => await ownRows(bot.DB.TitleNotify, userAlias, (i) => ({ streamer: i.streamerLogin, times: cleanTimes(i.times) }));
 	const tweetNotifyRows = async (userAlias) => await ownRows(bot.DB.TweetNotify, userAlias, (i) => ({ account: i.account, times: cleanTimes(i.times) }));
+	// Nur die mitgeschickten Felder aendern: message und/oder times (Klick auf den Text oder die Anzahl in der Tabelle)
+	const bodyFields = (body) => ({
+		...(body.message === undefined ? {} : { message: cleanMessage(body.message) }),
+		...(body.times === undefined ? {} : { times: cleanTimes(body.times) }),
+	});
 	// Kanalname aus der URL -> Channel-ID (nur Channels, in denen der Bot ist)
 	const urlChannelId = (req) => findChannel(String(req.params.channel ?? '').toLowerCase())?.id ?? null;
 
@@ -863,7 +877,7 @@ const createDashboardRouter = () => {
 			const me = await issuer(req);
 			await bot.DB.TitleNotify.updateOne(
 				{ channel: channel.id, streamerId: streamer.id, userAlias: me },
-				{ $set: { message: cleanMessage(req.body.message) }, $setOnInsert: { streamerLogin: streamer.login, added: new Date() } },
+				{ $set: { message: cleanMessage(req.body.message), times: cleanTimes(req.body.times) }, $setOnInsert: { streamerLogin: streamer.login, added: new Date() } },
 				{ upsert: true },
 			);
 			res.json(await titleNotifyRows(me));
@@ -878,7 +892,7 @@ const createDashboardRouter = () => {
 			if (channelId !== null) {
 				await bot.DB.TitleNotify.updateOne(
 					{ channel: channelId, userAlias: me, streamerLogin: String(req.params.streamer ?? '').toLowerCase() },
-					{ $set: { message: cleanMessage(req.body.message) } },
+					{ $set: bodyFields(req.body) },
 				);
 			}
 			res.json(await titleNotifyRows(me));
@@ -940,7 +954,7 @@ const createDashboardRouter = () => {
 			if (channelId !== null) {
 				await bot.DB.TweetNotify.updateOne(
 					{ channel: channelId, userAlias: me, account: cleanHandle(req.params.account) },
-					{ $set: { message: cleanMessage(req.body.message) } },
+					{ $set: bodyFields(req.body) },
 				);
 			}
 			res.json(await tweetNotifyRows(me));
@@ -984,7 +998,7 @@ const createDashboardRouter = () => {
 				res.status(400).json({ error: 'streamer required' });
 				return;
 			}
-			if (!(await addNotify(channel, streamer, str(req.body.message).trim()))) {
+			if (!(await addNotify(channel, streamer, req.body.message === undefined ? undefined : str(req.body.message).trim(), req.body.times))) {
 				res.status(404).json({ error: 'streamer not found' });
 				return;
 			}

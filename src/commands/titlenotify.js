@@ -1,6 +1,6 @@
 const { listOrLink } = require('../misc/list-reply.js');
 const { resolveStreamer, watchTitle } = require('../services/notifications.js');
-const { MAX_MESSAGE, cleanMessage } = require('../services/tweet-notify.js');
+const { MAX_MESSAGE, MAX_TIMES, cleanMessage, cleanTimes } = require('../services/tweet-notify.js');
 
 /**
  * Alarm auf Titelwechsel eines Streamers, aus sb-v2 - Vorwarnung, die meisten setzen den Titel kurz vor dem
@@ -17,7 +17,7 @@ module.exports = {
 	aliases: ['tc', 'tn', 'titlealarm'],
 	cooldown: 3000,
 	description: 'Alerts you when a streamer changes their title — and pings you.',
-	usage: 'titlenotify <streamer> [message] | remove <streamer> | list | optout | optin',
+	usage: `titlenotify <streamer> [x1-x${MAX_TIMES}] [message] | remove <streamer> | list | optout | optin`,
 	flags: ['no-prefix'],
 	execute: async (client, msg) => {
 		const args = [...msg.args];
@@ -95,7 +95,13 @@ module.exports = {
 		}
 
 		// Alles nach dem Streamer ist der eigene Zusatztext (ninou2, 13.11.2026), erneutes Eintragen aendert ihn
-		const rawMessage = args.slice(1).join(' ').trim();
+		const rest = args.slice(1);
+		const timesToken = /^x([1-5])$/i.exec(rest[0] ?? '');
+		const times = timesToken ? cleanTimes(timesToken[1]) : 1;
+		if (timesToken) {
+			rest.shift();
+		}
+		const rawMessage = rest.join(' ').trim();
 		if (rawMessage.length > MAX_MESSAGE) {
 			return { text: `@${display}, the message is too long (max ${MAX_MESSAGE} characters).` };
 		}
@@ -104,12 +110,12 @@ module.exports = {
 		watchTitle(streamer.id);
 		await bot.DB.TitleNotify.updateOne(
 			{ channel: channel.id, streamerId: streamer.id, userAlias: user.id },
-			{ $set: { message }, $setOnInsert: { streamerLogin: streamer.login, added: new Date() } },
+			{ $set: { message, times }, $setOnInsert: { streamerLogin: streamer.login, added: new Date() } },
 			{ upsert: true },
 		);
 		console.log(`[titlenotify] ${user.name} -> ${streamer.login} in #${channel.name}`);
 		return {
-			text: `@${display}, ✅ Title alert for ${first} set${message ? ` with your message "${message}"` : ''}. You'll be pinged when they change their title — usually shortly before going live.`,
+			text: `@${display}, ✅ Title alert for ${first} set${times > 1 ? ` (posted ${times}x)` : ''}${message ? ` with your message "${message}"` : ''}. You'll be pinged when they change their title — usually shortly before going live.`,
 		};
 	},
 };

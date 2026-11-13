@@ -452,7 +452,7 @@
       border-radius: 10px; overflow: hidden;
     }
     .data-table-head {
-      display: grid;
+      display: grid; gap: 12px; /* gleiche Spaltenabstaende wie .data-row, sonst stehen die Inhalte nicht unter ihrer Ueberschrift (ninou2, 13.11.2026) */
       padding: 9px 16px; background: #1a1a1a;
       border-bottom: 1px solid #282828;
       font-size: 11.5px; font-weight: 700; text-transform: uppercase;
@@ -505,12 +505,20 @@
     .spam-domain-table .data-table-head,
     .spam-domain-table .data-row { grid-template-columns: 150px 1fr 150px 60px 90px 80px; }
     .notify-table.with-added .data-table-head,
-    .notify-table.with-added .data-row { grid-template-columns: 160px 1fr 110px 80px; }
+    .notify-table.with-added .data-row { grid-template-columns: 160px 1fr 80px 80px; }
     /* Tweet Notify: Account, Pings, Message, Added, Delete */
     .notify-table.tweet-table .data-table-head,
-    .notify-table.tweet-table .data-row { grid-template-columns: 160px 150px 1fr 110px 80px; }
+    .notify-table.tweet-table .data-row { grid-template-columns: 160px 150px 1fr 80px 80px; }
     .notify-table.tweet-times .data-table-head,
-    .notify-table.tweet-times .data-row { grid-template-columns: 160px 150px 1fr 60px 110px 80px; }
+    .notify-table.tweet-times .data-row { grid-template-columns: 160px 150px 1fr 60px 80px 80px; }
+    /* Live Notify: Streamer, Custom message, Times, Added, Delete */
+    .notify-table.live-times .data-table-head,
+    .notify-table.live-times .data-row { grid-template-columns: 160px 1fr 60px 80px 80px; }
+    .times-edit { align-items: center; display: flex; gap: 4px; }
+    .times-edit input { width: 46px; padding: 4px 6px; font-size: 15px; border: 1px solid #1f7fb3; border-radius: 6px; }
+    .times-edit button { border: none; border-radius: 6px; color: #ffffff; cursor: pointer; font-size: 14px; font-weight: 700; height: 28px; line-height: 1; padding: 0; width: 26px; }
+    .times-edit .msg-yes { background: #1f8a4c; }
+    .times-edit .msg-no { background: #b3261e; }
 
     /* Blacklist: 2 cols */
     .bl-table .data-table-head,
@@ -1075,6 +1083,10 @@
             <label>Custom message (optional)</label>
             <input type="text" id="notifyMessage" placeholder="streamer is now live!" maxlength="300">
           </div>
+          <div class="field field-sm">
+            <label>Number</label>
+            <input type="number" id="notifyTimes" value="1" min="1" max="5" title="How many times the bot posts the message (1-5)">
+          </div>
           <div style="display:flex;align-items:flex-end">
             <button type="submit" class="btn btn-primary">+ Add</button>
           </div>
@@ -1100,6 +1112,10 @@
           <div class="field">
             <label>Custom message (optional)</label>
             <input type="text" id="titleMessage" placeholder="added to the alert" maxlength="200">
+          </div>
+          <div class="field field-sm">
+            <label>Number</label>
+            <input type="number" id="titleTimes" value="1" min="1" max="5" title="How many times the bot posts the message (1-5)">
           </div>
           <div style="display:flex;align-items:flex-end">
             <button type="submit" class="btn btn-primary">+ Add</button>
@@ -1480,6 +1496,9 @@
     });
 
     function showPage(name) {
+      // ninou2, 13.11.2026: "if you switch from a tab to another tab, all YES/NO confirmation button should automatically disappear"
+      document.querySelectorAll('.confirm-box').forEach(box => box._cancel?.());
+      document.querySelectorAll('[data-editing="1"]').forEach(cell => cell._cancel?.());
       if (name === 'reminders-history') readHistoryHash();
       const hash = (name === 'overview') ? '' : '#' + name + ((name === 'reminders-history') ? historyHashSuffix() : '');
       if (location.hash !== hash) history.pushState(null, '', location.pathname + hash);
@@ -2541,12 +2560,13 @@
         return;
       }
       el.innerHTML = `
-        <div class="data-table notify-table with-added">
-          <div class="data-table-head"><div>${sortHead('streamer', 'Streamer', notifySort, 'setNotifySort')}</div><div>Custom message</div><div>${sortHead('added', 'Added', notifySort, 'setNotifySort')}</div><div></div></div>
+        <div class="data-table notify-table with-added live-times">
+          <div class="data-table-head"><div>${sortHead('streamer', 'Streamer', notifySort, 'setNotifySort')}</div><div>Custom message</div><div>Times</div><div>${sortHead('added', 'Added', notifySort, 'setNotifySort')}</div><div></div></div>
           ${sortedBy(data.notify.map(item => ({ ...item, streamer: item.streamer || item.target || item.login || '' })), notifySort).map(item => `
             <div class="data-row">
               <div class="cell-mono">${esc(item.streamer)}</div>
               <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'live', '${esc(item.streamer)}', '')">${esc(item.message || '—')}</div>
+              <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editTimesCell(this, 'live', '${esc(item.streamer)}', '', ${Number(item.times) || 1})">${Number(item.times) || 1}×</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
                 <button class="btn btn-danger" onclick="deleteNotify('${esc(item.streamer || item.target || item.login || '')}')">Delete</button>
@@ -2567,16 +2587,18 @@
       e.preventDefault();
       const streamer = document.getElementById('notifyStreamer').value.trim();
       const message  = document.getElementById('notifyMessage').value.trim();
+      const times    = Math.min(5, Math.max(1, parseInt(document.getElementById('notifyTimes').value, 10) || 1));
       if (!streamer) return;
       const result = await apiFetch('api/notify', {
         method: 'POST',
-        body: JSON.stringify({ streamer, message }),
+        body: JSON.stringify({ streamer, message, times }),
       });
       if (result === null) return;
       data.notify = result;
       renderNotify();
       document.getElementById('notifyStreamer').value = '';
       document.getElementById('notifyMessage').value  = '';
+      document.getElementById('notifyTimes').value    = '1';
       showToast('Notification added!', 'success');
     });
 
@@ -2596,7 +2618,9 @@
       let done = false;
       // Nur diese Zelle zuruecksetzen, nie die ganze Tabelle: sonst verschwinden bei mehreren offenen Feldern auch die
       // Knoepfe der anderen (ninou2, 13.11.2026: "if u click NO on one of them, all buttons disapear ... only the YES/NO where u clicked")
-      const close = (text) => { cell.textContent = text || '—'; if (onclickAttr) cell.setAttribute('onclick', onclickAttr); };
+      const close = (text) => { cell.textContent = text || '—'; delete cell.dataset.editing; cell._cancel = null; if (onclickAttr) cell.setAttribute('onclick', onclickAttr); };
+      cell.dataset.editing = '1';
+      cell._cancel = () => { done = true; close(original); };
       const save = async () => {
         if (done) return;
         done = true;
@@ -2621,6 +2645,42 @@
       cell.querySelector('.msg-no').addEventListener('click', (e) => { e.stopPropagation(); done = true; close(original); });
     }
 
+    // Anzahl (1-5) in der Tabelle anklicken und aendern, wie beim Text (ninou2, 13.11.2026: "the x1 should be clickable, changeable to a value 1-5")
+    function editTimesCell(cell, kind, key, channel, current) {
+      if (cell.querySelector('input')) return;
+      const onclickAttr = cell.getAttribute('onclick');
+      cell.removeAttribute('onclick');
+      cell.innerHTML = '<span class="times-edit"><input type="number" min="1" max="5"><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button></span>';
+      const input = cell.querySelector('input');
+      input.value = String(current);
+      input.focus();
+      input.select();
+      let done = false;
+      const close = (value) => { cell.textContent = `${value}×`; delete cell.dataset.editing; cell._cancel = null; if (onclickAttr) cell.setAttribute('onclick', onclickAttr.replace(/, \d+\)$/, `, ${value})`)); };
+      cell.dataset.editing = '1';
+      cell._cancel = () => { done = true; close(current); };
+      const save = async () => {
+        if (done) return;
+        done = true;
+        const times = Math.min(5, Math.max(1, parseInt(input.value, 10) || 1));
+        if (times === current) { close(current); return; }
+        let result;
+        if (kind === 'tweet') result = await apiFetch(`api/tweetnotify/${encodeURIComponent(key)}/${encodeURIComponent(channel)}`, { method: 'PUT', body: JSON.stringify({ times }) });
+        else if (kind === 'title') result = await apiFetch(`api/titlenotify/${encodeURIComponent(key)}/${encodeURIComponent(channel)}`, { method: 'PUT', body: JSON.stringify({ times }) });
+        else result = await apiFetch('api/notify', { method: 'POST', body: JSON.stringify({ streamer: key, times }) });
+        if (result === null) { close(current); return; }
+        if (kind === 'tweet') data.tweetnotify = result; else if (kind === 'title') data.titlenotify = result; else data.notify = result;
+        close(times);
+        showToast('Saved.', 'success');
+      };
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); save(); }
+        else if (e.key === 'Escape') { done = true; close(current); }
+      });
+      cell.querySelector('.msg-yes').addEventListener('click', (e) => { e.stopPropagation(); save(); });
+      cell.querySelector('.msg-no').addEventListener('click', (e) => { e.stopPropagation(); done = true; close(current); });
+    }
+
     // ── Loeschen nur mit Bestaetigung ──────────────────────────────────────────
     // ninou2, 13.11.2026: "any remove button on the website should have a confirm button". Erster Klick auf einen roten
     // Knopf (Delete/Remove) zeigt "Delete? Yes / No", erst Yes loescht. Reminders fragen schon selbst.
@@ -2641,6 +2701,7 @@
       button.after(box);
       const restore = () => { clearTimeout(timer); box.remove(); button.style.display = ''; button.dataset.asking = ''; };
       const timer = setTimeout(restore, 8000);
+      box._cancel = restore;
       box.querySelector('.msg-no').addEventListener('click', (ev) => { ev.stopPropagation(); restore(); });
       box.querySelector('.msg-yes').addEventListener('click', (ev) => {
         ev.stopPropagation();
@@ -2671,13 +2732,14 @@
         return;
       }
       el.innerHTML = `
-        <div class="data-table notify-table with-added tweet-table">
-          <div class="data-table-head"><div>${sortHead('streamer', 'Streamer', titleNotifySort, 'setTitleNotifySort')}</div><div>Channel</div><div>Message</div><div>${sortHead('added', 'Added', titleNotifySort, 'setTitleNotifySort')}</div><div></div></div>
+        <div class="data-table notify-table with-added tweet-table tweet-times">
+          <div class="data-table-head"><div>${sortHead('streamer', 'Streamer', titleNotifySort, 'setTitleNotifySort')}</div><div>Channel</div><div>Message</div><div>Times</div><div>${sortHead('added', 'Added', titleNotifySort, 'setTitleNotifySort')}</div><div></div></div>
           ${sortedBy(data.titlenotify, titleNotifySort).map(item => `
             <div class="data-row">
               <div class="cell-mono">${esc(item.streamer)}</div>
               <div class="cell-muted">#${esc(item.channel)}</div>
               <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'title', '${esc(item.streamer)}', '${esc(item.channel)}')">${esc(item.message || '—')}</div>
+              <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editTimesCell(this, 'title', '${esc(item.streamer)}', '${esc(item.channel)}', ${Number(item.times) || 1})">${Number(item.times) || 1}×</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
                 <button class="btn btn-danger" onclick="deleteTitleNotify('${esc(item.streamer)}', '${esc(item.channel)}')">Delete</button>
@@ -2698,16 +2760,18 @@
       e.preventDefault();
       const streamer = document.getElementById('titleStreamer').value.trim();
       const message = document.getElementById('titleMessage').value.trim();
+      const times = Math.min(5, Math.max(1, parseInt(document.getElementById('titleTimes').value, 10) || 1));
       if (!streamer) return;
       const result = await apiFetch('api/titlenotify', {
         method: 'POST',
-        body: JSON.stringify({ streamer, message }),
+        body: JSON.stringify({ streamer, message, times }),
       });
       if (result === null) return;
       data.titlenotify = result;
       renderTitleNotify();
       document.getElementById('titleStreamer').value = '';
       document.getElementById('titleMessage').value = '';
+      document.getElementById('titleTimes').value = '1';
       showToast('Title alert added!', 'success');
     });
 
@@ -2738,7 +2802,7 @@
               <div class="cell-mono">@${esc(item.account)}</div>
               <div class="cell-muted">#${esc(item.channel)}</div>
               <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'tweet', '${esc(item.account)}', '${esc(item.channel)}')">${esc(item.message || '—')}</div>
-              <div class="cell-muted">${Number(item.times) || 1}×</div>
+              <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editTimesCell(this, 'tweet', '${esc(item.account)}', '${esc(item.channel)}', ${Number(item.times) || 1})">${Number(item.times) || 1}×</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
                 <button class="btn btn-danger" onclick="deleteTweetNotify('${esc(item.account)}', '${esc(item.channel)}')">Delete</button>

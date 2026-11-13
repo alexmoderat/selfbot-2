@@ -970,6 +970,12 @@ module.exports = [
 				type: 'String',
 				default: null,
 			},
+			times: {
+				column: 'Times',
+				type: 'Number',
+				required: false,
+				default: 1,
+			},
 			added: {
 				column: 'Added',
 				type: 'Date',
@@ -1533,6 +1539,12 @@ module.exports = [
 				column: 'Message',
 				type: 'String',
 				required: false,
+			},
+			times: {
+				column: 'Times',
+				type: 'Number',
+				required: false,
+				default: 1,
 			},
 			added: {
 				column: 'Added',

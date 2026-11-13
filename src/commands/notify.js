@@ -1,5 +1,6 @@
 const { uploadToOwnHaste } = require('../misc/haste.js');
 const { resolveStreamer, watchStreamer, watchTitle } = require('../services/notifications.js');
+const { cleanTimes } = require('../services/tweet-notify.js');
 
 /**
  * Benachrichtigungen einrichten, aus sb-v2:
@@ -46,7 +47,7 @@ module.exports = {
 	aliases: ['unnotify', 'listevents'],
 	cooldown: 3000,
 	description: 'Set up notifications for stream start and Twitch bans.',
-	usage: 'notify live <streamer> [text] | notify ban <user> [text] | unnotify live|ban <name> | listevents',
+	usage: 'notify live <streamer> [x1-x5] [text] | notify ban <user> [text] | unnotify live|ban <name> | listevents',
 	flags: ['mod'],
 	execute: async (client, msg) => {
 		const args = [...msg.args];
@@ -89,8 +90,15 @@ module.exports = {
 			};
 		}
 
-		const customMessage = args.slice(2).join(' ').trim() || null;
-		const extra = customMessage ? ` Message: "${customMessage}"` : '';
+		// notify live <streamer> [x1-x5] [text]: x3 = die Ansage wird 3x gepostet (ninou2, 13.11.2026)
+		const rest = args.slice(2);
+		const timesToken = sub === 'live' ? /^x([1-5])$/i.exec(rest[0] ?? '') : null;
+		const times = timesToken ? cleanTimes(timesToken[1]) : 1;
+		if (timesToken) {
+			rest.shift();
+		}
+		const customMessage = rest.join(' ').trim() || null;
+		const extra = `${times > 1 ? ` Posted ${times}x.` : ''}${customMessage ? ` Message: "${customMessage}"` : ''}`;
 
 		if (sub === 'live') {
 			const streamer = await resolveStreamer(target);
@@ -101,7 +109,7 @@ module.exports = {
 
 			await bot.DB.NotifyLive.updateOne(
 				{ channel: channel.id, streamerId: streamer.id },
-				{ $set: { streamerLogin: streamer.login, message: customMessage }, $setOnInsert: { added: new Date() } },
+				{ $set: { streamerLogin: streamer.login, message: customMessage, times }, $setOnInsert: { added: new Date() } },
 				{ upsert: true },
 			);
 			// Sofort abonnieren, sonst greift es erst mit notify-resync

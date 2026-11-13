@@ -3,6 +3,7 @@ const { got } = require('../token/got.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 const { fmtLengthShort } = require('../misc/streamer-streak.js');
 const { pubsub } = require('./pubsub.js');
+const { cleanTimes } = require('./tweet-notify.js');
 
 /**
  * Benachrichtigungen, aus sb-v2s singletons/notifications.ts:
@@ -120,10 +121,11 @@ const fetchLiveSince = async (streamerId) => {
 
 /** [{ Channel, Streamer_Login, Message }] */
 const getEntries = async (streamerId) =>
-	(await bot.DB.NotifyLive.find({ streamerId }, { channel: 1, streamerLogin: 1, message: 1 }).lean()).map((i) => ({
+	(await bot.DB.NotifyLive.find({ streamerId }, { channel: 1, streamerLogin: 1, message: 1, times: 1 }).lean()).map((i) => ({
 		Channel: i.channel,
 		Streamer_Login: i.streamerLogin,
 		Message: i.message,
+		Times: cleanTimes(i.times),
 	}));
 
 const sendTo = async (channelId, text) => {
@@ -175,7 +177,10 @@ const announceStreamState = async (streamerId, isOnline) => {
 		await bot.DB.NotifyGameChange.deleteMany({ streamerId });
 
 		for (const entry of entries) {
-			await sendTo(entry.Channel, `@${login} is now live!${entry.Message ? ` ${entry.Message}` : ''}`);
+			// Anzahl 1-5 (ninou2, 13.11.2026: "title notify/live notify should get this feature too")
+			for (let i = 0; i < entry.Times; i++) {
+				await sendTo(entry.Channel, `@${login} is now live!${entry.Message ? ` ${entry.Message}` : ''}`);
+			}
 		}
 		console.log(`[notifications] ${login} live -> ${entries.length} Channel(s)`);
 
@@ -229,6 +234,7 @@ const announceTitleChange = async (streamerId, title, game) => {
 		Streamer_Login: i.streamerLogin,
 		User_Alias: i.userAlias,
 		Message: i.message ?? '',
+		Times: cleanTimes(i.times),
 	}));
 	if (rows.length === 0) {
 		return;
@@ -240,15 +246,17 @@ const announceTitleChange = async (streamerId, title, game) => {
 	for (const row of rows) {
 		const user = await bot.Users.get(row.User_Alias);
 		if (user) {
-			const key = `${row.Channel}\u0000${row.Message}`;
-			const group = groups.get(key) ?? { channel: row.Channel, message: row.Message, users: [] };
+			const key = `${row.Channel}\u0000${row.Message}\u0000${row.Times}`;
+			const group = groups.get(key) ?? { channel: row.Channel, message: row.Message, times: row.Times, users: [] };
 			group.users.push(user.name);
 			groups.set(key, group);
 		}
 	}
 
-	for (const { channel, message, users } of groups.values()) {
-		await sendTo(channel, formatTitleChange(users, rows[0].Streamer_Login, title, game, liveMs, message));
+	for (const { channel, message, times, users } of groups.values()) {
+		for (let i = 0; i < times; i++) {
+			await sendTo(channel, formatTitleChange(users, rows[0].Streamer_Login, title, game, liveMs, message));
+		}
 	}
 	console.log(`[notifications] Titelwechsel ${rows[0].Streamer_Login} -> ${rows.length} Abonnent(en), ${groups.size} Meldung(en)`);
 };
