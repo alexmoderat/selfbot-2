@@ -398,12 +398,13 @@
     }
     .btn-primary { background: #1f7fb3; color: #fff; }
     .btn-primary:hover { background: #196a96; }
+    /* ninou2, 13.11.2026: "all delete button should look like REMOVE from MY reminder tab: red light background and white text" */
     .btn-danger {
-      background: none; border: 1px solid #282828;
-      color: #9a9c9b; padding: 5px 11px; font-size: 14px; font-weight: 600;
+      background: #7f1d1d; border: 1px solid #7f1d1d;
+      color: #ffffff; padding: 5px 11px; font-size: 14px; font-weight: 600;
       border-radius: 6px;
     }
-    .btn-danger:hover { border-color: #eb0400; color: #eb0400; background: #eb040010; }
+    .btn-danger:hover { background: #991b1b; border-color: #991b1b; color: #ffffff; }
     .btn-edit {
       background: none; border: 1px solid #282828;
       color: #adafae; padding: 5px 11px; font-size: 14px; font-weight: 600;
@@ -509,8 +510,11 @@
     /* Tweet Notify: Account, Pings, Message, Added, Delete */
     .notify-table.tweet-table .data-table-head,
     .notify-table.tweet-table .data-row { grid-template-columns: 160px 150px 1fr 80px 80px; }
+    /* Title/Tweet Notify (ninou2, 13.11.2026): Channel-Spalte genau so breit wie der laengste Channel-Name (Subgrid, alle Zeilen teilen
+       die Spalten), Message rueckt direkt daneben und bekommt den freien Platz; Added/Delete eng beieinander, Tabellenbreite gleich */
+    .notify-table.tweet-times { display: grid; grid-template-columns: 160px fit-content(160px) 1fr 60px 68px 68px; column-gap: 12px; }
     .notify-table.tweet-times .data-table-head,
-    .notify-table.tweet-times .data-row { grid-template-columns: 160px 110px 1fr 60px 80px 80px; } /* ninou2, 13.11.2026: Message naeher an die Channel-Spalte */
+    .notify-table.tweet-times .data-row { grid-column: 1 / -1; grid-template-columns: subgrid; }
     .chan-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     /* Live Notify: Streamer, Custom message, Times, Added, Delete */
     .notify-table.live-times .data-table-head,
