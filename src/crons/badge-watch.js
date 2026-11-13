@@ -11,7 +11,8 @@ const SOURCES = [
 	{ kind: 'emote', stateKey: 'badge-watch:known-emotes', fetch: fetchGlobalEmotes },
 ];
 const STATE_TTL = 365 * 864e5;
-const MAX_PER_RUN = 3; // mehr auf einmal = vermutlich Umbau der Seite, nicht echte Neuzugaenge
+const MAX_PER_RUN = 40; // deutlich mehr auf einmal = vermutlich Umbau der Seite, nicht echte Neuzugaenge
+const CHUNK_LIMIT = 420; // Zeichen je Chat-Nachricht bei Sammelmeldungen
 
 /** Neue Badges gegenueber dem bekannten Stand; known null = Erstlauf */
 const newBadges = (badges, known) => (known ? badges.filter((i) => !known.has(i.key)) : []);
@@ -26,6 +27,34 @@ const formatBadge = (badge, custom = '', extra = null) => {
 const formatEmote = (emote, custom = '') => {
 	const text = `New global Twitch emote: ${emote.title} (${EMOTES_URL})`;
 	return custom ? `${text} ${custom}` : text;
+};
+
+/**
+ * Mehrere neue auf einmal = eine Sammelmeldung (ninou2, 13.11.2026: "benachrichtigt werden wenn mehrere kommen auf 1x"),
+ * bei Bedarf auf mehrere Nachrichten verteilt. Ein einzelner Neuzugang behaelt die ausfuehrliche Meldung.
+ */
+const formatMany = (kind, items, custom = '', events = new Map()) => {
+	const url = kind === 'emote' ? EMOTES_URL : BADGES_URL;
+	const names = items.map((item) => {
+		const extra = kind === 'badge' ? events.get(item.key) : null;
+		const detail = [extra?.how, extra?.until ? `until ${extra.until}` : ''].filter(Boolean).join(', ');
+		return detail ? `${item.title} [${detail}]` : item.title;
+	});
+	const tail = ` (${url})${custom ? ` ${custom}` : ''}`;
+	const messages = [];
+	let current = [];
+	for (const name of names) {
+		if (current.length > 0 && [...current, name].join(', ').length > CHUNK_LIMIT) {
+			messages.push(current);
+			current = [];
+		}
+		current.push(name);
+	}
+	if (current.length > 0) {
+		messages.push(current);
+	}
+
+	return messages.map((chunk, i) => `New global Twitch ${kind}s${messages.length > 1 ? ` (${i + 1}/${messages.length})` : ` (${items.length})`}: ${chunk.join(', ')}${i === messages.length - 1 ? tail : ''}`);
 };
 
 const enabledChannels = async () => {
@@ -67,8 +96,11 @@ const runSource = async (source, getTargets) => {
 	const events = source.kind === 'badge' ? await fetchBadgeEvents().catch(() => new Map()) : new Map();
 	for (const item of fresh) {
 		console.log(`[badge-watch] Neues ${source.kind}: ${item.key} - ${item.title} -> ${targets.length} Channel(s)`);
-		for (const { channel, message } of targets) {
-			await bot.Channels.send(channel, format(item, message, events.get(item.key) ?? null)).catch(() => {});
+	}
+	for (const { channel, message } of targets) {
+		const texts = fresh.length === 1 ? [format(fresh[0], message, events.get(fresh[0].key) ?? null)] : formatMany(source.kind, fresh, message, events);
+		for (const text of texts) {
+			await bot.Channels.send(channel, text).catch(() => {});
 		}
 	}
 
@@ -100,4 +132,4 @@ module.exports = defineCron({
 	},
 });
 
-Object.assign(module.exports, { newBadges, formatBadge, formatEmote, runBadgeWatch });
+Object.assign(module.exports, { newBadges, formatBadge, formatEmote, formatMany, runBadgeWatch });

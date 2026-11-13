@@ -78,3 +78,16 @@ test('badgeAlerts ist als Channel-Eigenschaft deklariert (sonst "Unknown channel
 	assert.equal(channelDataSchema.badgeAlerts, 'object');
 	assert.ok(checkValue('object', { enabled: true, message: 'hi' }));
 });
+
+test('formatMany: mehrere neue in einer Sammelmeldung, lange Listen werden aufgeteilt', () => {
+	const { formatMany } = require('../src/crons/badge-watch.js');
+	const items = [{ key: 'a:1', title: 'Alpha' }, { key: 'b:1', title: 'Beta' }];
+	const events = new Map([['a:1', { how: 'watch 30 min', until: '2026-11-15' }]]);
+	const [one, ...rest] = formatMany('badge', items, 'hi', events);
+	assert.equal(rest.length, 0);
+	assert.ok(one.startsWith('New global Twitch badges (2): Alpha [watch 30 min, until 2026-11-15], Beta ('));
+	assert.ok(one.endsWith(' hi'));
+	const many = formatMany('emote', Array.from({ length: 60 }, (_, i) => ({ key: `e${i}`, title: `Emote${i}` })));
+	assert.ok(many.length > 1);
+	assert.ok(many.every((m) => m.length < 500));
+});
