@@ -104,6 +104,9 @@
       text-decoration: none;
       border-left: 2px solid transparent;
     }
+    /* ninou2, 13.11.2026: "make the area when u type background grey" */
+    #badgeAlertsMessage { background: #2e2e2e; }
+    #badgeAlertsMessage[readonly] { background: #232323; color: #adafae; cursor: default; }
     .nav-item:hover { background: #222222; color: #ffffff; }
     .nav-item.active {
       background: #1f7fb31a; color: #3a9bd0;
@@ -1003,7 +1006,7 @@
             <div class="cell-muted" style="font-size:14px">Posts in your chat when Twitch adds a new global badge or emote (data from streamdatabase.com). Off by default.</div>
             <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
               <input type="text" id="badgeAlertsMessage" placeholder="Custom text added to the message (optional)" maxlength="200" style="flex:1;min-width:220px">
-              <button type="button" class="btn btn-primary btn-sm" onclick="saveBadgeAlertsMessage()">Save text</button>
+              <button type="button" class="btn btn-primary btn-sm" id="badgeAlertsButton" onclick="saveBadgeAlertsMessage()">Save text</button>
             </div>
           </div>
           <div class="toggle-pair" id="toggleBadgeAlerts"></div>
@@ -2111,7 +2114,14 @@
         toggleBtn(s.badgeAlerts,  'On',  `setChannelSetting('badgeAlerts', true)`);
       const badgeText = document.getElementById('badgeAlertsMessage');
       if (badgeText && document.activeElement !== badgeText) badgeText.value = s.badgeAlertsMessage ?? '';
+      // ninou2, 13.11.2026: nach dem Speichern wird "Save text" zu "Edit" und das Feld ist gesperrt, bis man auf Edit klickt
+      const locked = !badgeTextEditing && Boolean(s.badgeAlertsMessage);
+      if (badgeText) badgeText.readOnly = locked;
+      const badgeButton = document.getElementById('badgeAlertsButton');
+      if (badgeButton) badgeButton.textContent = locked ? 'Edit' : 'Save text';
     }
+
+    let badgeTextEditing = false;
 
     async function setChannelSetting(key, value) {
       const result = await apiFetch('api/settings/channel', {
@@ -2125,7 +2135,15 @@
     }
 
     function saveBadgeAlertsMessage() {
-      setChannelSetting('badgeAlertsMessage', document.getElementById('badgeAlertsMessage').value);
+      const input = document.getElementById('badgeAlertsMessage');
+      if (input.readOnly) {
+        badgeTextEditing = true;
+        renderChannelSettings();
+        input.focus();
+        return;
+      }
+      badgeTextEditing = false;
+      setChannelSetting('badgeAlertsMessage', input.value);
     }
 
     // ── Bot Commands (built-in, on/off per channel) ────────────────────────────
