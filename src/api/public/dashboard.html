@@ -510,7 +510,8 @@
     .notify-table.tweet-table .data-table-head,
     .notify-table.tweet-table .data-row { grid-template-columns: 160px 150px 1fr 80px 80px; }
     .notify-table.tweet-times .data-table-head,
-    .notify-table.tweet-times .data-row { grid-template-columns: 160px 150px 1fr 60px 80px 80px; }
+    .notify-table.tweet-times .data-row { grid-template-columns: 160px 110px 1fr 60px 80px 80px; } /* ninou2, 13.11.2026: Message naeher an die Channel-Spalte */
+    .chan-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     /* Live Notify: Streamer, Custom message, Times, Added, Delete */
     .notify-table.live-times .data-table-head,
     .notify-table.live-times .data-row { grid-template-columns: 160px 1fr 60px 80px 80px; }
@@ -2737,7 +2738,7 @@
           ${sortedBy(data.titlenotify, titleNotifySort).map(item => `
             <div class="data-row">
               <div class="cell-mono">${esc(item.streamer)}</div>
-              <div class="cell-muted">#${esc(item.channel)}</div>
+              <div class="cell-muted chan-cell" title="#${esc(item.channel)}">#${esc(item.channel)}</div>
               <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'title', '${esc(item.streamer)}', '${esc(item.channel)}')">${esc(item.message || '—')}</div>
               <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editTimesCell(this, 'title', '${esc(item.streamer)}', '${esc(item.channel)}', ${Number(item.times) || 1})">${Number(item.times) || 1}×</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
@@ -2800,7 +2801,7 @@
           ${sortedBy(data.tweetnotify, tweetNotifySort).map(item => `
             <div class="data-row">
               <div class="cell-mono">@${esc(item.account)}</div>
-              <div class="cell-muted">#${esc(item.channel)}</div>
+              <div class="cell-muted chan-cell" title="#${esc(item.channel)}">#${esc(item.channel)}</div>
               <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'tweet', '${esc(item.account)}', '${esc(item.channel)}')">${esc(item.message || '—')}</div>
               <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editTimesCell(this, 'tweet', '${esc(item.account)}', '${esc(item.channel)}', ${Number(item.times) || 1})">${Number(item.times) || 1}×</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
