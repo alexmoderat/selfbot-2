@@ -185,7 +185,7 @@
 
     /* ── Stat cards ── */
     .stats-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px;
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px;
     }
     .stat-card {
       background: #111111; border: 1px solid #282828; border-radius: 10px;
@@ -312,7 +312,7 @@
     .join-mod strong { color: #ffffff; font-size: 23px; }
     .join-card a.btn { border-radius: 10px; display: inline-block; font-size: 23px; margin-top: 8px; padding: 16px 32px; text-decoration: none; }
     [hidden] { display: none !important; }
-    #page-overview .stats-grid { max-width: 760px; margin-bottom: 12px; }
+    #page-overview .stats-grid { max-width: 940px; margin-bottom: 12px; }
     #page-overview .stat-card { padding: 12px 14px; }
     #page-overview .stat-value { font-size: 27.5px; }
     .stream-embed { display: block; width: 100%; max-width: calc((100vh - 240px) * 16 / 9); min-height: 300px; aspect-ratio: 16 / 9; margin-top: 14px; border: 1px solid #282828; border-radius: 10px; background: #000; }
@@ -811,6 +811,12 @@
         <div class="stat-card">
           <div class="stat-label">Live Notify</div>
           <div class="stat-value" id="statNotify">—</div>
+          <div class="stat-sub">streamers tracked</div>
+        </div>
+        <!-- ninou2, 13.11.2026: "the main page website, Title notify box missing" -->
+        <div class="stat-card">
+          <div class="stat-label">Title Notify</div>
+          <div class="stat-value" id="statTitle">—</div>
           <div class="stat-sub">streamers tracked</div>
         </div>
         <div class="stat-card">
@@ -1855,6 +1861,7 @@
       document.getElementById('statBanphrases').textContent = stats.banphrases;
       document.getElementById('statCommands').textContent   = stats.commands;
       document.getElementById('statNotify').textContent     = stats.notify;
+      document.getElementById('statTitle').textContent      = stats.titlenotify ?? 0;
       document.getElementById('statBanwatch').textContent   = stats.banwatch;
       // also update badges
       document.getElementById('navBanCount').textContent      = stats.banphrases;
@@ -2447,6 +2454,7 @@
     function renderTitleNotify() {
       const n = data.titlenotify.length;
       document.getElementById('countTitle').textContent    = n;
+      document.getElementById('statTitle').textContent     = n;
       document.getElementById('navTitleCount').textContent = n;
       const el = document.getElementById('titleList');
       if (!n) {
