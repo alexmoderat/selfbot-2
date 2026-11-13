@@ -11,7 +11,9 @@ const { enabledChannels } = require('./badge-watch.js');
 const STATE_KEY = 'tweet-watch:seen';
 const STATE_TTL = 30 * 864e5;
 const KEEP_IDS = 100;
-const MAX_AGE_MS = 3 * 3600_000; // aeltere Tweets nach verlorenem Stand nicht noch einmal melden
+// Nach einem Ausfall von supinics API werden verpasste Tweets nachgeholt (alexmoderat/ninou2, 14.11.2026: "as soon as it come back"),
+// abgelaufene Zeitfenster ([ENDED!]) nicht mehr; aeltere als 12 h nie
+const MAX_AGE_MS = 12 * 3600_000;
 const MAX_PER_RUN = 5;
 const TEXT_LIMIT = 330;
 
@@ -37,7 +39,7 @@ const runTweetWatch = async () => {
 	const fresh = tweets
 		.filter((i) => !seen.has(i.id) && Date.now() - Date.parse(i.createdAt) < MAX_AGE_MS)
 		.map((tweet) => ({ tweet, info: parseGlobalTweet(tweet.text) }))
-		.filter((i) => i.info && i.info.what !== 'removed')
+		.filter((i) => i.info && i.info.what !== 'removed' && eventStatus(i.tweet.text) !== '[ENDED!]')
 		.reverse() // aelteste zuerst
 		.slice(0, MAX_PER_RUN);
 	if (fresh.length === 0) {

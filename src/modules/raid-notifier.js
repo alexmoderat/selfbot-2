@@ -59,7 +59,7 @@ const getTemplate = async (channel, reminder) => {
 	};
 };
 
-// Jede gepostete Meldung als Aufruf von !raidping / !raidreminder zaehlen, damit die Custom-Commands-Seite die echte Zahl zeigt
+// Jede Benachrichtigung (pro Channel) als Aufruf von !raidping / !raidreminder zaehlen, damit die Custom-Commands-Seite die echte Zahl zeigt
 // (ninou2, 14.11.2026: "it should tell how many times it has been posted in the chat ... if its set to x2/x3/x4/x5")
 let selfAlias = null;
 const countPost = async (channel, reminder, text) => {
@@ -89,19 +89,23 @@ const pingAll = async (subscribers, reminder) => {
 			continue;
 		}
 		const { text: template, times } = await getTemplate(channel, reminder);
-		for (const text of raidPingMessages(users, template)) {
+		const texts = raidPingMessages(users, template);
+		for (const text of texts) {
 			for (let i = 0; i < (times ?? 1); i++) {
 				await bot.Channels.send(channel, text).catch(() => {});
-				await countPost(channel, reminder, text);
 			}
 			batches++;
+		}
+		// Eine Benachrichtigung zaehlt einmal, egal wie oft sie wegen der Einstellung (x2-x5) oder wegen mehrerer Namenslisten
+		// gepostet wird (ninou2, 14.11.2026: "even if a person set it to x5, the 120s noti count as 1 post, and the 20s noti count as 1")
+		if (texts.length > 0) {
+			await countPost(channel, reminder, texts[0]);
 		}
 		// ninou2 moechte zweimal gepingt werden (01.08.2026) - bewusst nur dieser eine User; sobald die Anzahl im Dashboard
 		// eingestellt ist, gilt diese und der Einzel-Ping entfaellt
 		if (times === null && channel.name === 'ninou2' && users.includes('ninou2')) {
 			const extra = formatRaidText(template, ['ninou2'], REMINDER_LEAD_S);
 			await bot.Channels.send(channel, extra).catch(() => {});
-			await countPost(channel, reminder, extra);
 		}
 	}
 	return batches;
