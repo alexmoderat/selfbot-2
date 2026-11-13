@@ -185,7 +185,7 @@
 
     /* ── Stat cards ── */
     .stats-grid {
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px;
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 28px;
     }
     .stat-card {
       background: #111111; border: 1px solid #282828; border-radius: 10px;
@@ -312,7 +312,7 @@
     .join-mod strong { color: #ffffff; font-size: 23px; }
     .join-card a.btn { border-radius: 10px; display: inline-block; font-size: 23px; margin-top: 8px; padding: 16px 32px; text-decoration: none; }
     [hidden] { display: none !important; }
-    #page-overview .stats-grid { max-width: 940px; margin-bottom: 12px; }
+    #page-overview .stats-grid { max-width: 1100px; margin-bottom: 12px; }
     #page-overview .stat-card { padding: 12px 14px; }
     #page-overview .stat-value { font-size: 27.5px; }
     .stream-embed { display: block; width: 100%; max-width: calc((100vh - 240px) * 16 / 9); min-height: 300px; aspect-ratio: 16 / 9; margin-top: 14px; border: 1px solid #282828; border-radius: 10px; background: #000; }
@@ -823,6 +823,12 @@
           <div class="stat-label">Ban Watch</div>
           <div class="stat-value" id="statBanwatch">—</div>
           <div class="stat-sub">users watched</div>
+        </div>
+        <!-- ninou2, 13.11.2026: "i thinnk it was about the active reminders" (die fehlende 5. Kachel) -->
+        <div class="stat-card">
+          <div class="stat-label">Reminders</div>
+          <div class="stat-value" id="statReminders">—</div>
+          <div class="stat-sub">active reminders</div>
         </div>
         <!-- ninou2, 03.11.2026: "make the ADD the bot to channel a cool BOX", "same size as the other 4 boxes" -->
         <a class="add-frame" id="guestBox" href="#join" hidden>
@@ -1582,6 +1588,7 @@
       if (reminderSort.desc) list.reverse();
       document.getElementById('countReminders').textContent = list.length;
       document.getElementById('navReminderCount').textContent = list.length;
+      document.getElementById('statReminders').textContent = list.length;
       const el = document.getElementById('reminderList');
       if (!list.length) {
         el.innerHTML = buildEmpty('No pending reminders.');
