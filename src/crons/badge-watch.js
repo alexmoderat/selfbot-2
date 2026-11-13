@@ -53,6 +53,7 @@ const runSource = async (source, getTargets) => {
 		items.map((i) => i.key),
 		STATE_TTL,
 	);
+	console.log(`[badge-watch] ${source.kind}s: ${items.length} bekannt, ${fresh.length} neu${known ? '' : ' (Erstlauf, nur Stand gemerkt)'}`);
 	if (fresh.length === 0) {
 		return 0;
 	} else if (fresh.length > MAX_PER_RUN) {
