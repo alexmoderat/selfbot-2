@@ -473,6 +473,13 @@
     :where(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), textarea, select) { background: #2e2e2e; color: #ffffff; border: 1px solid #3a3a3a; }
     .msg-cell { cursor: text; border-radius: 6px; }
     .msg-cell:hover { background: #262626; color: #ffffff; }
+    .confirm-box { align-items: center; display: inline-flex; gap: 6px; }
+    .confirm-q { color: #adafae; font-size: 15px; }
+    .confirm-box button { border: none; border-radius: 6px; color: #ffffff; cursor: pointer; font-size: 15px; font-weight: 700; padding: 6px 12px; }
+    .confirm-box .msg-yes { background: #1f8a4c; }
+    .confirm-box .msg-yes:hover { background: #26a35b; }
+    .confirm-box .msg-no { background: #b3261e; }
+    .confirm-box .msg-no:hover { background: #d03a31; }
     .msg-edit { align-items: center; display: flex; gap: 6px; }
     .msg-edit input { flex: 1; min-width: 0; width: auto; }
     .msg-edit button { border: none; border-radius: 6px; color: #ffffff; cursor: pointer; font-size: 15px; font-weight: 700; height: 30px; line-height: 1; padding: 0; width: 32px; }
@@ -2607,24 +2614,31 @@
 
     // ── Loeschen nur mit Bestaetigung ──────────────────────────────────────────
     // ninou2, 13.11.2026: "any remove button on the website should have a confirm button". Erster Klick auf einen roten
-    // Knopf (Delete/Remove) schaltet ihn auf "Confirm?" (5 s), erst der zweite Klick loescht. Reminders fragen schon selbst.
+    // Knopf (Delete/Remove) zeigt "Delete? Yes / No", erst Yes loescht. Reminders fragen schon selbst.
     document.addEventListener('click', (e) => {
       const button = e.target.closest?.('.btn-danger');
       if (!button || button.closest('.reminder-table') || button.dataset.confirmed === '1') return;
-      if (button.dataset.armed === '1') {
-        clearTimeout(Number(button.dataset.armTimer));
-        button.dataset.armed = '';
-        return; // zweiter Klick: normal weiter zum onclick
-      }
       e.preventDefault();
       e.stopImmediatePropagation();
-      button.dataset.armed = '1';
-      button.dataset.label = button.textContent;
-      button.textContent = 'Confirm?';
-      button.dataset.armTimer = String(setTimeout(() => {
-        button.dataset.armed = '';
-        button.textContent = button.dataset.label;
-      }, 5000));
+      if (button.dataset.asking === '1') return;
+      // ninou2, 13.11.2026: "it should show 2 buttons, yes or no ... now we only see 'confirm?' which is confusing" -
+      // der Knopf wird durch "Delete? [Yes] [No]" ersetzt, nach 8 s kommt er von selbst zurueck
+      button.dataset.asking = '1';
+      const box = document.createElement('span');
+      box.className = 'confirm-box';
+      box.innerHTML = '<span class="confirm-q">Delete?</span><button type="button" class="msg-yes">Yes</button><button type="button" class="msg-no">No</button>';
+      button.style.display = 'none';
+      button.after(box);
+      const restore = () => { clearTimeout(timer); box.remove(); button.style.display = ''; button.dataset.asking = ''; };
+      const timer = setTimeout(restore, 8000);
+      box.querySelector('.msg-no').addEventListener('click', (ev) => { ev.stopPropagation(); restore(); });
+      box.querySelector('.msg-yes').addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        restore();
+        button.dataset.confirmed = '1';
+        button.click();
+        setTimeout(() => { button.dataset.confirmed = ''; }, 0);
+      });
     }, true);
 
     // ── Title Notify ───────────────────────────────────────────────────────────
