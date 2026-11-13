@@ -1075,6 +1075,10 @@
             <label>Streamer name</label>
             <input type="text" id="titleStreamer" placeholder="streamer_login" required maxlength="100">
           </div>
+          <div class="field">
+            <label>Custom message (optional)</label>
+            <input type="text" id="titleMessage" placeholder="added to the alert" maxlength="200">
+          </div>
           <div style="display:flex;align-items:flex-end">
             <button type="submit" class="btn btn-primary">+ Add</button>
           </div>
@@ -2542,6 +2546,28 @@
       showToast('Notification added!', 'success');
     });
 
+    // ── Loeschen nur mit Bestaetigung ──────────────────────────────────────────
+    // ninou2, 13.11.2026: "any remove button on the website should have a confirm button". Erster Klick auf einen roten
+    // Knopf (Delete/Remove) schaltet ihn auf "Confirm?" (5 s), erst der zweite Klick loescht. Reminders fragen schon selbst.
+    document.addEventListener('click', (e) => {
+      const button = e.target.closest?.('.btn-danger');
+      if (!button || button.closest('.reminder-table') || button.dataset.confirmed === '1') return;
+      if (button.dataset.armed === '1') {
+        clearTimeout(Number(button.dataset.armTimer));
+        button.dataset.armed = '';
+        return; // zweiter Klick: normal weiter zum onclick
+      }
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      button.dataset.armed = '1';
+      button.dataset.label = button.textContent;
+      button.textContent = 'Confirm?';
+      button.dataset.armTimer = String(setTimeout(() => {
+        button.dataset.armed = '';
+        button.textContent = button.dataset.label;
+      }, 5000));
+    }, true);
+
     // ── Title Notify ───────────────────────────────────────────────────────────
     async function loadTitleNotify() {
       loading('titleList');
@@ -2562,12 +2588,13 @@
         return;
       }
       el.innerHTML = `
-        <div class="data-table notify-table with-added">
-          <div class="data-table-head"><div>${sortHead('streamer', 'Streamer', titleNotifySort, 'setTitleNotifySort')}</div><div>Pings</div><div>${sortHead('added', 'Added', titleNotifySort, 'setTitleNotifySort')}</div><div></div></div>
+        <div class="data-table notify-table with-added tweet-table">
+          <div class="data-table-head"><div>${sortHead('streamer', 'Streamer', titleNotifySort, 'setTitleNotifySort')}</div><div>Pings</div><div>Message</div><div>${sortHead('added', 'Added', titleNotifySort, 'setTitleNotifySort')}</div><div></div></div>
           ${sortedBy(data.titlenotify, titleNotifySort).map(item => `
             <div class="data-row">
               <div class="cell-mono">${esc(item.streamer)}</div>
               <div class="cell-muted">@${esc(item.user)}</div>
+              <div class="cell-muted">${esc(item.message || '—')}</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
                 <button class="btn btn-danger" onclick="deleteTitleNotify('${esc(item.streamer)}', '${esc(item.user)}')">Delete</button>
@@ -2587,15 +2614,17 @@
     document.getElementById('addTitleForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const streamer = document.getElementById('titleStreamer').value.trim();
+      const message = document.getElementById('titleMessage').value.trim();
       if (!streamer) return;
       const result = await apiFetch('api/titlenotify', {
         method: 'POST',
-        body: JSON.stringify({ streamer }),
+        body: JSON.stringify({ streamer, message }),
       });
       if (result === null) return;
       data.titlenotify = result;
       renderTitleNotify();
       document.getElementById('titleStreamer').value = '';
+      document.getElementById('titleMessage').value = '';
       showToast('Title alert added!', 'success');
     });
 

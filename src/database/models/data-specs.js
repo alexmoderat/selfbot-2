@@ -1529,6 +1529,11 @@ module.exports = [
 				type: 'Number',
 				required: true,
 			},
+			message: {
+				column: 'Message',
+				type: 'String',
+				required: false,
+			},
 			added: {
 				column: 'Added',
 				type: 'Date',

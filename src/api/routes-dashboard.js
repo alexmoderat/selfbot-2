@@ -825,7 +825,7 @@ const createDashboardRouter = () => {
 		const names = new Map(users.map((i) => [i._id, i.name]));
 		return rows
 			.filter((i) => names.has(i.userAlias))
-			.map((i) => ({ streamer: i.streamerLogin, user: names.get(i.userAlias), added: i.added }))
+			.map((i) => ({ streamer: i.streamerLogin, user: names.get(i.userAlias), message: i.message ?? '', added: i.added }))
 			.sort((a, b) => a.streamer.localeCompare(b.streamer) || a.user.localeCompare(b.user));
 	};
 
@@ -863,7 +863,7 @@ const createDashboardRouter = () => {
 			watchTitle(streamer.id);
 			await bot.DB.TitleNotify.updateOne(
 				{ channel: channel.id, streamerId: streamer.id, userAlias: await issuer(req) },
-				{ $setOnInsert: { streamerLogin: streamer.login, added: new Date() } },
+				{ $set: { message: cleanMessage(req.body.message) }, $setOnInsert: { streamerLogin: streamer.login, added: new Date() } },
 				{ upsert: true },
 			);
 			res.json(await titleNotifyRows(channel));

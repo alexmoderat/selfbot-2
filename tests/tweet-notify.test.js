@@ -38,3 +38,10 @@ test('Zusatztext: wird bereinigt, gekuerzt und an die Meldung gehaengt', () => {
 	assert.equal(cleanMessage('x'.repeat(500)).length, 200);
 	assert.equal(formatTweetAlert(['a'], 'xqc', { id: '1', text: 'hi' }, 'LETSGO'), '@a — @xqc tweeted: hi https://x.com/xqc/status/1 LETSGO');
 });
+
+test('Title Notify: Zusatztext steht hinter der Meldung', () => {
+	global.bot = global.bot ?? {};
+	const { formatTitleChange } = require('../src/services/notifications.js');
+	assert.equal(formatTitleChange(['a'], 'xqc', ' Neu ', 'Just Chatting', null, 'LETSGO'), '@a — @xqc changed their title: " Neu " (Category: Just Chatting) LETSGO');
+	assert.equal(formatTitleChange(['a'], 'xqc', 'Neu', null), '@a — @xqc changed their title: " Neu "');
+});

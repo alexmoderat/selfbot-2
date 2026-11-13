@@ -104,8 +104,9 @@ const formatOfflineText = (login, gamesPart, lastGame, durationMs) => {
 // Leerzeichen in den Anfuehrungszeichen, damit Emotes am Titelrand erkannt werden; Streamer mit @.
 // Live: wie lange schon (ninou2, 10.11.2026: "if the streamer [is live] it tells for how long [they] has been [live]",
 // "(Category: World of Warcraft) [⏱1h20min]", 12.11.2026 auf "[at ⏱1h20min]" geaendert (ninou2 tippt es so vor); "if the streamer offline this bracket part does not show")
-const formatTitleChange = (users, login, title, game, liveMs = null) =>
-	`${users.map((i) => `@${i}`).join(' ')} — @${login} changed their title: " ${title.trim()} "${game ? ` (Category: ${game})` : ''}${liveMs !== null ? ` [at ⏱${fmtLengthShort(liveMs)}]` : ''}`;
+// custom: eigener Zusatztext des Abonnenten (ninou2, 13.11.2026: "even title notify should have the Custom message option too")
+const formatTitleChange = (users, login, title, game, liveMs = null, custom = '') =>
+	`${users.map((i) => `@${i}`).join(' ')} — @${login} changed their title: " ${title.trim()} "${game ? ` (Category: ${game})` : ''}${liveMs !== null ? ` [at ⏱${fmtLengthShort(liveMs)}]` : ''}${custom ? ` ${custom}` : ''}`;
 
 /** Seit wann live (ms), offline/unbekannt null */
 const fetchLiveSince = async (streamerId) => {
@@ -227,24 +228,29 @@ const announceTitleChange = async (streamerId, title, game) => {
 		Channel: i.channel,
 		Streamer_Login: i.streamerLogin,
 		User_Alias: i.userAlias,
+		Message: i.message ?? '',
 	}));
 	if (rows.length === 0) {
 		return;
 	}
 
 	const liveMs = await fetchLiveSince(streamerId);
-	const perChannel = new Map();
+	// Je Channel und Zusatztext eine Meldung; gleicher Text = zusammen angepingt
+	const groups = new Map();
 	for (const row of rows) {
 		const user = await bot.Users.get(row.User_Alias);
 		if (user) {
-			perChannel.set(row.Channel, [...(perChannel.get(row.Channel) ?? []), user.name]);
+			const key = `${row.Channel}\u0000${row.Message}`;
+			const group = groups.get(key) ?? { channel: row.Channel, message: row.Message, users: [] };
+			group.users.push(user.name);
+			groups.set(key, group);
 		}
 	}
 
-	for (const [channelId, users] of perChannel) {
-		await sendTo(channelId, formatTitleChange(users, rows[0].Streamer_Login, title, game, liveMs));
+	for (const { channel, message, users } of groups.values()) {
+		await sendTo(channel, formatTitleChange(users, rows[0].Streamer_Login, title, game, liveMs, message));
 	}
-	console.log(`[notifications] Titelwechsel ${rows[0].Streamer_Login} -> ${rows.length} Abonnent(en) in ${perChannel.size} Channel(s)`);
+	console.log(`[notifications] Titelwechsel ${rows[0].Streamer_Login} -> ${rows.length} Abonnent(en), ${groups.size} Meldung(en)`);
 };
 
 /* ---------- ban ---------- */

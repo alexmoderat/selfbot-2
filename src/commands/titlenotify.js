@@ -1,5 +1,6 @@
 const { listOrLink } = require('../misc/list-reply.js');
 const { resolveStreamer, watchTitle } = require('../services/notifications.js');
+const { MAX_MESSAGE, cleanMessage } = require('../services/tweet-notify.js');
 
 /**
  * Alarm auf Titelwechsel eines Streamers, aus sb-v2 - Vorwarnung, die meisten setzen den Titel kurz vor dem
@@ -16,7 +17,7 @@ module.exports = {
 	aliases: ['tc', 'tn', 'titlealarm'],
 	cooldown: 3000,
 	description: 'Alerts you when a streamer changes their title — and pings you.',
-	usage: 'titlenotify <streamer> | remove <streamer> | list | optout | optin',
+	usage: 'titlenotify <streamer> [message] | remove <streamer> | list | optout | optin',
 	flags: ['no-prefix'],
 	execute: async (client, msg) => {
 		const args = [...msg.args];
@@ -93,13 +94,22 @@ module.exports = {
 			return { text: `@${display}, ${first} opted out of title alerts.` };
 		}
 
+		// Alles nach dem Streamer ist der eigene Zusatztext (ninou2, 13.11.2026), erneutes Eintragen aendert ihn
+		const rawMessage = args.slice(1).join(' ').trim();
+		if (rawMessage.length > MAX_MESSAGE) {
+			return { text: `@${display}, the message is too long (max ${MAX_MESSAGE} characters).` };
+		}
+		const message = cleanMessage(rawMessage);
+
 		watchTitle(streamer.id);
 		await bot.DB.TitleNotify.updateOne(
 			{ channel: channel.id, streamerId: streamer.id, userAlias: user.id },
-			{ $setOnInsert: { streamerLogin: streamer.login, added: new Date() } },
+			{ $set: { message }, $setOnInsert: { streamerLogin: streamer.login, added: new Date() } },
 			{ upsert: true },
 		);
 		console.log(`[titlenotify] ${user.name} -> ${streamer.login} in #${channel.name}`);
-		return { text: `@${display}, ✅ Title alert for ${first} set. You'll be pinged when they change their title — usually shortly before going live.` };
+		return {
+			text: `@${display}, ✅ Title alert for ${first} set${message ? ` with your message "${message}"` : ''}. You'll be pinged when they change their title — usually shortly before going live.`,
+		};
 	},
 };
