@@ -45,3 +45,13 @@ test('Title Notify: Zusatztext steht hinter der Meldung', () => {
 	assert.equal(formatTitleChange(['a'], 'xqc', ' Neu ', 'Just Chatting', null, 'LETSGO'), '@a — @xqc changed their title: " Neu " (Category: Just Chatting) LETSGO');
 	assert.equal(formatTitleChange(['a'], 'xqc', 'Neu', null), '@a — @xqc changed their title: " Neu "');
 });
+
+test('Anzahl der Meldungen: 1-5, ungueltig = 1', () => {
+	const { cleanTimes, MAX_TIMES } = require('../src/services/tweet-notify.js');
+	assert.equal(MAX_TIMES, 5);
+	assert.equal(cleanTimes(undefined), 1);
+	assert.equal(cleanTimes('3'), 3);
+	assert.equal(cleanTimes('9'), 5);
+	assert.equal(cleanTimes('0'), 1);
+	assert.equal(cleanTimes('abc'), 1);
+});

@@ -1,5 +1,5 @@
 const { defineCron } = require('../clients/modules/timers.js');
-const { checkAccount, formatTweetAlert } = require('../services/tweet-notify.js');
+const { checkAccount, cleanTimes, formatTweetAlert } = require('../services/tweet-notify.js');
 
 /**
  * Prueft die per !tweetnotify / Dashboard eingetragenen X/Twitter-Accounts auf neue Tweets (ninou2, 13.11.2026) und pingt
@@ -21,15 +21,18 @@ const announce = async (account, tweet) => {
 	for (const row of rows) {
 		const user = await bot.Users.get(row.userAlias);
 		if (user) {
-			const key = `${row.channel}\u0000${row.message ?? ''}`;
-			const group = groups.get(key) ?? { channel: row.channel, message: row.message ?? '', users: [] };
+			const times = cleanTimes(row.times);
+			const key = `${row.channel}\u0000${row.message ?? ''}\u0000${times}`;
+			const group = groups.get(key) ?? { channel: row.channel, message: row.message ?? '', times, users: [] };
 			group.users.push(user.name);
 			groups.set(key, group);
 		}
 	}
 
-	for (const { channel, message, users } of groups.values()) {
-		await sendTo(channel, formatTweetAlert(users, account, tweet, message));
+	for (const { channel, message, times, users } of groups.values()) {
+		for (let i = 0; i < times; i++) {
+			await sendTo(channel, formatTweetAlert(users, account, tweet, message));
+		}
 	}
 	console.log(`[tweet-notify] @${account}: ${tweet.id} -> ${groups.size} Meldung(en)`);
 };

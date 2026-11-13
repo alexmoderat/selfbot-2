@@ -509,6 +509,8 @@
     /* Tweet Notify: Account, Pings, Message, Added, Delete */
     .notify-table.tweet-table .data-table-head,
     .notify-table.tweet-table .data-row { grid-template-columns: 160px 150px 1fr 110px 80px; }
+    .notify-table.tweet-times .data-table-head,
+    .notify-table.tweet-times .data-row { grid-template-columns: 160px 150px 1fr 60px 110px 80px; }
 
     /* Blacklist: 2 cols */
     .bl-table .data-table-head,
@@ -1124,6 +1126,10 @@
           <div class="field">
             <label>Custom message (optional)</label>
             <input type="text" id="tweetMessage" placeholder="added to the alert" maxlength="200">
+          </div>
+          <div class="field field-sm">
+            <label>Number</label>
+            <input type="number" id="tweetTimes" value="1" min="1" max="5" title="How many times the bot posts the message (1-5)">
           </div>
           <div style="display:flex;align-items:flex-end">
             <button type="submit" class="btn btn-primary">+ Add</button>
@@ -2725,13 +2731,14 @@
         return;
       }
       el.innerHTML = `
-        <div class="data-table notify-table with-added tweet-table">
-          <div class="data-table-head"><div>${sortHead('account', 'Account', tweetNotifySort, 'setTweetNotifySort')}</div><div>Channel</div><div>Message</div><div>${sortHead('added', 'Added', tweetNotifySort, 'setTweetNotifySort')}</div><div></div></div>
+        <div class="data-table notify-table with-added tweet-table tweet-times">
+          <div class="data-table-head"><div>${sortHead('account', 'Account', tweetNotifySort, 'setTweetNotifySort')}</div><div>Channel</div><div>Message</div><div>Times</div><div>${sortHead('added', 'Added', tweetNotifySort, 'setTweetNotifySort')}</div><div></div></div>
           ${sortedBy(data.tweetnotify, tweetNotifySort).map(item => `
             <div class="data-row">
               <div class="cell-mono">@${esc(item.account)}</div>
               <div class="cell-muted">#${esc(item.channel)}</div>
               <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'tweet', '${esc(item.account)}', '${esc(item.channel)}')">${esc(item.message || '—')}</div>
+              <div class="cell-muted">${Number(item.times) || 1}×</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
                 <button class="btn btn-danger" onclick="deleteTweetNotify('${esc(item.account)}', '${esc(item.channel)}')">Delete</button>
@@ -2752,16 +2759,18 @@
       e.preventDefault();
       const account = document.getElementById('tweetAccount').value.trim();
       const message = document.getElementById('tweetMessage').value.trim();
+      const times = Math.min(5, Math.max(1, parseInt(document.getElementById('tweetTimes').value, 10) || 1));
       if (!account) return;
       const result = await apiFetch('api/tweetnotify', {
         method: 'POST',
-        body: JSON.stringify({ account, message }),
+        body: JSON.stringify({ account, message, times }),
       });
       if (result === null) return;
       data.tweetnotify = result;
       renderTweetNotify();
       document.getElementById('tweetAccount').value = '';
       document.getElementById('tweetMessage').value = '';
+      document.getElementById('tweetTimes').value = '1';
       showToast('Tweet alert added!', 'success');
     });
 

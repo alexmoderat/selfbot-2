@@ -27,6 +27,13 @@ const formatTweetAlert = (users, account, tweet, custom = '') => {
 };
 
 const MAX_MESSAGE = 200;
+// Wie oft die Meldung gepostet wird, 1-5 (ninou2, 13.11.2026: "add a text called 'number' ... how many times you want the bot to post the message")
+const MAX_TIMES = 5;
+const cleanTimes = (input) => {
+	const n = Number.parseInt(String(input ?? '1'), 10);
+	return Number.isNaN(n) ? 1 : Math.min(MAX_TIMES, Math.max(1, n));
+};
+
 const cleanMessage = (input) => String(input ?? '').replaceAll(/\s+/g, ' ').trim().slice(0, MAX_MESSAGE);
 
 /** Neue Tweets gegenueber dem gemerkten Stand (null = Erstlauf, nichts melden), aelteste zuerst */
@@ -56,4 +63,4 @@ const accountExists = async (account) => {
 	return Array.isArray(tweets) && tweets.length > 0;
 };
 
-module.exports = { HANDLE, MAX_MESSAGE, cleanMessage, cleanHandle, isStandalone, formatTweetAlert, freshTweets, checkAccount, accountExists };
+module.exports = { HANDLE, MAX_MESSAGE, MAX_TIMES, cleanTimes, cleanMessage, cleanHandle, isStandalone, formatTweetAlert, freshTweets, checkAccount, accountExists };

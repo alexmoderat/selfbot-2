@@ -1576,6 +1576,12 @@ module.exports = [
 				type: 'Number',
 				required: true,
 			},
+			times: {
+				column: 'Times',
+				type: 'Number',
+				required: false,
+				default: 1,
+			},
 			added: {
 				column: 'Added',
 				type: 'Date',

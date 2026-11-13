@@ -7,7 +7,7 @@ const spamDomains = require('../services/spam-domains.js');
 const customCommands = require('../services/custom-commands.js');
 const { partChannel } = require('../services/channel-manager.js');
 const { resolveStreamer, watchStreamer, watchTitle } = require('../services/notifications.js');
-const { cleanHandle, cleanMessage, accountExists, HANDLE } = require('../services/tweet-notify.js');
+const { cleanHandle, cleanMessage, cleanTimes, accountExists, HANDLE } = require('../services/tweet-notify.js');
 const sbv2 = require('../database/sbv2.js');
 const { getPrefix } = require('../clients/modules/handler.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
@@ -827,7 +827,7 @@ const createDashboardRouter = () => {
 			.map((i) => ({ ...fields(i), channel: channelLabel(i.channel), message: i.message ?? '', added: i.added }))
 			.sort((a, b) => (a.streamer ?? a.account).localeCompare(b.streamer ?? b.account) || a.channel.localeCompare(b.channel));
 	const titleNotifyRows = async (userAlias) => await ownRows(bot.DB.TitleNotify, userAlias, (i) => ({ streamer: i.streamerLogin }));
-	const tweetNotifyRows = async (userAlias) => await ownRows(bot.DB.TweetNotify, userAlias, (i) => ({ account: i.account }));
+	const tweetNotifyRows = async (userAlias) => await ownRows(bot.DB.TweetNotify, userAlias, (i) => ({ account: i.account, times: cleanTimes(i.times) }));
 	// Kanalname aus der URL -> Channel-ID (nur Channels, in denen der Bot ist)
 	const urlChannelId = (req) => findChannel(String(req.params.channel ?? '').toLowerCase())?.id ?? null;
 
@@ -924,7 +924,7 @@ const createDashboardRouter = () => {
 			const me = await issuer(req);
 			await bot.DB.TweetNotify.updateOne(
 				{ channel: channel.id, account, userAlias: me },
-				{ $set: { message: cleanMessage(req.body.message) }, $setOnInsert: { added: new Date() } },
+				{ $set: { message: cleanMessage(req.body.message), times: cleanTimes(req.body.times) }, $setOnInsert: { added: new Date() } },
 				{ upsert: true },
 			);
 			res.json(await tweetNotifyRows(me));
