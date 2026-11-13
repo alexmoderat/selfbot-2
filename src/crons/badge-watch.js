@@ -125,7 +125,7 @@ const runBadgeWatch = async () => {
 
 module.exports = defineCron({
 	name: 'badge-watch',
-	expression: '0 */10 * * * *',
+	expression: '0 */3 * * * *', // alle 3 Minuten (ninou2, 13.11.2026: "is that the minimum time? can it go lower")
 	description: 'Announces new global Twitch badges and emotes (from streamdatabase.com) in channels that turned it on.',
 	code: async function badgeWatch() {
 		await runBadgeWatch().catch((e) => console.warn(`[badge-watch] ${e?.message ?? e}`));
