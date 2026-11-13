@@ -2457,7 +2457,9 @@
     // Streamer/Added anklickbar wie bei den Remindern (nochmal klicken = umgekehrt). Added zuerst die neuesten.
     const NOTIFY_SORTS = {
       streamer: (a, b) => a.streamer.localeCompare(b.streamer) || String(a.user ?? '').localeCompare(String(b.user ?? '')),
-      added: (a, b) => new Date(b.added ?? 0) - new Date(a.added ?? 0) || a.streamer.localeCompare(b.streamer)
+      added: (a, b) => new Date(b.added ?? 0) - new Date(a.added ?? 0) || String(a.streamer ?? a.account).localeCompare(String(b.streamer ?? b.account)),
+      // Tweet Notify (ninou2, 13.11.2026: "tweet notify the sort by does not work")
+      account: (a, b) => a.account.localeCompare(b.account) || String(a.user ?? '').localeCompare(String(b.user ?? '')),
     };
     const loadSort = (key, fallback) => {
       try { const saved = JSON.parse(localStorage.getItem(key)); if (NOTIFY_SORTS[saved?.key]) return saved; } catch {}
@@ -2465,6 +2467,7 @@
     };
     let notifySort = loadSort('notifySort', { key: 'added', desc: true });
     let titleNotifySort = loadSort('titleNotifySort', { key: 'streamer', desc: false });
+    let tweetNotifySort = loadSort('tweetNotifySort', { key: 'account', desc: false });
     const nextSort = (state, key) => (state.key === key) ? { key, desc: !state.desc } : { key, desc: false };
     function setNotifySort(key) {
       notifySort = nextSort(notifySort, key);
@@ -2475,6 +2478,11 @@
       titleNotifySort = nextSort(titleNotifySort, key);
       try { localStorage.setItem('titleNotifySort', JSON.stringify(titleNotifySort)); } catch {}
       renderTitleNotify();
+    }
+    function setTweetNotifySort(key) {
+      tweetNotifySort = nextSort(tweetNotifySort, key);
+      try { localStorage.setItem('tweetNotifySort', JSON.stringify(tweetNotifySort)); } catch {}
+      renderTweetNotify();
     }
     const sortedBy = (list, state) => {
       const sorted = [...list].sort(NOTIFY_SORTS[state.key]);
@@ -2649,8 +2657,8 @@
       }
       el.innerHTML = `
         <div class="data-table notify-table with-added tweet-table">
-          <div class="data-table-head"><div>Account</div><div>Pings</div><div>Message</div><div>Added</div><div></div></div>
-          ${data.tweetnotify.map(item => `
+          <div class="data-table-head"><div>${sortHead('account', 'Account', tweetNotifySort, 'setTweetNotifySort')}</div><div>Pings</div><div>Message</div><div>${sortHead('added', 'Added', tweetNotifySort, 'setTweetNotifySort')}</div><div></div></div>
+          ${sortedBy(data.tweetnotify, tweetNotifySort).map(item => `
             <div class="data-row">
               <div class="cell-mono">@${esc(item.account)}</div>
               <div class="cell-muted">@${esc(item.user)}</div>
