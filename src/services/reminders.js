@@ -12,8 +12,8 @@ const AFK = require('./afk.js');
 // - "Pingme": meldet dem Absender, wenn das Ziel schreibt
 // - "Deferred": erinnert das Ziel bei der naechsten Nachricht nach einem Zeitpunkt
 
-/** Hoeheres Limit fuer aktive Reminder einzelner User (ninou2, 07.11.2026: "i get my list max to 20") */
-const ACTIVE_LIMIT_OVERRIDES = new Map([[4293, 20]]); // ninou2
+/** Hoeheres Limit fuer aktive Reminder einzelner User (ninou2, 07.11.2026: "i get my list max to 20"; 13.11.2026: "can i get a 30 limit please") */
+const ACTIVE_LIMIT_OVERRIDES = new Map([[4293, 30]]); // ninou2
 const activeLimitFor = (userId, fallback) => Math.max(fallback, ACTIVE_LIMIT_OVERRIDES.get(userId) ?? 0);
 
 const REMINDER_ERROR_REASONS = {
