@@ -2578,7 +2578,7 @@
       }
       el.innerHTML = `
         <div class="data-table notify-table with-added live-times">
-          <div class="data-table-head"><div>${sortHead('streamer', 'Streamer', notifySort, 'setNotifySort')}</div><div>Custom message</div><div>Times</div><div>${sortHead('added', 'Added', notifySort, 'setNotifySort')}</div><div></div></div>
+          <div class="data-table-head"><div>${sortHead('streamer', 'Streamer', notifySort, 'setNotifySort')}</div><div>Custom message</div><div>${sortHead('times', 'Times', notifySort, 'setNotifySort')}</div><div>${sortHead('added', 'Added', notifySort, 'setNotifySort')}</div><div></div></div>
           ${sortedBy(data.notify.map(item => ({ ...item, streamer: item.streamer || item.target || item.login || '' })), notifySort).map(item => `
             <div class="data-row">
               <div class="cell-mono">${esc(item.streamer)}</div>
@@ -2751,7 +2751,7 @@
       }
       el.innerHTML = `
         <div class="data-table notify-table with-added tweet-table tweet-times">
-          <div class="data-table-head"><div>${sortHead('streamer', 'Streamer', titleNotifySort, 'setTitleNotifySort')}</div><div>Channel</div><div>Message</div><div>Times</div><div>${sortHead('added', 'Added', titleNotifySort, 'setTitleNotifySort')}</div><div></div></div>
+          <div class="data-table-head"><div>${sortHead('streamer', 'Streamer', titleNotifySort, 'setTitleNotifySort')}</div><div>Channel</div><div>Message</div><div>${sortHead('times', 'Times', titleNotifySort, 'setTitleNotifySort')}</div><div>${sortHead('added', 'Added', titleNotifySort, 'setTitleNotifySort')}</div><div></div></div>
           ${sortedBy(data.titlenotify, titleNotifySort).map(item => `
             <div class="data-row">
               <div class="cell-mono">${esc(item.streamer)}</div>
@@ -2814,7 +2814,7 @@
       }
       el.innerHTML = `
         <div class="data-table notify-table with-added tweet-table tweet-times">
-          <div class="data-table-head"><div>${sortHead('account', 'Account', tweetNotifySort, 'setTweetNotifySort')}</div><div>Channel</div><div>Message</div><div>Times</div><div>${sortHead('added', 'Added', tweetNotifySort, 'setTweetNotifySort')}</div><div></div></div>
+          <div class="data-table-head"><div>${sortHead('account', 'Account', tweetNotifySort, 'setTweetNotifySort')}</div><div>Channel</div><div>Message</div><div>${sortHead('times', 'Times', tweetNotifySort, 'setTweetNotifySort')}</div><div>${sortHead('added', 'Added', tweetNotifySort, 'setTweetNotifySort')}</div><div></div></div>
           ${sortedBy(data.tweetnotify, tweetNotifySort).map(item => `
             <div class="data-row">
               <div class="cell-mono">@${esc(item.account)}</div>
