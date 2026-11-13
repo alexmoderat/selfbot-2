@@ -468,6 +468,9 @@
     .data-row:hover { background: #1a1a1a; }
     .cell-mono { font-size: 15px; font-weight: 600; font-family: 'Consolas', 'Monaco', monospace; word-break: break-all; }
     .cell-muted { font-size: 15px; color: #9a9c9b; }
+    /* ninou2, 13.11.2026: "always use grey background and white text" - Grundregel fuer alle Eingabefelder (ohne Spezifitaet,
+       jede eigene Regel darf sie ueberschreiben), damit nie ein weisses Standardfeld erscheint */
+    :where(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), textarea, select) { background: #2e2e2e; color: #ffffff; border: 1px solid #3a3a3a; }
     .msg-cell { cursor: text; border-radius: 6px; }
     .msg-cell:hover { background: #262626; color: #ffffff; }
     .msg-cell input { background: #2e2e2e; border: 1px solid #1f7fb3; border-radius: 6px; color: #ffffff; font-size: 15px; padding: 4px 8px; width: 100%; }
@@ -2563,7 +2566,6 @@
     function editMessageCell(cell, kind, key, user) {
       if (cell.querySelector('input')) return;
       const original = cell.textContent === '—' ? '' : cell.textContent;
-      cell.classList.remove('msg-cell');
       cell.removeAttribute('onclick');
       cell.innerHTML = '<input type="text" maxlength="200" placeholder="added to the alert">';
       const input = cell.querySelector('input');
