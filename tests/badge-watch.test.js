@@ -2,8 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 global.bot = global.bot ?? {};
-const { parseBadges } = require('../src/misc/streamdatabase.js');
-const { newBadges, formatBadge } = require('../src/crons/badge-watch.js');
+const { parseBadges, parseEmotes } = require('../src/misc/streamdatabase.js');
+const { newBadges, formatBadge, formatEmote } = require('../src/crons/badge-watch.js');
 
 const page = (list) =>
 	`<html><script id="__NEXT_DATA__" type="application/json">${JSON.stringify({ props: { pageProps: { initialTwitchGlobalBadges: list } } })}</script></html>`;
@@ -33,4 +33,19 @@ test('Meldung mit eigenem Textteil', () => {
 	assert.ok(text.startsWith('New global Twitch badge: Gallica - Sub badge'));
 	assert.ok(text.endsWith('PogChamp'));
 	assert.ok(!formatBadge({ title: 'X', description: '' }).endsWith(' '));
+});
+
+test('Emotes aus der Seite lesen und melden', () => {
+	const html = `<script id="__NEXT_DATA__" type="application/json">${JSON.stringify({ props: { pageProps: { twitchGlobalEmotes: [{ current: { id: '1', name: ':)' } }, { current: { id: '2', name: 'TakisAllIntense' } }, { current: {} }] } } })}</script>`;
+	const emotes = parseEmotes(html);
+	assert.deepEqual(emotes, [
+		{ key: '1', title: ':)' },
+		{ key: '2', title: 'TakisAllIntense' },
+	]);
+	assert.deepEqual(
+		newBadges(emotes, new Set(['1'])).map((i) => i.title),
+		['TakisAllIntense'],
+	);
+	assert.ok(formatEmote(emotes[1], 'Pog').startsWith('New global Twitch emote: TakisAllIntense'));
+	assert.ok(formatEmote(emotes[1], 'Pog').endsWith('Pog'));
 });

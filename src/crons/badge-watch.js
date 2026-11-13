@@ -1,12 +1,15 @@
 const { defineCron } = require('../clients/modules/timers.js');
-const { fetchGlobalBadges, BADGES_URL } = require('../misc/streamdatabase.js');
+const { fetchGlobalBadges, fetchGlobalEmotes, BADGES_URL, EMOTES_URL } = require('../misc/streamdatabase.js');
 
 /**
- * Meldet neue globale Twitch-Badges in den Channels, die es im Dashboard eingeschaltet haben (ninou2, 13.11.2026:
+ * Meldet neue globale Twitch-Badges und Emotes in den Channels, die es im Dashboard eingeschaltet haben (ninou2, 13.11.2026:
  * "command disabled by default, the user enable from the website, add a custom message part"). Standardmaessig aus.
  * Bekannte Badges liegen in Redis; der erste Lauf merkt sich nur den Stand und meldet nichts.
  */
-const STATE_KEY = 'badge-watch:known';
+const SOURCES = [
+	{ kind: 'badge', stateKey: 'badge-watch:known', fetch: fetchGlobalBadges },
+	{ kind: 'emote', stateKey: 'badge-watch:known-emotes', fetch: fetchGlobalEmotes },
+];
 const STATE_TTL = 365 * 864e5;
 const MAX_PER_RUN = 3; // mehr auf einmal = vermutlich Umbau der Seite, nicht echte Neuzugaenge
 
@@ -15,6 +18,11 @@ const newBadges = (badges, known) => (known ? badges.filter((i) => !known.has(i.
 
 const formatBadge = (badge, custom = '') => {
 	const text = `New global Twitch badge: ${badge.title}${badge.description ? ` - ${badge.description}` : ''} (${BADGES_URL})`;
+	return custom ? `${text} ${custom}` : text;
+};
+
+const formatEmote = (emote, custom = '') => {
+	const text = `New global Twitch emote: ${emote.title} (${EMOTES_URL})`;
 	return custom ? `${text} ${custom}` : text;
 };
 
@@ -33,41 +41,55 @@ const enabledChannels = async () => {
 	return result;
 };
 
-const runBadgeWatch = async () => {
-	const badges = await fetchGlobalBadges();
-	const stored = await bot.Redis.getJSON(STATE_KEY).catch(() => null);
+const runSource = async (source, targets) => {
+	const items = await source.fetch();
+	const stored = await bot.Redis.getJSON(source.stateKey).catch(() => null);
 	const known = Array.isArray(stored) ? new Set(stored) : null;
-	const fresh = newBadges(badges, known);
+	const fresh = newBadges(items, known);
 	await bot.Redis.setJSON(
-		STATE_KEY,
-		badges.map((i) => i.key),
+		source.stateKey,
+		items.map((i) => i.key),
 		STATE_TTL,
 	);
 	if (fresh.length === 0) {
 		return 0;
 	} else if (fresh.length > MAX_PER_RUN) {
-		console.warn(`[badge-watch] ${fresh.length} neue Badges auf einmal, uebersprungen (Seite umgebaut?)`);
+		console.warn(`[badge-watch] ${fresh.length} neue ${source.kind}s auf einmal, uebersprungen (Seite umgebaut?)`);
 		return 0;
 	}
 
-	const targets = await enabledChannels();
-	for (const badge of fresh) {
-		console.log(`[badge-watch] Neues Badge: ${badge.key} - ${badge.title} -> ${targets.length} Channel(s)`);
+	const format = source.kind === 'emote' ? formatEmote : formatBadge;
+	for (const item of fresh) {
+		console.log(`[badge-watch] Neues ${source.kind}: ${item.key} - ${item.title} -> ${targets.length} Channel(s)`);
 		for (const { channel, message } of targets) {
-			await bot.Channels.send(channel, formatBadge(badge, message)).catch(() => {});
+			await bot.Channels.send(channel, format(item, message)).catch(() => {});
 		}
 	}
 
 	return fresh.length;
 };
 
+const runBadgeWatch = async () => {
+	const targets = await enabledChannels();
+	let total = 0;
+	for (const source of SOURCES) {
+		// Eine Quelle darf ausfallen, ohne die andere zu blockieren
+		total += await runSource(source, targets).catch((e) => {
+			console.warn(`[badge-watch] ${source.kind}: ${e?.message ?? e}`);
+			return 0;
+		});
+	}
+
+	return total;
+};
+
 module.exports = defineCron({
 	name: 'badge-watch',
 	expression: '0 */10 * * * *',
-	description: 'Announces new global Twitch badges (from streamdatabase.com) in channels that turned it on.',
+	description: 'Announces new global Twitch badges and emotes (from streamdatabase.com) in channels that turned it on.',
 	code: async function badgeWatch() {
 		await runBadgeWatch().catch((e) => console.warn(`[badge-watch] ${e?.message ?? e}`));
 	},
 });
 
-Object.assign(module.exports, { newBadges, formatBadge, runBadgeWatch });
+Object.assign(module.exports, { newBadges, formatBadge, formatEmote, runBadgeWatch });
