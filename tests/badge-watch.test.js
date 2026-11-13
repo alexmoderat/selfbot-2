@@ -92,18 +92,20 @@ test('formatMany: mehrere neue in einer Sammelmeldung, lange Listen werden aufge
 	assert.ok(many.every((m) => m.length < 500));
 });
 
-test('!lastbadge: Anzahl 1-5, Ausgabe einzeln und als Liste', () => {
-	const { parseCount, formatRecent } = require('../src/commands/lastbadge.js');
+test('!badgeinfo: Anzahl 1-5, Badges und Emotes gemischt, neueste zuerst', () => {
+	const { parseCount, mergeRecent, formatRecent } = require('../src/commands/badgeinfo.js');
 	assert.equal(parseCount([]), 1);
 	assert.equal(parseCount(['3']), 3);
 	assert.equal(parseCount(['9']), 5);
 	assert.equal(parseCount(['0']), 1);
 	assert.equal(parseCount(['abc']), 1);
-	const at = new Date(Date.now() - 125 * 60_000).toISOString();
-	const one = formatRecent('badge', [{ title: 'Alpha', description: 'Desc', how: 'watch 30 min', until: '2026-11-15', at }]);
+	const at = (min) => new Date(Date.now() - min * 60_000).toISOString();
+	const merged = mergeRecent([{ title: 'B1', at: at(300) }, { title: 'B2', at: at(120) }], [{ title: 'E1', at: at(125) }], 3);
+	assert.deepEqual(merged.map((i) => `${i.kind}:${i.title}`), ['badge:B2', 'emote:E1', 'badge:B1']);
+	const one = formatRecent([{ kind: 'badge', title: 'Alpha', description: 'Desc', how: 'watch 30 min', until: '2026-11-15', at: at(125) }]);
 	assert.equal(one, 'Last global Twitch badge: Alpha - Desc [watch 30 min, until 2026-11-15] (2h5min ago)');
-	const many = formatRecent('emote', [{ title: 'A', at }, { title: 'B', at }]);
-	assert.equal(many, 'Last 2 global Twitch emotes: A (2h5min ago), B (2h5min ago)');
+	assert.equal(formatRecent([{ kind: 'emote', title: 'Foo', at: at(5) }]), 'Last global Twitch emote: Foo (5min ago)');
+	assert.equal(formatRecent(merged.slice(0, 2)), 'Last 2 global Twitch infos: badge B2 (2h ago), emote E1 (2h5min ago)');
 });
 
 test('badge-history: neueste zuerst, nach KEEP abgeschnitten', async () => {
