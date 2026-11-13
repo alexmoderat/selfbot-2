@@ -106,7 +106,7 @@
     }
     /* ninou2, 13.11.2026: "make the area when u type background grey" */
     #badgeAlertsMessage { background: #2e2e2e; color: #ffffff; } /* ninou2: "text in white when u start typing" */
-    #badgeAlertsMessage[readonly] { background: #232323; color: #adafae; cursor: default; }
+    #badgeAlertsMessage[readonly] { background: #232323; color: #adafae; cursor: default; pointer-events: none; user-select: none; } /* ninou2: "the text area should be unclickable" */
     .nav-item:hover { background: #222222; color: #ffffff; }
     .nav-item.active {
       background: #1f7fb31a; color: #3a9bd0;
@@ -2117,7 +2117,7 @@
       const badgeText = document.getElementById('badgeAlertsMessage');
       if (badgeText && !badgeTextEditing) badgeText.value = s.badgeAlertsMessage ?? '';
       // ninou2, 13.11.2026: Seite oeffnen -> Knopf "Edit", Feld gesperrt; Klick auf Edit -> Knoepfe "Confirm" und "Undo"
-      if (badgeText) badgeText.readOnly = !badgeTextEditing;
+      if (badgeText) { badgeText.readOnly = !badgeTextEditing; badgeText.tabIndex = badgeTextEditing ? 0 : -1; }
       document.getElementById('badgeAlertsEdit').hidden = badgeTextEditing;
       document.getElementById('badgeAlertsConfirm').hidden = !badgeTextEditing;
       document.getElementById('badgeAlertsUndo').hidden = !badgeTextEditing;
