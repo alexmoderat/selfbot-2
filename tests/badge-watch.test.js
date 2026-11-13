@@ -120,3 +120,34 @@ test('badge-history: neueste zuerst, nach KEEP abgeschnitten', async () => {
 	assert.equal((await getRecent('badge', 99)).length, KEEP);
 	assert.deepEqual(await getRecent('emote', 3), []);
 });
+
+test('Tweets: parseTweets (ohne angehefteten und t.co-Links) und parseGlobalTweet', () => {
+	const { parseTweets, parseGlobalTweet } = require('../src/misc/streamdatabase.js');
+	const body = {
+		data: {
+			timeline: [
+				{ id_str: '1', _probably_pinned: true, full_text: 'pinned', created_at: 'Sun Jul 26 17:47:59 +0000 2026' },
+				{ id_str: '2', full_text: 'Twitch global badge added: Silver Chain https://t.co/abc', created_at: 'Fri Nov 13 18:09:25 +0000 2026' },
+				{ id_str: '3', full_text: 'Twitch global badge now available: Jordan\n\nObjective\n- Watch 15 minutes.', created_at: 'Fri Nov 13 20:33:42 +0000 2026' },
+			],
+		},
+	};
+	const tweets = parseTweets(body);
+	assert.deepEqual(tweets.map((i) => i.id), ['3', '2']);
+	assert.equal(tweets[1].text, 'Twitch global badge added: Silver Chain');
+	assert.deepEqual(parseGlobalTweet(tweets[1].text), { kind: 'badge', what: 'added', rest: 'Silver Chain' });
+	assert.equal(parseGlobalTweet(tweets[0].text).what, 'now available');
+	assert.equal(parseGlobalTweet('Learn more:'), null);
+	const { titleOf, formatTweet } = require('../src/crons/tweet-watch.js');
+	assert.equal(titleOf('Jordan x Space Jam Objective - Watch 15 minutes.'), 'Jordan x Space Jam');
+	assert.equal(formatTweet({ id: '9', text: 'Hi' }, 'x'), 'Hi (https://x.com/StreamDatabase/status/9) x');
+});
+
+test('badge-history: wasAnnounced/markAnnounced', async () => {
+	const store = new Map();
+	global.bot.Redis = { getJSON: async (k) => store.get(k) ?? null, setJSON: async (k, v) => store.set(k, v) };
+	const { wasAnnounced, markAnnounced } = require('../src/misc/badge-history.js');
+	assert.equal(await wasAnnounced('added:badge:x'), false);
+	await markAnnounced('added:badge:x');
+	assert.equal(await wasAnnounced('added:badge:x'), true);
+});

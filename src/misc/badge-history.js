@@ -22,4 +22,25 @@ const getRecent = async (kind, count) => {
 	return (Array.isArray(stored) ? stored : []).slice(0, count);
 };
 
-module.exports = { recordRecent, getRecent, KEEP };
+/**
+ * Schon gemeldete Eintraege ("added:badge:silver chain"), damit Tweet und Seite dasselbe Badge nicht doppelt melden:
+ * wer zuerst kommt (meist der Tweet), meldet, der andere bleibt still.
+ */
+const ANNOUNCED_KEY = 'badge-watch:announced';
+const ANNOUNCED_KEEP = 300;
+const ANNOUNCED_TTL = 3 * 864e5;
+
+const wasAnnounced = async (key) => {
+	const stored = await bot.Redis.getJSON(ANNOUNCED_KEY).catch(() => null);
+	return Array.isArray(stored) && stored.includes(key);
+};
+
+const markAnnounced = async (key) => {
+	const stored = await bot.Redis.getJSON(ANNOUNCED_KEY).catch(() => null);
+	const list = Array.isArray(stored) ? stored : [];
+	if (!list.includes(key)) {
+		await bot.Redis.setJSON(ANNOUNCED_KEY, [...list, key].slice(-ANNOUNCED_KEEP), ANNOUNCED_TTL);
+	}
+};
+
+module.exports = { recordRecent, getRecent, wasAnnounced, markAnnounced, KEEP };

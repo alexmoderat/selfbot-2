@@ -1,5 +1,5 @@
 const { defineCron } = require('../clients/modules/timers.js');
-const { recordRecent } = require('../misc/badge-history.js');
+const { recordRecent, wasAnnounced, markAnnounced } = require('../misc/badge-history.js');
 const { fetchGlobalBadges, fetchGlobalEmotes, fetchBadgeEvents, BADGES_URL, EMOTES_URL } = require('../misc/streamdatabase.js');
 
 /**
@@ -100,11 +100,22 @@ const runSource = async (source, getTargets) => {
 		source.kind,
 		fresh.map((i) => ({ title: i.title, description: source.kind === 'badge' ? i.description : '', ...(events.get(i.key) ?? {}) })),
 	).catch((e) => console.warn(`[badge-watch] Verlauf: ${e?.message ?? e}`));
+	// Was der Tweet-Cron schon gemeldet hat, nicht noch einmal melden (und umgekehrt)
+	const toSend = [];
 	for (const item of fresh) {
-		console.log(`[badge-watch] Neues ${source.kind}: ${item.key} - ${item.title} -> ${targets.length} Channel(s)`);
+		const marker = `added:${source.kind}:${item.title.toLowerCase()}`;
+		const already = await wasAnnounced(marker).catch(() => false);
+		console.log(`[badge-watch] Neues ${source.kind}: ${item.key} - ${item.title} -> ${already ? 'schon per Tweet gemeldet' : `${targets.length} Channel(s)`}`);
+		if (!already) {
+			toSend.push(item);
+			await markAnnounced(marker).catch(() => {});
+		}
 	}
 	for (const { channel, message } of targets) {
-		const texts = fresh.length === 1 ? [format(fresh[0], message, events.get(fresh[0].key) ?? null)] : formatMany(source.kind, fresh, message, events);
+		if (toSend.length === 0) {
+			break;
+		}
+		const texts = toSend.length === 1 ? [format(toSend[0], message, events.get(toSend[0].key) ?? null)] : formatMany(source.kind, toSend, message, events);
 		for (const text of texts) {
 			await bot.Channels.send(channel, text).catch(() => {});
 		}
@@ -138,4 +149,4 @@ module.exports = defineCron({
 	},
 });
 
-Object.assign(module.exports, { newBadges, formatBadge, formatEmote, formatMany, runBadgeWatch });
+Object.assign(module.exports, { newBadges, formatBadge, formatEmote, formatMany, runBadgeWatch, enabledChannels });

@@ -130,3 +130,47 @@ module.exports = {
 	fetchGlobalEmotes,
 	fetchBadgeEvents,
 };
+
+/**
+ * Tweets von @StreamDatabase ueber supinics API (alexmoderat, 13.11.2026: "supinic hat ne api"; ninou2: "thats why i prefer
+ * the tweet" - der Tweet kommt frueher als der Eintrag auf der Seite). -> [{ id, text, createdAt }], neueste zuerst, ohne
+ * den angehefteten Tweet. Nur Tweets der Form "Twitch global badge/emote ..." gehoeren zu den Alerts (isGlobalTweet).
+ */
+const TWEETS_URL = 'https://supinic.com/api/twitter/syndication/StreamDatabase';
+
+const parseTweets = (body) => {
+	const timeline = body?.data?.timeline;
+	if (!Array.isArray(timeline)) {
+		throw new Error('Tweet-Liste fehlt');
+	}
+
+	return timeline
+		.filter((i) => i?.id_str && !i._probably_pinned)
+		.map((i) => ({
+			id: String(i.id_str),
+			text: String(i.full_text ?? i.text ?? '')
+				.replaceAll(/https?:\/\/t\.co\/\S+/g, '')
+				.replaceAll(/\s+/g, ' ')
+				.trim(),
+			createdAt: new Date(i.created_at).toISOString(),
+		}))
+		.sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
+};
+
+const fetchTweets = async () => {
+	const response = await got('Global')({ url: TWEETS_URL, responseType: 'json', timeout: { request: 20_000 } });
+	if (!response.ok) {
+		throw new Error(`supinic: HTTP ${response.statusCode}`);
+	}
+
+	return parseTweets(response.body);
+};
+
+/** "Twitch global badge added: X" / "... badge now available: X Objective - ..." / "... emote added: X" */
+const GLOBAL_TWEET = /^Twitch global (?<kind>badge|emote)s? (?<what>added|now available|removed)\s*:\s*(?<rest>.+)$/i;
+const parseGlobalTweet = (text) => {
+	const match = GLOBAL_TWEET.exec(text);
+	return match ? { kind: match.groups.kind.toLowerCase(), what: match.groups.what.toLowerCase(), rest: match.groups.rest.trim() } : null;
+};
+
+Object.assign(module.exports, { TWEETS_URL, parseTweets, fetchTweets, parseGlobalTweet });
