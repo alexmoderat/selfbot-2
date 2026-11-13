@@ -517,6 +517,8 @@
     /* ninou2, 14.11.2026: Times und Added ein Stueck nach links (Abstand zum Delete-Knopf), Ueberschrift MESSAGE mittig, Inhalt etwas nach rechts */
     .notify-table.tweet-times .data-table-head > :nth-child(3) { text-align: center; }
     .notify-table.tweet-times .data-row > :nth-child(3) { padding-left: 10px; }
+    /* Leerer Text: nur das Zeichen "—", mittig in der Spalte und etwas groesser (ninou2, 14.11.2026) */
+    .notify-table.tweet-times .msg-cell.msg-empty { font-size: 22px; line-height: 1; padding-left: 0; text-align: center; }
     .notify-table.tweet-times .data-table-head,
     .notify-table.tweet-times .data-row { grid-column: 1 / -1; grid-template-columns: subgrid; }
     .chan-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -2619,6 +2621,7 @@
       const original = cell.textContent === '—' ? '' : cell.textContent;
       const onclickAttr = cell.getAttribute('onclick');
       cell.removeAttribute('onclick');
+      cell.classList.remove('msg-empty');
       cell.innerHTML = '<span class="msg-edit"><input type="text" maxlength="200" placeholder="added to the alert">'
         + '<button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button></span>';
       const input = cell.querySelector('input');
@@ -2627,7 +2630,7 @@
       let done = false;
       // Nur diese Zelle zuruecksetzen, nie die ganze Tabelle: sonst verschwinden bei mehreren offenen Feldern auch die
       // Knoepfe der anderen (ninou2, 13.11.2026: "if u click NO on one of them, all buttons disapear ... only the YES/NO where u clicked")
-      const close = (text) => { cell.textContent = text || '—'; delete cell.dataset.editing; cell._cancel = null; if (onclickAttr) cell.setAttribute('onclick', onclickAttr); };
+      const close = (text) => { cell.textContent = text || '—'; cell.classList.toggle('msg-empty', !text); delete cell.dataset.editing; cell._cancel = null; if (onclickAttr) cell.setAttribute('onclick', onclickAttr); };
       cell.dataset.editing = '1';
       cell._cancel = () => { done = true; close(original); };
       const save = async () => {
@@ -2747,7 +2750,7 @@
             <div class="data-row">
               <div class="cell-mono">${esc(item.streamer)}</div>
               <div class="cell-muted chan-cell" title="#${esc(item.channel)}">#${esc(item.channel)}</div>
-              <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'title', '${esc(item.streamer)}', '${esc(item.channel)}')">${esc(item.message || '—')}</div>
+              <div class="cell-muted msg-cell${item.message ? '' : ' msg-empty'}" title="Click to edit" onclick="editMessageCell(this, 'title', '${esc(item.streamer)}', '${esc(item.channel)}')">${esc(item.message || '—')}</div>
               <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editTimesCell(this, 'title', '${esc(item.streamer)}', '${esc(item.channel)}', ${Number(item.times) || 1})">${Number(item.times) || 1}×</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
@@ -2810,7 +2813,7 @@
             <div class="data-row">
               <div class="cell-mono">@${esc(item.account)}</div>
               <div class="cell-muted chan-cell" title="#${esc(item.channel)}">#${esc(item.channel)}</div>
-              <div class="cell-muted msg-cell" title="Click to edit" onclick="editMessageCell(this, 'tweet', '${esc(item.account)}', '${esc(item.channel)}')">${esc(item.message || '—')}</div>
+              <div class="cell-muted msg-cell${item.message ? '' : ' msg-empty'}" title="Click to edit" onclick="editMessageCell(this, 'tweet', '${esc(item.account)}', '${esc(item.channel)}')">${esc(item.message || '—')}</div>
               <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editTimesCell(this, 'tweet', '${esc(item.account)}', '${esc(item.channel)}', ${Number(item.times) || 1})">${Number(item.times) || 1}×</div>
               <div class="cell-muted" title="added">${addedDate(item.added)}</div>
               <div class="cell-actions">
