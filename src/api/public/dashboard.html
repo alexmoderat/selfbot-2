@@ -191,6 +191,9 @@
       background: #111111; border: 1px solid #282828; border-radius: 10px;
       padding: 18px 20px; border-top: 3px solid #1f7fb3;
     }
+    /* ninou2, 13.11.2026: "clicking a box should take you to its tab" */
+    .stat-link { cursor: pointer; transition: border-color 0.12s, background 0.12s; }
+    .stat-link:hover, .stat-link:focus-visible { background: #161616; border-color: #1f7fb3; outline: none; }
     .stat-label {
       font-size: 12.5px; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.8px; color: #9a9c9b; margin-bottom: 8px;
@@ -807,33 +810,33 @@
           </div>
         </a>
         <!-- ninou2, 13.11.2026: "i thinnk it was about the active reminders" (die fehlende 5. Kachel), "it be shown as the 1st box to the left" -->
-        <div class="stat-card">
+        <div class="stat-card stat-link" role="link" tabindex="0" onclick="showPage('reminders')" onkeydown="if(event.key==='Enter')showPage('reminders')">
           <div class="stat-label">Reminders</div>
           <div class="stat-value" id="statReminders">—</div>
           <div class="stat-sub">active reminders</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-link" role="link" tabindex="0" onclick="showPage('banphrases')" onkeydown="if(event.key==='Enter')showPage('banphrases')">
           <div class="stat-label">Banphrases</div>
           <div class="stat-value" id="statBanphrases">—</div>
           <div class="stat-sub">active phrases</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-link" role="link" tabindex="0" onclick="showPage('commands')" onkeydown="if(event.key==='Enter')showPage('commands')">
           <div class="stat-label">Custom Commands</div>
           <div class="stat-value" id="statCommands">—</div>
           <div class="stat-sub">custom commands</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-link" role="link" tabindex="0" onclick="showPage('notify')" onkeydown="if(event.key==='Enter')showPage('notify')">
           <div class="stat-label">Live Notify</div>
           <div class="stat-value" id="statNotify">—</div>
           <div class="stat-sub">streamers tracked</div>
         </div>
         <!-- ninou2, 13.11.2026: "the main page website, Title notify box missing" -->
-        <div class="stat-card">
+        <div class="stat-card stat-link" role="link" tabindex="0" onclick="showPage('titlenotify')" onkeydown="if(event.key==='Enter')showPage('titlenotify')">
           <div class="stat-label">Title Notify</div>
           <div class="stat-value" id="statTitle">—</div>
           <div class="stat-sub">streamers tracked</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-link" role="link" tabindex="0" onclick="showPage('banwatch')" onkeydown="if(event.key==='Enter')showPage('banwatch')">
           <div class="stat-label">Ban Watch</div>
           <div class="stat-value" id="statBanwatch">—</div>
           <div class="stat-sub">users watched</div>
