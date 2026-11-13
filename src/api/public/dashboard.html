@@ -724,6 +724,10 @@
           <span class="nav-icon">✏️</span> Title Notify
           <span class="nav-badge" id="navTitleCount">0</span>
         </button>
+        <button class="nav-item" onclick="showPage('tweetnotify')">
+          <span class="nav-icon">🐦</span> Tweet Notify
+          <span class="nav-badge" id="navTweetCount">0</span>
+        </button>
         <button class="nav-item" onclick="showPage('banwatch')">
           <span class="nav-icon">🔨</span> Ban Watch
           <span class="nav-badge" id="navBanwatchCount">0</span>
@@ -837,6 +841,11 @@
           <div class="stat-label">Title Notify</div>
           <div class="stat-value" id="statTitle">—</div>
           <div class="stat-sub">streamers tracked</div>
+        </div>
+        <div class="stat-card stat-link" role="link" tabindex="0" onclick="showPage('tweetnotify')" onkeydown="if(event.key==='Enter')showPage('tweetnotify')">
+          <div class="stat-label">Tweet Notify</div>
+          <div class="stat-value" id="statTweet">—</div>
+          <div class="stat-sub">accounts tracked</div>
         </div>
         <div class="stat-card stat-link" role="link" tabindex="0" onclick="showPage('banwatch')" onkeydown="if(event.key==='Enter')showPage('banwatch')">
           <div class="stat-label">Ban Watch</div>
@@ -1072,6 +1081,28 @@
       <div id="titleList"></div>
     </div>
 
+    <!-- ═══ Tweet Notify ═══ -->
+    <div class="page page-hidden" id="page-tweetnotify">
+      <div class="section-header">
+        <div class="section-title">Tweet Notify <span class="count-pill" id="countTweet">0</span></div>
+      </div>
+      <p class="section-desc">Get pinged in your channel chat with the link when an X/Twitter account posts a new tweet. Same as <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">!tweetnotify &lt;account&gt;</code>. Checked every 2 minutes; retweets and replies are ignored.</p>
+
+      <form class="add-card" id="addTweetForm">
+        <div class="add-card-row">
+          <div class="field">
+            <label>X / Twitter account</label>
+            <input type="text" id="tweetAccount" placeholder="username" required maxlength="100">
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <button type="submit" class="btn btn-primary">+ Add</button>
+          </div>
+        </div>
+      </form>
+
+      <div id="tweetList"></div>
+    </div>
+
     <!-- ═══ Ban Watch ═══ -->
     <div class="page page-hidden" id="page-banwatch">
       <div class="section-header">
@@ -1305,6 +1336,7 @@
       adminSettings: null,
       notify: [],
       titlenotify: [],
+      tweetnotify: [],
       banwatch: [],
       adminChannels: [],
       adminPhrases: [],
@@ -1378,6 +1410,7 @@
       settings: 'Bot Commands',
       notify: 'Live Notify',
       titlenotify: 'Title Notify',
+      tweetnotify: 'Tweet Notify',
       join: 'Join my channel',
       use: 'Use Commands',
       reminders: 'My reminders',
@@ -1446,6 +1479,7 @@
           settings:            loadBotSettings,
           notify:              loadNotify,
           titlenotify:         loadTitleNotify,
+          tweetnotify:         loadTweetNotify,
           banwatch:            loadBanwatch,
           admin:               loadAdminChannels,
           blacklist:           loadBlacklist,
@@ -1888,12 +1922,14 @@
       document.getElementById('statCommands').textContent   = stats.commands;
       document.getElementById('statNotify').textContent     = stats.notify;
       document.getElementById('statTitle').textContent      = stats.titlenotify ?? 0;
+      document.getElementById('statTweet').textContent      = stats.tweetnotify ?? 0;
       document.getElementById('statBanwatch').textContent   = stats.banwatch;
       // also update badges
       document.getElementById('navBanCount').textContent      = stats.banphrases;
       document.getElementById('navCmdCount').textContent      = stats.commands;
       document.getElementById('navNotifyCount').textContent   = stats.notify;
       document.getElementById('navTitleCount').textContent    = stats.titlenotify ?? 0;
+      document.getElementById('navTweetCount').textContent    = stats.tweetnotify ?? 0;
       document.getElementById('navBanwatchCount').textContent = stats.banwatch;
     }
 
@@ -2552,6 +2588,63 @@
       renderTitleNotify();
       document.getElementById('titleStreamer').value = '';
       showToast('Title alert added!', 'success');
+    });
+
+    // ── Tweet Notify ───────────────────────────────────────────────────────────
+    async function loadTweetNotify() {
+      loading('tweetList');
+      const result = await apiFetch('api/tweetnotify');
+      if (result === null) { loadError('tweetList'); return; }
+      data.tweetnotify = result;
+      renderTweetNotify();
+    }
+
+    function renderTweetNotify() {
+      const n = data.tweetnotify.length;
+      document.getElementById('countTweet').textContent    = n;
+      document.getElementById('statTweet').textContent     = n;
+      document.getElementById('navTweetCount').textContent = n;
+      const el = document.getElementById('tweetList');
+      if (!n) {
+        el.innerHTML = buildEmpty('No tweet alerts yet.');
+        return;
+      }
+      el.innerHTML = `
+        <div class="data-table notify-table with-added">
+          <div class="data-table-head"><div>Account</div><div>Pings</div><div>Added</div><div></div></div>
+          ${data.tweetnotify.map(item => `
+            <div class="data-row">
+              <div class="cell-mono">@${esc(item.account)}</div>
+              <div class="cell-muted">@${esc(item.user)}</div>
+              <div class="cell-muted" title="added">${addedDate(item.added)}</div>
+              <div class="cell-actions">
+                <button class="btn btn-danger" onclick="deleteTweetNotify('${esc(item.account)}', '${esc(item.user)}')">Delete</button>
+              </div>
+            </div>`).join('')}
+        </div>`;
+    }
+
+    async function deleteTweetNotify(account, user) {
+      const result = await apiFetch(`api/tweetnotify/${encodeURIComponent(account)}/${encodeURIComponent(user)}`, { method: 'DELETE' });
+      if (result === null) return;
+      data.tweetnotify = result;
+      renderTweetNotify();
+      showToast('Tweet alert removed.', 'success');
+    }
+
+    document.getElementById('addTweetForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const account = document.getElementById('tweetAccount').value.trim();
+      if (!account) return;
+      const result = await apiFetch('api/tweetnotify', {
+        method: 'POST',
+        body: JSON.stringify({ account }),
+      });
+      if (result === null) return;
+      data.tweetnotify = result;
+      renderTweetNotify();
+      document.getElementById('tweetAccount').value = '';
+      showToast('Tweet alert added!', 'success');
     });
 
     // ── Ban Watch ──────────────────────────────────────────────────────────────

@@ -1544,6 +1544,43 @@ module.exports = [
 		],
 	},
 	{
+		table: 'Tweet_Notify',
+		model: 'TweetNotify',
+		collection: 'tweetNotify',
+		comment: 'tweetnotify: User wird im Channel angepingt, wenn ein X/Twitter-Account einen neuen Tweet postet',
+		counter: null,
+		key: ['channel', 'account', 'userAlias'],
+		fields: {
+			channel: {
+				column: 'Channel',
+				type: 'Number',
+				required: true,
+			},
+			account: {
+				column: 'Account',
+				type: 'String',
+				required: true,
+			},
+			userAlias: {
+				column: 'User_Alias',
+				type: 'Number',
+				required: true,
+			},
+			added: {
+				column: 'Added',
+				type: 'Date',
+				required: false,
+				default: 'now',
+			},
+		},
+		indexes: [
+			{
+				fields: ['account'],
+				unique: false,
+			},
+		],
+	},
+	{
 		table: 'Title_Notify_Optout',
 		model: 'TitleNotifyOptout',
 		collection: 'titleNotifyOptout',

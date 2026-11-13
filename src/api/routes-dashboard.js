@@ -7,6 +7,7 @@ const spamDomains = require('../services/spam-domains.js');
 const customCommands = require('../services/custom-commands.js');
 const { partChannel } = require('../services/channel-manager.js');
 const { resolveStreamer, watchStreamer, watchTitle } = require('../services/notifications.js');
+const { cleanHandle, accountExists, HANDLE } = require('../services/tweet-notify.js');
 const sbv2 = require('../database/sbv2.js');
 const { getPrefix } = require('../clients/modules/handler.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
@@ -888,6 +889,70 @@ const createDashboardRouter = () => {
 		}),
 	);
 
+	/* ---------- tweetnotify ---------- */
+	// ninou2, 13.11.2026: "a twitter command, just like the title and live notifications" - wie titlenotify, Alarme gehoeren
+	// je einer Person; neue legt die angemeldete Person fuer sich an, die Channel-Besitzerin kann jeden entfernen.
+	const tweetNotifyRows = async (channel) => {
+		const rows = await bot.DB.TweetNotify.find({ channel: channel.id }).lean();
+		const users = await bot.DB.User.find({ _id: { $in: rows.map((i) => i.userAlias) } }, { name: 1 }).lean();
+		const names = new Map(users.map((i) => [i._id, i.name]));
+		return rows
+			.filter((i) => names.has(i.userAlias))
+			.map((i) => ({ account: i.account, user: names.get(i.userAlias), added: i.added }))
+			.sort((a, b) => a.account.localeCompare(b.account) || a.user.localeCompare(b.user));
+	};
+
+	router.get(
+		'/api/tweetnotify',
+		requireSession,
+		route(async (req, res) => {
+			const channel = sessionChannel(req, res);
+			if (channel) {
+				res.json(await tweetNotifyRows(channel));
+			}
+		}),
+	);
+	router.post(
+		'/api/tweetnotify',
+		requireSession,
+		route(async (req, res) => {
+			const channel = sessionChannel(req, res);
+			if (!channel) {
+				return;
+			}
+			const account = cleanHandle(str(req.body.account));
+			if (!HANDLE.test(account) || !(await accountExists(account))) {
+				res.status(404).json({ error: 'account not found or has no public tweets' });
+				return;
+			}
+			await bot.DB.TweetNotify.updateOne(
+				{ channel: channel.id, account, userAlias: await issuer(req) },
+				{ $setOnInsert: { added: new Date() } },
+				{ upsert: true },
+			);
+			res.json(await tweetNotifyRows(channel));
+		}),
+	);
+	router.delete(
+		'/api/tweetnotify/:account/:user',
+		requireSession,
+		route(async (req, res) => {
+			const channel = sessionChannel(req, res);
+			if (!channel) {
+				return;
+			}
+			const user = await bot.Users.get(req.params.user ?? '');
+			if (user) {
+				await bot.DB.TweetNotify.deleteMany({
+					channel: channel.id,
+					userAlias: user.id,
+					account: cleanHandle(req.params.account),
+				});
+			}
+			res.json(await tweetNotifyRows(channel));
+		}),
+	);
+
 	/* ---------- notify / banwatch ---------- */
 
 	router.get(
@@ -1173,6 +1238,7 @@ const createDashboardRouter = () => {
 				notify: (await notifyRows(channel)).length,
 				// ninou2, 28.10.2026: Zahl am Title-Notify-Tab stand bis zum Anklicken auf 0
 				titlenotify: (await titleNotifyRows(channel)).length,
+				tweetnotify: (await tweetNotifyRows(channel)).length,
 				banwatch: (await banwatchRows(channel)).length,
 			});
 		}),

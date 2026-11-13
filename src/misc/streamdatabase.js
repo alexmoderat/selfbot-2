@@ -157,14 +157,23 @@ const parseTweets = (body) => {
 		.sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
 };
 
-const fetchTweets = async () => {
-	const response = await got('Global')({ url: TWEETS_URL, responseType: 'json', timeout: { request: 20_000 } });
-	if (!response.ok) {
+/** Tweets eines beliebigen Accounts; unbekannter Account (404) = null */
+const fetchTweetsOf = async (account) => {
+	const response = await got('Global')({
+		url: `https://supinic.com/api/twitter/syndication/${encodeURIComponent(account)}`,
+		responseType: 'json',
+		timeout: { request: 20_000 },
+	});
+	if (response.statusCode === 404) {
+		return null;
+	} else if (!response.ok) {
 		throw new Error(`supinic: HTTP ${response.statusCode}`);
 	}
 
 	return parseTweets(response.body);
 };
+
+const fetchTweets = async () => (await fetchTweetsOf('StreamDatabase')) ?? [];
 
 /** "Twitch global badge added: X" / "... badge now available: X Objective - ..." / "... emote added: X" */
 const GLOBAL_TWEET = /^Twitch global (?<kind>badge|emote)s? (?<what>added|now available|removed)\s*:\s*(?<rest>.+)$/i;
@@ -173,4 +182,4 @@ const parseGlobalTweet = (text) => {
 	return match ? { kind: match.groups.kind.toLowerCase(), what: match.groups.what.toLowerCase(), rest: match.groups.rest.trim() } : null;
 };
 
-Object.assign(module.exports, { TWEETS_URL, parseTweets, fetchTweets, parseGlobalTweet });
+Object.assign(module.exports, { TWEETS_URL, parseTweets, fetchTweets, fetchTweetsOf, parseGlobalTweet });
