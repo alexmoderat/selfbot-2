@@ -473,6 +473,13 @@
     :where(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), textarea, select) { background: #2e2e2e; color: #ffffff; border: 1px solid #3a3a3a; }
     .msg-cell { cursor: text; border-radius: 6px; }
     .msg-cell:hover { background: #262626; color: #ffffff; }
+    .msg-edit { align-items: center; display: flex; gap: 6px; }
+    .msg-edit input { flex: 1; min-width: 0; width: auto; }
+    .msg-edit button { border: none; border-radius: 6px; color: #ffffff; cursor: pointer; font-size: 15px; font-weight: 700; height: 30px; line-height: 1; padding: 0; width: 32px; }
+    .msg-edit .msg-yes { background: #1f8a4c; }
+    .msg-edit .msg-yes:hover { background: #26a35b; }
+    .msg-edit .msg-no { background: #b3261e; }
+    .msg-edit .msg-no:hover { background: #d03a31; }
     .msg-cell input { background: #2e2e2e; border: 1px solid #1f7fb3; border-radius: 6px; color: #ffffff; font-size: 15px; padding: 4px 8px; width: 100%; }
     .cell-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
 
@@ -2567,7 +2574,8 @@
       if (cell.querySelector('input')) return;
       const original = cell.textContent === '—' ? '' : cell.textContent;
       cell.removeAttribute('onclick');
-      cell.innerHTML = '<input type="text" maxlength="200" placeholder="added to the alert">';
+      cell.innerHTML = '<span class="msg-edit"><input type="text" maxlength="200" placeholder="added to the alert">'
+        + '<button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button></span>';
       const input = cell.querySelector('input');
       input.value = original;
       input.focus();
@@ -2591,7 +2599,10 @@
         if (e.key === 'Enter') { e.preventDefault(); save(); }
         else if (e.key === 'Escape') { done = true; restore(); }
       });
-      input.addEventListener('blur', save);
+      // ninou2, 13.11.2026: "a small yes a no button should show when u start editing MESSAGE section ... on the right of the box,
+      // yes green no red" - gespeichert wird nur mit dem gruenen Haken (oder Enter), nicht mehr beim Verlassen des Felds
+      cell.querySelector('.msg-yes').addEventListener('click', (e) => { e.stopPropagation(); save(); });
+      cell.querySelector('.msg-no').addEventListener('click', (e) => { e.stopPropagation(); done = true; restore(); });
     }
 
     // ── Loeschen nur mit Bestaetigung ──────────────────────────────────────────
