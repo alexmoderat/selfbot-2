@@ -525,11 +525,16 @@
     /* Live Notify: Streamer, Custom message, Times, Added, Delete */
     .notify-table.live-times .data-table-head,
     .notify-table.live-times .data-row { grid-template-columns: 160px 1fr 60px 80px 80px; }
-    .times-edit { align-items: center; display: flex; gap: 4px; }
-    .times-edit input { width: 46px; padding: 4px 6px; font-size: 15px; border: 1px solid #1f7fb3; border-radius: 6px; }
-    .times-edit button { border: none; border-radius: 6px; color: #ffffff; cursor: pointer; font-size: 14px; font-weight: 700; height: 28px; line-height: 1; padding: 0; width: 26px; }
+    /* Anzahl aendern (ninou2, 14.11.2026: "the yes/no buttons are posted on the right which override the date, move it to the left ...
+       give them the regular yes/no green/red size"): Feld und Knoepfe wachsen nach links ueber die Message-Spalte, nicht ueber Added */
+    .msg-cell:has(.times-edit) { position: relative; }
+    .times-edit { align-items: center; background: #1a1a1a; border-radius: 8px; box-shadow: 0 0 0 1px #282828; display: flex; gap: 6px; padding: 3px; position: absolute; right: 0; top: 50%; transform: translateY(-50%); z-index: 5; }
+    .times-edit input { width: 52px; padding: 4px 6px; font-size: 15px; border: 1px solid #1f7fb3; border-radius: 6px; }
+    .times-edit button { border: none; border-radius: 6px; color: #ffffff; cursor: pointer; font-size: 15px; font-weight: 700; height: 30px; line-height: 1; padding: 0; width: 32px; }
     .times-edit .msg-yes { background: #1f8a4c; }
+    .times-edit .msg-yes:hover { background: #26a35b; }
     .times-edit .msg-no { background: #b3261e; }
+    .times-edit .msg-no:hover { background: #d03a31; }
 
     /* Blacklist: 2 cols */
     .bl-table .data-table-head,
