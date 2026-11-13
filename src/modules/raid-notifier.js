@@ -2,6 +2,7 @@ const { defineChatModule } = require('../clients/modules/chat-modules.js');
 
 const customCommands = require('../services/custom-commands.js');
 const { cleanTimes } = require('../services/tweet-notify.js');
+const { logCommandExecution } = require('../services/log.js');
 
 /**
  * Raid-Event-Ankuendigung (Bot-Konto 883453487, "A Raid Event at Level") -> alle per subraid angemeldeten User
@@ -58,6 +59,28 @@ const getTemplate = async (channel, reminder) => {
 	};
 };
 
+// Jede gepostete Meldung als Aufruf von !raidping / !raidreminder zaehlen, damit die Custom-Commands-Seite die echte Zahl zeigt
+// (ninou2, 14.11.2026: "it should tell how many times it has been posted in the chat ... if its set to x2/x3/x4/x5")
+let selfAlias = null;
+const countPost = async (channel, reminder, text) => {
+	try {
+		selfAlias ??= (await bot.Users.getOrCreate(bot.Twitch.selfName)).ID;
+		logCommandExecution({
+			userId: selfAlias,
+			command: `custom:${channel.id}:${reminder ? 'raidreminder' : 'raidping'}`,
+			channelId: channel.id,
+			invocation: reminder ? 'raidreminder' : 'raidping',
+			arguments: [],
+			executed: new Date(),
+			success: true,
+			result: text,
+			executionTime: null,
+		});
+	} catch (e) {
+		console.warn('[raid-notifier] Zaehlen fehlgeschlagen', e?.message ?? e);
+	}
+};
+
 const pingAll = async (subscribers, reminder) => {
 	let batches = 0;
 	for (const [channelId, users] of subscribers) {
@@ -69,13 +92,16 @@ const pingAll = async (subscribers, reminder) => {
 		for (const text of raidPingMessages(users, template)) {
 			for (let i = 0; i < (times ?? 1); i++) {
 				await bot.Channels.send(channel, text).catch(() => {});
+				await countPost(channel, reminder, text);
 			}
 			batches++;
 		}
 		// ninou2 moechte zweimal gepingt werden (01.08.2026) - bewusst nur dieser eine User; sobald die Anzahl im Dashboard
 		// eingestellt ist, gilt diese und der Einzel-Ping entfaellt
 		if (times === null && channel.name === 'ninou2' && users.includes('ninou2')) {
-			await bot.Channels.send(channel, formatRaidText(template, ['ninou2'], REMINDER_LEAD_S)).catch(() => {});
+			const extra = formatRaidText(template, ['ninou2'], REMINDER_LEAD_S);
+			await bot.Channels.send(channel, extra).catch(() => {});
+			await countPost(channel, reminder, extra);
 		}
 	}
 	return batches;
