@@ -524,6 +524,11 @@
        je Zeile nur der aktive Zustand in Klammern vor dem Text, gleiche Schrift wie die Ueberschrift */
     .raid-legend { letter-spacing: 0.8px; text-transform: none; }
     .raid-state { font-weight: 700; }
+    .raid-legend { position: relative; }
+    .raid-clickable { cursor: pointer; text-decoration: underline dotted; }
+    .raid-reset-pop { background: #1a1a1a; border: 1px solid #333333; border-radius: 8px; bottom: 100%; left: 0; margin-bottom: 4px; padding: 4px 8px; position: absolute; text-transform: none; white-space: nowrap; z-index: 30; }
+    .raid-default-btn { background: none; border: none; cursor: pointer; font-size: inherit; letter-spacing: inherit; padding: 2px 0; width: auto !important; height: auto !important; }
+    .raid-reset-pop .confirm-q { font-size: 12px; margin-right: 4px; }
     .raid-state.default { color: #3a9bd0; }
     .raid-state.custom { color: #e0a030; }
     .raid-tag { background: #1f7fb322; border-radius: 4px; color: #3a9bd0; font-size: 11.5px; font-weight: 700; margin-left: 8px; padding: 1px 6px; text-transform: uppercase; }
@@ -2990,8 +2995,40 @@
     function raidStateLegend(items) {
       const words = [];
       if (items.some(i => !i.custom)) words.push('<span class="raid-state default">Default</span>');
-      if (items.some(i => i.custom)) words.push('<span class="raid-state custom">Custom</span>');
+      if (items.some(i => i.custom)) words.push('<span class="raid-state custom raid-clickable" title="Click to go back to the default message" onclick="raidCustomMenu(this, event)">Custom</span>');
       return `<span class="raid-legend">(${words.join(', ')})</span>`;
+    }
+
+    // (Custom) anklickbar (ninou2, 14.11.2026: "make (custom) clickable that pop up on the top of it (Default). when u click default
+    // u get a yes/no message"): oben erscheint (Default), ein Klick darauf fragt per Haken/Kreuz, dann gehen alle eigenen Texte zurueck
+    function raidCustomMenu(el, event) {
+      event.stopPropagation();
+      const legend = el.closest('.raid-legend');
+      const open = legend.querySelector('.raid-reset-pop');
+      if (open) { open._cancel(); return; }
+      const pop = document.createElement('span');
+      pop.className = 'confirm-box raid-reset-pop';
+      pop.innerHTML = '<button type="button" class="raid-state default raid-default-btn" title="Back to the default message">(Default)</button>';
+      legend.append(pop);
+      const close = () => { document.removeEventListener('click', outside, true); pop.remove(); };
+      const outside = (e) => { if (!pop.contains(e.target)) close(); };
+      document.addEventListener('click', outside, true);
+      pop._cancel = close;
+      pop.querySelector('.raid-default-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        pop.innerHTML = '<span class="confirm-q">Back to default?</span><button type="button" class="msg-yes" title="Yes">✓</button><button type="button" class="msg-no" title="No">✕</button>';
+        pop.querySelector('.msg-no').addEventListener('click', (ev) => { ev.stopPropagation(); close(); });
+        pop.querySelector('.msg-yes').addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          close();
+          let result = null;
+          for (const item of data.raidnotify.items.filter(i => i.custom)) {
+            result = await apiFetch(`api/raidnotify/items/${item.id}`, { method: 'PUT', body: JSON.stringify({ text: null }) });
+            if (result === null) return;
+          }
+          if (result) applyRaidResult(result, 'Back to the default message.');
+        });
+      });
     }
 
     function renderRaidNotify() {
