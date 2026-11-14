@@ -170,6 +170,31 @@ const addUtilityRows = (map, rows) => {
 	return map;
 };
 
+/**
+ * Wann ein Command im Channel zuletzt benutzt wurde (ninou2, 14.11.2026: "add to Bot commands, sort by (last used)") - selfbot
+ * (commandExecutions) und utility-bot (utility_command_executions, Spalte executed_at). -> Map Name -> ISO-Zeit
+ */
+const lastUsedCounts = async (channel) => {
+	const [own, utility] = await Promise.all([
+		bot.DB.CommandExecution.aggregate([{ $match: { channelId: channel.id } }, { $group: { _id: '$command', last: { $max: '$executed' } } }]),
+		sbv2.query(`SELECT command AS Command, MAX(executed_at) AS Last FROM ${UTILITY_TABLE} WHERE channel = ? GROUP BY command`, [channel.name]),
+	]);
+	const map = new Map();
+	const add = (name, value) => {
+		const time = value ? new Date(value).getTime() : Number.NaN;
+		if (!Number.isNaN(time) && time > (map.get(name) ?? 0)) {
+			map.set(name, time);
+		}
+	};
+	for (const row of own) {
+		add(row._id, row.last);
+	}
+	for (const row of utility) {
+		add(ownName(row.Command), row.Last);
+	}
+	return new Map([...map].map(([name, time]) => [name, new Date(time).toISOString()]));
+};
+
 /** Aufrufe je Command ueber alle Channels (ninou2, 07.11.2026: "global" neben den eigenen Uses) */
 const globalUsageCounts = async () => {
 	const [own, utility] = await Promise.all([
@@ -738,7 +763,7 @@ const createDashboardRouter = () => {
 			if (!channel) {
 				return;
 			}
-			const [uses, globalUses] = await Promise.all([usageCounts(channel), globalUsageCounts()]);
+			const [uses, globalUses, lastUsed] = await Promise.all([usageCounts(channel), globalUsageCounts(), lastUsedCounts(channel).catch(() => new Map())]);
 			const levels = (await bot.Channels.getData(channel, 'commandLevels')) ?? {};
 			res.json(
 				[...commands.values()]
@@ -746,6 +771,7 @@ const createDashboardRouter = () => {
 					.map((i) => ({
 						name: i.Name,
 						uses: uses.get(i.Name) ?? 0,
+						lastUsed: lastUsed.get(i.Name) ?? null,
 						globalUses: globalUses.get(i.Name) ?? 0,
 						aliases: i.Aliases,
 						description: i.Description,
@@ -762,6 +788,7 @@ const createDashboardRouter = () => {
 						utilityOnlyCommands().map((i) => ({
 							name: i.Name,
 							uses: uses.get(i.Name) ?? 0,
+							lastUsed: lastUsed.get(i.Name) ?? null,
 							globalUses: globalUses.get(i.Name) ?? 0,
 							aliases: i.Aliases,
 							description: i.Description,
