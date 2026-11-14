@@ -1,6 +1,6 @@
 const { listOrLink } = require('../misc/list-reply.js');
 const { resolveStreamer, watchTitle } = require('../services/notifications.js');
-const { MAX_MESSAGE, MAX_TIMES, cleanMessage, cleanTimes } = require('../services/tweet-notify.js');
+const { MAX_MESSAGE, MAX_TIMES, cleanMessage, cleanTimes, homeChannel } = require('../services/tweet-notify.js');
 
 /**
  * Alarm auf Titelwechsel eines Streamers, aus sb-v2 - Vorwarnung, die meisten setzen den Titel kurz vor dem
@@ -30,7 +30,7 @@ module.exports = {
 
 		const first = clean(args[0]);
 		if (first === 'list') {
-			const list = (await bot.DB.TitleNotify.find({ channel: channel.id, userAlias: user.id }, { streamerLogin: 1 }).lean()).map((i) => i.streamerLogin);
+			const list = (await bot.DB.TitleNotify.find({ userAlias: user.id }, { streamerLogin: 1 }).lean()).map((i) => i.streamerLogin);
 			return {
 				text:
 					list.length > 0
@@ -71,7 +71,7 @@ module.exports = {
 				return { text: `@${display}, Usage: ${msg.invocation} remove <streamer>` };
 			}
 
-			const result = await bot.DB.TitleNotify.deleteMany({ channel: channel.id, userAlias: user.id, streamerLogin: streamer });
+			const result = await bot.DB.TitleNotify.deleteMany({ userAlias: user.id, streamerLogin: streamer });
 			return {
 				text: result.deletedCount > 0 ? `@${display}, title alert for ${streamer} removed.` : `@${display}, you had no alert for ${streamer}.`,
 			};
@@ -107,15 +107,23 @@ module.exports = {
 		}
 		const message = cleanMessage(rawMessage);
 
+		// Gepostet wird im eigenen Channel der Person, nicht im Chat, in dem der Befehl steht (ninou2, 14.11.2026)
+		const home = homeChannel(user);
+		if (!home) {
+			return {
+				text: `@${display}, title alerts are posted in your own channel, but I'm not in #${user.name}. Add me at https://auth.alexmoderat.eu/dashboard first.`,
+			};
+		}
+
 		watchTitle(streamer.id);
 		await bot.DB.TitleNotify.updateOne(
-			{ channel: channel.id, streamerId: streamer.id, userAlias: user.id },
+			{ channel: home.id, streamerId: streamer.id, userAlias: user.id },
 			{ $set: { message, times }, $setOnInsert: { streamerLogin: streamer.login, added: new Date() } },
 			{ upsert: true },
 		);
-		console.log(`[titlenotify] ${user.name} -> ${streamer.login} in #${channel.name}`);
+		console.log(`[titlenotify] ${user.name} -> ${streamer.login} (gepostet in #${home.name}, eingegeben in #${channel.name})`);
 		return {
-			text: `@${display}, ✅ Title alert for ${first} set${times > 1 ? ` (posted ${times}x)` : ''}${message ? ` with your message "${message}"` : ''}. You'll be pinged when they change their title — usually shortly before going live.`,
+			text: `@${display}, ✅ Title alert for ${first} set${home.id === channel.id ? '' : ` (posted in #${home.name})`}${times > 1 ? ` (posted ${times}x)` : ''}${message ? ` with your message "${message}"` : ''}. You'll be pinged when they change their title — usually shortly before going live.`,
 		};
 	},
 };

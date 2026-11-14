@@ -55,3 +55,15 @@ test('Anzahl der Meldungen: 1-5, ungueltig = 1', () => {
 	assert.equal(cleanTimes('0'), 1);
 	assert.equal(cleanTimes('abc'), 1);
 });
+
+test('Alter des Tweets in Klammern', () => {
+	const { agoTag, formatTweetAlert } = require('../src/services/tweet-notify.js');
+	const now = Date.parse('2026-11-14T00:30:00Z');
+	assert.equal(agoTag('2026-11-14T00:19:00Z', now), '[11min ago]');
+	assert.equal(agoTag('2026-11-14T00:29:40Z', now), '[just now]');
+	assert.equal(agoTag('2026-11-13T22:00:00Z', now), '[2h30min ago]');
+	assert.equal(
+		formatTweetAlert(['a'], 'twitch', { id: '1', text: 'hi', createdAt: '2026-11-14T00:19:00Z' }, '', now),
+		'@a — @twitch tweeted: hi [11min ago] https://x.com/twitch/status/1',
+	);
+});

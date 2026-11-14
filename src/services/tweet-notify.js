@@ -1,4 +1,5 @@
 const { fetchTweetsOf } = require('../misc/streamdatabase.js');
+const { fmtLengthShort } = require('../misc/streamer-streak.js');
 
 /**
  * Tweet-Alarme (ninou2, 13.11.2026: "a twitter command, just like the title and live notifications ... track tweets by
@@ -20,9 +21,19 @@ const cleanHandle = (input) =>
 const isStandalone = (tweet) => !/^RT @/.test(tweet.text) && !tweet.text.startsWith('@');
 
 // custom: eigener Zusatztext der Abonnenten (ninou2, 13.11.2026: "add the option to add a custom message with it")
-const formatTweetAlert = (users, account, tweet, custom = '') => {
+// Alter des Tweets in Klammern (ninou2, 14.11.2026: "it didnt tell that the original tweet time was 11min ago" -> "[11min ago]")
+const agoTag = (createdAt, now = Date.now()) => {
+	const ms = now - Date.parse(createdAt);
+	if (Number.isNaN(ms)) {
+		return '';
+	}
+	return ms < 60_000 ? '[just now]' : `[${fmtLengthShort(ms)} ago]`;
+};
+
+const formatTweetAlert = (users, account, tweet, custom = '', now = Date.now()) => {
 	const text = tweet.text.length > TEXT_LIMIT ? `${tweet.text.slice(0, TEXT_LIMIT - 1)}…` : tweet.text;
-	const base = `${users.map((i) => `@${i}`).join(' ')} — @${account} tweeted${text ? `: ${text}` : ''} https://x.com/${account}/status/${tweet.id}`;
+	const age = tweet.createdAt ? agoTag(tweet.createdAt, now) : '';
+	const base = `${users.map((i) => `@${i}`).join(' ')} — @${account} tweeted${text ? `: ${text}` : ''}${age ? ` ${age}` : ''} https://x.com/${account}/status/${tweet.id}`;
 	return custom ? `${base} ${custom}` : base;
 };
 
@@ -63,4 +74,14 @@ const accountExists = async (account) => {
 	return Array.isArray(tweets) && tweets.length > 0;
 };
 
-module.exports = { HANDLE, MAX_MESSAGE, MAX_TIMES, cleanTimes, cleanMessage, cleanHandle, isStandalone, formatTweetAlert, freshTweets, checkAccount, accountExists };
+/**
+ * Alarme werden immer im EIGENEN Channel der Person gepostet, auch wenn der Befehl in einem fremden Chat eingegeben wurde
+ * (ninou2, 14.11.2026: "even if you create a notification in another channel it should only be posted in your own channel ...
+ * so bot does not bother channel's owner if they didn't consent to an action by the bot"). Null = Bot nicht im eigenen Channel.
+ */
+const homeChannel = (user) => {
+	const channel = bot.Channels.get(String(user?.name ?? ''));
+	return channel && channel.mode !== 'Inactive' ? channel : null;
+};
+
+module.exports = { homeChannel, agoTag, HANDLE, MAX_MESSAGE, MAX_TIMES, cleanTimes, cleanMessage, cleanHandle, isStandalone, formatTweetAlert, freshTweets, checkAccount, accountExists };

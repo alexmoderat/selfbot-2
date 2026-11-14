@@ -2,6 +2,7 @@ const { defineCron } = require('../clients/modules/timers.js');
 const { fetchTweets, parseGlobalTweet, eventStatus } = require('../misc/streamdatabase.js');
 const { wasAnnounced, markAnnounced, recordRecent } = require('../misc/badge-history.js');
 const { enabledChannels } = require('./badge-watch.js');
+const { agoTag } = require('../services/tweet-notify.js');
 
 /**
  * Meldet Tweets von @StreamDatabase ueber neue globale Badges/Emotes (ninou2, 13.11.2026: "thats why i prefer the tweet";
@@ -22,7 +23,8 @@ const titleOf = (rest) => rest.split(/\s+(?:Objective|Category|Channel|The event
 const formatTweet = (tweet, custom = '') => {
 	const text = tweet.text.length > TEXT_LIMIT ? `${tweet.text.slice(0, TEXT_LIMIT - 1)}…` : tweet.text;
 	const status = eventStatus(tweet.text);
-	const base = `${text}${status ? ` ${status}` : ''} (https://x.com/StreamDatabase/status/${tweet.id})`;
+	const age = tweet.createdAt ? agoTag(tweet.createdAt) : '';
+	const base = `${text}${status ? ` ${status}` : ''}${age ? ` ${age}` : ''} (https://x.com/StreamDatabase/status/${tweet.id})`;
 	return custom ? `${base} ${custom}` : base;
 };
 

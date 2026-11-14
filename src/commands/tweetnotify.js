@@ -1,5 +1,5 @@
 const { listOrLink } = require('../misc/list-reply.js');
-const { HANDLE, MAX_MESSAGE, MAX_TIMES, cleanHandle, cleanMessage, cleanTimes, accountExists } = require('../services/tweet-notify.js');
+const { HANDLE, MAX_MESSAGE, MAX_TIMES, cleanHandle, cleanMessage, cleanTimes, accountExists, homeChannel } = require('../services/tweet-notify.js');
 
 /**
  * Tweet-Alarm: Ping mit Link, sobald ein X/Twitter-Account einen neuen Tweet postet (ninou2, 13.11.2026: "a twitter command,
@@ -7,7 +7,7 @@ const { HANDLE, MAX_MESSAGE, MAX_TIMES, cleanHandle, cleanMessage, cleanTimes, a
  */
 module.exports = {
 	name: 'tweetnotify',
-	aliases: ['tn2', 'tweetalert', 'twitternotify'],
+	aliases: ['twn', 'tn2', 'tweetalert', 'twitternotify'],
 	cooldown: 3000,
 	description: 'Alerts you with the link when an X/Twitter account posts a new tweet — and pings you.',
 	usage: `tweetnotify <account> [x1-x${MAX_TIMES}] [message] | remove <account> | list`,
@@ -23,7 +23,7 @@ module.exports = {
 
 		const first = cleanHandle(args[0]);
 		if (first === 'list') {
-			const list = (await bot.DB.TweetNotify.find({ channel: channel.id, userAlias: user.id }, { account: 1 }).lean()).map((i) => i.account);
+			const list = (await bot.DB.TweetNotify.find({ userAlias: user.id }, { account: 1 }).lean()).map((i) => i.account);
 			return {
 				text:
 					list.length > 0
@@ -38,7 +38,7 @@ module.exports = {
 				return { text: `@${display}, Usage: ${msg.invocation} remove <account>` };
 			}
 
-			const result = await bot.DB.TweetNotify.deleteMany({ channel: channel.id, userAlias: user.id, account });
+			const result = await bot.DB.TweetNotify.deleteMany({ userAlias: user.id, account });
 			return { text: result.deletedCount > 0 ? `@${display}, tweet alert for ${account} removed.` : `@${display}, you had no tweet alert for ${account}.` };
 		}
 
@@ -63,14 +63,22 @@ module.exports = {
 			return { text: `@${display}, the message is too long (max ${MAX_MESSAGE} characters).` };
 		}
 
+		// Gepostet wird im eigenen Channel der Person, nicht im Chat, in dem der Befehl steht
+		const home = homeChannel(user);
+		if (!home) {
+			return {
+				text: `@${display}, tweet alerts are posted in your own channel, but I'm not in #${user.name}. Add me at https://auth.alexmoderat.eu/dashboard first.`,
+			};
+		}
+
 		await bot.DB.TweetNotify.updateOne(
-			{ channel: channel.id, account: first, userAlias: user.id },
+			{ channel: home.id, account: first, userAlias: user.id },
 			{ $set: { message, times }, $setOnInsert: { added: new Date() } },
 			{ upsert: true },
 		);
-		console.log(`[tweetnotify] ${user.name} -> ${first} in #${channel.name}`);
+		console.log(`[tweetnotify] ${user.name} -> ${first} (gepostet in #${home.name}, eingegeben in #${channel.name})`);
 		return {
-			text: `@${display}, ✅ Tweet alert for ${first} set${times > 1 ? ` (posted ${times}x)` : ''}${message ? ` with your message "${message}"` : ''}. You'll be pinged with the link when they post a new tweet.`,
+			text: `@${display}, ✅ Tweet alert for ${first} set${home.id === channel.id ? '' : ` (posted in #${home.name})`}${times > 1 ? ` (posted ${times}x)` : ''}${message ? ` with your message "${message}"` : ''}. You'll be pinged with the link when they post a new tweet.`,
 		};
 	},
 };
