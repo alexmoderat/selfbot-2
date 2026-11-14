@@ -2,6 +2,7 @@ const { defineCron } = require('../clients/modules/timers.js');
 const { fetchWindows, activeWindows, BADGES_URL } = require('../misc/streamdatabase.js');
 const { wasAnnounced, markAnnounced, recordRecent } = require('../misc/badge-history.js');
 const { enabledChannels } = require('./badge-watch.js');
+const { cleanTimes } = require('../services/tweet-notify.js');
 
 /**
  * Meldet, wenn ein Zeitfenster fuer ein globales Badge beginnt oder neu eingetragen wird (alexmoderat, 14.11.2026, nachdem der
@@ -21,6 +22,33 @@ const formatWindow = (window) =>
 	`Twitch global badge now available: ${window.title}${window.how ? ` [${window.how}]` : ''}${window.event && window.event.toLowerCase() !== window.title.toLowerCase() ? ` (${window.event})` : ''} The event ends ${monthDay(window.endMs)} at ${hhmm(window.endMs)}. (UTC)`;
 
 const withCustom = (text, custom) => (custom ? `${text} ${custom}` : text);
+
+const TWEET_ACCOUNT = 'streamdatabase';
+
+/**
+ * Abonnenten von Tweet Notify fuer @StreamDatabase, je Channel/Text/Anzahl gruppiert. Diese Meldung ersetzt den Tweet, also gilt
+ * ihr eigener Text und ihre Anzahl (ninou2, 14.11.2026: "that is not my custom message, and i have x2 as times to post").
+ */
+const tweetSubscribers = async () => {
+	const rows = await bot.DB.TweetNotify.find({ account: TWEET_ACCOUNT }).lean();
+	const groups = new Map();
+	for (const row of rows) {
+		const user = await bot.Users.get(row.userAlias);
+		const channel = bot.Channels.get(row.channel);
+		if (!user || !channel || channel.mode === 'Inactive') {
+			continue;
+		}
+		const times = cleanTimes(row.times);
+		const key = `${row.channel}\u0000${row.message ?? ''}\u0000${times}`;
+		const group = groups.get(key) ?? { channel, message: row.message ?? '', times, users: [] };
+		group.users.push(user.name);
+		groups.set(key, group);
+	}
+
+	return [...groups.values()];
+};
+
+const formatSubscriberAlert = (users, text, custom) => withCustom(`${users.map((i) => `@${i}`).join(' ')} — @StreamDatabase: ${text}`, custom);
 
 const runEventWatch = async () => {
 	const windows = await fetchWindows();
@@ -60,7 +88,23 @@ const runEventWatch = async () => {
 			? fresh.map(formatWindow)
 			: [`${fresh.length} global Twitch badges now available: ${fresh.map((i) => i.title).join(', ')} (${BADGES_URL})`];
 	console.log(`[event-watch] ${fresh.map((i) => i.title).join(', ')} -> ${targets.length} Channel(s)`);
+	// Tweet-Notify-Abonnenten (eigener Text, Anzahl) bekommen die Meldung wie einen Tweet; in deren Channels entfaellt der Badge-Alert-Text
+	const subscribers = await tweetSubscribers().catch((e) => {
+		console.warn(`[event-watch] Tweet-Notify-Abonnenten: ${e?.message ?? e}`);
+		return [];
+	});
+	const handled = new Set(subscribers.map((i) => i.channel.id));
+	for (const { channel, message, times, users } of subscribers) {
+		for (let n = 0; n < times; n++) {
+			for (const text of texts) {
+				await bot.Channels.send(channel, formatSubscriberAlert(users, text, message)).catch(() => {});
+			}
+		}
+	}
 	for (const { channel, message } of targets) {
+		if (handled.has(channel.id)) {
+			continue;
+		}
 		for (const text of texts) {
 			await bot.Channels.send(channel, withCustom(text, message)).catch(() => {});
 		}
@@ -78,4 +122,4 @@ module.exports = defineCron({
 	},
 });
 
-Object.assign(module.exports, { formatWindow, runEventWatch });
+Object.assign(module.exports, { formatWindow, runEventWatch, tweetSubscribers, formatSubscriberAlert });
