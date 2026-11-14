@@ -526,7 +526,10 @@
     /* ninou2, 14.11.2026: Remove noch kleiner und weiter nach links, die Spalte Notification bleibt wo sie ist (mehr Platz dazwischen) */
     .raid-table .btn-danger { font-size: 11px; margin-left: -8px; padding: 3px 7px; }
     .raid-table .confirm-box button { height: 26px; width: 26px; }
-    .raid-table .raid-off { opacity: .55; }
+    /* ninou2, 14.11.2026: ausgeschaltet bleibt die Zeile bestehen: "Off" wird zu "Disabled" in Rot, die ganze Zeile hellrot hinterlegt */
+    .raid-table .data-row.raid-off { background: rgba(179, 38, 30, 0.16); }
+    .raid-table .data-row.raid-off:hover { background: rgba(179, 38, 30, 0.24); }
+    .raid-table .toggle-pair button.off-red.active { background: #b3261e; color: #ffffff; }
     /* ninou2, 14.11.2026: "default, custom ... show the one active and in it color blue/orange and make it as big as MESSAGE word":
        je Zeile nur der aktive Zustand in Klammern vor dem Text, gleiche Schrift wie die Ueberschrift */
     .raid-legend { letter-spacing: 0.8px; text-transform: none; }
@@ -3053,7 +3056,7 @@
             <div class="data-row${item.on ? '' : ' raid-off'}">
               <div class="cell-actions"><button class="btn btn-danger" onclick="removeRaidItem(${item.id}, this)">Remove</button></div>
               <div class="raid-name"><span>Raid notification ${index + 1}</span>
-                <div class="toggle-pair">${toggleBtn(item.on, 'On', `confirmRaidToggle(this, ${item.id}, true)`)}${toggleBtn(!item.on, 'Off', `confirmRaidToggle(this, ${item.id}, false)`)}</div></div>
+                <div class="toggle-pair">${toggleBtn(item.on, 'On', `confirmRaidToggle(this, ${item.id}, true)`)}<button class="${item.on ? '' : 'active off-red'}" onclick="confirmRaidToggle(this, ${item.id}, false)">${item.on ? 'Off' : 'Disabled'}</button></div></div>
               <div class="cell-muted msg-cell" title="Click to change (${r.minSeconds}-${r.maxSeconds} seconds before the start)" onclick="editRaidCell(this, ${item.id}, 'seconds')">${item.seconds}s</div>
               <div class="cell-muted msg-cell${item.custom ? ' raid-custom' : ''}" title="${item.custom ? 'Custom message' : 'Default message'} - click to edit" onclick="editRaidCell(this, ${item.id}, 'text')">${esc(item.text)}</div>
               <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editRaidCell(this, ${item.id}, 'times')">${item.times}×</div>
