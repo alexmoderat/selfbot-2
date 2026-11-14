@@ -527,7 +527,8 @@
     .raid-legend { position: relative; }
     .raid-clickable { cursor: pointer; text-decoration: underline dotted; }
     .raid-reset-pop { background: #1a1a1a; border: 1px solid #333333; border-radius: 8px; bottom: 100%; left: 0; margin-bottom: 4px; padding: 4px 8px; position: absolute; text-transform: none; white-space: nowrap; z-index: 30; }
-    .raid-default-btn { background: none; border: none; cursor: pointer; font-size: inherit; letter-spacing: inherit; padding: 2px 0; width: auto !important; height: auto !important; }
+    /* ninou2, 14.11.2026: "(default) popup should be the same size as (custom)" - .confirm-box button setzt sonst 15px */
+    .raid-reset-pop .raid-default-btn { background: none; border: none; cursor: pointer; font-size: 11.5px; font-weight: 700; letter-spacing: 0.8px; padding: 2px 0; width: auto; height: auto; }
     .raid-reset-pop .confirm-q { font-size: 12px; margin-right: 4px; }
     .raid-state.default { color: #3a9bd0; }
     .raid-state.custom { color: #e0a030; }
