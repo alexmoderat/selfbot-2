@@ -11,28 +11,31 @@ const { fetchRoleGrant } = require('./mod-since.js');
  */
 
 const BASE = 'https://roles.tv/api';
+// Fallback fuer "in welchen Channels hat User X die Rolle": ttv.tools/docs (alexmoderat, 14.11.2026), eigene Daten,
+// andere Parameternamen (perPage statt per_page), Route /roles/<rolle>/<login>
+const TTV_BASE = 'https://ttv.tools/api';
 const PER_PAGE = 100;
 const MAX_PAGES = 100; // = 10.000 Eintraege
 const TIMEOUT_MS = 10_000;
 
-const paginate = async (path) => {
+const paginate = async (path, { base = BASE, source = 'roles.tv', perPageParam = 'per_page' } = {}) => {
 	const entries = [];
 	let cursor = null;
 	let total = 0;
 	for (let page = 0; page < MAX_PAGES; page++) {
 		const response = await got('Global')({
-			url: `${BASE}${path}`,
-			searchParams: { per_page: PER_PAGE, ...(cursor ? { after: cursor } : {}) },
+			url: `${base}${path}`,
+			searchParams: { [perPageParam]: PER_PAGE, ...(cursor ? { after: cursor } : {}) },
 			headers: { 'User-Agent': 'alexmoderat-bot' },
 			timeout: { request: TIMEOUT_MS },
 		}).catch((e) => {
-			throw new Error(`roles.tv ${path} fehlgeschlagen: ${e instanceof Error ? e.message : String(e)}`);
+			throw new Error(`${source} ${path} fehlgeschlagen: ${e instanceof Error ? e.message : String(e)}`);
 		});
 
 		if (response.statusCode === 404) {
 			return null;
 		} else if (!response.ok || typeof response.body !== 'object') {
-			throw new Error(`roles.tv ${path} fehlgeschlagen: HTTP ${response.statusCode}`);
+			throw new Error(`${source} ${path} fehlgeschlagen: HTTP ${response.statusCode}`);
 		}
 
 		total = response.body.total ?? total;
@@ -54,10 +57,10 @@ const paginate = async (path) => {
 	}
 
 	if (cursor) {
-		throw new Error(`roles.tv ${path}: Seitenlimit (${MAX_PAGES} Seiten) erreicht - Liste unvollstaendig`);
+		throw new Error(`${source} ${path}: Seitenlimit (${MAX_PAGES} Seiten) erreicht - Liste unvollstaendig`);
 	}
 	if (entries.length < total * 0.9) {
-		throw new Error(`roles.tv ${path}: nur ${entries.length}/${total} Eintraege erhalten`);
+		throw new Error(`${source} ${path}: nur ${entries.length}/${total} Eintraege erhalten`);
 	}
 
 	return { entries, total };
@@ -67,7 +70,15 @@ const paginate = async (path) => {
 const fetchChannelRoleList = (channel, role) => paginate(`/stats/channel/${role}/login/${encodeURIComponent(channel.toLowerCase())}`);
 
 /** In welchen Channels der User diese Rolle hat */
-const fetchUserRoleList = (login, role) => paginate(`/stats/user/${role}/login/${encodeURIComponent(login.toLowerCase())}`);
+const fetchUserRoleList = async (login, role) => {
+	const name = encodeURIComponent(login.toLowerCase());
+	try {
+		return await paginate(`/stats/user/${role}/login/${name}`);
+	} catch {
+		// roles.tv down -> ttv.tools; scheitert auch das, kommt dessen Fehler hoch
+		return paginate(`/roles/${role}/${name}`, { base: TTV_BASE, source: 'ttv.tools', perPageParam: 'perPage' });
+	}
+};
 
 /** Rollenliste eines Channels live von roles.tv; null = Channel unbekannt */
 const getChannelRoles = async (channelRaw, role) => {
