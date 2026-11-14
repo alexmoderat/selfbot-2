@@ -551,6 +551,12 @@
     .msg-edit .msg-def { background: #333333; border: none; border-radius: 6px; color: #ffffff; cursor: pointer; font-size: 13px; font-weight: 600; height: 30px; padding: 0 8px; width: auto; }
     .msg-edit .msg-def:hover { background: #444444; }
 
+    /* Name/Cooldown direkt in der Tabelle: Feld in der Groesse des Texts, Haken/Kreuz darunter (Name) bzw. rechts (Cooldown) */
+    .cmd-inline { align-items: center; display: flex; gap: 2px; height: 100%; }
+    .cmd-inline input { box-sizing: border-box; font: inherit; height: 100%; min-width: 0; padding: 0 3px; width: 100%; }
+    .cmd-pop { position: absolute; z-index: 20; }
+    .cmd-pop-below { left: 0; top: 100%; margin-top: 4px; }
+    .cmd-pop-right { left: 100%; margin-left: 6px; top: 50%; transform: translateY(-50%); }
     /* Custom Commands: Bearbeiten in der Zeile, Spalten bleiben stehen */
     .cmd-edit-row { align-items: start; }
     .cmd-edit-name { align-items: center; display: flex; gap: 2px; }
@@ -2249,15 +2255,25 @@
       if (!cmd) return;
       const original = field === 'name' ? String(cmd.name).replace(/^!/, '') : field === 'cooldown' ? String(cmd.cooldown ?? 5) : cmd.response;
       const html = cell.innerHTML;
+      const styleBefore = cell.getAttribute('style');
       const onclickAttr = cell.getAttribute('onclick');
       cell.removeAttribute('onclick');
-      cell.innerHTML = `<span class="msg-edit">${field === 'name' ? '<span class="cmd-edit-bang">!</span>' : ''}<input type="${field === 'cooldown' ? 'number' : 'text'}" ${field === 'cooldown' ? 'min="0" max="3600" style="width:64px"' : field === 'name' ? 'maxlength="30"' : 'maxlength="500"'}><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button></span>`;
+      const buttons = '<button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button>';
+      if (field === 'response') {
+        cell.innerHTML = `<span class="msg-edit"><input type="text" maxlength="500">${buttons}</span>`;
+      } else {
+        // Name und Sekunden behalten ihre Groesse (ninou2, 14.11.2026: "when u click them dont make them change size"); Haken/Kreuz
+        // erscheinen beim Namen darunter, beim Cooldown rechts daneben (ohne den Platz der Zeile zu veraendern)
+        const rect = cell.getBoundingClientRect();
+        cell.style.cssText += `;position:relative;width:${Math.max(rect.width, field === 'cooldown' ? 34 : 0)}px;height:${rect.height}px;display:inline-block;box-sizing:border-box`;
+        cell.innerHTML = `<span class="cmd-inline">${field === 'name' ? '<span class="cmd-edit-bang">!</span>' : ''}<input type="text" ${field === 'cooldown' ? 'inputmode="numeric" maxlength="4"' : 'maxlength="30"'}></span><span class="confirm-box cmd-pop ${field === 'name' ? 'cmd-pop-below' : 'cmd-pop-right'}">${buttons}</span>`;
+      }
       const input = cell.querySelector('input');
       input.value = original;
       input.focus();
       input.select();
       let done = false;
-      const close = () => { cell.innerHTML = html; delete cell.dataset.editing; cell._cancel = null; if (onclickAttr) cell.setAttribute('onclick', onclickAttr); };
+      const close = () => { cell.innerHTML = html; if (styleBefore === null) cell.removeAttribute('style'); else cell.setAttribute('style', styleBefore); delete cell.dataset.editing; cell._cancel = null; if (onclickAttr) cell.setAttribute('onclick', onclickAttr); };
       cell.dataset.editing = '1';
       cell._cancel = () => { done = true; close(); };
       const save = async () => {
