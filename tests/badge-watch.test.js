@@ -103,9 +103,9 @@ test('!badgeinfo: Anzahl 1-5, Badges und Emotes gemischt, neueste zuerst', () =>
 	const merged = mergeRecent([{ title: 'B1', at: at(300) }, { title: 'B2', at: at(120) }], [{ title: 'E1', at: at(125) }], 3);
 	assert.deepEqual(merged.map((i) => `${i.kind}:${i.title}`), ['badge:B2', 'emote:E1', 'badge:B1']);
 	const one = formatRecent([{ kind: 'badge', title: 'Alpha', description: 'Desc', how: 'watch 30 min', until: '2026-11-15', at: at(125) }]);
-	assert.equal(one, 'Last global Twitch badge: Alpha - Desc [watch 30 min, until 2026-11-15] (2h5min ago)');
+	assert.equal(one, 'Last global Twitch badge: Alpha - Desc [watch 30 min, until 2026-11-15] (2h 5min ago)');
 	assert.equal(formatRecent([{ kind: 'emote', title: 'Foo', at: at(5) }]), 'Last global Twitch emote: Foo (5min ago)');
-	assert.equal(formatRecent(merged.slice(0, 2)), 'Last 2 global Twitch infos: badge B2 (2h0min ago), emote E1 (2h5min ago)');
+	assert.equal(formatRecent(merged.slice(0, 2)), 'Last 2 global Twitch infos: badge B2 (2h 0min ago), emote E1 (2h 5min ago)');
 });
 
 test('badge-history: neueste zuerst, nach KEEP abgeschnitten', async () => {
@@ -156,7 +156,7 @@ test('!badgeinfo: Verfuegbarkeits-Tweet mit Link', () => {
 	const merged = mergeRecent([{ title: 'B', at: at(60) }], [], 2, [tweet]);
 	assert.deepEqual(merged.map((i) => i.kind), ['tweet', 'badge']);
 	assert.equal(formatRecent([merged[0]]), 'Last global Twitch info: Twitch global badge now available: Jordan https://x.com/StreamDatabase/status/1 (10min ago)');
-	assert.ok(formatRecent(merged).includes('tweet https://x.com/StreamDatabase/status/1 (10min ago), badge B (1h0min ago)'));
+	assert.ok(formatRecent(merged).includes('tweet https://x.com/StreamDatabase/status/1 (10min ago), badge B (1h 0min ago)'));
 });
 
 test('Zeitfenster: [AVAILABLE!] solange offen, [ENDED!] danach', () => {

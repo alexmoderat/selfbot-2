@@ -201,12 +201,12 @@ function fmtDateTimeUtc(iso) {
 
 const hhmm = (d) => `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
 
-/** "6h20min" / "59min" (ohne Leerzeichen, wie ninou2 es vorgeschlagen hat). */
+/** "6h 20min" / "59min" (Leerzeichen zwischen Stunden und Minuten; ninou2, 14.11.2026: "make it always space between hours and minutes"). */
 function fmtLengthShort(ms) {
 	const totalMin = Math.max(0, Math.floor(ms / 60_000));
 	const h = Math.floor(totalMin / 60);
 	const m = totalMin % 60;
-	return h > 0 ? `${h}h${m}min` : `${m}min`;
+	return h > 0 ? `${h}h ${m}min` : `${m}min`;
 }
 
 /**
