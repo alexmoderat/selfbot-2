@@ -530,7 +530,7 @@
     /* ninou2, 14.11.2026: Remove noch kleiner und weiter nach links, die Spalte Notification bleibt wo sie ist (mehr Platz dazwischen) */
     .raid-table .btn-danger { font-size: 11px; margin-left: -8px; padding: 3px 7px; }
     .raid-table .confirm-box button { height: 26px; width: 26px; }
-    /* ninou2, 14.11.2026: ausgeschaltet bleibt die Zeile bestehen: "Off" wird zu "Disabled" in Rot, die ganze Zeile hellrot hinterlegt */
+    /* ninou2, 14.11.2026: ausgeschaltet bleibt die Zeile bestehen: "OFF" in Rot, die ganze Zeile hellrot hinterlegt */
     .raid-table .data-row.raid-off { background: rgba(179, 38, 30, 0.16); }
     .raid-table .data-row.raid-off:hover { background: rgba(179, 38, 30, 0.24); }
     .raid-table .toggle-pair button.off-red.active { background: #b3261e; color: #ffffff; }
@@ -3079,7 +3079,7 @@
             <div class="data-row${item.on ? '' : ' raid-off'}">
               <div class="cell-actions"><button class="btn btn-danger" onclick="removeRaidItem(${item.id}, this)">Remove</button></div>
               <div class="raid-name"><span>Raid notification ${index + 1}</span>
-                <div class="toggle-pair">${toggleBtn(item.on, 'On', `confirmRaidToggle(this, ${item.id}, true)`)}<button class="${item.on ? '' : 'active off-red'}" onclick="confirmRaidToggle(this, ${item.id}, false)">${item.on ? 'Off' : 'Disabled'}</button></div></div>
+                <div class="toggle-pair">${toggleBtn(item.on, 'ON', `setRaidItem(${item.id}, { on: true })`)}<button class="${item.on ? '' : 'active off-red'}" onclick="setRaidItem(${item.id}, { on: false })">OFF</button></div></div>
               <div class="cell-muted msg-cell" title="Click to change (${r.minSeconds}-${r.maxSeconds} seconds before the start)" onclick="editRaidCell(this, ${item.id}, 'seconds')">${item.seconds}s</div>
               <div class="cell-muted msg-cell${item.custom ? ' raid-custom' : ''}" title="${item.custom ? 'Custom message' : 'Default message'} - click to edit" onclick="editRaidCell(this, ${item.id}, 'text')">${esc(item.text)}</div>
               <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editRaidCell(this, ${item.id}, 'times')">${item.times}×</div>
@@ -3104,32 +3104,6 @@
       }
       renderRaidNotify();
       if (message) showToast(message, 'success');
-    }
-
-    // On/Off erst nach Bestaetigung (ninou2, 14.11.2026: "make also clicking ON/OFF show the yes/no message"): der Schalter wird
-    // durch Haken und Kreuz ersetzt, nach 8 s oder beim Seitenwechsel kommt er von selbst zurueck
-    function confirmRaidToggle(button, id, on) {
-      const item = data.raidnotify?.items.find(i => i.id === id);
-      if (!item || item.on === on) return;
-      const pair = button.closest('.toggle-pair');
-      if (!pair || pair.dataset.asking === '1') return;
-      pair.dataset.asking = '1';
-      const box = document.createElement('span');
-      box.className = 'confirm-box';
-      box.innerHTML = `<button type="button" class="msg-yes" title="Switch ${on ? 'on' : 'off'}">✓</button><button type="button" class="msg-no" title="Keep it">✕</button>`;
-      pair.style.display = 'none';
-      pair.after(box);
-      const restore = () => { clearTimeout(timer); box.remove(); pair.style.display = ''; pair.dataset.asking = ''; };
-      const timer = setTimeout(restore, 8000);
-      box._cancel = restore;
-      box.querySelector('.msg-no').addEventListener('click', (e) => { e.stopPropagation(); restore(); });
-      box.querySelector('.msg-yes').addEventListener('click', (e) => {
-        e.stopPropagation();
-        restore();
-        const anchor = pair.parentElement;
-        if (!on && wouldTurnOffRaid(id)) askRaidOff(anchor, () => setRaidItem(id, { on }));
-        else setRaidItem(id, { on });
-      });
     }
 
     async function setRaidItem(id, fields, message) {
