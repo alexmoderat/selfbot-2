@@ -81,7 +81,14 @@ const channelSettings = async (channel) => ({
 	badgeAlertsMessage: (await bot.Channels.getData(channel, 'badgeAlerts'))?.message ?? '',
 	// Raid Notify (ninou2, 14.11.2026): standardmaessig aus, danach erscheint der Punkt Raid Notify in den Notifications
 	raidNotify: (await raidNotifier.getConfig(channel)).enabled,
+	raidNotifyActive: await raidActiveCount(channel),
 });
+
+// Zahl der eingeschalteten Raid-Benachrichtigungen (0, wenn Raid Notify aus ist) fuer die Seitenleiste
+const raidActiveCount = async (channel) => {
+	const config = await raidNotifier.getConfig(channel);
+	return config.enabled ? config.items.filter((i) => i.on).length : 0;
+};
 
 const applyChannelSettings = async (req, channel) => {
 	const { commandsAllowed, moderation, crossban, sevenTvAccess, badgeAlerts, badgeAlertsMessage, raidNotify } = req.body;
@@ -1397,6 +1404,7 @@ const createDashboardRouter = () => {
 				tweetnotify: (await tweetNotifyRows(await issuer(req))).length,
 				banwatch: (await banwatchRows(channel)).length,
 				raidNotify: (await raidNotifier.getConfig(channel)).enabled,
+				raidNotifyActive: await raidActiveCount(channel),
 			});
 		}),
 	);

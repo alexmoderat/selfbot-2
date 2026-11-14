@@ -205,6 +205,8 @@
     .stat-sub { font-size: 14px; color: #777777; margin-top: 4px; }
     #page-overview { max-width: none; padding-top: 20px; }
     #page-use { max-width: none; padding: 0; }
+    /* ninou2, 14.11.2026: "make the table more width", "add 1/4 of its current size to the total size" (900 -> 1125 px) */
+    #page-raidnotify { max-width: 1125px; }
     #page-reminders { max-width: 1156px; } /* ninou2, 08.11.2026: "make REMINDER size [a bit] smaller", danach "more smaller" */
     /* ninou2, 07.11.2026: "should be the same space between WHEN, WHERE, CREATED, REMOVE" - eine Tabelle (subgrid), die
        Spalten sind so breit wie ihr laengster Inhalt, dazwischen ueberall derselbe Abstand */
@@ -792,6 +794,7 @@
         </button>
         <button class="nav-item" id="navRaidNotify" style="display:none" onclick="showPage('raidnotify')">
           <span class="nav-icon">⚔️</span> Raid Notify
+          <span class="nav-badge" id="navRaidCount">0</span>
         </button>
         <button class="nav-item" onclick="showPage('banwatch')">
           <span class="nav-icon">🔨</span> Ban Watch
@@ -2042,7 +2045,7 @@
       document.getElementById('statNotify').textContent     = stats.notify;
       document.getElementById('statTitle').textContent      = stats.titlenotify ?? 0;
       document.getElementById('statTweet').textContent      = stats.tweetnotify ?? 0;
-      updateRaidNav(stats.raidNotify === true);
+      updateRaidNav(stats.raidNotify === true, stats.raidNotifyActive ?? 0);
       document.getElementById('statBanwatch').textContent   = stats.banwatch;
       // also update badges
       document.getElementById('navBanCount').textContent      = stats.banphrases;
@@ -2279,7 +2282,7 @@
       document.getElementById('toggleRaidNotify').innerHTML =
         toggleBtn(!s.raidNotify, 'Off', `setChannelSetting('raidNotify', false)`) +
         toggleBtn(s.raidNotify,  'On',  `setChannelSetting('raidNotify', true)`);
-      updateRaidNav(s.raidNotify);
+      updateRaidNav(s.raidNotify, s.raidNotifyActive ?? 0);
       document.getElementById('toggleBadgeAlerts').innerHTML =
         toggleBtn(!s.badgeAlerts, 'Off', `setChannelSetting('badgeAlerts', false)`) +
         toggleBtn(s.badgeAlerts,  'On',  `setChannelSetting('badgeAlerts', true)`);
@@ -2938,9 +2941,11 @@
 
     // ── Raid Notify ────────────────────────────────────────────────────────────
     // Der Punkt in der Seitenleiste erscheint erst, wenn Raid Notify unter Bot Commands eingeschaltet ist (ninou2, 14.11.2026)
-    function updateRaidNav(enabled) {
+    function updateRaidNav(enabled, active) {
       const nav = document.getElementById('navRaidNotify');
       if (!nav || guestMode) return;
+      // Zahl der eingeschalteten Benachrichtigungen neben dem Namen (ninou2, 14.11.2026)
+      if (active !== undefined) document.getElementById('navRaidCount').textContent = enabled ? active : 0;
       raidNavKnown = true;
       if (!enabled && currentPage === 'raidnotify') showPage('overview');
       nav.style.display = enabled ? '' : 'none';
@@ -2959,6 +2964,7 @@
       const r = data.raidnotify;
       if (!r) return;
       document.getElementById('countRaid').textContent = r.items.length;
+      document.getElementById('navRaidCount').textContent = r.items.filter(i => i.on).length;
       document.getElementById('countRaidSubs').textContent = r.subscribers.length;
       document.getElementById('raidAddButton').style.display = r.items.length >= r.maxItems ? 'none' : '';
       document.getElementById('raidList').innerHTML = r.items.length ? `
