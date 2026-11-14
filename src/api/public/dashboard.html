@@ -520,10 +520,11 @@
     .raid-table .btn-danger { font-size: 11px; margin-left: -8px; padding: 3px 7px; }
     .raid-table .confirm-box button { height: 26px; width: 26px; }
     .raid-table .raid-off { opacity: .55; }
-    /* ninou2, 14.11.2026: "default, custom words should be near MESSAGE in between ( )" - Hinweis in der Ueberschrift; je Zeile zeigt
-       eigener Text weiss, Standardtext grau */
-    .raid-legend { font-weight: 600; letter-spacing: 0; text-transform: none; }
-    .raid-table .msg-cell.raid-custom { color: #ffffff; }
+    /* ninou2, 14.11.2026: "default, custom ... show the one active and in it color blue/orange and make it as big as MESSAGE word":
+       je Zeile nur der aktive Zustand in Klammern vor dem Text, gleiche Schrift wie die Ueberschrift */
+    .raid-state { font-size: 11.5px; font-weight: 700; letter-spacing: 0.8px; margin-right: 4px; text-transform: uppercase; }
+    .raid-state.default { color: #3a9bd0; }
+    .raid-state.custom { color: #e0a030; }
     .raid-tag { background: #1f7fb322; border-radius: 4px; color: #3a9bd0; font-size: 11.5px; font-weight: 700; margin-left: 8px; padding: 1px 6px; text-transform: uppercase; }
     .raid-tag.custom { background: #8a5a1f33; color: #d9a24a; }
     .msg-edit .msg-def { background: #333333; border: none; border-radius: 6px; color: #ffffff; cursor: pointer; font-size: 13px; font-weight: 600; height: 30px; padding: 0 8px; width: auto; }
@@ -2992,14 +2993,14 @@
       document.getElementById('raidAddButton').style.display = r.items.length >= r.maxItems ? 'none' : '';
       document.getElementById('raidList').innerHTML = r.items.length ? `
         <div class="data-table raid-table">
-          <div class="data-table-head"><div></div><div>Notification</div><div>Time</div><div>Message <span class="raid-legend">(default, custom)</span></div><div>Times</div></div>
+          <div class="data-table-head"><div></div><div>Notification</div><div>Time</div><div>Message</div><div>Times</div></div>
           ${r.items.map((item, index) => `
             <div class="data-row${item.on ? '' : ' raid-off'}">
               <div class="cell-actions"><button class="btn btn-danger" onclick="removeRaidItem(${item.id}, this)">Remove</button></div>
               <div class="raid-name"><span>Raid notification ${index + 1}</span>
                 <div class="toggle-pair">${toggleBtn(item.on, 'On', `confirmRaidToggle(this, ${item.id}, true)`)}${toggleBtn(!item.on, 'Off', `confirmRaidToggle(this, ${item.id}, false)`)}</div></div>
               <div class="cell-muted msg-cell" title="Click to change (${r.minSeconds}-${r.maxSeconds} seconds before the start)" onclick="editRaidCell(this, ${item.id}, 'seconds')">${item.seconds}s</div>
-              <div class="cell-muted msg-cell${item.custom ? ' raid-custom' : ''}" title="${item.custom ? 'Custom message' : 'Default message'} - click to edit" onclick="editRaidCell(this, ${item.id}, 'text')">${esc(item.text)}</div>
+              <div class="cell-muted msg-cell${item.custom ? ' raid-custom' : ''}" title="${item.custom ? 'Custom message' : 'Default message'} - click to edit" onclick="editRaidCell(this, ${item.id}, 'text')"><span class="raid-state ${item.custom ? 'custom' : 'default'}">(${item.custom ? 'custom' : 'default'})</span> ${esc(item.text)}</div>
               <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editRaidCell(this, ${item.id}, 'times')">${item.times}×</div>
             </div>`).join('')}
         </div>` : buildEmpty('No raid notifications.');
