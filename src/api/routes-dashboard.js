@@ -1074,6 +1074,22 @@ const createDashboardRouter = () => {
 			return tooMany ? `At most ${raidNotifier.MAX_ITEMS} raid notifications.` : null;
 		}),
 	);
+	router.post(
+		'/api/raidnotify/test',
+		requireSession,
+		route(async (req, res) => {
+			const channel = sessionChannel(req, res);
+			if (!channel) {
+				return;
+			}
+			const result = await raidNotifier.sendTest(channel, req.sess?.username ?? channel.name);
+			if (result.error) {
+				res.status(400).json({ error: result.error });
+				return;
+			}
+			res.json(result);
+		}),
+	);
 	router.put(
 		'/api/raidnotify/items/:id',
 		requireSession,

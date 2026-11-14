@@ -119,3 +119,17 @@ test('Zaehler je Zeit bleibt beim Entfernen und erneuten Anlegen erhalten, Start
 	await raid.updateItems(channel, (items) => [...items, raid.newItem(3, 53)]);
 	assert.deepEqual((await raid.getConfig(channel)).uses, { 53: 3, 120: 1 });
 });
+
+test('Probelauf: nur der Testende wird erwaehnt, Zaehler bleibt, 30 s Sperre', async () => {
+	reset();
+	const testChannel = { id: 'c-test', name: 'tester', mode: 'Write' };
+	await raid.setEnabled(testChannel, true);
+	const first = await raid.sendTest(testChannel, 'ninou2');
+	assert.deepEqual(first, { sent: 1 });
+	assert.match(sent[0], /^@ninou2 ⚡ Raid is happening!.*120 seconds! ⚡$/);
+	assert.doesNotMatch(sent[0], /alice|bob/);
+	assert.deepEqual((await raid.getConfig(testChannel)).uses, {});
+	const again = await raid.sendTest(testChannel, 'ninou2');
+	assert.match(again.error, /wait/);
+	assert.equal(sent.length, 1);
+});

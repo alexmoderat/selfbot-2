@@ -1252,7 +1252,8 @@
       <p class="section-desc">Each row is one message to everyone who joined with <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">!subraid</code> in your channel. <b>Time</b> is how many seconds before the raid starts it is posted (120 = right when it is announced). Click Time, Message or Times to change them. Use <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{users}</code> for the names and <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{seconds}</code> for the seconds left. If you switch all of them off or remove them, Raid Notify turns itself off.</p>
 
       <div id="raidList"></div>
-      <div style="margin-top:10px"><button type="button" class="btn btn-primary" id="raidAddButton" style="font-size:12px;padding:5px 11px" onclick="addRaidItem()">+ Add notification</button></div>
+      <div style="margin-top:10px"><button type="button" class="btn btn-primary" id="raidAddButton" style="font-size:12px;padding:5px 11px" onclick="addRaidItem()">+ Add notification</button>
+        <button type="button" class="btn btn-cancel" id="raidTestButton" style="font-size:12px;padding:5px 11px;margin-left:6px" title="Posts every active notification once in your chat, mentioning only you" onclick="sendRaidTest(this)">Send test</button></div>
 
       <div class="section-title" style="margin:18px 0 8px">Subscribers <span class="count-pill" id="countRaidSubs">0</span></div>
       <div id="raidSubs"></div>
@@ -3110,6 +3111,14 @@
       const result = await apiFetch(`api/raidnotify/items/${id}`, { method: 'PUT', body: JSON.stringify(fields) });
       if (result === null) return;
       applyRaidResult(result, message ?? 'Saved.');
+    }
+
+    async function sendRaidTest(button) {
+      button.disabled = true;
+      const result = await apiFetch('api/raidnotify/test', { method: 'POST', body: '{}' });
+      setTimeout(() => { button.disabled = false; }, 3000);
+      if (result === null) return;
+      showToast(`Test sent (${result.sent} message${result.sent === 1 ? '' : 's'}, only you are mentioned).`, 'success');
     }
 
     async function addRaidItem() {

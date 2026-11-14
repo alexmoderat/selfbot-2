@@ -200,6 +200,40 @@ const runRaid = async (subscribers, duration) => {
 	return batches;
 };
 
+const lastTest = new Map();
+const TEST_COOLDOWN_MS = 30_000;
+const TEST_GAP_MS = 1_200;
+
+/**
+ * Probelauf aus dem Dashboard (ninou2, 14.11.2026: "is there a way to send a raid notification as a test"): alle eingeschalteten
+ * Benachrichtigungen einmal sofort in den eigenen Channel, nur der Testende wird erwaehnt (nicht die !subraid-Liste), Anzahl (x2-x5)
+ * wie eingestellt, ohne den Zaehler zu erhoehen. Mindestens 30 s Pause je Channel, Abstand zwischen den Nachrichten.
+ */
+const sendTest = async (channel, username) => {
+	const wait = (lastTest.get(channel.id) ?? 0) + TEST_COOLDOWN_MS - Date.now();
+	if (wait > 0) {
+		return { error: `Please wait ${Math.ceil(wait / 1000)}s before the next test.` };
+	}
+	const config = await getConfig(channel);
+	const items = config.items.filter((i) => i.on).sort((a, b) => b.seconds - a.seconds);
+	if (items.length === 0) {
+		return { error: 'No active raid notification to test.' };
+	}
+	lastTest.set(channel.id, Date.now());
+	let sent = 0;
+	for (const item of items) {
+		const [text] = raidPingMessages([username], item.text ?? defaultText(item.seconds), item.seconds);
+		for (let i = 0; i < item.times; i++) {
+			if (sent > 0) {
+				await new Promise((resolve) => setTimeout(resolve, TEST_GAP_MS));
+			}
+			await bot.Channels.send(channel, text).catch(() => {});
+			sent++;
+		}
+	}
+	return { sent };
+};
+
 module.exports = defineChatModule({
 	name: 'raid-notifier',
 	description: 'Pings subraid subscribers when a raid event starts, and again 20 s before it begins.',
@@ -227,4 +261,4 @@ module.exports = defineChatModule({
 	},
 });
 
-Object.assign(module.exports, { bumpUses, runRaid, MIN_LEAD_S, MAX_LEAD_S, MAX_ITEMS, clampLead, getConfig, setEnabled, updateItems, newItem, defaultText, RAID_TEMPLATE_COMMANDS, DEFAULT_RAID_MESSAGE, DEFAULT_RAID_REMINDER, formatRaidText, raidPingMessages });
+Object.assign(module.exports, { sendTest, bumpUses, runRaid, MIN_LEAD_S, MAX_LEAD_S, MAX_ITEMS, clampLead, getConfig, setEnabled, updateItems, newItem, defaultText, RAID_TEMPLATE_COMMANDS, DEFAULT_RAID_MESSAGE, DEFAULT_RAID_REMINDER, formatRaidText, raidPingMessages });
