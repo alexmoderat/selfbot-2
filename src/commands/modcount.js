@@ -37,7 +37,8 @@ module.exports = {
 
 		const tv = await fetchUserRoleList(target, 'moderators').catch(() => null);
 		if (!tv) {
-			return { text: `@${display}, couldn't get mod data for ${target} (roles.tv unavailable or unknown user).` };
+			// Fallback: StreamDatabase gibt die Liste nur eingeloggten Nutzern per API heraus, also auf die Seite verlinken
+			return { text: `@${display}, roles.tv is unavailable right now, ${target}'s moderated channels on StreamDatabase: https://streamdatabase.com/twitch/moderated-channels/${encodeURIComponent(target)}` };
 		}
 
 		// total ist roles.tvs Zahl; die Liste kann ein paar Eintraege kuerzer sein (sb-v2: 204 gegen 202)
