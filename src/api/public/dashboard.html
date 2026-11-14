@@ -556,7 +556,14 @@
     .cmd-inline input { box-sizing: border-box; font: inherit; height: 100%; min-width: 0; padding: 0 3px; width: 100%; }
     .cmd-pop { position: absolute; z-index: 20; }
     .cmd-pop-below { left: 50%; margin-top: 4px; top: 100%; transform: translateX(-50%); }
-    .cmd-pop-right { left: 100%; margin-left: 6px; top: 50%; transform: translateY(-50%); }
+    .cmd-pop-right { left: 100%; margin-left: 16px; top: 50%; transform: translateY(-50%); }
+    /* ninou2, 14.11.2026: Tabelle breiter, Namensspalte groesser und weiter links, Datum-Spalte, Cooldown-Haken weiter rechts */
+    #page-commands { max-width: 1125px; }
+    .cmd-name-cell { font-size: 16.5px; margin-left: -8px; }
+    .cmd-head { display: grid; }
+    .cmd-head .raid-sort { position: relative; }
+    .cmd-head .raid-sort-arrow { font-size: 9px; left: -12px; position: absolute; top: 50%; transform: translateY(-50%); }
+    .cmd-date { font-size: 14px; line-height: 1.4; }
     /* Custom Commands: Bearbeiten in der Zeile, Spalten bleiben stehen */
     .cmd-edit-row { align-items: start; }
     .cmd-edit-name { align-items: center; display: flex; gap: 2px; }
@@ -2203,25 +2210,52 @@
         return;
       }
       el.innerHTML = `<div class="data-table cmd-table" id="cmdTableInner">` +
-        data.commands.map(cmd => renderCmdRow(cmd)).join('') +
+        `<div class="data-table-head cmd-head" style="grid-template-columns:${CMD_GRID}"><div>Command</div><div>Response</div><div>Cooldown</div><div>${cmdSortHead()}</div><div></div><div></div></div>` +
+        cmdSortedList().map(cmd => renderCmdRow(cmd)).join('') +
         `</div>`;
     }
 
     // !raidping / !raidreminder: Vorlagen fuer den Raid-Ping mit Anzahl 1-5 (ninou2, 14.11.2026)
     const isRaidTemplate = name => ['raidping', 'raidreminder'].includes(String(name).replace(/^!/, '').toLowerCase());
 
+    const CMD_GRID = '160px 1fr 96px 100px 112px 120px';
+    // Datum der Erstellung, darunter in Klammern die letzte Aenderung (ninou2, 14.11.2026: "add a column called DATE that is clickable and
+    // sort by"); Format wie bei Added: TT/MM/JJJJ
+    const cmdDate = value => {
+      if (!value) return '—';
+      const date = new Date(value);
+      const part = n => String(n).padStart(2, '0');
+      return `${part(date.getDate())}/${part(date.getMonth() + 1)}/${date.getFullYear()}`;
+    };
+    const cmdDateCell = cmd => `<div title="created">${cmdDate(cmd.created)}</div><div style="font-size:12px;opacity:.8" title="last modified">(${cmdDate(cmd.modified ?? cmd.created)})</div>`;
+    let cmdSort = (() => { try { const saved = JSON.parse(localStorage.getItem('cmdSort')); if (saved?.key === 'date') return saved; } catch {} return null; })();
+    function setCmdSort() {
+      cmdSort = cmdSort ? { key: 'date', desc: !cmdSort.desc } : { key: 'date', desc: false };
+      try { localStorage.setItem('cmdSort', JSON.stringify(cmdSort)); } catch {}
+      renderCommands();
+    }
+    function cmdSortHead() {
+      return `<button type="button" class="sort-head raid-sort${cmdSort ? ' active' : ''}" onclick="setCmdSort()">${cmdSort ? `<span class="raid-sort-arrow">${cmdSort.desc ? '▲' : '▼'}</span>` : ''}Date</button>`;
+    }
+    function cmdSortedList() {
+      if (!cmdSort) return data.commands;
+      const list = [...data.commands].sort((a, b) => new Date(a.created ?? 0) - new Date(b.created ?? 0));
+      return cmdSort.desc ? list.reverse() : list;
+    }
+
     function renderCmdRow(cmd) {
       if (editingCmd === cmd.name) {
         // Bearbeiten direkt in der Zeile: jede Spalte bleibt an ihrem Platz, der Name ist mit aenderbar (ninou2, 14.11.2026: "clicking edit
         // should let u edit the command name too, but the one click edit move everything weirdly to the left, can everything stay at its place")
         const id = esc(cmd.name);
-        return `<div class="data-row cmd-edit-row" style="grid-template-columns:140px 1fr auto auto 120px">
+        return `<div class="data-row cmd-edit-row" style="grid-template-columns:160px 1fr 96px 100px 112px 120px">
           <div class="cmd-edit-name"><span class="cmd-edit-bang">!</span><input type="text" id="editName-${id}" value="${esc(String(cmd.name).replace(/^!/, ''))}" maxlength="30"></div>
           <div><textarea id="editResp-${id}" rows="2">${esc(cmd.response)}</textarea></div>
           <div class="cmd-edit-nums">
             <input type="number" id="editCd-${id}" value="${esc(cmd.cooldown ?? 5)}" min="0" max="3600" title="Cooldown in seconds">
             ${isRaidTemplate(cmd.name) ? `<input type="number" id="editTimes-${id}" value="${esc(cmd.times ?? 1)}" min="1" max="5" title="How many times the bot posts the message (1-5)">` : ''}
           </div>
+          <div class="cell-muted cmd-date">${cmdDateCell(cmd)}</div>
           <div class="cmd-edit-flags">
             <label class="checkbox-label"><input type="checkbox" id="editMod-${id}" ${cmd.mod_only ? 'checked' : ''}> Mod</label>
             <label class="checkbox-label"><input type="checkbox" id="editReply-${id}" ${cmd.reply ? 'checked' : ''}> Reply</label>
@@ -2232,10 +2266,11 @@
           </div>
         </div>`;
       }
-      return `<div class="data-row" style="grid-template-columns:140px 1fr auto auto 120px">
-        <div class="cell-mono msg-cell" style="color:#3a9bd0" title="Click to rename" onclick="editCmdCell(this, '${esc(cmd.name)}', 'name')">!${esc(String(cmd.name).replace(/^!/, ""))}</div>
+      return `<div class="data-row" style="grid-template-columns:160px 1fr 96px 100px 112px 120px">
+        <div class="cell-mono msg-cell cmd-name-cell" style="color:#3a9bd0" title="Click to rename" onclick="editCmdCell(this, '${esc(cmd.name)}', 'name')">!${esc(String(cmd.name).replace(/^!/, ""))}</div>
         <div class="cell-muted msg-cell" style="white-space:pre-wrap;word-break:break-word" title="Click to edit" onclick="editCmdCell(this, '${esc(cmd.name)}', 'response')">${esc(cmd.response)}</div>
         <div style="font-size:14px;color:#9a9c9b"><span class="msg-cell" title="Click to change the cooldown" onclick="editCmdCell(this, '${esc(cmd.name)}', 'cooldown')">${esc(cmd.cooldown ?? 5)}s</span>${isRaidTemplate(cmd.name) ? ` · <span class="msg-cell" style="display:inline-block;min-width:34px;text-align:center" title="Click to change (1-5)" onclick="editTimesCell(this, 'cmd', '${esc(String(cmd.name).replace(/^!/, ''))}', '', ${Number(cmd.times) || 1})">${Number(cmd.times) || 1}×</span>` : ''}<br><span class="uses-link" title="who used it in your channel (since 23.10.2026)" onclick="showCommandUsers('${esc(String(cmd.name).replace(/^!/, ""))}', true)">${esc(cmd.uses ?? 0)} use${cmd.uses === 1 ? '' : 's'}</span></div>
+        <div class="cell-muted cmd-date">${cmdDateCell(cmd)}</div>
         <div style="display:flex;gap:5px;align-items:center">
           ${cmd.mod_only ? '<span class="badge badge-mod">MOD</span>' : ''}
           ${cmd.reply    ? '<span class="badge badge-reply">REPLY</span>' : ''}

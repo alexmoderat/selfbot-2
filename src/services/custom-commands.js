@@ -91,7 +91,7 @@ const add = async (channel, name, response, options) => {
 const edit = async (existing, response, options, newName) => {
 	await bot.DB.CustomCommand.updateOne(
 		{ _id: existing.ID },
-		{ $set: { response, ...(newName ? { name: newName.toLowerCase() } : {}), ...bot.DB.fromRow('CustomCommand', options) } },
+		{ $set: { response, modified: new Date(), ...(newName ? { name: newName.toLowerCase() } : {}), ...bot.DB.fromRow('CustomCommand', options) } },
 	);
 	cache.delete(existing.Channel);
 };

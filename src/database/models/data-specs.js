@@ -347,6 +347,12 @@ module.exports = [
 				required: false,
 				default: 'now',
 			},
+			modified: {
+				column: 'Modified',
+				type: 'Date',
+				required: false,
+				comment: 'letzte Aenderung (Dashboard), leer = nie geaendert',
+			},
 		},
 		indexes: [
 			{

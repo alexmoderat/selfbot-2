@@ -229,6 +229,8 @@ const commandRows = async (channel) => {
 		reply: Boolean(i.Reply),
 		times: i.Times ? cleanTimes(i.Times) : null,
 		uses: uses.get(`custom:${channel.id}:${i.Name.replace(/^!/, '')}`) ?? 0,
+		created: i.Created ?? null,
+		modified: i.Modified ?? null,
 	}));
 };
 
