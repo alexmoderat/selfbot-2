@@ -497,6 +497,10 @@
     .raid-table .data-table-head,
     .raid-table .data-row { grid-template-columns: 62px 206px 42px 1fr 46px; column-gap: 8px; }
     .raid-table .cell-actions { justify-content: flex-start; }
+    /* Sortier-Pfeil links vom Wort (verschiebt den Text nicht); Zahl der Spalte Times mittig */
+    .raid-table .raid-sort { position: relative; }
+    .raid-table .raid-sort-arrow { font-size: 9px; left: -12px; position: absolute; top: 50%; transform: translateY(-50%); }
+    .raid-table .data-table-head > :nth-child(5), .raid-table .data-row > :nth-child(5) { text-align: center; }
     /* ninou2, 14.11.2026: Abstand zwischen TIMES und dem rechten Tabellenrand minimal; ausserhalb der Tabelle je Zeile die Zahl der Aufrufe
        wie bei den Custom Commands ("183 uses"). Rechts bleibt dafuer Platz frei, die Tabelle behaelt ihre Breite (Seite 1125 + 90 px). */
     #page-raidnotify { max-width: 1215px; }
@@ -3001,6 +3005,25 @@
       renderRaidNotify();
     }
 
+    // Sortieren nach Notification (Reihenfolge der Nummern) oder Time (ninou2, 14.11.2026: "make TIME, NOTIFICATION a sort by clickable"):
+    // nochmal klicken = umgekehrt, der Pfeil steht links vom Wort. Die Nummer "Raid notification N" bleibt die feste Position der Zeile.
+    let raidSort = (() => { try { const saved = JSON.parse(localStorage.getItem('raidSort')); if (['notification', 'time'].includes(saved?.key)) return saved; } catch {} return null; })();
+    function setRaidSort(key) {
+      raidSort = raidSort?.key === key ? { key, desc: !raidSort.desc } : { key, desc: false };
+      try { localStorage.setItem('raidSort', JSON.stringify(raidSort)); } catch {}
+      renderRaidNotify();
+    }
+    function raidSortHead(key, label) {
+      const active = raidSort?.key === key;
+      return `<button type="button" class="sort-head raid-sort${active ? ' active' : ''}" onclick="setRaidSort('${key}')">${active ? `<span class="raid-sort-arrow">${raidSort.desc ? '▲' : '▼'}</span>` : ''}${label}</button>`;
+    }
+    function raidSortedItems(items) {
+      const list = items.map((item, index) => ({ item, index }));
+      if (!raidSort) return list;
+      list.sort((a, b) => (raidSort.key === 'time' ? a.item.seconds - b.item.seconds || a.index - b.index : a.index - b.index));
+      return raidSort.desc ? list.reverse() : list;
+    }
+
     // Aktiver Zustand neben der Ueberschrift MESSAGE, z.B. "MESSAGE (Default)": blau = Default, orange = Custom; sind die Zeilen
     // gemischt, stehen beide darin (ninou2, 14.11.2026: "exemple : MESSAGE (Default)", "keep it next to the word message on its right")
     function raidStateLegend(items) {
@@ -3051,8 +3074,8 @@
       document.getElementById('raidAddButton').style.display = r.items.length >= r.maxItems ? 'none' : '';
       document.getElementById('raidList').innerHTML = r.items.length ? `
         <div class="data-table raid-table">
-          <div class="data-table-head"><div></div><div>Notification</div><div>Time</div><div>Message ${raidStateLegend(r.items)}</div><div>Times</div></div>
-          ${r.items.map((item, index) => `
+          <div class="data-table-head"><div></div><div>${raidSortHead('notification', 'Notification')}</div><div>${raidSortHead('time', 'Time')}</div><div>Message ${raidStateLegend(r.items)}</div><div>Times</div></div>
+          ${raidSortedItems(r.items).map(({ item, index }) => `
             <div class="data-row${item.on ? '' : ' raid-off'}">
               <div class="cell-actions"><button class="btn btn-danger" onclick="removeRaidItem(${item.id}, this)">Remove</button></div>
               <div class="raid-name"><span>Raid notification ${index + 1}</span>
