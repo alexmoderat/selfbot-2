@@ -778,6 +778,9 @@
           <span class="nav-icon">🐦</span> Tweet Notify
           <span class="nav-badge" id="navTweetCount">0</span>
         </button>
+        <button class="nav-item" id="navRaidNotify" style="display:none" onclick="showPage('raidnotify')">
+          <span class="nav-icon">⚔️</span> Raid Notify
+        </button>
         <button class="nav-item" onclick="showPage('banwatch')">
           <span class="nav-icon">🔨</span> Ban Watch
           <span class="nav-badge" id="navBanwatchCount">0</span>
@@ -1058,6 +1061,14 @@
           </div>
           <div class="toggle-pair" id="toggleSevenTvAccess"></div>
         </div>
+        <!-- ninou2, 14.11.2026: "Raid notification on/off, off by default at the BOT commands, then ... a new title in the notification section named Raid Notify" -->
+        <div class="data-row" style="grid-template-columns:1fr auto">
+          <div>
+            <div class="cell-mono" style="color:#3a9bd0">Raid notifications</div>
+            <div class="cell-muted" style="font-size:14px">Pings people who joined with !subraid when a raid event starts. Off by default; once on, "Raid Notify" appears under Notifications for texts, number and timing.</div>
+          </div>
+          <div class="toggle-pair" id="toggleRaidNotify"></div>
+        </div>
         <!-- ninou2, 13.11.2026: "command disabled by default, the user enable from the website, add a custom message part" -->
         <div class="data-row" style="grid-template-columns:1fr auto">
           <div>
@@ -1171,6 +1182,48 @@
       </form>
 
       <div id="tweetList"></div>
+    </div>
+
+    <!-- ═══ Raid Notify ═══ -->
+    <div class="page page-hidden" id="page-raidnotify">
+      <div class="section-header">
+        <div class="section-title">Raid Notify <span class="count-pill" id="countRaid">0</span></div>
+      </div>
+      <p class="section-desc">When a raid event is announced, the bot pings everyone who joined with <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">!subraid</code> in your channel, and once more shortly before it starts. Use <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{users}</code> for the names and <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{seconds}</code> for the seconds left.</p>
+
+      <form class="add-card" id="raidForm">
+        <div class="add-card-row">
+          <div class="field">
+            <label>First message (event announced)</label>
+            <input type="text" id="raidPingText" maxlength="400">
+          </div>
+          <div class="field field-sm">
+            <label>Number</label>
+            <input type="number" id="raidPingTimes" min="1" max="5" value="1" title="How many times the bot posts it (1-5)">
+          </div>
+        </div>
+        <div class="add-card-row">
+          <div class="field">
+            <label>Reminder message</label>
+            <input type="text" id="raidReminderText" maxlength="400">
+          </div>
+          <div class="field field-sm">
+            <label>Number</label>
+            <input type="number" id="raidReminderTimes" min="1" max="5" value="1" title="How many times the bot posts it (1-5)">
+          </div>
+          <div class="field field-sm">
+            <label>Seconds before start</label>
+            <input type="number" id="raidSeconds" min="5" max="120" value="20" title="When the reminder is posted (5-120 seconds before the event starts)">
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:6px">
+          <button type="submit" class="btn btn-primary">Save</button>
+          <span class="cell-muted" id="raidStats"></span>
+        </div>
+      </form>
+
+      <div class="section-title" style="margin:18px 0 8px">Subscribers <span class="count-pill" id="countRaidSubs">0</span></div>
+      <div id="raidSubs"></div>
     </div>
 
     <!-- ═══ Ban Watch ═══ -->
@@ -1480,6 +1533,7 @@
       settings: 'Bot Commands',
       notify: 'Live Notify',
       titlenotify: 'Title Notify',
+      raidnotify: 'Raid Notify',
       tweetnotify: 'Tweet Notify',
       join: 'Join my channel',
       use: 'Use Commands',
@@ -1552,6 +1606,7 @@
           settings:            loadBotSettings,
           notify:              loadNotify,
           titlenotify:         loadTitleNotify,
+          raidnotify:          loadRaidNotify,
           tweetnotify:         loadTweetNotify,
           banwatch:            loadBanwatch,
           admin:               loadAdminChannels,
@@ -1998,6 +2053,7 @@
       document.getElementById('statNotify').textContent     = stats.notify;
       document.getElementById('statTitle').textContent      = stats.titlenotify ?? 0;
       document.getElementById('statTweet').textContent      = stats.tweetnotify ?? 0;
+      updateRaidNav(stats.raidNotify === true);
       document.getElementById('statBanwatch').textContent   = stats.banwatch;
       // also update badges
       document.getElementById('navBanCount').textContent      = stats.banphrases;
@@ -2231,6 +2287,10 @@
       document.getElementById('toggleSevenTvAccess').innerHTML =
         toggleBtn(s.sevenTvAccess !== 'streamer', 'Mods + streamer', `setChannelSetting('sevenTvAccess', 'mods')`) +
         toggleBtn(s.sevenTvAccess === 'streamer', 'Streamer only',   `setChannelSetting('sevenTvAccess', 'streamer')`);
+      document.getElementById('toggleRaidNotify').innerHTML =
+        toggleBtn(!s.raidNotify, 'Off', `setChannelSetting('raidNotify', false)`) +
+        toggleBtn(s.raidNotify,  'On',  `setChannelSetting('raidNotify', true)`);
+      updateRaidNav(s.raidNotify);
       document.getElementById('toggleBadgeAlerts').innerHTML =
         toggleBtn(!s.badgeAlerts, 'Off', `setChannelSetting('badgeAlerts', false)`) +
         toggleBtn(s.badgeAlerts,  'On',  `setChannelSetting('badgeAlerts', true)`);
@@ -2869,6 +2929,58 @@
       document.getElementById('tweetMessage').value = '';
       document.getElementById('tweetTimes').value = '1';
       showToast('Tweet alert added!', 'success');
+    });
+
+    // ── Raid Notify ────────────────────────────────────────────────────────────
+    // Der Punkt in der Seitenleiste erscheint erst, wenn Raid Notify unter Bot Commands eingeschaltet ist (ninou2, 14.11.2026)
+    function updateRaidNav(enabled) {
+      const nav = document.getElementById('navRaidNotify');
+      if (!nav || guestMode) return;
+      nav.style.display = enabled ? '' : 'none';
+      const section = nav.closest('.nav-section');
+      if (section) section.style.display = '';
+    }
+
+    async function loadRaidNotify() {
+      const result = await apiFetch('api/raidnotify');
+      if (result === null) return;
+      data.raidnotify = result;
+      renderRaidNotify();
+    }
+
+    function renderRaidNotify() {
+      const r = data.raidnotify;
+      if (!r) return;
+      document.getElementById('raidPingText').value = r.ping.text;
+      document.getElementById('raidPingTimes').value = r.ping.times;
+      document.getElementById('raidReminderText').value = r.reminder.text;
+      document.getElementById('raidReminderTimes').value = r.reminder.times;
+      const seconds = document.getElementById('raidSeconds');
+      seconds.min = r.minSeconds; seconds.max = r.maxSeconds; seconds.value = r.seconds;
+      document.getElementById('raidStats').textContent = `Posted so far: first message ${r.ping.uses}×, reminder ${r.reminder.uses}×`;
+      document.getElementById('countRaid').textContent = r.subscribers.length;
+      document.getElementById('countRaidSubs').textContent = r.subscribers.length;
+      document.getElementById('raidSubs').innerHTML = r.subscribers.length
+        ? `<div class="cell-muted" style="line-height:1.9">${r.subscribers.map(name => `<span class="uses-pill">@${esc(name)}</span>`).join(' ')}</div>`
+        : buildEmpty('Nobody joined with !subraid yet.');
+    }
+
+    document.getElementById('raidForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const clamp = (id, lo, hi) => Math.min(hi, Math.max(lo, parseInt(document.getElementById(id).value, 10) || lo));
+      const r = data.raidnotify;
+      const result = await apiFetch('api/raidnotify', {
+        method: 'PUT',
+        body: JSON.stringify({
+          ping: { text: document.getElementById('raidPingText').value.trim(), times: clamp('raidPingTimes', 1, 5) },
+          reminder: { text: document.getElementById('raidReminderText').value.trim(), times: clamp('raidReminderTimes', 1, 5) },
+          seconds: clamp('raidSeconds', r?.minSeconds ?? 5, r?.maxSeconds ?? 120),
+        }),
+      });
+      if (result === null) return;
+      data.raidnotify = result;
+      renderRaidNotify();
+      showToast('Raid Notify saved.', 'success');
     });
 
     // ── Ban Watch ──────────────────────────────────────────────────────────────

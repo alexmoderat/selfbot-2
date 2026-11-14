@@ -8,6 +8,7 @@ const customCommands = require('../services/custom-commands.js');
 const { partChannel } = require('../services/channel-manager.js');
 const { resolveStreamer, watchStreamer, watchTitle } = require('../services/notifications.js');
 const { cleanHandle, cleanMessage, cleanTimes, accountExists, HANDLE } = require('../services/tweet-notify.js');
+const raidNotifier = require('../modules/raid-notifier.js');
 const sbv2 = require('../database/sbv2.js');
 const { getPrefix } = require('../clients/modules/handler.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
@@ -78,10 +79,12 @@ const channelSettings = async (channel) => ({
 	// ninou2, 13.11.2026: neue globale Badges im Chat melden, standardmaessig aus, eigener Textteil
 	badgeAlerts: (await bot.Channels.getData(channel, 'badgeAlerts'))?.enabled === true,
 	badgeAlertsMessage: (await bot.Channels.getData(channel, 'badgeAlerts'))?.message ?? '',
+	// Raid Notify (ninou2, 14.11.2026): standardmaessig aus, danach erscheint der Punkt Raid Notify in den Notifications
+	raidNotify: (await bot.Channels.getData(channel, 'raidNotify'))?.enabled === true,
 });
 
 const applyChannelSettings = async (req, channel) => {
-	const { commandsAllowed, moderation, crossban, sevenTvAccess, badgeAlerts, badgeAlertsMessage } = req.body;
+	const { commandsAllowed, moderation, crossban, sevenTvAccess, badgeAlerts, badgeAlertsMessage, raidNotify } = req.body;
 	if (typeof commandsAllowed === 'boolean') {
 		const by = await issuer(req);
 		await setBlock(channelBlock(channel), !commandsAllowed, () =>
@@ -109,6 +112,10 @@ const applyChannelSettings = async (req, channel) => {
 							.slice(0, 200)
 					: (current.message ?? ''),
 		});
+	}
+	if (typeof raidNotify === 'boolean') {
+		const current = (await bot.Channels.getData(channel, 'raidNotify')) ?? {};
+		await bot.Channels.setData(channel, 'raidNotify', { ...current, enabled: raidNotify });
 	}
 	return await channelSettings(channel);
 };
@@ -976,6 +983,86 @@ const createDashboardRouter = () => {
 		}),
 	);
 
+	/* ---------- raid notify ---------- */
+	// ninou2, 14.11.2026: "Raid notification on/off, off by default at the BOT commands, then ... a new title in the notification
+	// section named Raid Notify". Texte und Anzahl liegen wie bisher in den Vorlagen !raidping / !raidreminder, der Zeitpunkt der
+	// Erinnerung (5-120 s vor Start) in den Channel-Daten.
+	const RAID_TEXT_MAX = 400;
+	const raidNotifyState = async (channel) => {
+		const uses = await usageCounts(channel);
+		const settings = (await bot.Channels.getData(channel, 'raidNotify')) ?? {};
+		const template = async (name, fallback) => {
+			const row = await customCommands.get(channel, `!${name}`).catch(() => null);
+			return {
+				text: row?.Response ?? fallback,
+				times: row?.Times ? cleanTimes(row.Times) : 1,
+				uses: uses.get(`custom:${channel.id}:${name}`) ?? 0,
+			};
+		};
+		const subscribers = [];
+		for (const row of await bot.DB.RaidSubscriber.find({ channel: channel.id }).lean()) {
+			const user = await bot.Users.get(row.userAlias);
+			if (user) {
+				subscribers.push(user.name);
+			}
+		}
+		return {
+			enabled: settings.enabled === true,
+			seconds: raidNotifier.clampLead(settings.seconds),
+			minSeconds: raidNotifier.MIN_LEAD_S,
+			maxSeconds: raidNotifier.MAX_LEAD_S,
+			ping: await template('raidping', raidNotifier.DEFAULT_RAID_MESSAGE),
+			reminder: await template('raidreminder', raidNotifier.DEFAULT_RAID_REMINDER),
+			subscribers: subscribers.sort((a, b) => a.localeCompare(b)),
+		};
+	};
+	const saveRaidTemplate = async (channel, name, fallback, input) => {
+		if (!input || typeof input !== 'object') {
+			return;
+		}
+		const existing = await customCommands.get(channel, `!${name}`).catch(() => null);
+		const text = str(input.text).replaceAll(/[\r\n]+/g, ' ').trim().slice(0, RAID_TEXT_MAX) || existing?.Response || fallback;
+		const options = {
+			Cooldown: existing?.Cooldown ?? 5,
+			Mod_Only: Boolean(existing?.Mod_Only),
+			Reply: Boolean(existing?.Reply),
+			Times: input.times === undefined ? (existing?.Times ?? 1) : cleanTimes(input.times),
+		};
+		if (existing) {
+			await customCommands.edit(existing, text, options);
+		} else {
+			await customCommands.add(channel, `!${name}`, text, options);
+		}
+	};
+
+	router.get(
+		'/api/raidnotify',
+		requireSession,
+		route(async (req, res) => {
+			const channel = sessionChannel(req, res);
+			if (channel) {
+				res.json(await raidNotifyState(channel));
+			}
+		}),
+	);
+	router.put(
+		'/api/raidnotify',
+		requireSession,
+		route(async (req, res) => {
+			const channel = sessionChannel(req, res);
+			if (!channel) {
+				return;
+			}
+			await saveRaidTemplate(channel, 'raidping', raidNotifier.DEFAULT_RAID_MESSAGE, req.body.ping);
+			await saveRaidTemplate(channel, 'raidreminder', raidNotifier.DEFAULT_RAID_REMINDER, req.body.reminder);
+			if (req.body.seconds !== undefined) {
+				const current = (await bot.Channels.getData(channel, 'raidNotify')) ?? {};
+				await bot.Channels.setData(channel, 'raidNotify', { ...current, seconds: raidNotifier.clampLead(req.body.seconds) });
+			}
+			res.json(await raidNotifyState(channel));
+		}),
+	);
+
 	/* ---------- notify / banwatch ---------- */
 
 	router.get(
@@ -1263,6 +1350,7 @@ const createDashboardRouter = () => {
 				titlenotify: (await titleNotifyRows(await issuer(req))).length,
 				tweetnotify: (await tweetNotifyRows(await issuer(req))).length,
 				banwatch: (await banwatchRows(channel)).length,
+				raidNotify: (await bot.Channels.getData(channel, 'raidNotify'))?.enabled === true,
 			});
 		}),
 	);

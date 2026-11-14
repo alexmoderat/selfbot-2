@@ -81,34 +81,69 @@ const countPost = async (channel, reminder, text) => {
 	}
 };
 
-const pingAll = async (subscribers, reminder) => {
+// Raid Notify je Channel (ninou2, 14.11.2026): standardmaessig aus, eigener Zeitpunkt der Erinnerung (5-120 s vor Start)
+const MIN_LEAD_S = 5;
+const MAX_LEAD_S = 120;
+const clampLead = (value) => {
+	const n = Number.parseInt(String(value ?? REMINDER_LEAD_S), 10);
+	return Number.isNaN(n) ? REMINDER_LEAD_S : Math.min(MAX_LEAD_S, Math.max(MIN_LEAD_S, n));
+};
+const raidSettings = async (channel) => {
+	const data = await bot.Channels.getData(channel, 'raidNotify').catch(() => null);
+	return { enabled: data?.enabled === true, seconds: clampLead(data?.seconds) };
+};
+
+const pingChannel = async (channel, users, reminder, seconds = REMINDER_LEAD_S) => {
+	const { text: template, times } = await getTemplate(channel, reminder);
+	const texts = raidPingMessages(users, template, seconds);
+	for (const text of texts) {
+		for (let i = 0; i < (times ?? 1); i++) {
+			await bot.Channels.send(channel, text).catch(() => {});
+		}
+	}
+	// Eine Benachrichtigung zaehlt einmal, egal wie oft sie wegen der Einstellung (x2-x5) oder wegen mehrerer Namenslisten
+	// gepostet wird (ninou2, 14.11.2026: "even if a person set it to x5, the 120s noti count as 1 post, and the 20s noti count as 1")
+	if (texts.length > 0) {
+		await countPost(channel, reminder, texts[0]);
+	}
+	// ninou2 moechte zweimal gepingt werden (01.08.2026) - bewusst nur dieser eine User; sobald die Anzahl im Dashboard
+	// eingestellt ist, gilt diese und der Einzel-Ping entfaellt
+	if (times === null && channel.name === 'ninou2' && users.includes('ninou2')) {
+		await bot.Channels.send(channel, formatRaidText(template, ['ninou2'], seconds)).catch(() => {});
+	}
+	return texts.length;
+};
+
+/** Erste Meldung (Event angekuendigt) in allen Channels, die Raid Notify eingeschaltet haben */
+const pingAll = async (subscribers) => {
 	let batches = 0;
+	for (const [channelId, users] of subscribers) {
+		const channel = bot.Channels.get(channelId);
+		if (!channel || channel.mode === 'Inactive' || !(await raidSettings(channel)).enabled) {
+			continue;
+		}
+		batches += await pingChannel(channel, users, false);
+	}
+	return batches;
+};
+
+/** Erinnerung je Channel zu dessen eigenem Zeitpunkt ("seconds" vor Start) */
+const scheduleReminders = async (subscribers, duration) => {
 	for (const [channelId, users] of subscribers) {
 		const channel = bot.Channels.get(channelId);
 		if (!channel || channel.mode === 'Inactive') {
 			continue;
 		}
-		const { text: template, times } = await getTemplate(channel, reminder);
-		const texts = raidPingMessages(users, template);
-		for (const text of texts) {
-			for (let i = 0; i < (times ?? 1); i++) {
-				await bot.Channels.send(channel, text).catch(() => {});
-			}
-			batches++;
-		}
-		// Eine Benachrichtigung zaehlt einmal, egal wie oft sie wegen der Einstellung (x2-x5) oder wegen mehrerer Namenslisten
-		// gepostet wird (ninou2, 14.11.2026: "even if a person set it to x5, the 120s noti count as 1 post, and the 20s noti count as 1")
-		if (texts.length > 0) {
-			await countPost(channel, reminder, texts[0]);
-		}
-		// ninou2 moechte zweimal gepingt werden (01.08.2026) - bewusst nur dieser eine User; sobald die Anzahl im Dashboard
-		// eingestellt ist, gilt diese und der Einzel-Ping entfaellt
-		if (times === null && channel.name === 'ninou2' && users.includes('ninou2')) {
-			const extra = formatRaidText(template, ['ninou2'], REMINDER_LEAD_S);
-			await bot.Channels.send(channel, extra).catch(() => {});
+		const { enabled, seconds } = await raidSettings(channel);
+		if (enabled && duration > seconds) {
+			setTimeout(
+				() => {
+					void pingChannel(channel, users, true, seconds).catch((e) => console.warn('[raid-notifier] Reminder', e));
+				},
+				(duration - seconds) * 1000,
+			);
 		}
 	}
-	return batches;
 };
 
 module.exports = defineChatModule({
@@ -131,20 +166,13 @@ module.exports = defineChatModule({
 				return;
 			}
 
-			const batches = await pingAll(subscribers, false);
+			const batches = await pingAll(subscribers);
 			console.log(`[raid-notifier] Raid in #${channel.name} - ${batches} Nachricht(en) in ${subscribers.size} Channel(s)`);
 
 			const duration = Number(DURATION_PATTERN.exec(message)?.[1] ?? 0);
-			if (duration > REMINDER_LEAD_S) {
-				setTimeout(
-					() => {
-						void pingAll(subscribers, true).catch((e) => console.warn('[raid-notifier] Reminder', e));
-					},
-					(duration - REMINDER_LEAD_S) * 1000,
-				);
-			}
+			await scheduleReminders(subscribers, duration);
 		},
 	},
 });
 
-Object.assign(module.exports, { RAID_TEMPLATE_COMMANDS, DEFAULT_RAID_MESSAGE, DEFAULT_RAID_REMINDER, formatRaidText, raidPingMessages });
+Object.assign(module.exports, { MIN_LEAD_S, MAX_LEAD_S, clampLead, RAID_TEMPLATE_COMMANDS, DEFAULT_RAID_MESSAGE, DEFAULT_RAID_REMINDER, formatRaidText, raidPingMessages });
