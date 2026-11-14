@@ -138,9 +138,6 @@ test('Tweets: parseTweets (ohne angehefteten und t.co-Links) und parseGlobalTwee
 	assert.deepEqual(parseGlobalTweet(tweets[1].text), { kind: 'badge', what: 'added', rest: 'Silver Chain' });
 	assert.equal(parseGlobalTweet(tweets[0].text).what, 'now available');
 	assert.equal(parseGlobalTweet('Learn more:'), null);
-	const { titleOf, formatTweet } = require('../src/crons/tweet-watch.js');
-	assert.equal(titleOf('Jordan x Space Jam Objective - Watch 15 minutes.'), 'Jordan x Space Jam');
-	assert.equal(formatTweet({ id: '9', text: 'Hi' }, 'x'), 'Hi (https://x.com/StreamDatabase/status/9) x');
 });
 
 test('badge-history: wasAnnounced/markAnnounced', async () => {

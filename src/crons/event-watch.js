@@ -33,7 +33,7 @@ const runEventWatch = async () => {
 		return 0;
 	}
 
-	// Pro Badge und Tag nur eine Meldung, egal ob Tweet oder Aktionen sie zuerst melden (Marker teilt sich tweet-watch)
+	// Pro Badge und Tag nur eine Meldung, egal ob Tweet oder Aktionen sie zuerst melden (Marker teilt sich badge-watch)
 	const today = new Date().toISOString().slice(0, 10);
 	const fresh = [];
 	for (const window of active.filter((i) => !before.has(i.key))) {
