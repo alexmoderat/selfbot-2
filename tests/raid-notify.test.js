@@ -64,9 +64,11 @@ test('Alte Einstellung (enabled + seconds) wird einmal in die Liste uebernommen'
 	assert.deepEqual(store.get('c1:raidNotify').items.length, 2);
 });
 
-test('Standardtexte: 120 s = Ping, darunter Erinnerung mit {seconds}', () => {
-	assert.equal(raid.defaultText(120), raid.DEFAULT_RAID_MESSAGE);
-	assert.equal(raid.defaultText(20), raid.DEFAULT_RAID_REMINDER);
+test('Standardtext enthaelt immer die eingestellte Zeit am Ende', () => {
+	for (const seconds of [120, 67, 20]) {
+		const [text] = raid.raidPingMessages(['alice'], raid.defaultText(seconds), seconds);
+		assert.equal(text, `@alice ⚡ Raid is happening! Type +join to join! ${seconds} seconds! ⚡`);
+	}
 });
 
 test('runRaid: 120-s-Eintrag sofort, x2 postet zweimal, ausgeschaltete und spaetere nicht', async () => {

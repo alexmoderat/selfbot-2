@@ -14,7 +14,6 @@ const DURATION_PATTERN = /will begin in (\d+) seconds/i;
 const BATCH_SIZE = 10; // Twitch mag keine zu langen Mention-Listen
 const DEDUP_TTL_MS = 60_000;
 const REMINDER_LEAD_S = 20;
-const REMINDER_TAG = 'Nails';
 
 let lastRaid = 0;
 
@@ -22,8 +21,9 @@ let lastRaid = 0;
 // 25.10.2026: "als richtigen custom cmd", nachdem ninou2 ihren Zusatz zweimal geaendert haben wollte. Ohne den Custom
 // Command der Standard aus sb-v2.
 const RAID_TEMPLATE_COMMANDS = { ping: '!raidping', reminder: '!raidreminder' };
-const DEFAULT_RAID_MESSAGE = '{users} ⚡ Raid is happening! Type +join to join!';
-const DEFAULT_RAID_REMINDER = `{users} ⚡ Raid is happening! Type +join to join! ( {seconds}s Left ${REMINDER_TAG} )`;
+// Standardtext (ninou2, 14.11.2026): immer mit der eingestellten Zeit am Ende, z.B. bei 120 s "... Type +join to join! 120 seconds! ⚡"
+const DEFAULT_RAID_MESSAGE = '{users} ⚡ Raid is happening! Type +join to join! {seconds} seconds! ⚡';
+const DEFAULT_RAID_REMINDER = DEFAULT_RAID_MESSAGE;
 
 const formatRaidText = (template, users, seconds) =>
 	template.replaceAll(/\{users\}/gi, users.map((u) => `@${u}`).join(' ')).replaceAll(/\{seconds\}/gi, String(seconds));
@@ -82,7 +82,7 @@ const clampLead = (value) => {
 // Zeitpunkt (5-120 s vor Start), Text (null = Standardtext) und Anzahl (x1-x5). Gespeichert in den Channel-Daten "raidNotify":
 // { enabled, items: [{ id, on, seconds, text, times }] }. Der erste Eintrag ist der 120-s-Ping (= bei der Ankuendigung).
 const MAX_ITEMS = 10;
-const defaultText = (seconds) => (seconds >= MAX_LEAD_S ? DEFAULT_RAID_MESSAGE : DEFAULT_RAID_REMINDER);
+const defaultText = () => DEFAULT_RAID_MESSAGE;
 const newItem = (id, seconds = REMINDER_LEAD_S) => ({ id, on: true, seconds: clampLead(seconds), text: null, times: 1 });
 const normalizeItem = (i) => ({
 	id: Number(i.id),
