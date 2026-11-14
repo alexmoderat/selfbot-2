@@ -49,16 +49,6 @@ const getSubscribers = async () => {
 	return result;
 };
 
-// times: wie oft jede Meldung gepostet wird (ninou2, 14.11.2026: "both commands should get the times feature"); null = nie
-// eingestellt, dann gilt das alte Verhalten (ein Mal, fuer ninou2 zusaetzlich ihr Einzel-Ping)
-const getTemplate = async (channel, reminder) => {
-	const custom = await customCommands.get(channel, reminder ? RAID_TEMPLATE_COMMANDS.reminder : RAID_TEMPLATE_COMMANDS.ping).catch(() => null);
-	return {
-		text: custom?.Response ?? (reminder ? DEFAULT_RAID_REMINDER : DEFAULT_RAID_MESSAGE),
-		times: custom?.Times ? cleanTimes(custom.Times) : null,
-	};
-};
-
 // Jede Benachrichtigung (pro Channel) als Aufruf von !raidping / !raidreminder zaehlen, damit die Custom-Commands-Seite die echte Zahl zeigt
 // (ninou2, 14.11.2026: "it should tell how many times it has been posted in the chat ... if its set to x2/x3/x4/x5")
 let selfAlias = null;
@@ -81,23 +71,79 @@ const countPost = async (channel, reminder, text) => {
 	}
 };
 
-// Raid Notify je Channel (ninou2, 14.11.2026): standardmaessig aus, eigener Zeitpunkt der Erinnerung (5-120 s vor Start)
+// Zeitpunkt der Erinnerung: 5-120 s vor Start
 const MIN_LEAD_S = 5;
 const MAX_LEAD_S = 120;
 const clampLead = (value) => {
 	const n = Number.parseInt(String(value ?? REMINDER_LEAD_S), 10);
 	return Number.isNaN(n) ? REMINDER_LEAD_S : Math.min(MAX_LEAD_S, Math.max(MIN_LEAD_S, n));
 };
-const raidSettings = async (channel) => {
-	const data = await bot.Channels.getData(channel, 'raidNotify').catch(() => null);
-	return { enabled: data?.enabled === true, seconds: clampLead(data?.seconds) };
+// Raid Notify je Channel (ninou2, 14.11.2026): standardmaessig aus; eine Liste von Benachrichtigungen, jede mit eigenem Schalter,
+// Zeitpunkt (5-120 s vor Start), Text (null = Standardtext) und Anzahl (x1-x5). Gespeichert in den Channel-Daten "raidNotify":
+// { enabled, items: [{ id, on, seconds, text, times }] }. Der erste Eintrag ist der 120-s-Ping (= bei der Ankuendigung).
+const MAX_ITEMS = 10;
+const defaultText = (seconds) => (seconds >= MAX_LEAD_S ? DEFAULT_RAID_MESSAGE : DEFAULT_RAID_REMINDER);
+const newItem = (id, seconds = REMINDER_LEAD_S) => ({ id, on: true, seconds: clampLead(seconds), text: null, times: 1 });
+const normalizeItem = (i) => ({
+	id: Number(i.id),
+	on: i.on === true,
+	seconds: clampLead(i.seconds),
+	text: typeof i.text === 'string' && i.text.trim() ? i.text : null,
+	times: cleanTimes(i.times),
+});
+
+const saveConfig = async (channel, enabled, items) => {
+	await bot.Channels.setData(channel, 'raidNotify', { enabled: enabled === true, items });
+	return { enabled: enabled === true, items };
 };
 
-const pingChannel = async (channel, users, reminder, seconds = REMINDER_LEAD_S) => {
-	const { text: template, times } = await getTemplate(channel, reminder);
-	const texts = raidPingMessages(users, template, seconds);
+// Alte Einstellung (Ping/Erinnerung als Custom Commands !raidping/!raidreminder + "seconds") einmalig in die Liste uebernehmen
+const migrateLegacy = async (channel, data) => {
+	const legacy = async (reminder) => {
+		const custom = await customCommands.get(channel, reminder ? RAID_TEMPLATE_COMMANDS.reminder : RAID_TEMPLATE_COMMANDS.ping).catch(() => null);
+		// ohne eingestellte Anzahl galt fuer ninou2 ein Einzel-Ping zusaetzlich: das entspricht jetzt x2
+		const times = custom?.Times ? cleanTimes(custom.Times) : channel.name === 'ninou2' ? 2 : 1;
+		return { text: custom?.Response ?? null, times };
+	};
+	const ping = await legacy(false);
+	const reminder = await legacy(true);
+	const items = [
+		{ id: 1, on: true, seconds: MAX_LEAD_S, ...ping },
+		{ id: 2, on: true, seconds: clampLead(data.seconds), ...reminder },
+	].map(normalizeItem);
+	return saveConfig(channel, true, items);
+};
+
+const getConfig = async (channel) => {
+	const data = (await bot.Channels.getData(channel, 'raidNotify').catch(() => null)) ?? {};
+	if (Array.isArray(data.items)) {
+		return { enabled: data.enabled === true, items: data.items.map(normalizeItem) };
+	}
+	return data.enabled === true ? migrateLegacy(channel, data) : { enabled: false, items: [] };
+};
+
+/** Raid Notify unter Bot Commands ein-/ausschalten; beim Einschalten ohne aktive Eintraege entsteht der Standard-Eintrag (120 s) */
+const setEnabled = async (channel, want) => {
+	const config = await getConfig(channel);
+	if (!want) {
+		return saveConfig(channel, false, config.items);
+	}
+	return config.items.some((i) => i.on) ? saveConfig(channel, true, config.items) : saveConfig(channel, true, [newItem(1, MAX_LEAD_S)]);
+};
+
+/** Eintraege aendern; sind danach alle aus (oder keiner mehr da), schaltet sich Raid Notify selbst aus */
+const updateItems = async (channel, change) => {
+	const config = await getConfig(channel);
+	const items = change(config.items.slice()).map(normalizeItem);
+	return saveConfig(channel, items.some((i) => i.on), items);
+};
+
+const pingChannel = async (channel, users, item) => {
+	const template = item.text ?? defaultText(item.seconds);
+	const reminder = item.seconds < MAX_LEAD_S;
+	const texts = raidPingMessages(users, template, item.seconds);
 	for (const text of texts) {
-		for (let i = 0; i < (times ?? 1); i++) {
+		for (let i = 0; i < item.times; i++) {
 			await bot.Channels.send(channel, text).catch(() => {});
 		}
 	}
@@ -106,44 +152,39 @@ const pingChannel = async (channel, users, reminder, seconds = REMINDER_LEAD_S) 
 	if (texts.length > 0) {
 		await countPost(channel, reminder, texts[0]);
 	}
-	// ninou2 moechte zweimal gepingt werden (01.08.2026) - bewusst nur dieser eine User; sobald die Anzahl im Dashboard
-	// eingestellt ist, gilt diese und der Einzel-Ping entfaellt
-	if (times === null && channel.name === 'ninou2' && users.includes('ninou2')) {
-		await bot.Channels.send(channel, formatRaidText(template, ['ninou2'], seconds)).catch(() => {});
-	}
 	return texts.length;
 };
 
-/** Erste Meldung (Event angekuendigt) in allen Channels, die Raid Notify eingeschaltet haben */
-const pingAll = async (subscribers) => {
+/**
+ * Alle Benachrichtigungen aller Channels mit eingeschaltetem Raid Notify: jede zu "Dauer minus ihre Sekunden" nach der Ankuendigung,
+ * die mit seconds >= Dauer sofort (Reihenfolge: groesste Zeit zuerst). Unbekannte Dauer (0): nur die 120-s-Eintraege.
+ */
+const runRaid = async (subscribers, duration) => {
 	let batches = 0;
-	for (const [channelId, users] of subscribers) {
-		const channel = bot.Channels.get(channelId);
-		if (!channel || channel.mode === 'Inactive' || !(await raidSettings(channel)).enabled) {
-			continue;
-		}
-		batches += await pingChannel(channel, users, false);
-	}
-	return batches;
-};
-
-/** Erinnerung je Channel zu dessen eigenem Zeitpunkt ("seconds" vor Start) */
-const scheduleReminders = async (subscribers, duration) => {
 	for (const [channelId, users] of subscribers) {
 		const channel = bot.Channels.get(channelId);
 		if (!channel || channel.mode === 'Inactive') {
 			continue;
 		}
-		const { enabled, seconds } = await raidSettings(channel);
-		if (enabled && duration > seconds) {
-			setTimeout(
-				() => {
-					void pingChannel(channel, users, true, seconds).catch((e) => console.warn('[raid-notifier] Reminder', e));
-				},
-				(duration - seconds) * 1000,
-			);
+		const config = await getConfig(channel);
+		if (!config.enabled) {
+			continue;
+		}
+		const items = config.items.filter((i) => i.on).sort((a, b) => b.seconds - a.seconds);
+		for (const item of items) {
+			if (item.seconds >= (duration || MAX_LEAD_S)) {
+				batches += await pingChannel(channel, users, item);
+			} else if (duration > 0) {
+				setTimeout(
+					() => {
+						void pingChannel(channel, users, item).catch((e) => console.warn('[raid-notifier] Erinnerung', e));
+					},
+					(duration - item.seconds) * 1000,
+				);
+			}
 		}
 	}
+	return batches;
 };
 
 module.exports = defineChatModule({
@@ -166,13 +207,11 @@ module.exports = defineChatModule({
 				return;
 			}
 
-			const batches = await pingAll(subscribers);
-			console.log(`[raid-notifier] Raid in #${channel.name} - ${batches} Nachricht(en) in ${subscribers.size} Channel(s)`);
-
 			const duration = Number(DURATION_PATTERN.exec(message)?.[1] ?? 0);
-			await scheduleReminders(subscribers, duration);
+			const batches = await runRaid(subscribers, duration);
+			console.log(`[raid-notifier] Raid in #${channel.name} - ${batches} sofortige Nachricht(en), ${subscribers.size} Channel(s)`);
 		},
 	},
 });
 
-Object.assign(module.exports, { MIN_LEAD_S, MAX_LEAD_S, clampLead, RAID_TEMPLATE_COMMANDS, DEFAULT_RAID_MESSAGE, DEFAULT_RAID_REMINDER, formatRaidText, raidPingMessages });
+Object.assign(module.exports, { runRaid, MIN_LEAD_S, MAX_LEAD_S, MAX_ITEMS, clampLead, getConfig, setEnabled, updateItems, newItem, defaultText, RAID_TEMPLATE_COMMANDS, DEFAULT_RAID_MESSAGE, DEFAULT_RAID_REMINDER, formatRaidText, raidPingMessages });

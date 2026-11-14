@@ -492,6 +492,18 @@
     .msg-cell input { background: #2e2e2e; border: 1px solid #1f7fb3; border-radius: 6px; color: #ffffff; font-size: 15px; padding: 4px 8px; width: 100%; }
     .cell-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
 
+    /* Raid Notify (ninou2, 14.11.2026): Entfernen, Schalter, Zeit, Nachricht, Anzahl */
+    .raid-table .data-table-head,
+    .raid-table .data-row { grid-template-columns: 88px 250px 80px 1fr 80px; }
+    .raid-table .cell-actions { justify-content: flex-start; }
+    .raid-table .raid-name { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
+    .raid-table .raid-name > span { font-size: 15px; font-weight: 600; white-space: nowrap; }
+    .raid-table .raid-off { opacity: .55; }
+    .raid-tag { background: #1f7fb322; border-radius: 4px; color: #3a9bd0; font-size: 11.5px; font-weight: 700; margin-left: 8px; padding: 1px 6px; text-transform: uppercase; }
+    .raid-tag.custom { background: #8a5a1f33; color: #d9a24a; }
+    .msg-edit .msg-def { background: #333333; border: none; border-radius: 6px; color: #ffffff; cursor: pointer; font-size: 13px; font-weight: 600; height: 30px; padding: 0 8px; width: auto; }
+    .msg-edit .msg-def:hover { background: #444444; }
+
     /* Banphrases: 3 cols */
     .phrase-table .data-table-head,
     .phrase-table .data-row { grid-template-columns: 1fr 1fr 80px; }
@@ -1189,38 +1201,10 @@
       <div class="section-header">
         <div class="section-title">Raid Notify <span class="count-pill" id="countRaid">0</span></div>
       </div>
-      <p class="section-desc">When a raid event is announced, the bot pings everyone who joined with <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">!subraid</code> in your channel, and once more shortly before it starts. Use <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{users}</code> for the names and <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{seconds}</code> for the seconds left.</p>
+      <p class="section-desc">Each row is one message to everyone who joined with <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">!subraid</code> in your channel. <b>Time</b> is how many seconds before the raid starts it is posted (120 = right when it is announced). Click Time, Message or Times to change them. Use <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{users}</code> for the names and <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{seconds}</code> for the seconds left. If you switch all of them off or remove them, Raid Notify turns itself off.</p>
 
-      <form class="add-card" id="raidForm">
-        <div class="add-card-row">
-          <div class="field">
-            <label>First message (event announced)</label>
-            <input type="text" id="raidPingText" maxlength="400">
-          </div>
-          <div class="field field-sm">
-            <label>Number</label>
-            <input type="number" id="raidPingTimes" min="1" max="5" value="1" title="How many times the bot posts it (1-5)">
-          </div>
-        </div>
-        <div class="add-card-row">
-          <div class="field">
-            <label>Reminder message</label>
-            <input type="text" id="raidReminderText" maxlength="400">
-          </div>
-          <div class="field field-sm">
-            <label>Number</label>
-            <input type="number" id="raidReminderTimes" min="1" max="5" value="1" title="How many times the bot posts it (1-5)">
-          </div>
-          <div class="field field-sm">
-            <label>Seconds before start</label>
-            <input type="number" id="raidSeconds" min="5" max="120" value="20" title="When the reminder is posted (5-120 seconds before the event starts)">
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px;margin-top:6px">
-          <button type="submit" class="btn btn-primary">Save</button>
-          <span class="cell-muted" id="raidStats"></span>
-        </div>
-      </form>
+      <div id="raidList"></div>
+      <div style="margin-top:10px"><button type="button" class="btn btn-primary" id="raidAddButton" onclick="addRaidItem()">+ Add notification</button></div>
 
       <div class="section-title" style="margin:18px 0 8px">Subscribers <span class="count-pill" id="countRaidSubs">0</span></div>
       <div id="raidSubs"></div>
@@ -1446,6 +1430,7 @@
 
     // ── State ──────────────────────────────────────────────────────────────────
     let currentPage = 'overview';
+    let raidNavKnown = false; // erst true, wenn die Statistik den Zustand von Raid Notify geliefert hat
     let isAdmin = false;
     let guestMode = false;
     let adminTab = 'banphrases';
@@ -1551,6 +1536,10 @@
     function pageFromHash() {
       // "#reminders-history/pages/2": nur der Teil vor dem ersten "/" ist die Seite
       const name = location.hash.slice(1).split('/')[0];
+      // Raid Notify ist in der Seitenleiste erst sichtbar, wenn die Statistik geladen ist: beim Neuladen auf #raidnotify nicht
+      // zur Uebersicht springen (ninou2, 14.11.2026: "the website changed link and brought me back to main page"), updateRaidNav
+      // prueft es spaeter
+      if (name === 'raidnotify' && !raidNavKnown && !guestMode) return name;
       const navName = (name === 'reminders-history') ? 'reminders' : name;
       const button = (/^[a-z-]+$/.test(name)) ? document.querySelector(`.nav-item[onclick="showPage('${navName}')"]`) : null;
       // Versteckte Eintraege (Admin-Bereich ohne Rechte) fuehren zur Uebersicht
@@ -2952,6 +2941,8 @@
     function updateRaidNav(enabled) {
       const nav = document.getElementById('navRaidNotify');
       if (!nav || guestMode) return;
+      raidNavKnown = true;
+      if (!enabled && currentPage === 'raidnotify') showPage('overview');
       nav.style.display = enabled ? '' : 'none';
       const section = nav.closest('.nav-section');
       if (section) section.style.display = '';
@@ -2967,37 +2958,103 @@
     function renderRaidNotify() {
       const r = data.raidnotify;
       if (!r) return;
-      document.getElementById('raidPingText').value = r.ping.text;
-      document.getElementById('raidPingTimes').value = r.ping.times;
-      document.getElementById('raidReminderText').value = r.reminder.text;
-      document.getElementById('raidReminderTimes').value = r.reminder.times;
-      const seconds = document.getElementById('raidSeconds');
-      seconds.min = r.minSeconds; seconds.max = r.maxSeconds; seconds.value = r.seconds;
-      document.getElementById('raidStats').textContent = `Posted so far: first message ${r.ping.uses}×, reminder ${r.reminder.uses}×`;
-      document.getElementById('countRaid').textContent = r.subscribers.length;
+      document.getElementById('countRaid').textContent = r.items.length;
       document.getElementById('countRaidSubs').textContent = r.subscribers.length;
+      document.getElementById('raidAddButton').style.display = r.items.length >= r.maxItems ? 'none' : '';
+      document.getElementById('raidList').innerHTML = r.items.length ? `
+        <div class="data-table raid-table">
+          <div class="data-table-head"><div></div><div>Notification</div><div>Time</div><div>Message</div><div>Times</div></div>
+          ${r.items.map((item, index) => `
+            <div class="data-row${item.on ? '' : ' raid-off'}">
+              <div class="cell-actions"><button class="btn btn-danger" onclick="removeRaidItem(${item.id})">Remove</button></div>
+              <div class="raid-name"><span>Raid notification ${index + 1}</span>
+                <div class="toggle-pair">${toggleBtn(item.on, 'On', `setRaidItem(${item.id}, { on: true })`)}${toggleBtn(!item.on, 'Off', `setRaidItem(${item.id}, { on: false })`)}</div></div>
+              <div class="cell-muted msg-cell" title="Click to change (${r.minSeconds}-${r.maxSeconds} seconds before the start)" onclick="editRaidCell(this, ${item.id}, 'seconds')">${item.seconds}s</div>
+              <div class="cell-muted msg-cell" title="Click to edit" onclick="editRaidCell(this, ${item.id}, 'text')">${esc(item.text)}<span class="raid-tag${item.custom ? ' custom' : ''}">${item.custom ? 'custom' : 'default'}</span></div>
+              <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editRaidCell(this, ${item.id}, 'times')">${item.times}×</div>
+            </div>`).join('')}
+        </div>` : buildEmpty('No raid notifications.');
       document.getElementById('raidSubs').innerHTML = r.subscribers.length
         ? `<div class="cell-muted" style="line-height:1.9">${r.subscribers.map(name => `<span class="uses-pill">@${esc(name)}</span>`).join(' ')}</div>`
         : buildEmpty('Nobody joined with !subraid yet.');
     }
 
-    document.getElementById('raidForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const clamp = (id, lo, hi) => Math.min(hi, Math.max(lo, parseInt(document.getElementById(id).value, 10) || lo));
-      const r = data.raidnotify;
-      const result = await apiFetch('api/raidnotify', {
-        method: 'PUT',
-        body: JSON.stringify({
-          ping: { text: document.getElementById('raidPingText').value.trim(), times: clamp('raidPingTimes', 1, 5) },
-          reminder: { text: document.getElementById('raidReminderText').value.trim(), times: clamp('raidReminderTimes', 1, 5) },
-          seconds: clamp('raidSeconds', r?.minSeconds ?? 5, r?.maxSeconds ?? 120),
-        }),
-      });
-      if (result === null) return;
+    // Antwort uebernehmen; sind alle Eintraege aus/entfernt, ist Raid Notify automatisch aus: Punkt weg, zurueck zur Uebersicht
+    function applyRaidResult(result, message) {
       data.raidnotify = result;
+      if (data.channelSettings) data.channelSettings.raidNotify = result.enabled;
+      if (!result.enabled) {
+        updateRaidNav(false);
+        renderChannelSettings();
+        showPage('overview');
+        showToast('Raid Notify turned off.', 'success');
+        return;
+      }
       renderRaidNotify();
-      showToast('Raid Notify saved.', 'success');
-    });
+      if (message) showToast(message, 'success');
+    }
+
+    async function setRaidItem(id, fields, message) {
+      const result = await apiFetch(`api/raidnotify/items/${id}`, { method: 'PUT', body: JSON.stringify(fields) });
+      if (result === null) return;
+      applyRaidResult(result, message ?? 'Saved.');
+    }
+
+    async function addRaidItem() {
+      const result = await apiFetch('api/raidnotify/items', { method: 'POST', body: '{}' });
+      if (result === null) return;
+      applyRaidResult(result, 'Raid notification added.');
+    }
+
+    async function removeRaidItem(id) {
+      const result = await apiFetch(`api/raidnotify/items/${id}`, { method: 'DELETE' });
+      if (result === null) return;
+      applyRaidResult(result, 'Raid notification removed.');
+    }
+
+    // Zeit (Sekunden), Text oder Anzahl in der Tabelle anklicken; Haken (oder Enter) speichert, Kreuz (oder Escape) verwirft.
+    // Beim Text gibt es zusaetzlich "Default" = Standardtext wiederherstellen.
+    function editRaidCell(cell, id, field) {
+      if (cell.querySelector('input')) return;
+      const r = data.raidnotify;
+      const item = r.items.find(i => i.id === id);
+      if (!item) return;
+      const onclickAttr = cell.getAttribute('onclick');
+      const html = cell.innerHTML;
+      cell.removeAttribute('onclick');
+      const isText = field === 'text';
+      cell.innerHTML = isText
+        ? '<span class="msg-edit"><input type="text" maxlength="400"><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button><button type="button" class="msg-def" title="Use the default message">Default</button></span>'
+        : '<span class="times-edit"><input type="number"></span><span class="times-pop"><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button></span>';
+      const input = cell.querySelector('input');
+      if (field === 'seconds') { input.min = r.minSeconds; input.max = r.maxSeconds; input.value = item.seconds; }
+      else if (field === 'times') { input.min = 1; input.max = 5; input.value = item.times; }
+      else input.value = item.text;
+      input.focus();
+      if (!isText) input.select();
+      let done = false;
+      const close = () => { cell.innerHTML = html; delete cell.dataset.editing; cell._cancel = null; if (onclickAttr) cell.setAttribute('onclick', onclickAttr); };
+      cell.dataset.editing = '1';
+      cell._cancel = () => { done = true; close(); };
+      const save = async (value) => {
+        if (done) return;
+        done = true;
+        const unchanged = value === undefined ? (isText ? input.value.trim() === item.text : Number(input.value) === item[field]) : false;
+        if (unchanged) { close(); return; }
+        const body = value !== undefined ? { text: value }
+          : isText ? { text: input.value.trim() }
+          : { [field]: Number(input.value) };
+        close();
+        await setRaidItem(id, body);
+      };
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); save(); }
+        else if (e.key === 'Escape') { done = true; close(); }
+      });
+      cell.querySelector('.msg-yes').addEventListener('click', (e) => { e.stopPropagation(); save(); });
+      cell.querySelector('.msg-no').addEventListener('click', (e) => { e.stopPropagation(); done = true; close(); });
+      cell.querySelector('.msg-def')?.addEventListener('click', (e) => { e.stopPropagation(); save(null); });
+    }
 
     // ── Ban Watch ──────────────────────────────────────────────────────────────
     async function loadBanwatch() {

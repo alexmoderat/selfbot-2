@@ -80,7 +80,7 @@ const channelSettings = async (channel) => ({
 	badgeAlerts: (await bot.Channels.getData(channel, 'badgeAlerts'))?.enabled === true,
 	badgeAlertsMessage: (await bot.Channels.getData(channel, 'badgeAlerts'))?.message ?? '',
 	// Raid Notify (ninou2, 14.11.2026): standardmaessig aus, danach erscheint der Punkt Raid Notify in den Notifications
-	raidNotify: (await bot.Channels.getData(channel, 'raidNotify'))?.enabled === true,
+	raidNotify: (await raidNotifier.getConfig(channel)).enabled,
 });
 
 const applyChannelSettings = async (req, channel) => {
@@ -114,8 +114,7 @@ const applyChannelSettings = async (req, channel) => {
 		});
 	}
 	if (typeof raidNotify === 'boolean') {
-		const current = (await bot.Channels.getData(channel, 'raidNotify')) ?? {};
-		await bot.Channels.setData(channel, 'raidNotify', { ...current, enabled: raidNotify });
+		await raidNotifier.setEnabled(channel, raidNotify);
 	}
 	return await channelSettings(channel);
 };
@@ -1012,20 +1011,12 @@ const createDashboardRouter = () => {
 
 	/* ---------- raid notify ---------- */
 	// ninou2, 14.11.2026: "Raid notification on/off, off by default at the BOT commands, then ... a new title in the notification
-	// section named Raid Notify". Texte und Anzahl liegen wie bisher in den Vorlagen !raidping / !raidreminder, der Zeitpunkt der
-	// Erinnerung (5-120 s vor Start) in den Channel-Daten.
+	// section named Raid Notify", danach eine Tabelle mit mehreren Benachrichtigungen (Schalter, Zeit, Text Standard/eigen, Anzahl).
+	// Sind alle aus oder entfernt, schaltet sich Raid Notify selbst aus (der Punkt verschwindet wieder).
 	const RAID_TEXT_MAX = 400;
 	const raidNotifyState = async (channel) => {
 		const uses = await usageCounts(channel);
-		const settings = (await bot.Channels.getData(channel, 'raidNotify')) ?? {};
-		const template = async (name, fallback) => {
-			const row = await customCommands.get(channel, `!${name}`).catch(() => null);
-			return {
-				text: row?.Response ?? fallback,
-				times: row?.Times ? cleanTimes(row.Times) : 1,
-				uses: uses.get(`custom:${channel.id}:${name}`) ?? 0,
-			};
-		};
+		const config = await raidNotifier.getConfig(channel);
 		const subscribers = [];
 		for (const row of await bot.DB.RaidSubscriber.find({ channel: channel.id }).lean()) {
 			const user = await bot.Users.get(row.userAlias);
@@ -1034,59 +1025,87 @@ const createDashboardRouter = () => {
 			}
 		}
 		return {
-			enabled: settings.enabled === true,
-			seconds: raidNotifier.clampLead(settings.seconds),
+			enabled: config.enabled,
+			items: config.items.map((i) => ({
+				...i,
+				custom: i.text !== null,
+				text: i.text ?? raidNotifier.defaultText(i.seconds),
+				uses: uses.get(`custom:${channel.id}:${i.seconds >= raidNotifier.MAX_LEAD_S ? 'raidping' : 'raidreminder'}`) ?? 0,
+			})),
 			minSeconds: raidNotifier.MIN_LEAD_S,
 			maxSeconds: raidNotifier.MAX_LEAD_S,
-			ping: await template('raidping', raidNotifier.DEFAULT_RAID_MESSAGE),
-			reminder: await template('raidreminder', raidNotifier.DEFAULT_RAID_REMINDER),
+			maxItems: raidNotifier.MAX_ITEMS,
 			subscribers: subscribers.sort((a, b) => a.localeCompare(b)),
 		};
 	};
-	const saveRaidTemplate = async (channel, name, fallback, input) => {
-		if (!input || typeof input !== 'object') {
-			return;
-		}
-		const existing = await customCommands.get(channel, `!${name}`).catch(() => null);
-		const text = str(input.text).replaceAll(/[\r\n]+/g, ' ').trim().slice(0, RAID_TEXT_MAX) || existing?.Response || fallback;
-		const options = {
-			Cooldown: existing?.Cooldown ?? 5,
-			Mod_Only: Boolean(existing?.Mod_Only),
-			Reply: Boolean(existing?.Reply),
-			Times: input.times === undefined ? (existing?.Times ?? 1) : cleanTimes(input.times),
-		};
-		if (existing) {
-			await customCommands.edit(existing, text, options);
-		} else {
-			await customCommands.add(channel, `!${name}`, text, options);
-		}
-	};
-
-	router.get(
-		'/api/raidnotify',
-		requireSession,
-		route(async (req, res) => {
-			const channel = sessionChannel(req, res);
-			if (channel) {
-				res.json(await raidNotifyState(channel));
-			}
-		}),
-	);
-	router.put(
-		'/api/raidnotify',
-		requireSession,
+	const raidRoute = (change) =>
 		route(async (req, res) => {
 			const channel = sessionChannel(req, res);
 			if (!channel) {
 				return;
 			}
-			await saveRaidTemplate(channel, 'raidping', raidNotifier.DEFAULT_RAID_MESSAGE, req.body.ping);
-			await saveRaidTemplate(channel, 'raidreminder', raidNotifier.DEFAULT_RAID_REMINDER, req.body.reminder);
-			if (req.body.seconds !== undefined) {
-				const current = (await bot.Channels.getData(channel, 'raidNotify')) ?? {};
-				await bot.Channels.setData(channel, 'raidNotify', { ...current, seconds: raidNotifier.clampLead(req.body.seconds) });
+			const error = await change(channel, req);
+			if (error) {
+				res.status(400).json({ error });
+				return;
 			}
 			res.json(await raidNotifyState(channel));
+		});
+
+	router.get('/api/raidnotify', requireSession, raidRoute(async () => null));
+	router.post(
+		'/api/raidnotify/items',
+		requireSession,
+		raidRoute(async (channel) => {
+			let tooMany = false;
+			await raidNotifier.updateItems(channel, (items) => {
+				if (items.length >= raidNotifier.MAX_ITEMS) {
+					tooMany = true;
+					return items;
+				}
+				return [...items, raidNotifier.newItem(Math.max(0, ...items.map((i) => i.id)) + 1)];
+			});
+			return tooMany ? `At most ${raidNotifier.MAX_ITEMS} raid notifications.` : null;
+		}),
+	);
+	router.put(
+		'/api/raidnotify/items/:id',
+		requireSession,
+		raidRoute(async (channel, req) => {
+			const id = Number(req.params.id);
+			const { on, seconds, text, times } = req.body ?? {};
+			await raidNotifier.updateItems(channel, (items) =>
+				items.map((item) => {
+					if (item.id !== id) {
+						return item;
+					}
+					const next = { ...item };
+					if (typeof on === 'boolean') {
+						next.on = on;
+					}
+					if (seconds !== undefined) {
+						next.seconds = raidNotifier.clampLead(seconds);
+					}
+					if (text !== undefined) {
+						// null / leer = Standardtext
+						next.text = typeof text === 'string' ? text.replaceAll(/[\r\n]+/g, ' ').trim().slice(0, RAID_TEXT_MAX) || null : null;
+					}
+					if (times !== undefined) {
+						next.times = cleanTimes(times);
+					}
+					return next;
+				}),
+			);
+			return null;
+		}),
+	);
+	router.delete(
+		'/api/raidnotify/items/:id',
+		requireSession,
+		raidRoute(async (channel, req) => {
+			const id = Number(req.params.id);
+			await raidNotifier.updateItems(channel, (items) => items.filter((i) => i.id !== id));
+			return null;
 		}),
 	);
 
@@ -1377,7 +1396,7 @@ const createDashboardRouter = () => {
 				titlenotify: (await titleNotifyRows(await issuer(req))).length,
 				tweetnotify: (await tweetNotifyRows(await issuer(req))).length,
 				banwatch: (await banwatchRows(channel)).length,
-				raidNotify: (await bot.Channels.getData(channel, 'raidNotify'))?.enabled === true,
+				raidNotify: (await raidNotifier.getConfig(channel)).enabled,
 			});
 		}),
 	);
