@@ -514,7 +514,7 @@
     .raid-table .raid-name > span { font-size: 13px; font-weight: 600; white-space: nowrap; }
     /* ninou2, 14.11.2026: Schalter, Text "Raid notification N" und Remove etwas kleiner, dafuer die Spalte breiter */
     /* ninou2, 14.11.2026: "the button ON/OFF just a little smaller and move just a little bit to the right" */
-    .raid-table .toggle-pair { margin-left: 6px; }
+    .raid-table .toggle-pair { margin-left: 12px; }
     .raid-table .toggle-pair button { font-size: 11px; padding: 3px 8px; }
     /* ninou2, 14.11.2026: Remove noch kleiner und weiter nach links, die Spalte Notification bleibt wo sie ist (mehr Platz dazwischen) */
     .raid-table .btn-danger { font-size: 11px; margin-left: -8px; padding: 3px 7px; }
@@ -522,7 +522,8 @@
     .raid-table .raid-off { opacity: .55; }
     /* ninou2, 14.11.2026: "default, custom ... show the one active and in it color blue/orange and make it as big as MESSAGE word":
        je Zeile nur der aktive Zustand in Klammern vor dem Text, gleiche Schrift wie die Ueberschrift */
-    .raid-state { font-size: 11.5px; font-weight: 700; letter-spacing: 0.8px; margin-right: 4px; text-transform: uppercase; }
+    .raid-legend { letter-spacing: 0.8px; text-transform: none; }
+    .raid-state { font-weight: 700; }
     .raid-state.default { color: #3a9bd0; }
     .raid-state.custom { color: #e0a030; }
     .raid-tag { background: #1f7fb322; border-radius: 4px; color: #3a9bd0; font-size: 11.5px; font-weight: 700; margin-left: 8px; padding: 1px 6px; text-transform: uppercase; }
@@ -2984,6 +2985,15 @@
       renderRaidNotify();
     }
 
+    // Aktiver Zustand neben der Ueberschrift MESSAGE, z.B. "MESSAGE (Default)": blau = Default, orange = Custom; sind die Zeilen
+    // gemischt, stehen beide darin (ninou2, 14.11.2026: "exemple : MESSAGE (Default)", "keep it next to the word message on its right")
+    function raidStateLegend(items) {
+      const words = [];
+      if (items.some(i => !i.custom)) words.push('<span class="raid-state default">Default</span>');
+      if (items.some(i => i.custom)) words.push('<span class="raid-state custom">Custom</span>');
+      return `<span class="raid-legend">(${words.join(', ')})</span>`;
+    }
+
     function renderRaidNotify() {
       const r = data.raidnotify;
       if (!r) return;
@@ -2993,14 +3003,14 @@
       document.getElementById('raidAddButton').style.display = r.items.length >= r.maxItems ? 'none' : '';
       document.getElementById('raidList').innerHTML = r.items.length ? `
         <div class="data-table raid-table">
-          <div class="data-table-head"><div></div><div>Notification</div><div>Time</div><div>Message</div><div>Times</div></div>
+          <div class="data-table-head"><div></div><div>Notification</div><div>Time</div><div>Message ${raidStateLegend(r.items)}</div><div>Times</div></div>
           ${r.items.map((item, index) => `
             <div class="data-row${item.on ? '' : ' raid-off'}">
               <div class="cell-actions"><button class="btn btn-danger" onclick="removeRaidItem(${item.id}, this)">Remove</button></div>
               <div class="raid-name"><span>Raid notification ${index + 1}</span>
                 <div class="toggle-pair">${toggleBtn(item.on, 'On', `confirmRaidToggle(this, ${item.id}, true)`)}${toggleBtn(!item.on, 'Off', `confirmRaidToggle(this, ${item.id}, false)`)}</div></div>
               <div class="cell-muted msg-cell" title="Click to change (${r.minSeconds}-${r.maxSeconds} seconds before the start)" onclick="editRaidCell(this, ${item.id}, 'seconds')">${item.seconds}s</div>
-              <div class="cell-muted msg-cell${item.custom ? ' raid-custom' : ''}" title="${item.custom ? 'Custom message' : 'Default message'} - click to edit" onclick="editRaidCell(this, ${item.id}, 'text')"><span class="raid-state ${item.custom ? 'custom' : 'default'}">(${item.custom ? 'custom' : 'default'})</span> ${esc(item.text)}</div>
+              <div class="cell-muted msg-cell${item.custom ? ' raid-custom' : ''}" title="${item.custom ? 'Custom message' : 'Default message'} - click to edit" onclick="editRaidCell(this, ${item.id}, 'text')">${esc(item.text)}</div>
               <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editRaidCell(this, ${item.id}, 'times')">${item.times}×</div>
             </div>`).join('')}
         </div>` : buildEmpty('No raid notifications.');
