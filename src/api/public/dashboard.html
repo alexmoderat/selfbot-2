@@ -501,6 +501,8 @@
     /* Bestaetigung unter "Default" darf ueber den Tabellenrand ragen (sonst bei der letzten Zeile abgeschnitten) */
     .raid-table { overflow: visible; }
     .raid-table .data-table-head { border-radius: 10px 10px 0 0; }
+    .raid-off-pop { background: #1a1a1a; border: 1px solid #333333; border-radius: 8px; margin-top: 6px; padding: 6px 8px; position: absolute; left: 0; top: 100%; white-space: nowrap; z-index: 20; }
+    .raid-off-pop .confirm-q { font-size: 13px; margin-right: 4px; }
     .def-wrap { display: inline-flex; position: relative; }
     .def-pop { background: #1a1a1a; border: 1px solid #333333; border-radius: 8px; margin-top: 6px; padding: 4px; position: absolute; right: 0; top: 100%; z-index: 20; }
     /* ninou2, 14.11.2026: "the red part should get filled 1st before creating the 2nd row" - lange Woerter ohne Leerzeichen springen
@@ -2984,7 +2986,7 @@
           <div class="data-table-head"><div></div><div>Notification</div><div>Time</div><div>Message</div><div>Times</div></div>
           ${r.items.map((item, index) => `
             <div class="data-row${item.on ? '' : ' raid-off'}">
-              <div class="cell-actions"><button class="btn btn-danger" onclick="removeRaidItem(${item.id})">Remove</button></div>
+              <div class="cell-actions"><button class="btn btn-danger" onclick="removeRaidItem(${item.id}, this)">Remove</button></div>
               <div class="raid-name"><span>Raid notification ${index + 1}</span>
                 <div class="toggle-pair">${toggleBtn(item.on, 'On', `confirmRaidToggle(this, ${item.id}, true)`)}${toggleBtn(!item.on, 'Off', `confirmRaidToggle(this, ${item.id}, false)`)}</div></div>
               <div class="cell-muted msg-cell" title="Click to change (${r.minSeconds}-${r.maxSeconds} seconds before the start)" onclick="editRaidCell(this, ${item.id}, 'seconds')">${item.seconds}s</div>
@@ -3029,7 +3031,13 @@
       const timer = setTimeout(restore, 8000);
       box._cancel = restore;
       box.querySelector('.msg-no').addEventListener('click', (e) => { e.stopPropagation(); restore(); });
-      box.querySelector('.msg-yes').addEventListener('click', (e) => { e.stopPropagation(); restore(); setRaidItem(id, { on }); });
+      box.querySelector('.msg-yes').addEventListener('click', (e) => {
+        e.stopPropagation();
+        restore();
+        const anchor = pair.parentElement;
+        if (!on && wouldTurnOffRaid(id)) askRaidOff(anchor, () => setRaidItem(id, { on }));
+        else setRaidItem(id, { on });
+      });
     }
 
     async function setRaidItem(id, fields, message) {
@@ -3044,10 +3052,37 @@
       applyRaidResult(result, 'Raid notification added.');
     }
 
-    async function removeRaidItem(id) {
+    // Schaltet das Entfernen/Ausschalten dieses Eintrags Raid Notify ganz aus (kein anderer Eintrag ist an)?
+    function wouldTurnOffRaid(id) {
+      return !data.raidnotify.items.some(i => i.id !== id && i.on);
+    }
+
+    // Zusaetzliche Rueckfrage unter dem Knopf (ninou2, 14.11.2026: "if you have only 1 notification and you click remove then click yes,
+    // another 3rd message should show telling you are you sure: yes/no, because if you remove this 3rd your noti raid will go back to off")
+    function askRaidOff(anchor, onYes) {
+      if (anchor.querySelector('.raid-off-pop')) return;
+      anchor.style.position = 'relative';
+      const box = document.createElement('span');
+      box.className = 'confirm-box raid-off-pop';
+      box.innerHTML = '<span class="confirm-q">Raid Notify turns off. Sure?</span><button type="button" class="msg-yes" title="Yes">✓</button><button type="button" class="msg-no" title="No">✕</button>';
+      anchor.append(box);
+      const close = () => { clearTimeout(timer); box.remove(); };
+      const timer = setTimeout(close, 8000);
+      box._cancel = close;
+      box.querySelector('.msg-no').addEventListener('click', (e) => { e.stopPropagation(); close(); });
+      box.querySelector('.msg-yes').addEventListener('click', (e) => { e.stopPropagation(); close(); onYes(); });
+    }
+
+    async function deleteRaidItem(id) {
       const result = await apiFetch(`api/raidnotify/items/${id}`, { method: 'DELETE' });
       if (result === null) return;
       applyRaidResult(result, 'Raid notification removed.');
+    }
+
+    function removeRaidItem(id, button) {
+      const anchor = button?.closest('.cell-actions');
+      if (anchor && wouldTurnOffRaid(id)) { askRaidOff(anchor, () => deleteRaidItem(id)); return; }
+      return deleteRaidItem(id);
     }
 
     // Zeit (Sekunden), Text oder Anzahl in der Tabelle anklicken; Haken (oder Enter) speichert, Kreuz (oder Escape) verwirft.
