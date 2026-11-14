@@ -2227,9 +2227,9 @@
         </div>`;
       }
       return `<div class="data-row" style="grid-template-columns:140px 1fr auto auto 120px">
-        <div class="cell-mono" style="color:#3a9bd0">!${esc(String(cmd.name).replace(/^!/, ""))}</div>
-        <div class="cell-muted" style="white-space:pre-wrap;word-break:break-word">${esc(cmd.response)}</div>
-        <div style="font-size:14px;color:#9a9c9b">${esc(cmd.cooldown ?? 5)}s${isRaidTemplate(cmd.name) ? ` · <span class="msg-cell" style="display:inline-block;min-width:34px;text-align:center" title="Click to change (1-5)" onclick="editTimesCell(this, 'cmd', '${esc(String(cmd.name).replace(/^!/, ''))}', '', ${Number(cmd.times) || 1})">${Number(cmd.times) || 1}×</span>` : ''}<br><span class="uses-link" title="who used it in your channel (since 23.10.2026)" onclick="showCommandUsers('${esc(String(cmd.name).replace(/^!/, ""))}', true)">${esc(cmd.uses ?? 0)} use${cmd.uses === 1 ? '' : 's'}</span></div>
+        <div class="cell-mono msg-cell" style="color:#3a9bd0" title="Click to rename" onclick="editCmdCell(this, '${esc(cmd.name)}', 'name')">!${esc(String(cmd.name).replace(/^!/, ""))}</div>
+        <div class="cell-muted msg-cell" style="white-space:pre-wrap;word-break:break-word" title="Click to edit" onclick="editCmdCell(this, '${esc(cmd.name)}', 'response')">${esc(cmd.response)}</div>
+        <div style="font-size:14px;color:#9a9c9b"><span class="msg-cell" title="Click to change the cooldown" onclick="editCmdCell(this, '${esc(cmd.name)}', 'cooldown')">${esc(cmd.cooldown ?? 5)}s</span>${isRaidTemplate(cmd.name) ? ` · <span class="msg-cell" style="display:inline-block;min-width:34px;text-align:center" title="Click to change (1-5)" onclick="editTimesCell(this, 'cmd', '${esc(String(cmd.name).replace(/^!/, ''))}', '', ${Number(cmd.times) || 1})">${Number(cmd.times) || 1}×</span>` : ''}<br><span class="uses-link" title="who used it in your channel (since 23.10.2026)" onclick="showCommandUsers('${esc(String(cmd.name).replace(/^!/, ""))}', true)">${esc(cmd.uses ?? 0)} use${cmd.uses === 1 ? '' : 's'}</span></div>
         <div style="display:flex;gap:5px;align-items:center">
           ${cmd.mod_only ? '<span class="badge badge-mod">MOD</span>' : ''}
           ${cmd.reply    ? '<span class="badge badge-reply">REPLY</span>' : ''}
@@ -2239,6 +2239,55 @@
           <button class="btn btn-danger" onclick="deleteCmd('${esc(cmd.name)}')">Delete</button>
         </div>
       </div>`;
+    }
+
+    // Name, Antwort und Cooldown direkt in der Tabelle anklicken und aendern (ninou2, 14.11.2026: "the COMMAND NAME, the MESSAGE CONTENT,
+    // the cooldown seconds all should be clickable that u edit it from there too"); Haken/Enter speichert, Kreuz/Escape verwirft
+    function editCmdCell(cell, name, field) {
+      if (cell.querySelector('input')) return;
+      const cmd = data.commands.find(c => c.name === name);
+      if (!cmd) return;
+      const original = field === 'name' ? String(cmd.name).replace(/^!/, '') : field === 'cooldown' ? String(cmd.cooldown ?? 5) : cmd.response;
+      const html = cell.innerHTML;
+      const onclickAttr = cell.getAttribute('onclick');
+      cell.removeAttribute('onclick');
+      cell.innerHTML = `<span class="msg-edit">${field === 'name' ? '<span class="cmd-edit-bang">!</span>' : ''}<input type="${field === 'cooldown' ? 'number' : 'text'}" ${field === 'cooldown' ? 'min="0" max="3600" style="width:64px"' : field === 'name' ? 'maxlength="30"' : 'maxlength="500"'}><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button></span>`;
+      const input = cell.querySelector('input');
+      input.value = original;
+      input.focus();
+      input.select();
+      let done = false;
+      const close = () => { cell.innerHTML = html; delete cell.dataset.editing; cell._cancel = null; if (onclickAttr) cell.setAttribute('onclick', onclickAttr); };
+      cell.dataset.editing = '1';
+      cell._cancel = () => { done = true; close(); };
+      const save = async () => {
+        if (done) return;
+        const value = input.value.trim();
+        if (value === original) { done = true; close(); return; }
+        const body = { response: cmd.response, cooldown: cmd.cooldown, mod_only: cmd.mod_only, reply: cmd.reply, times: cmd.times ?? undefined };
+        if (field === 'response') {
+          if (!value) { showToast('Response cannot be empty.', 'error'); return; }
+          body.response = value;
+        } else if (field === 'cooldown') {
+          body.cooldown = Math.min(3600, Math.max(0, parseInt(value, 10) || 0));
+        } else {
+          const newName = value.toLowerCase().replace(/^!+/, '');
+          if (!/^[a-z0-9_-]{1,30}$/.test(newName)) { showToast('The name may only have letters, numbers, - and _.', 'error'); return; }
+          body.newName = newName;
+        }
+        done = true;
+        const result = await apiFetch(`api/commands/${encodeURIComponent(name)}`, { method: 'PUT', body: JSON.stringify(body) });
+        if (result === null) { done = false; close(); return; }
+        data.commands = result;
+        renderCommands();
+        showToast('Saved.', 'success');
+      };
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); save(); }
+        else if (e.key === 'Escape') { done = true; close(); }
+      });
+      cell.querySelector('.msg-yes').addEventListener('click', (e) => { e.stopPropagation(); save(); });
+      cell.querySelector('.msg-no').addEventListener('click', (e) => { e.stopPropagation(); done = true; close(); });
     }
 
     function startEditCmd(name) {
