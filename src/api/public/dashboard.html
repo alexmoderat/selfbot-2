@@ -2974,7 +2974,7 @@
             <div class="data-row${item.on ? '' : ' raid-off'}">
               <div class="cell-actions"><button class="btn btn-danger" onclick="removeRaidItem(${item.id})">Remove</button></div>
               <div class="raid-name"><span>Raid notification ${index + 1}</span>
-                <div class="toggle-pair">${toggleBtn(item.on, 'On', `setRaidItem(${item.id}, { on: true })`)}${toggleBtn(!item.on, 'Off', `setRaidItem(${item.id}, { on: false })`)}</div></div>
+                <div class="toggle-pair">${toggleBtn(item.on, 'On', `confirmRaidToggle(this, ${item.id}, true)`)}${toggleBtn(!item.on, 'Off', `confirmRaidToggle(this, ${item.id}, false)`)}</div></div>
               <div class="cell-muted msg-cell" title="Click to change (${r.minSeconds}-${r.maxSeconds} seconds before the start)" onclick="editRaidCell(this, ${item.id}, 'seconds')">${item.seconds}s</div>
               <div class="cell-muted msg-cell" title="Click to edit" onclick="editRaidCell(this, ${item.id}, 'text')">${esc(item.text)}<span class="raid-tag${item.custom ? ' custom' : ''}">${item.custom ? 'custom' : 'default'}</span></div>
               <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editRaidCell(this, ${item.id}, 'times')">${item.times}×</div>
@@ -2998,6 +2998,26 @@
       }
       renderRaidNotify();
       if (message) showToast(message, 'success');
+    }
+
+    // On/Off erst nach Bestaetigung (ninou2, 14.11.2026: "make also clicking ON/OFF show the yes/no message"): der Schalter wird
+    // durch Haken und Kreuz ersetzt, nach 8 s oder beim Seitenwechsel kommt er von selbst zurueck
+    function confirmRaidToggle(button, id, on) {
+      const item = data.raidnotify?.items.find(i => i.id === id);
+      if (!item || item.on === on) return;
+      const pair = button.closest('.toggle-pair');
+      if (!pair || pair.dataset.asking === '1') return;
+      pair.dataset.asking = '1';
+      const box = document.createElement('span');
+      box.className = 'confirm-box';
+      box.innerHTML = `<button type="button" class="msg-yes" title="Switch ${on ? 'on' : 'off'}">✓</button><button type="button" class="msg-no" title="Keep it">✕</button>`;
+      pair.style.display = 'none';
+      pair.after(box);
+      const restore = () => { clearTimeout(timer); box.remove(); pair.style.display = ''; pair.dataset.asking = ''; };
+      const timer = setTimeout(restore, 8000);
+      box._cancel = restore;
+      box.querySelector('.msg-no').addEventListener('click', (e) => { e.stopPropagation(); restore(); });
+      box.querySelector('.msg-yes').addEventListener('click', (e) => { e.stopPropagation(); restore(); setRaidItem(id, { on }); });
     }
 
     async function setRaidItem(id, fields, message) {
