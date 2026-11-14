@@ -115,7 +115,8 @@ const migrateLegacy = async (channel, data) => {
 };
 
 const getConfig = async (channel) => {
-	const data = (await bot.Channels.getData(channel, 'raidNotify').catch(() => null)) ?? {};
+	// getData ist synchron, kein Promise (ninou2, 14.11.2026: "bot.Channels.getData(...).catch not a function")
+	const data = (await Promise.resolve(bot.Channels.getData(channel, 'raidNotify')).catch(() => null)) ?? {};
 	if (Array.isArray(data.items)) {
 		return { enabled: data.enabled === true, items: data.items.map(normalizeItem) };
 	}

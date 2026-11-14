@@ -7,7 +7,7 @@ const store = new Map();
 const channel = { id: 'c1', name: 'someone', mode: 'Write' };
 global.bot = {
 	Channels: {
-		getData: async (c, key) => store.get(`${c.id}:${key}`) ?? null,
+		getData: (c, key) => store.get(`${c.id}:${key}`) ?? null,
 		setData: async (c, key, value) => void store.set(`${c.id}:${key}`, value),
 		send: async (c, text) => void sent.push(text),
 		get: () => channel,
