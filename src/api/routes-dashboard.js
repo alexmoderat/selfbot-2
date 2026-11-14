@@ -510,7 +510,20 @@ const createDashboardRouter = () => {
 				}
 				const existing = await customCommands.get(channel, req.params.name ?? '');
 				if (existing) {
-					await customCommands.edit(existing, str(req.body.response) || existing.Response, commandOptions(req.body));
+					// Umbenennen (ninou2, 14.11.2026: "clicking edit should let u edit the command name too"): nur freie, gueltige Namen
+					let newName = null;
+					if (req.body.newName !== undefined && req.body.newName !== null) {
+						newName = `!${str(req.body.newName).toLowerCase().replace(/^!+/, '')}`;
+						if (!/^![a-z0-9_-]{1,30}$/.test(newName)) {
+							res.status(400).json({ error: 'invalid name' });
+							return;
+						}
+						if (newName !== existing.Name.toLowerCase() && (await customCommands.get(channel, newName))) {
+							res.status(409).json({ error: `!${newName.slice(1)} already exists` });
+							return;
+						}
+					}
+					await customCommands.edit(existing, str(req.body.response) || existing.Response, commandOptions(req.body), newName);
 				}
 				res.json(await commandRows(channel));
 			}),

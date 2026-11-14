@@ -551,6 +551,17 @@
     .msg-edit .msg-def { background: #333333; border: none; border-radius: 6px; color: #ffffff; cursor: pointer; font-size: 13px; font-weight: 600; height: 30px; padding: 0 8px; width: auto; }
     .msg-edit .msg-def:hover { background: #444444; }
 
+    /* Custom Commands: Bearbeiten in der Zeile, Spalten bleiben stehen */
+    .cmd-edit-row { align-items: start; }
+    .cmd-edit-name { align-items: center; display: flex; gap: 2px; }
+    .cmd-edit-bang { color: #3a9bd0; font-family: 'Consolas', 'Monaco', monospace; font-weight: 700; }
+    .cmd-edit-name input, .cmd-edit-row textarea, .cmd-edit-nums input { box-sizing: border-box; border-radius: 6px; font-size: 14px; padding: 5px 7px; width: 100%; }
+    .cmd-edit-row textarea { min-height: 56px; resize: vertical; }
+    .cmd-edit-nums { display: flex; flex-direction: column; gap: 4px; width: 62px; }
+    .cmd-edit-flags { display: flex; flex-direction: column; gap: 4px; }
+    .cmd-edit-flags .checkbox-label { font-size: 13px; }
+    .cmd-edit-row .cell-actions { flex-direction: column; align-items: flex-end; }
+
     /* Banphrases: 3 cols */
     .phrase-table .data-table-head,
     .phrase-table .data-row { grid-template-columns: 1fr 1fr 80px; }
@@ -2195,29 +2206,22 @@
 
     function renderCmdRow(cmd) {
       if (editingCmd === cmd.name) {
-        return `<div class="edit-inline" id="editRow-${esc(cmd.name)}">
-          <div class="add-card-row" style="margin-bottom:8px">
-            <div class="field">
-              <label>Response</label>
-              <textarea id="editResp-${esc(cmd.name)}">${esc(cmd.response)}</textarea>
-            </div>
-            <div class="field-sm" style="min-width:80px;max-width:90px">
-              <label>Cooldown (s)</label>
-              <input type="number" id="editCd-${esc(cmd.name)}" value="${esc(cmd.cooldown ?? 5)}" min="0" max="3600">
-            </div>
-            ${isRaidTemplate(cmd.name) ? `<div class="field-sm" style="min-width:80px;max-width:90px">
-              <label>Number</label>
-              <input type="number" id="editTimes-${esc(cmd.name)}" value="${esc(cmd.times ?? 1)}" min="1" max="5" title="How many times the bot posts the message (1-5)">
-            </div>` : ''}
+        // Bearbeiten direkt in der Zeile: jede Spalte bleibt an ihrem Platz, der Name ist mit aenderbar (ninou2, 14.11.2026: "clicking edit
+        // should let u edit the command name too, but the one click edit move everything weirdly to the left, can everything stay at its place")
+        const id = esc(cmd.name);
+        return `<div class="data-row cmd-edit-row" style="grid-template-columns:140px 1fr auto auto 120px">
+          <div class="cmd-edit-name"><span class="cmd-edit-bang">!</span><input type="text" id="editName-${id}" value="${esc(String(cmd.name).replace(/^!/, ''))}" maxlength="30"></div>
+          <div><textarea id="editResp-${id}" rows="2">${esc(cmd.response)}</textarea></div>
+          <div class="cmd-edit-nums">
+            <input type="number" id="editCd-${id}" value="${esc(cmd.cooldown ?? 5)}" min="0" max="3600" title="Cooldown in seconds">
+            ${isRaidTemplate(cmd.name) ? `<input type="number" id="editTimes-${id}" value="${esc(cmd.times ?? 1)}" min="1" max="5" title="How many times the bot posts the message (1-5)">` : ''}
           </div>
-          <div class="checkbox-row">
-            <label class="checkbox-label">
-              <input type="checkbox" id="editMod-${esc(cmd.name)}" ${cmd.mod_only ? 'checked' : ''}> Mod only
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" id="editReply-${esc(cmd.name)}" ${cmd.reply ? 'checked' : ''}> Reply
-            </label>
-            <button class="btn btn-primary btn-sm" onclick="saveCmd('${esc(cmd.name)}')" style="margin-left:auto">Save</button>
+          <div class="cmd-edit-flags">
+            <label class="checkbox-label"><input type="checkbox" id="editMod-${id}" ${cmd.mod_only ? 'checked' : ''}> Mod</label>
+            <label class="checkbox-label"><input type="checkbox" id="editReply-${id}" ${cmd.reply ? 'checked' : ''}> Reply</label>
+          </div>
+          <div class="cell-actions">
+            <button class="btn btn-primary btn-sm" onclick="saveCmd('${id}')">Save</button>
             <button class="btn btn-cancel" onclick="cancelEditCmd()">Cancel</button>
           </div>
         </div>`;
@@ -2254,10 +2258,12 @@
       const reply     = document.getElementById(`editReply-${name}`).checked;
       const timesEl   = document.getElementById(`editTimes-${name}`);
       const times     = timesEl ? Math.min(5, Math.max(1, parseInt(timesEl.value, 10) || 1)) : undefined;
+      const newName   = document.getElementById(`editName-${name}`).value.trim().toLowerCase().replace(/^!+/, '');
       if (!response) { showToast('Response cannot be empty.', 'error'); return; }
+      if (!/^[a-z0-9_-]{1,30}$/.test(newName)) { showToast('The name may only have letters, numbers, - and _.', 'error'); return; }
       const result = await apiFetch(`api/commands/${encodeURIComponent(name)}`, {
         method: 'PUT',
-        body: JSON.stringify({ response, cooldown, mod_only, reply, times }),
+        body: JSON.stringify({ response, cooldown, mod_only, reply, times, newName: newName === String(name).replace(/^!/, '').toLowerCase() ? undefined : newName }),
       });
       if (result === null) return;
       editingCmd = null;
