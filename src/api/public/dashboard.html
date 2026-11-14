@@ -498,6 +498,11 @@
     .raid-table .data-table-head,
     .raid-table .data-row { grid-template-columns: 76px 206px 42px 1fr 46px; column-gap: 8px; }
     .raid-table .cell-actions { justify-content: flex-start; }
+    /* Bestaetigung unter "Default" darf ueber den Tabellenrand ragen (sonst bei der letzten Zeile abgeschnitten) */
+    .raid-table { overflow: visible; }
+    .raid-table .data-table-head { border-radius: 10px 10px 0 0; }
+    .def-wrap { display: inline-flex; position: relative; }
+    .def-pop { background: #1a1a1a; border: 1px solid #333333; border-radius: 8px; margin-top: 6px; padding: 4px; position: absolute; right: 0; top: 100%; z-index: 20; }
     /* ninou2, 14.11.2026: "the red part should get filled 1st before creating the 2nd row" - lange Woerter ohne Leerzeichen springen
        sonst ganz in die zweite Zeile und lassen rechts Platz frei; jetzt bricht erst am echten Zeilenende um */
     .raid-table .msg-cell { overflow-wrap: anywhere; word-break: break-all; }
@@ -3057,7 +3062,7 @@
       cell.removeAttribute('onclick');
       const isText = field === 'text';
       cell.innerHTML = isText
-        ? '<span class="msg-edit"><input type="text" maxlength="400"><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button><button type="button" class="msg-def" title="Use the default message">Default</button></span>'
+        ? '<span class="msg-edit"><input type="text" maxlength="400"><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button><span class="def-wrap"><button type="button" class="msg-def" title="Use the default message">Default</button></span></span>'
         : '<span class="times-edit"><input type="number"></span><span class="times-pop"><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button></span>';
       const input = cell.querySelector('input');
       if (field === 'seconds') { input.min = r.minSeconds; input.max = r.maxSeconds; input.value = item.seconds; }
@@ -3086,7 +3091,20 @@
       });
       cell.querySelector('.msg-yes').addEventListener('click', (e) => { e.stopPropagation(); save(); });
       cell.querySelector('.msg-no').addEventListener('click', (e) => { e.stopPropagation(); done = true; close(); });
-      cell.querySelector('.msg-def')?.addEventListener('click', (e) => { e.stopPropagation(); save(null); });
+      // Default (ninou2, 14.11.2026: "if you have a custom message and click default a pop up under default with yes/no should show"):
+      // bei eigenem Text erst Haken/Kreuz unter dem Knopf, erst der Haken stellt den Standardtext wieder her
+      cell.querySelector('.msg-def')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!item.custom) return;
+        const wrap = e.currentTarget.parentElement;
+        if (wrap.querySelector('.confirm-box')) return;
+        const box = document.createElement('span');
+        box.className = 'confirm-box def-pop';
+        box.innerHTML = '<button type="button" class="msg-yes" title="Back to the default message">✓</button><button type="button" class="msg-no" title="Keep my message">✕</button>';
+        wrap.append(box);
+        box.querySelector('.msg-no').addEventListener('click', (ev) => { ev.stopPropagation(); box.remove(); });
+        box.querySelector('.msg-yes').addEventListener('click', (ev) => { ev.stopPropagation(); save(null); });
+      });
     }
 
     // ── Ban Watch ──────────────────────────────────────────────────────────────
