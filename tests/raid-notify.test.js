@@ -104,3 +104,18 @@ test('runRaid ohne bekannte Dauer: nur die 120-s-Eintraege, nichts eingeplant', 
 	assert.equal(sent.length, 1);
 	assert.deepEqual(timers, []);
 });
+
+test('Zaehler je Zeit bleibt beim Entfernen und erneuten Anlegen erhalten, Start bei 0', async () => {
+	reset();
+	await raid.setEnabled(channel, true);
+	assert.deepEqual((await raid.getConfig(channel)).uses, {});
+	for (let i = 0; i < 3; i++) {
+		await raid.bumpUses(channel, 53);
+	}
+	await raid.bumpUses(channel, 120);
+	await raid.updateItems(channel, (items) => [...items, raid.newItem(2, 53)]);
+	// 53-s-Eintrag entfernen und mit derselben Zeit neu anlegen: Zaehler laeuft weiter
+	await raid.updateItems(channel, (items) => items.filter((i) => i.seconds !== 53));
+	await raid.updateItems(channel, (items) => [...items, raid.newItem(3, 53)]);
+	assert.deepEqual((await raid.getConfig(channel)).uses, { 53: 3, 120: 1 });
+});

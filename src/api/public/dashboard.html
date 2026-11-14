@@ -500,10 +500,11 @@
     /* ninou2, 14.11.2026: Abstand zwischen TIMES und dem rechten Tabellenrand minimal; ausserhalb der Tabelle je Zeile die Zahl der Aufrufe
        wie bei den Custom Commands ("183 uses"). Rechts bleibt dafuer Platz frei, die Tabelle behaelt ihre Breite (Seite 1125 + 90 px). */
     #page-raidnotify { max-width: 1215px; }
-    #raidList { margin-right: 90px; }
+    #raidList { margin-right: 62px; }
     .raid-table .data-table-head, .raid-table .data-row { padding-right: 6px; }
     .raid-table .data-row { position: relative; }
-    .raid-table .raid-uses { left: calc(100% + 10px); position: absolute; top: 50%; transform: translateY(-50%); width: 76px; }
+    /* ninou2, 14.11.2026: "make the uses more smaller and the whole table get more space" */
+    .raid-table .raid-uses { cursor: default; font-size: 11px; left: calc(100% + 6px); padding: 2px 3px; position: absolute; top: 50%; transform: translateY(-50%); width: 52px; }
     /* ninou2, 14.11.2026: "now the word MESSAGE should be in the middle of the column" */
     .raid-table .data-table-head > :nth-child(4) { text-align: center; }
     /* Bestaetigung unter "Default" darf ueber den Tabellenrand ragen (sonst bei der letzten Zeile abgeschnitten) */
@@ -3056,7 +3057,7 @@
               <div class="cell-muted msg-cell" title="Click to change (${r.minSeconds}-${r.maxSeconds} seconds before the start)" onclick="editRaidCell(this, ${item.id}, 'seconds')">${item.seconds}s</div>
               <div class="cell-muted msg-cell${item.custom ? ' raid-custom' : ''}" title="${item.custom ? 'Custom message' : 'Default message'} - click to edit" onclick="editRaidCell(this, ${item.id}, 'text')">${esc(item.text)}</div>
               <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editRaidCell(this, ${item.id}, 'times')">${item.times}×</div>
-              <span class="uses-link uses-pill raid-uses" title="how often it was posted in your channel" onclick="showCommandUsers('${item.seconds >= r.maxSeconds ? 'raidping' : 'raidreminder'}', true)">${esc(item.uses ?? 0)} use${item.uses === 1 ? '' : 's'}</span>
+              <span class="uses-pill raid-uses" title="how often a ${item.seconds}s notification was posted in your channel (kept when you remove and add it again)">${esc(item.uses ?? 0)} use${item.uses === 1 ? '' : 's'}</span>
             </div>`).join('')}
         </div>` : buildEmpty('No raid notifications.');
       document.getElementById('raidSubs').innerHTML = r.subscribers.length

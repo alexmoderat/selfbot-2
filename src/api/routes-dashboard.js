@@ -1022,7 +1022,6 @@ const createDashboardRouter = () => {
 	// Sind alle aus oder entfernt, schaltet sich Raid Notify selbst aus (der Punkt verschwindet wieder).
 	const RAID_TEXT_MAX = 400;
 	const raidNotifyState = async (channel) => {
-		const uses = await usageCounts(channel);
 		const config = await raidNotifier.getConfig(channel);
 		const subscribers = [];
 		for (const row of await bot.DB.RaidSubscriber.find({ channel: channel.id }).lean()) {
@@ -1037,7 +1036,7 @@ const createDashboardRouter = () => {
 				...i,
 				custom: i.text !== null,
 				text: i.text ?? raidNotifier.defaultText(i.seconds),
-				uses: uses.get(`custom:${channel.id}:${i.seconds >= raidNotifier.MAX_LEAD_S ? 'raidping' : 'raidreminder'}`) ?? 0,
+				uses: config.uses?.[String(i.seconds)] ?? 0,
 			})),
 			minSeconds: raidNotifier.MIN_LEAD_S,
 			maxSeconds: raidNotifier.MAX_LEAD_S,

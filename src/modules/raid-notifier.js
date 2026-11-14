@@ -92,9 +92,20 @@ const normalizeItem = (i) => ({
 	times: cleanTimes(i.times),
 });
 
+// Zaehler je Zeit (Sekunden) im Channel: { "120": 12, "53": 50 } - bleibt erhalten, auch wenn die Benachrichtigung entfernt und spaeter mit
+// derselben Zeit neu angelegt wird (ninou2, 14.11.2026: "the bot will remember the 50 uses for a 53s notification")
 const saveConfig = async (channel, enabled, items) => {
-	await bot.Channels.setData(channel, 'raidNotify', { enabled: enabled === true, items });
-	return { enabled: enabled === true, items };
+	const current = (await Promise.resolve(bot.Channels.getData(channel, 'raidNotify')).catch(() => null)) ?? {};
+	const uses = current.uses && typeof current.uses === 'object' ? current.uses : {};
+	await bot.Channels.setData(channel, 'raidNotify', { enabled: enabled === true, items, uses });
+	return { enabled: enabled === true, items, uses };
+};
+
+const bumpUses = async (channel, seconds) => {
+	const data = (await Promise.resolve(bot.Channels.getData(channel, 'raidNotify')).catch(() => null)) ?? {};
+	const uses = { ...(data.uses ?? {}) };
+	uses[String(seconds)] = (uses[String(seconds)] ?? 0) + 1;
+	await bot.Channels.setData(channel, 'raidNotify', { ...data, uses });
 };
 
 // Alte Einstellung (Ping/Erinnerung als Custom Commands !raidping/!raidreminder + "seconds") einmalig in die Liste uebernehmen
@@ -118,9 +129,9 @@ const getConfig = async (channel) => {
 	// getData ist synchron, kein Promise (ninou2, 14.11.2026: "bot.Channels.getData(...).catch not a function")
 	const data = (await Promise.resolve(bot.Channels.getData(channel, 'raidNotify')).catch(() => null)) ?? {};
 	if (Array.isArray(data.items)) {
-		return { enabled: data.enabled === true, items: data.items.map(normalizeItem) };
+		return { enabled: data.enabled === true, items: data.items.map(normalizeItem), uses: data.uses ?? {} };
 	}
-	return data.enabled === true ? migrateLegacy(channel, data) : { enabled: false, items: [] };
+	return data.enabled === true ? migrateLegacy(channel, data) : { enabled: false, items: [], uses: {} };
 };
 
 /** Raid Notify unter Bot Commands ein-/ausschalten; beim Einschalten ohne aktive Eintraege entsteht der Standard-Eintrag (120 s) */
@@ -152,6 +163,7 @@ const pingChannel = async (channel, users, item) => {
 	// gepostet wird (ninou2, 14.11.2026: "even if a person set it to x5, the 120s noti count as 1 post, and the 20s noti count as 1")
 	if (texts.length > 0) {
 		await countPost(channel, reminder, texts[0]);
+		await bumpUses(channel, item.seconds).catch((e) => console.warn('[raid-notifier] Zaehler', e?.message ?? e));
 	}
 	return texts.length;
 };
@@ -215,4 +227,4 @@ module.exports = defineChatModule({
 	},
 });
 
-Object.assign(module.exports, { runRaid, MIN_LEAD_S, MAX_LEAD_S, MAX_ITEMS, clampLead, getConfig, setEnabled, updateItems, newItem, defaultText, RAID_TEMPLATE_COMMANDS, DEFAULT_RAID_MESSAGE, DEFAULT_RAID_REMINDER, formatRaidText, raidPingMessages });
+Object.assign(module.exports, { bumpUses, runRaid, MIN_LEAD_S, MAX_LEAD_S, MAX_ITEMS, clampLead, getConfig, setEnabled, updateItems, newItem, defaultText, RAID_TEMPLATE_COMMANDS, DEFAULT_RAID_MESSAGE, DEFAULT_RAID_REMINDER, formatRaidText, raidPingMessages });
