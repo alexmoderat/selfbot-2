@@ -5,6 +5,7 @@ const { announceAutobanCount, announceBan, banUser, targetFromChannel } = requir
 const { deobfuscate, getHiddenDomains, getLinkSpamReason, isTrustedSender, rolesFromBadges } = require('../misc/text-analysis.js');
 const spamDomains = require('../services/spam-domains.js');
 const { formatBanphraseReason, localizeViewbotReason } = require('../misc/ban-reason.js');
+const { mayBanPhraseHit } = require('../misc/phrase-ban-gate.js');
 
 /**
  * Kern der Moderation aus sb-v2: prueft jede Nachricht gegen Banphrases und Link-Spam.
@@ -109,6 +110,12 @@ module.exports = defineChatModule({
 
 				const status = evader ? 'BAN EVADER' : suspicious ? 'SUSPICIOUS' : 'REGULAR';
 				phrases.recordHit(matched, channel.id);
+
+				// Nur komischer Name UND juenger als 7 Tage wird gebannt, sonst keine Aktion; Ban-Evader/Verdaechtige immer wie bisher
+				if (!evader && !suspicious && !(await mayBanPhraseHit(user.name, userId))) {
+					console.warn(`[banphrase-filter] "${matched.Phrase}" von ${user.name} in #${channel.name} - kein komischer Name oder aelter als 7 Tage, keine Aktion`);
+					return;
+				}
 
 				const localizedReason = localizeViewbotReason(channel.name, matched.Reason || matched.Phrase);
 				const reason = formatBanphraseReason(localizedReason, bot.Twitch.selfName);

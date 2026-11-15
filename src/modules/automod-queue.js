@@ -5,6 +5,7 @@ const { autoBan, targetFromChannel } = require('../services/moderation.js');
 const { formatAutoBanReason, formatBanphraseReason, localizeViewbotReason } = require('../misc/ban-reason.js');
 const { deobfuscate, getLinkSpamReason } = require('../misc/text-analysis.js');
 const { accountAgeDays } = require('../misc/twitch-lists.js');
+const { mayBanPhraseHit } = require('../misc/phrase-ban-gate.js');
 
 /**
  * Nachrichten, die Twitchs AutoMod zurueckhaelt (PubSub automod-queue), aus sb-v2. Diese Nachrichten laufen NICHT
@@ -16,7 +17,6 @@ const { accountAgeDays } = require('../misc/twitch-lists.js');
  * Bei jedem Treffer wird die Nachricht in der Queue abgelehnt (DENY) und der User gebannt.
  */
 const ACCOUNT_MIN_AGE_DAYS = 7;
-
 const findMentionTokens = (text) => text.match(/@[A-Za-z0-9]*[a-z][A-Z][A-Za-z0-9]*/g) ?? [];
 
 const denyMessage = async (messageId, selfId) => {
@@ -77,6 +77,10 @@ module.exports = defineChatModule({
 			const matched = phrases.findMatch(channel.id, deobfuscate(text).toLowerCase());
 			if (matched) {
 				phrases.recordHit(matched, channel.id);
+				if (!(await mayBanPhraseHit(login, userId))) {
+					console.warn(`[automod-queue] Banphrase "${matched.Phrase}" von ${login} in #${channel.name} - kein komischer Name oder aelter als 7 Tage, keine Aktion (Nachricht bleibt in der Queue)`);
+					return;
+				}
 				const label = localizeViewbotReason(channel.name, matched.Reason || matched.Phrase);
 				await punish(formatBanphraseReason(label, platform.selfName), label, 'AUTOMOD', matched.Duration);
 				return;
