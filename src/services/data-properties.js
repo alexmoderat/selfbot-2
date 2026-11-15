@@ -19,6 +19,7 @@ const channelDataSchema = {
 	autobanPromoDisabled: 'boolean',
 	autobanAgecheckDisabled: 'boolean',
 	autobanSpamDisabled: 'boolean',
+	emoteWaveBan: 'boolean',
 	autobanAnnounce: 'boolean',
 	botbansText: 'string',
 	crossbanOptIn: 'boolean',
