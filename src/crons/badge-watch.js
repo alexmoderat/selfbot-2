@@ -1,6 +1,7 @@
 const { defineCron } = require('../clients/modules/timers.js');
 const { recordRecent, wasAnnounced, markAnnounced } = require('../misc/badge-history.js');
 const { fetchGlobalBadges, fetchGlobalEmotes, fetchBadgeEvents, BADGES_URL, EMOTES_URL } = require('../misc/streamdatabase.js');
+const { fetchGqlBadges } = require('../misc/twitch-badges-gql.js');
 
 /**
  * Meldet neue globale Twitch-Badges und Emotes in den Channels, die es im Dashboard eingeschaltet haben (ninou2, 13.11.2026:
@@ -8,7 +9,8 @@ const { fetchGlobalBadges, fetchGlobalEmotes, fetchBadgeEvents, BADGES_URL, EMOT
  * Bekannte Badges liegen in Redis; der erste Lauf merkt sich nur den Stand und meldet nichts.
  */
 const SOURCES = [
-	{ kind: 'badge', stateKey: 'badge-watch:known', fetch: fetchGlobalBadges },
+	// Badges zuerst direkt von Twitch (GQL), faellt das aus, die StreamDatabase-Seite
+	{ kind: 'badge', stateKey: 'badge-watch:known', fetch: () => fetchGqlBadges().catch((e) => (console.warn(`[badge-watch] GQL: ${e?.message ?? e}, nehme StreamDatabase`), fetchGlobalBadges())) },
 	{ kind: 'emote', stateKey: 'badge-watch:known-emotes', fetch: fetchGlobalEmotes },
 ];
 const STATE_TTL = 365 * 864e5;
@@ -143,7 +145,7 @@ const runBadgeWatch = async () => {
 module.exports = defineCron({
 	name: 'badge-watch',
 	expression: '0 */3 * * * *', // alle 3 Minuten (ninou2, 13.11.2026: "is that the minimum time? can it go lower")
-	description: 'Announces new global Twitch badges and emotes (from streamdatabase.com) in channels that turned it on.',
+	description: 'Announces new global Twitch badges (Twitch GQL, fallback streamdatabase.com) and emotes (streamdatabase.com) in channels that turned it on.',
 	code: async function badgeWatch() {
 		await runBadgeWatch().catch((e) => console.warn(`[badge-watch] ${e?.message ?? e}`));
 	},

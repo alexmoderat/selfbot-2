@@ -242,7 +242,7 @@ test('event-watch: Tweet-Notify-Abonnenten bekommen eigenen Text und Anzahl, Bad
 	};
 	try {
 		await runEventWatch(); // Erstlauf
-		active = [{ key: 'k', title: 'Gallica', how: 'sub', event: 'Gallica', endMs: Date.parse('2026-12-12T17:59:00Z') }];
+		active = [{ key: 'k', setId: 'gallica', title: 'Gallica', how: 'sub', event: 'Gallica', endMs: Date.parse('2026-12-12T17:59:00Z') }];
 		await runEventWatch();
 	} finally {
 		windows.fetchWindows = origFetch;
@@ -251,4 +251,41 @@ test('event-watch: Tweet-Notify-Abonnenten bekommen eigenen Text und Anzahl, Bad
 	}
 	assert.equal(sent.length, 2);
 	assert.ok(sent.every((t) => t.startsWith('@ninou2 — @StreamDatabase: Twitch global badge now available: Gallica') && t.endsWith(' NEU') && !t.includes('ALT')));
+});
+
+test('event-watch: neues Fenster desselben Badges innerhalb von 7 Tagen wird nicht erneut gemeldet', async () => {
+	const sent = [];
+	const channel = { id: 71, name: 'x', Platform: 'twitch', mode: 'Write' };
+	const store = new Map();
+	const windows = require('../src/misc/streamdatabase.js');
+	const origFetch = windows.fetchWindows;
+	const origActive = windows.activeWindows;
+	let active = [];
+	windows.fetchWindows = async () => [];
+	windows.activeWindows = () => active;
+	delete require.cache[require.resolve('../src/crons/event-watch.js')];
+	const { runEventWatch } = require('../src/crons/event-watch.js');
+	const saved = global.bot;
+	global.bot = {
+		Redis: { getJSON: async (k) => store.get(k) ?? null, setJSON: async (k, v) => void store.set(k, v) },
+		Channels: { get: () => channel, all: () => [channel], getData: async () => ({ enabled: true, message: '' }), send: async (c, t) => void sent.push(t) },
+		Users: { get: async () => null },
+		DB: { TweetNotify: { find: () => ({ lean: async () => [] }) } },
+		Twitch: 'twitch',
+	};
+	const win = (key) => ({ key, setId: 'space-jam', title: 'Space Jam', how: 'watch', event: 'Space Jam', endMs: Date.parse('2026-11-15T22:45:00Z') });
+	try {
+		await runEventWatch(); // Erstlauf
+		active = [win('a')];
+		await runEventWatch();
+		active = [];
+		await runEventWatch();
+		active = [win('b')]; // zweites Fenster desselben Badges
+		await runEventWatch();
+	} finally {
+		windows.fetchWindows = origFetch;
+		windows.activeWindows = origActive;
+		global.bot = saved;
+	}
+	assert.equal(sent.length, 1);
 });
