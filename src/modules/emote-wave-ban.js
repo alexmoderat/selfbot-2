@@ -11,7 +11,7 @@ const { isEmoteOnly, isGeneratedName, isYoungAccount } = require('../misc/emote-
  * ~30 Tage alten Accounts mit generierten Namen geflutet; Auswahl "nur dort, strenge Kombi"). Nur wenn ALLE drei zutreffen:
  * Nachricht besteht nur aus Emotes (mind. 3), Konto juenger als 60 Tage, generierter Name. Mods/VIPs/Subs sind ausgenommen.
  */
-const PUBLIC_REASON = 'bot wave/emote';
+const PUBLIC_REASON = 'Automated bot detection';
 const CACHE_MS = 10 * 60_000;
 const cache = new Map(); // channel.id -> { names: Set, at }
 
