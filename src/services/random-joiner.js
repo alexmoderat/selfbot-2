@@ -143,6 +143,14 @@ const subscribe = async (stream) => {
 	if (!response.ok) {
 		const message = response.body?.message ?? '';
 		Logger.log(LogLevel.WARN, `[joiner] #${stream.user_login} fehlgeschlagen (${response.statusCode}): ${message}`);
+		// 403 = der Bot ist dort gebannt: Channel merken und nicht mehr ziehen (wie DontAddThisBots bannedChannels)
+		if (response.statusCode === 403) {
+			await bot.DB.JoinerBan.updateOne(
+				{ channelId: stream.user_id },
+				{ $set: { channel: stream.user_login, banType: 'ban', bannedDate: new Date() } },
+				{ upsert: true },
+			).catch((e) => Logger.log(LogLevel.WARN, '[joiner] Bann-Liste speichern fehlgeschlagen', e));
+		}
 		// 429 = Join-/Abo-Limit: nicht weiter fuellen bis zur naechsten Rotation
 		if (response.statusCode === 429) {
 			limitHit = true;
@@ -194,8 +202,10 @@ const rotate = async ({ initial = false } = {}) => {
 		const missing = slots - joined.size;
 		let added = 0;
 		if (missing > 0) {
+			const banned = await bot.DB.JoinerBan.find({}, { channelId: 1 }).lean().catch(() => []);
 			const exclude = new Set([
 				...joined.keys(),
+				...banned.map((i) => i.channelId),
 				...bot.Channels.getJoinable()
 					.map((i) => i.twitchId)
 					.filter(Boolean),

@@ -261,6 +261,20 @@ const JoinerMessage = define(
 	],
 );
 
+// Joiner (services/random-joiner.js): Channels, in denen der Bot gebannt ist (EventSub antwortet 403), wie DontAddThisBots bannedChannels;
+// nach 30 Tagen vergessen, damit aufgehobene Banns wieder in die Auswahl kommen
+const JoinerBan = define(
+	'JoinerBan',
+	{
+		channelId: { type: String, unique: true },
+		channel: String,
+		banType: { type: String, default: 'ban' },
+		bannedDate: { type: Date, default: Date.now },
+	},
+	{ collection: 'joinerBans' },
+	[[{ bannedDate: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 }]],
+);
+
 module.exports = {
 	Counter,
 	Channel,
@@ -276,4 +290,5 @@ module.exports = {
 	ChatLine,
 	SpamDomain,
 	JoinerMessage,
+	JoinerBan,
 };
