@@ -4,12 +4,12 @@ const { formatAutoBanReason } = require('../misc/ban-reason.js');
 const { isTrustedSender, rolesFromBadges } = require('../misc/text-analysis.js');
 const { accountAgeDays } = require('../misc/twitch-lists.js');
 const { getActiveEmoteSetId, getEmotesInSet, getGlobalEmotes } = require('../misc/seventv.js');
-const { isEmoteOnly, isGeneratedName, isYoungAccount } = require('../misc/emote-wave.js');
+const { isEmoteOnly, isGeneratedName, isShoutoutText, isYoungAccount } = require('../misc/emote-wave.js');
 
 /**
  * Bannt Accounts der Emote-Spam-Welle in Channels mit dem Schalter emoteWaveBan (alexmoderat, 15.11.2026: kickster1010, von
  * ~30 Tage alten Accounts mit generierten Namen geflutet; Auswahl "nur dort, strenge Kombi"). Nur wenn ALLE drei zutreffen:
- * Nachricht besteht nur aus Emotes (mind. 3), Konto juenger als 60 Tage, generierter Name. Mods/VIPs/Subs sind ausgenommen.
+ * Nachricht besteht nur aus Emotes (mind. 3) oder ist ein Shoutout-Text ("Please give shoutout"), Konto juenger als 60 Tage, generierter Name. Mods/VIPs/Subs sind ausgenommen.
  */
 const PUBLIC_REASON = 'Automated bot detection';
 const CACHE_MS = 10 * 60_000;
@@ -38,7 +38,7 @@ const knownEmoteNames = async (channel) => {
 
 module.exports = defineChatModule({
 	name: 'emote-wave-ban',
-	description: 'In channels with the emoteWaveBan switch: bans young accounts with generated names that post only emotes.',
+	description: 'In channels with the emoteWaveBan switch: bans young accounts with generated names that post only emotes or shoutout begging.',
 	scope: 'global',
 	handlers: {
 		message: async (context) => {
@@ -51,7 +51,7 @@ module.exports = defineChatModule({
 			if (!isGeneratedName(user.name) || isTrustedSender(rolesFromBadges(user.name, data.badges))) {
 				return;
 			}
-			if (!isEmoteOnly(message, context.msg?.tags?.emotes, await knownEmoteNames(channel))) {
+			if (!isShoutoutText(message) && !isEmoteOnly(message, context.msg?.tags?.emotes, await knownEmoteNames(channel))) {
 				return;
 			}
 			const age = await accountAgeDays(userId, { byId: true });

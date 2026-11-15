@@ -47,9 +47,12 @@ const isEmoteOnly = (text, emoteTag, knownNames) => {
 	});
 };
 
+/** Die Welle schreibt jetzt auch Texte ("Big shoutout to the mods!", "Please give shoutout") - alexmoderat, 15.11.2026 */
+const isShoutoutText = (text) => /shout[\s-]?outs?/i.test(String(text ?? ''));
+
 const isYoungAccount = (age) => Boolean(age) && Number.isFinite(age.ageDays) && age.ageDays < MAX_AGE_DAYS;
 
 /** Alle drei Merkmale zusammen */
-const isEmoteWave = ({ text, emoteTag, knownNames, login, age }) => isEmoteOnly(text, emoteTag, knownNames) && isGeneratedName(login) && isYoungAccount(age);
+const isEmoteWave = ({ text, emoteTag, knownNames, login, age }) => (isEmoteOnly(text, emoteTag, knownNames) || isShoutoutText(text)) && isGeneratedName(login) && isYoungAccount(age);
 
-module.exports = { MIN_EMOTES, MAX_AGE_DAYS, isGeneratedName, nativeEmoteRanges, isEmoteOnly, isYoungAccount, isEmoteWave };
+module.exports = { MIN_EMOTES, MAX_AGE_DAYS, isGeneratedName, nativeEmoteRanges, isEmoteOnly, isShoutoutText, isYoungAccount, isEmoteWave };

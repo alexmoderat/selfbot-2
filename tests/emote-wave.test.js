@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { isGeneratedName, isEmoteOnly, isYoungAccount, isEmoteWave } = require('../src/misc/emote-wave.js');
+const { isGeneratedName, isEmoteOnly, isShoutoutText, isYoungAccount, isEmoteWave } = require('../src/misc/emote-wave.js');
 
 const known = new Set(['DogeFace', 'Skull']);
 
@@ -28,4 +28,16 @@ test('isEmoteWave: alle drei Merkmale noetig', () => {
 	assert.equal(isEmoteWave({ ...base, login: 'itsylime_' }), false); // normaler Name
 	assert.equal(isEmoteWave({ ...base, text: 'hello there friend' }), false);
 	assert.equal(isYoungAccount(null), false); // Alter unbekannt: nicht bannen
+});
+
+test('Shoutout-Texte der Welle werden mit denselben Sicherungen erkannt', () => {
+	for (const t of ['Big shoutout to the mods!', 'Please give shoutout', 'Please give a shoutout to my friend!', 'plz shout out me']) {
+		assert.equal(isShoutoutText(t), true, t);
+	}
+	assert.equal(isShoutoutText('hello how are you'), false);
+	const base = { text: 'Please give shoutout', emoteTag: '', knownNames: known, login: 'lonelydeana', age: { ageDays: 30 } };
+	assert.equal(isEmoteWave(base), true);
+	assert.equal(isEmoteWave({ ...base, age: { ageDays: 400 } }), false); // altes Konto
+	assert.equal(isEmoteWave({ ...base, login: 'itsylime_' }), false); // normaler Name
+	assert.equal(isEmoteWave({ ...base, age: null }), false); // Alter unbekannt
 });
