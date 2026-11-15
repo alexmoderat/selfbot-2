@@ -13,7 +13,6 @@ const { cleanTimes } = require('../services/tweet-notify.js');
 const STATE_KEY = 'event-watch:active';
 const STATE_TTL = 30 * 864e5;
 const MAX_SEPARATE = 3; // mehr auf einmal = eine Sammelmeldung
-const REPEAT_TTL = 7 * 864e5; // dasselbe Badge (set_id) hoechstens einmal pro Woche, auch wenn StreamDatabase das Event in mehrere Fenster zerlegt
 
 const monthDay = (ms) => new Date(ms).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 const hhmm = (ms) => new Date(ms).toISOString().slice(11, 16);
@@ -66,18 +65,12 @@ const runEventWatch = async () => {
 	const today = new Date().toISOString().slice(0, 10);
 	const fresh = [];
 	for (const window of active.filter((i) => !before.has(i.key))) {
-		const seenKey = `event-watch:seen:${window.setId}`;
-		if (await bot.Redis.getJSON(seenKey).catch(() => null)) {
-			console.log(`[event-watch] ${window.title}: in den letzten 7 Tagen schon gemeldet`);
-			continue;
-		}
 		const marker = `avail:badge:${window.title.toLowerCase()}:${today}`;
 		if (await wasAnnounced(marker).catch(() => false)) {
 			console.log(`[event-watch] ${window.title}: schon gemeldet`);
 			continue;
 		}
 		await markAnnounced(marker).catch(() => {});
-		await bot.Redis.setJSON(seenKey, 1, REPEAT_TTL).catch(() => {});
 		fresh.push(window);
 	}
 	if (fresh.length === 0) {
