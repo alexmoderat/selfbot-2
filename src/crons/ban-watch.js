@@ -3,7 +3,7 @@ const { announceBan } = require('../services/notifications.js');
 const { getBanStatusBatch } = require('../misc/twitch-gql.js');
 
 /**
- * Prueft die per "notify ban" beobachteten Accounts auf Twitch-Sperren, aus sb-v2 (alle 10 s, ganze Liste im Batch).
+ * Prueft die per "notify ban" beobachteten Accounts auf Twitch-Sperren, aus sb-v2 (jetzt alle 5 s statt 10 s; alexmoderat, 15.11.2026, nachdem PotatBotat einen Ban 7 s nach der Kontoaenderung meldete, ganze Liste im Batch).
  * Einmal je Channel melden, dauerhaft vermerkt (Notified) - sonst kam dieselbe Sperre nach jedem Neustart erneut
  * (sodzaga, 29.07.2026). Wieder entsperrt -> Vermerk weg, die naechste Sperre wird erneut gemeldet.
  */
@@ -22,7 +22,7 @@ const REASON_TEXT = {
 
 module.exports = defineCron({
 	name: 'ban-watch',
-	expression: '*/10 * * * * *',
+	expression: '*/5 * * * * *',
 	description: 'Checks the accounts watched via "notify ban" for Twitch bans.',
 	code: async function banWatch() {
 		const rows = (await bot.DB.NotifyBan.find({}).lean()).map((i) => ({ Channel: i.channel, Login: i.login, Message: i.message, Notified: i.notified }));
