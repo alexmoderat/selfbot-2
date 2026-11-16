@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { isWeirdName, shouldBanPhraseHit } = require('../src/misc/phrase-ban-gate.js');
+const { isWeirdName, isGeneratedBotName, shouldBanPhraseHit } = require('../src/misc/phrase-ban-gate.js');
 
 test('isWeirdName: generierte Spam-Namen ja, kurze normale nein', () => {
 	for (const name of ['needymanagementc0ph', 'curvedbutleruzzbn6q1hc', 'ghostshaman3767', 'oliver_edd', 'weebconnect', 'luckychateauqjy032']) {
@@ -12,9 +12,24 @@ test('isWeirdName: generierte Spam-Namen ja, kurze normale nein', () => {
 });
 
 test('shouldBanPhraseHit: nur komischer Name UND juenger als 7 Tage', () => {
-	assert.equal(shouldBanPhraseHit('needymanagementc0ph', { ageDays: 2 }), true);
-	assert.equal(shouldBanPhraseHit('needymanagementc0ph', { ageDays: 7 }), false);
+	assert.equal(shouldBanPhraseHit('ghostshaman3767', { ageDays: 2 }), true);
+	assert.equal(shouldBanPhraseHit('ghostshaman3767', { ageDays: 7 }), false);
 	assert.equal(shouldBanPhraseHit('reksua10', { ageDays: 950 }), false); // Reksua10: alt, nichts passiert
 	assert.equal(shouldBanPhraseHit('reksua', { ageDays: 1 }), false); // normaler Name, jung: keine Aktion
-	assert.equal(shouldBanPhraseHit('needymanagementc0ph', null), true); // Alter unbekannt: wie bisher
+	assert.equal(shouldBanPhraseHit('ghostshaman3767', null), true); // Alter unbekannt: wie bisher
+});
+
+test('isGeneratedBotName: lange Zufallsnamen ja, normale und Unterstrich-Namen nein', () => {
+	for (const name of ['vindictiveordinanceomvs', 'angelicbacklogpkdh4', 'reportedquintetdbnwd7uxsb', 'traumaticmailmannuysxa', 'promisedgroundingiyj']) {
+		assert.equal(isGeneratedBotName(name), true, name);
+	}
+	for (const name of ['jacke245_again', 'rl_rager', 'reksua10', 'alexmoderatmod1', 'very_long_name_with_underscores']) {
+		assert.equal(isGeneratedBotName(name), false, name);
+	}
+});
+
+test('shouldBanPhraseHit: generierter Bot-Name wird unabhaengig vom Alter gebannt', () => {
+	assert.equal(shouldBanPhraseHit('vindictiveordinanceomvs', { ageDays: 18 }), true);
+	assert.equal(shouldBanPhraseHit('vindictiveordinanceomvs', { ageDays: 900 }), true);
+	assert.equal(shouldBanPhraseHit('jacke245_again', { ageDays: 947 }), false);
 });

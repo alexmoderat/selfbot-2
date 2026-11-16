@@ -16,9 +16,18 @@ const isWeirdName = (login) => {
 	return name.length >= 10 || /\d{2,}/.test(name) || /[a-z]\d[a-z]/.test(name);
 };
 
+/**
+ * Generierter Bot-Name: sehr lang (ab 18 Zeichen), nur Kleinbuchstaben und Ziffern, kein Unterstrich ("vindictiveordinanceomvs",
+ * "angelicbacklogpkdh4": mehrere Woerter plus Zufallsende). Solche Konten werden in Chargen angelegt (alle am 29.10.2026) und sind
+ * nach wenigen Wochen noch Bots, deshalb ohne Altersgrenze (alexmoderat, 16.11.2026: "mach variante 3").
+ */
+const isGeneratedBotName = (login) => /^[a-z][a-z0-9]{17,}$/.test(String(login ?? '').toLowerCase());
+
 /** age = { ageDays } oder null (Alter unbekannt: Name allein entscheidet, wie bisher bannen) */
 const shouldBanPhraseHit = (login, age) => {
-	if (!isWeirdName(login)) {
+	if (isGeneratedBotName(login)) {
+		return true;
+	} else if (!isWeirdName(login)) {
 		return false;
 	}
 
@@ -28,4 +37,4 @@ const shouldBanPhraseHit = (login, age) => {
 /** Fuer die Module: Alter holen und entscheiden */
 const mayBanPhraseHit = async (login, userId) => shouldBanPhraseHit(login, await accountAgeDays(userId, { byId: true }));
 
-module.exports = { MAX_BAN_AGE_DAYS, isWeirdName, shouldBanPhraseHit, mayBanPhraseHit };
+module.exports = { MAX_BAN_AGE_DAYS, isWeirdName, isGeneratedBotName, shouldBanPhraseHit, mayBanPhraseHit };
