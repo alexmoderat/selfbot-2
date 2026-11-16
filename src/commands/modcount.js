@@ -1,6 +1,7 @@
 const { fetchModeratedChannels } = require('../util/twitch/twitch-utils.js');
 const { uploadList } = require('../misc/haste.js');
 const { fetchUserRoleList } = require('../misc/roles-tv.js');
+const { getChannelsWithRole } = require('../misc/twitch-gql.js');
 
 /**
  * In wie vielen Channels ein User Mod ist, aus sb-v2: fuer den Bot selbst ueber Helix moderation/channels, fuer alle
@@ -32,6 +33,13 @@ module.exports = {
 
 			const logins = sortedLogins(channels.map((i) => i.login));
 			const url = await uploadList(`${self} — moderated channels`, logins);
+			// Lead-Mod-Kanaele (alexmoderat, 16.11.2026: "mach den leadmod cmd, kannst an ml dranhaengen"); nur wenn der Web-Token zum Bot-Account gehoert
+			const lead = await getChannelsWithRole('lead_mod').catch(() => null);
+			if (lead && lead.userId === String(twitch.selfId)) {
+				const leadUrl = lead.logins.length > 0 ? await uploadList(`${self} — lead mod channels`, sortedLogins(lead.logins)) : null;
+				return { text: `@${display}, ${self} mods in ${logins.length} channels: ${url} | Lead Mod in ${lead.logins.length}${leadUrl ? `: ${leadUrl}` : ''}` };
+			}
+
 			return { text: `@${display}, ${self} mods in ${logins.length} channels: ${url}` };
 		}
 

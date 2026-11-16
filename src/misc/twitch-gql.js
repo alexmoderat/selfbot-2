@@ -400,7 +400,25 @@ const getChannelPointsBalance = async (channelLogin) => {
 	return typeof balance === 'number' ? balance : null;
 };
 
+const CHANNELS_WITH_ROLE_HASH = '46f9085d9c6295dc9ba6c7db1c61355c9c2ed6380048fc4e3d1f8fb3470f186b';
+
+/**
+ * Channels, in denen der Web-Token-Account eine Rolle hat (Dashboard "My Assigned Roles"; roleId z. B. "lead_mod").
+ * Die Abfrage gilt immer fuer den Token-Besitzer, nicht fuer andere User. -> { userId, logins } oder null
+ */
+const getChannelsWithRole = async (roleId = 'lead_mod') => {
+	const data = await gqlAuth({ operationName: 'ChannelsWithRole', variables: { roleId }, extensions: { persistedQuery: { version: 1, sha256Hash: CHANNELS_WITH_ROLE_HASH } } });
+	const user = data?.currentUser;
+	const edges = user?.channelsWithRole?.edges;
+	if (!Array.isArray(edges)) {
+		return null;
+	}
+
+	return { userId: String(user.id), logins: edges.map((i) => i?.node?.login).filter(Boolean) };
+};
+
 module.exports = {
+	getChannelsWithRole,
 	GQL_PUBLIC_CLIENT_ID,
 	gqlPublic,
 	gqlAuth,
