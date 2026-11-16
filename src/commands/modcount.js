@@ -1,7 +1,7 @@
 const { fetchModeratedChannels } = require('../util/twitch/twitch-utils.js');
 const { uploadList } = require('../misc/haste.js');
 const { fetchUserRoleList } = require('../misc/roles-tv.js');
-const { getChannelsWithRole } = require('../misc/twitch-gql.js');
+const { getChannelsWithRole, getEditableChannels } = require('../misc/twitch-gql.js');
 
 /**
  * In wie vielen Channels ein User Mod ist, aus sb-v2: fuer den Bot selbst ueber Helix moderation/channels, fuer alle
@@ -33,11 +33,19 @@ module.exports = {
 
 			const logins = sortedLogins(channels.map((i) => i.login));
 			const url = await uploadList(`${self} — moderated channels`, logins);
-			// Lead-Mod-Kanaele (alexmoderat, 16.11.2026: "mach den leadmod cmd, kannst an ml dranhaengen"); nur wenn der Web-Token zum Bot-Account gehoert
-			const lead = await getChannelsWithRole('lead_mod').catch(() => null);
-			if (lead && lead.userId === String(twitch.selfId)) {
-				const leadUrl = lead.logins.length > 0 ? await uploadList(`${self} — lead mod channels`, sortedLogins(lead.logins)) : null;
-				return { text: `@${display}, ${self} mods in ${logins.length} channels: ${url} | Lead Mod in ${lead.logins.length}${leadUrl ? `: ${leadUrl}` : ''}` };
+			// Lead-Mod- und Editor-Kanaele (alexmoderat, 16.11.2026: "mach den leadmod cmd, kannst an ml dranhaengen", "kriegt man auch die editor Anzahl");
+			// nur wenn der Web-Token zum Bot-Account gehoert
+			const [lead, editor] = await Promise.all([getChannelsWithRole('lead_mod').catch(() => null), getEditableChannels().catch(() => null)]);
+			const own = (i) => i && i.userId === String(twitch.selfId);
+			const parts = [];
+			for (const [label, info] of [['Lead Mod', lead], ['Editor', editor]]) {
+				if (own(info)) {
+					const listUrl = info.logins.length > 0 ? await uploadList(`${self} — ${label.toLowerCase()} channels`, sortedLogins(info.logins)) : null;
+					parts.push(`${label} in ${info.logins.length}${info.hasNextPage ? '+' : ''}${listUrl ? `: ${listUrl}` : ''}`);
+				}
+			}
+			if (parts.length > 0) {
+				return { text: `@${display}, ${self} mods in ${logins.length} channels: ${url} | ${parts.join(' | ')}` };
 			}
 
 			return { text: `@${display}, ${self} mods in ${logins.length} channels: ${url}` };

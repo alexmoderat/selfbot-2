@@ -417,7 +417,22 @@ const getChannelsWithRole = async (roleId = 'lead_mod') => {
 	return { userId: String(user.id), logins: edges.map((i) => i?.node?.login).filter(Boolean) };
 };
 
+const MY_EDITABLE_CHANNELS_HASH = '41f21b92feac17acf29ccb9ee01e07308f229ede3893a4f34439c755496dc821';
+
+/** Channels, in denen der Web-Token-Account Editor ist (Dashboard "My Assigned Roles"). -> { userId, logins, hasNextPage } oder null */
+const getEditableChannels = async () => {
+	const data = await gqlAuth({ operationName: 'MyEditableChannels', variables: {}, extensions: { persistedQuery: { version: 1, sha256Hash: MY_EDITABLE_CHANNELS_HASH } } });
+	const user = data?.currentUser;
+	const edges = user?.editableChannels?.edges;
+	if (!Array.isArray(edges)) {
+		return null;
+	}
+
+	return { userId: String(user.id), logins: edges.map((i) => i?.node?.login).filter(Boolean), hasNextPage: Boolean(user.editableChannels.pageInfo?.hasNextPage) };
+};
+
 module.exports = {
+	getEditableChannels,
 	getChannelsWithRole,
 	GQL_PUBLIC_CLIENT_ID,
 	gqlPublic,
