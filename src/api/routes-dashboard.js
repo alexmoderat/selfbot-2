@@ -1409,7 +1409,14 @@ const createDashboardRouter = () => {
 		requireSession,
 		requireAdmin,
 		route(async (req, res) => {
-			const user = await bot.Users.get(String(req.params.username).toLowerCase());
+			// Wie "admin remove" im Chat: sich selbst austragen geht nicht (Xyqra, 17.11.2026: hat sich selbst entfernt
+			// und kam danach nicht mehr an die Admin-Seite)
+			const username = String(req.params.username).toLowerCase();
+			if (username === String(req.sess?.channel ?? '').toLowerCase()) {
+				res.status(400).json({ error: "You can't remove yourself." });
+				return;
+			}
+			const user = await bot.Users.get(username);
 			if (user) {
 				await bot.Users.setData(user, 'administrator', null);
 			}

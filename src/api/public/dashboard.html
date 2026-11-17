@@ -1775,6 +1775,7 @@
       setupReasonPickers();
       if (!me.joined && !me.isAdmin) return enterGuestMode({ username: me.username, displayName: me.channel });
       data.prefix = me.prefix || 'sb';
+      data.sessionChannel = String(me.channel || '').toLowerCase();
       document.getElementById('sidebarChannel').textContent = '#' + me.channel;
       document.getElementById('sidebarChannelSub').textContent = me.channel;
       document.getElementById('channelLink').href = 'https://www.twitch.tv/' + encodeURIComponent(me.channel);
@@ -3794,7 +3795,9 @@
             <div class="data-row">
               <div class="cell-mono">${esc(user)}</div>
               <div class="cell-actions">
-                <button class="btn btn-danger" onclick="deleteAdminUser('${esc(user)}')">Remove</button>
+                ${user === data.sessionChannel
+                  ? '<span class="cell-mono">you</span>'
+                  : `<button class="btn btn-danger" onclick="deleteAdminUser('${esc(user)}')">Remove</button>`}
               </div>
             </div>`).join('')}
         </div>`;
