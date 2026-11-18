@@ -7,16 +7,16 @@ module.exports = defineCron({
 	expression: '15 */5 * * * *',
 	description: 'Tracks the record of simultaneously live channels among the joined ones.',
 	code: async function liveRecord() {
-		const platform = bot.Twitch;
-		let live = 0;
+		// Logins mitspeichern, fuer !whoislivebest (ninou2, 18.11.2026: "a command that save the best !wil", "who were live")
+		const live = [];
 		for (const channel of bot.Channels.getJoinable()) {
 			if (await bot.Channels.isLive(channel)) {
-				live++;
+				live.push(channel.name);
 			}
 		}
 
-		if (live > 0 && (await updateRecordIfHigher('live_channels', live))) {
-			console.log(`[live-record] Neuer Rekord: ${live} live Channels`);
+		if (live.length > 0 && (await updateRecordIfHigher('live_channels', live.length, live))) {
+			console.log(`[live-record] Neuer Rekord: ${live.length} live Channels (${live.join(', ')})`);
 		}
 	},
 });

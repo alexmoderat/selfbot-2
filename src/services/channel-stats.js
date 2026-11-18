@@ -217,16 +217,16 @@ const getCurrentCategory = async (channel) => {
 
 /* ---------- Bot-Rekorde ---------- */
 
-/** { Value, Achieved } oder null */
-const getRecord = async (name) => pick('BotRecord', await bot.DB.BotRecord.findOne({ name }).lean(), ['Value', 'Achieved']);
+/** { Value, Achieved, Channels } oder null; Channels erst seit 18.11.2026 gespeichert, aeltere Rekorde: null */
+const getRecord = async (name) => pick('BotRecord', await bot.DB.BotRecord.findOne({ name }).lean(), ['Value', 'Achieved', 'Channels']);
 
-/** true, wenn es ein neuer Rekord ist */
-const updateRecordIfHigher = async (name, value) => {
+/** true, wenn es ein neuer Rekord ist; channels = Logins zum Rekord (live_channels) */
+const updateRecordIfHigher = async (name, value, channels = null) => {
 	const current = await getRecord(name);
 	if (current && current.Value >= value) {
 		return false;
 	}
-	await bot.DB.BotRecord.updateOne({ name }, { $set: { value: Number(value), achieved: new Date() } }, { upsert: true });
+	await bot.DB.BotRecord.updateOne({ name }, { $set: { value: Number(value), achieved: new Date(), channels } }, { upsert: true });
 	return true;
 };
 

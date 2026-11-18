@@ -78,6 +78,11 @@ module.exports = [
 				type: 'Date',
 				required: true,
 			},
+			channels: {
+				column: 'Channels',
+				type: 'Mixed',
+				required: false,
+			},
 		},
 		indexes: [],
 	},
