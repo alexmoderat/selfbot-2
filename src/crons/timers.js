@@ -33,7 +33,19 @@ module.exports = defineCron({
 				live = liveCache.get(channel.id) ?? null;
 			}
 
-			if (!isTimerDue(timer, live, now)) {
+			// whenlive: Live-Status des anderen Channels (unbekannter/entfernter Channel = nicht live)
+			let otherLive = null;
+			if (timer.Live_Channel) {
+				const other = bot.Channels.get(Number(timer.Live_Channel));
+				if (other) {
+					if (!liveCache.has(other.id)) {
+						liveCache.set(other.id, await bot.Channels.isLive(other).catch(() => null));
+					}
+					otherLive = liveCache.get(other.id) ?? null;
+				}
+			}
+
+			if (!isTimerDue(timer, live, now, otherLive)) {
 				continue;
 			}
 

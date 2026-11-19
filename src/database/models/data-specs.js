@@ -252,6 +252,13 @@ module.exports = [
 				required: false,
 				default: false,
 			},
+			// nur senden, wenn dieser andere Channel (Channel-ID) live ist - fuer +ed im Ausweich-Channel, waehrend ninou2 live ist
+			liveChannel: {
+				column: 'Live_Channel',
+				type: 'Number',
+				required: false,
+				default: null,
+			},
 			enabled: {
 				column: 'Enabled',
 				type: 'Boolean',

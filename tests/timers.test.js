@@ -31,3 +31,12 @@ test('Timer: Anzeige der Bedingung', () => {
 	assert.equal(timerMode({ Online_Only: false }), 'always');
 	assert.equal(timerMode({ Online_Only: false, Offline_Only: true }), 'offline only');
 });
+
+test('Timer: whenlive - nur wenn der andere Channel sicher live ist', () => {
+	const timer = { ...base, Offline_Only: true, Live_Channel: 70 };
+	assert.equal(isTimerDue(timer, false, now, true), true); // hier offline, ninou2 live
+	assert.equal(isTimerDue(timer, false, now, false), false); // ninou2 offline
+	assert.equal(isTimerDue(timer, false, now, null), false); // unbekannt
+	assert.equal(isTimerDue(timer, true, now, true), false); // hier selbst live
+	assert.equal(isTimerDue({ ...base, Offline_Only: true }, false, now), true); // ohne whenlive wie bisher
+});

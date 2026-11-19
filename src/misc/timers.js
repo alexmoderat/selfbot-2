@@ -23,13 +23,17 @@ const parseTimerInterval = (input) => {
 const timerMode = (timer) => (timer.Offline_Only ? 'offline only' : timer.Online_Only ? 'live only' : 'always');
 
 /**
- * Faellig, wenn aktiv, (bei Online_Only) live bzw. (bei Offline_Only) offline und das Intervall seit dem letzten Senden um ist. Noch nie gesendet
+ * Faellig, wenn aktiv, (bei Online_Only) live bzw. (bei Offline_Only) offline, (bei Live_Channel) der andere Channel live und das Intervall seit dem letzten Senden um ist. Noch nie gesendet
  * -> sofort, d. h. ein neuer Timer meldet sich im naechsten Cron-Tick. "live" null (unbekannt) zaehlt als offline,
  * damit ein Online-Timer bei API-Problemen lieber schweigt als in einen leeren Chat zu posten; ein Offline-Timer schweigt
  * bei unbekanntem Status ebenfalls (lieber nicht in einen laufenden Stream posten).
  */
-const isTimerDue = (timer, live, now) => {
+const isTimerDue = (timer, live, now, otherLive = null) => {
 	if (!timer.Enabled || (timer.Online_Only && live !== true) || (timer.Offline_Only && live !== false)) {
+		return false;
+	}
+	// whenlive: der andere Channel muss sicher live sein
+	if (timer.Live_Channel && otherLive !== true) {
 		return false;
 	}
 
