@@ -1,0 +1,95 @@
+const { got } = require('../token/got.js');
+
+/**
+ * Frage an eine KI, wie Supibots $gpt (ninou2, 19.11.2026: "was thinking about an !ask command just like the GPT one from
+ * supibot", "if it cost nothing"). Kostenlos ueber das Gratis-Kontingent der Gemini-API (Schluessel GEMINI_API_KEY aus
+ * Google AI Studio, Modell per GEMINI_MODEL aenderbar). Statt einer zweiten KI zum Zusammenfassen wird Gemini direkt um eine
+ * kurze Antwort gebeten und zur Sicherheit hart gekuerzt; ist das Tageskontingent aufgebraucht (429), kommt "try again later".
+ */
+const DEFAULT_MODEL = 'gemini-2.5-flash';
+const MAX_QUESTION = 500;
+const MAX_ANSWER = 400;
+const SYSTEM_PROMPT =
+	'You are a helpful bot in a Twitch chat. Answer the question in at most 300 characters, in one or two sentences, ' +
+	'in the same language as the question. Plain text only: no markdown, no lists, no line breaks, no links.';
+
+/** Antwort aus der Gemini-Antwort holen; null = gesperrt/leer */
+const extractAnswer = (body) => {
+	const candidate = body?.candidates?.[0];
+	const parts = Array.isArray(candidate?.content?.parts) ? candidate.content.parts : [];
+	const text = parts
+		.filter((p) => !p.thought && typeof p.text === 'string')
+		.map((p) => p.text)
+		.join(' ');
+	return text.trim() ? text : null;
+};
+
+/** Eine Zeile, ohne Markdown-Sternchen/Backticks, auf MAX_ANSWER Zeichen gekuerzt */
+const cleanAnswer = (text) => {
+	const line = String(text)
+		.replaceAll(/[*_`#]+/g, '')
+		.replaceAll(/\s+/g, ' ')
+		.trim();
+	return line.length > MAX_ANSWER ? `${line.slice(0, MAX_ANSWER - 1).trimEnd()}…` : line;
+};
+
+const askGemini = async (question, apiKey, model = DEFAULT_MODEL) => {
+	const response = await got('Global')({
+		url: `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+		method: 'POST',
+		headers: { 'x-goog-api-key': apiKey },
+		json: {
+			systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+			contents: [{ role: 'user', parts: [{ text: question }] }],
+			generationConfig: { maxOutputTokens: 256, thinkingConfig: { thinkingBudget: 0 } },
+		},
+		timeout: { request: 20_000 },
+	});
+
+	if (response.statusCode === 429) {
+		return { error: 'the free AI limit is used up for now, try again later.' };
+	}
+	if (response.statusCode !== 200) {
+		console.warn(`[ask] Gemini HTTP ${response.statusCode}: ${JSON.stringify(response.body).slice(0, 300)}`);
+		return { error: `the AI didn't answer (status ${response.statusCode}), try again later.` };
+	}
+	const answer = extractAnswer(response.body);
+	if (!answer) {
+		return { error: "the AI didn't give an answer to that." };
+	}
+	return { answer: cleanAnswer(answer) };
+};
+
+module.exports = {
+	name: 'ask',
+	aliases: [],
+	cooldown: 30_000,
+	description: 'Asks an AI (Google Gemini) a question and posts a short answer.',
+	usage: 'ask <question>',
+	flags: ['cooldown-notice', 'no-prefix', 'external-input'],
+	execute: async (client, msg) => {
+		const display = msg.displayName;
+		const question = msg.args.join(' ').trim();
+		if (!question) {
+			return { text: `@${display}, Usage: ${msg.invocation} <question>` };
+		}
+		if (question.length > MAX_QUESTION) {
+			return { text: `@${display}, your question is too long (max ${MAX_QUESTION} characters).` };
+		}
+
+		const apiKey = process.env.GEMINI_API_KEY;
+		if (!apiKey) {
+			return { text: `@${display}, the AI isn't set up yet.` };
+		}
+
+		try {
+			const result = await askGemini(question, apiKey, process.env.GEMINI_MODEL || DEFAULT_MODEL);
+			return { text: `@${display}, ${result.answer ?? result.error}` };
+		} catch (e) {
+			console.warn(`[ask] ${e instanceof Error ? e.message : e}`);
+			return { text: `@${display}, the AI didn't answer, try again later.` };
+		}
+	},
+};
+
+Object.assign(module.exports, { extractAnswer, cleanAnswer, askGemini, SYSTEM_PROMPT });
