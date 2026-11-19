@@ -3,10 +3,12 @@ const { got } = require('../token/got.js');
 /**
  * Frage an eine KI, wie Supibots $gpt (ninou2, 19.11.2026: "was thinking about an !ask command just like the GPT one from
  * supibot", "if it cost nothing"). Kostenlos ueber das Gratis-Kontingent der Gemini-API (Schluessel GEMINI_API_KEY aus
- * Google AI Studio, Modell per GEMINI_MODEL aenderbar). Statt einer zweiten KI zum Zusammenfassen wird Gemini direkt um eine
+ * Google AI Studio, Modell per GEMINI_MODEL aenderbar, Standard gemini-flash-lite-latest). Statt einer zweiten KI zum Zusammenfassen wird Gemini direkt um eine
  * kurze Antwort gebeten und zur Sicherheit hart gekuerzt; ist das Tageskontingent aufgebraucht (429), kommt "try again later".
  */
-const DEFAULT_MODEL = 'gemini-2.5-flash';
+// gemini-2.5-flash gibt es fuer neue Schluessel nicht mehr, die grossen Flash-Modelle waren beim Einrichten (19.11.2026)
+// ueberlastet (503/Timeout) - die Lite-Variante antwortet zuverlaessig
+const DEFAULT_MODEL = 'gemini-flash-lite-latest';
 const MAX_QUESTION = 500;
 const MAX_ANSWER = 400;
 const SYSTEM_PROMPT =
@@ -41,13 +43,17 @@ const askGemini = async (question, apiKey, model = DEFAULT_MODEL) => {
 		json: {
 			systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
 			contents: [{ role: 'user', parts: [{ text: question }] }],
-			generationConfig: { maxOutputTokens: 256, thinkingConfig: { thinkingBudget: 0 } },
+			generationConfig: { maxOutputTokens: 256 },
 		},
-		timeout: { request: 20_000 },
+		timeout: { request: 30_000 },
+		retry: { limit: 0 },
 	});
 
 	if (response.statusCode === 429) {
 		return { error: 'the free AI limit is used up for now, try again later.' };
+	}
+	if (response.statusCode === 503) {
+		return { error: 'the AI is busy right now, try again in a bit.' };
 	}
 	if (response.statusCode !== 200) {
 		console.warn(`[ask] Gemini HTTP ${response.statusCode}: ${JSON.stringify(response.body).slice(0, 300)}`);
