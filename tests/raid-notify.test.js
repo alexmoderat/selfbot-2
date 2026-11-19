@@ -133,3 +133,30 @@ test('Probelauf: nur der Testende wird erwaehnt, Zaehler bleibt, 30 s Sperre', a
 	assert.match(again.error, /wait/);
 	assert.equal(sent.length, 1);
 });
+
+test('Raid Notify: negative Zeit postet so viele Sekunden nach dem Start (ninou2, 19.11.2026: "-1 = 121s, -3 = 123s")', async () => {
+	const raid = require('../src/modules/raid-notifier.js');
+	const delays = [];
+	const realTimeout = global.setTimeout;
+	global.setTimeout = (fn, ms) => {
+		delays.push(ms);
+		return { unref() {} };
+	};
+	const savedBot = global.bot;
+	const channel = { id: 991, name: 'zzqchannel', mode: 'Write' };
+	global.bot = {
+		Channels: {
+			get: () => channel,
+			getData: () => ({ enabled: true, items: [{ id: 1, on: true, seconds: -3, text: null, times: 1 }, { id: 2, on: true, seconds: 0, text: null, times: 1 }], uses: {} }),
+			setData: async () => {},
+			send: async () => {},
+		},
+	};
+	try {
+		await raid.runRaid(new Map([[991, ['zzquser']]]), 120);
+	} finally {
+		global.setTimeout = realTimeout;
+		global.bot = savedBot;
+	}
+	assert.deepEqual(delays.sort((a, b) => a - b), [120_000, 123_000]);
+});

@@ -1273,7 +1273,7 @@
       <div class="section-header">
         <div class="section-title">Raid Notify <span class="count-pill" id="countRaid">0</span></div>
       </div>
-      <p class="section-desc">Each row is one message to everyone who joined with <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">!subraid</code> in your channel. <b>Time</b> is how many seconds before the raid starts it is posted (120 = right when it is announced, 0 = when the raid starts). Click Time, Message or Times to change them. Use <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{users}</code> for the names and <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{seconds}</code> for the seconds left. If you switch all of them off or remove them, Raid Notify turns itself off.</p>
+      <p class="section-desc">Each row is one message to everyone who joined with <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">!subraid</code> in your channel. <b>Time</b> is how many seconds before the raid starts it is posted (120 = right when it is announced, 0 = when the raid starts, -1 to -10 = that many seconds after it started). Click Time, Message or Times to change them. Use <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{users}</code> for the names and <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{seconds}</code> for the seconds left. If you switch all of them off or remove them, Raid Notify turns itself off.</p>
 
       <div id="raidList"></div>
       <div style="margin-top:10px"><button type="button" class="btn btn-primary" id="raidAddButton" style="font-size:12px;padding:5px 11px" onclick="addRaidItem()">+ Add notification</button>
@@ -3191,7 +3191,7 @@
               <div class="cell-actions"><button class="btn btn-danger" onclick="removeRaidItem(${item.id}, this)">Remove</button></div>
               <div class="raid-name"><span>Raid notification ${index + 1}</span>
                 <div class="toggle-pair">${toggleBtn(item.on, 'ON', `setRaidItem(${item.id}, { on: true })`)}<button class="${item.on ? '' : 'active off-red'}" onclick="setRaidItem(${item.id}, { on: false })">OFF</button></div></div>
-              <div class="cell-muted msg-cell" title="Click to change (${r.minSeconds}-${r.maxSeconds} seconds before the start)" onclick="editRaidCell(this, ${item.id}, 'seconds')">${item.seconds}s</div>
+              <div class="cell-muted msg-cell" title="Click to change (${r.minSeconds} to ${r.maxSeconds} seconds before the start, negative = after the start)" onclick="editRaidCell(this, ${item.id}, 'seconds')">${item.seconds}s</div>
               <div class="cell-muted msg-cell${item.custom ? ' raid-custom' : ''}" title="${item.custom ? 'Custom message' : 'Default message'} - click to edit" onclick="editRaidCell(this, ${item.id}, 'text')">${esc(item.text)}</div>
               <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editRaidCell(this, ${item.id}, 'times')">${item.times}×</div>
               <span class="uses-pill raid-uses" title="how often a ${item.seconds}s notification was posted in your channel (kept when you remove and add it again)">${esc(item.uses ?? 0)} use${item.uses === 1 ? '' : 's'}</span>
