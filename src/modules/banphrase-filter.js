@@ -112,7 +112,7 @@ module.exports = defineChatModule({
 				phrases.recordHit(matched, channel.id);
 
 				// Nur komischer Name UND juenger als 7 Tage wird gebannt, sonst keine Aktion; Ban-Evader/Verdaechtige immer wie bisher
-				if (!evader && !suspicious && !(await mayBanPhraseHit(user.name, userId))) {
+				if (!evader && !suspicious && !(await mayBanPhraseHit(user.name, userId, matched, phrases.getPreset('sellerbot')?.ID ?? null))) {
 					console.warn(`[banphrase-filter] "${matched.Phrase}" von ${user.name} in #${channel.name} - kein komischer Name oder aelter als 7 Tage, keine Aktion`);
 					return;
 				}

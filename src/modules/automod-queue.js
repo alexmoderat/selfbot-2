@@ -77,7 +77,7 @@ module.exports = defineChatModule({
 			const matched = phrases.findMatch(channel.id, deobfuscate(text).toLowerCase());
 			if (matched) {
 				phrases.recordHit(matched, channel.id);
-				if (!(await mayBanPhraseHit(login, userId))) {
+				if (!(await mayBanPhraseHit(login, userId, matched, phrases.getPreset('sellerbot')?.ID ?? null))) {
 					console.warn(`[automod-queue] Banphrase "${matched.Phrase}" von ${login} in #${channel.name} - kein komischer Name oder aelter als 7 Tage, keine Aktion (Nachricht bleibt in der Queue)`);
 					return;
 				}

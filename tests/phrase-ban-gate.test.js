@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { isWeirdName, isGeneratedBotName, shouldBanPhraseHit } = require('../src/misc/phrase-ban-gate.js');
+const { isWeirdName, isGeneratedBotName, isViewbotPhrase, shouldBanPhraseHit } = require('../src/misc/phrase-ban-gate.js');
 
 test('isWeirdName: generierte Spam-Namen ja, kurze normale nein', () => {
 	for (const name of ['needymanagementc0ph', 'curvedbutleruzzbn6q1hc', 'ghostshaman3767', 'oliver_edd', 'weebconnect', 'luckychateauqjy032']) {
@@ -32,4 +32,18 @@ test('shouldBanPhraseHit: generierter Bot-Name wird unabhaengig vom Alter gebann
 	assert.equal(shouldBanPhraseHit('vindictiveordinanceomvs', { ageDays: 18 }), true);
 	assert.equal(shouldBanPhraseHit('vindictiveordinanceomvs', { ageDays: 900 }), true);
 	assert.equal(shouldBanPhraseHit('jacke245_again', { ageDays: 947 }), false);
+});
+
+test('Viewbot-Phrase: komischer Name reicht, ohne Altersgrenze (fleetingax12h, 19.11.2026)', () => {
+	assert.equal(isViewbotPhrase({ Reason: 'Viewbot Services', Preset: null }), true);
+	assert.equal(isViewbotPhrase({ Reason: 'Viewbot Service', Preset: null }), true);
+	assert.equal(isViewbotPhrase({ Reason: 'seller bot', Preset: null }), true);
+	assert.equal(isViewbotPhrase({ Reason: 'Harassment', Preset: 2 }, 2), true); // sellerbot-Preset
+	assert.equal(isViewbotPhrase({ Reason: 'Harassment', Preset: null }, 2), false);
+	assert.equal(isViewbotPhrase(null), false);
+
+	assert.equal(shouldBanPhraseHit('fleetingax12h', { ageDays: 20 }, true), true);
+	assert.equal(shouldBanPhraseHit('cut_rateredistribution8', { ageDays: 400 }, true), true);
+	assert.equal(shouldBanPhraseHit('fleetingax12h', { ageDays: 20 }, false), false); // andere Phrasen: weiter 7 Tage
+	assert.equal(shouldBanPhraseHit('reksua', { ageDays: 1 }, true), false); // normaler Name: weiter keine Aktion
 });
