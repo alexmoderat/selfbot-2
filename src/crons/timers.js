@@ -7,6 +7,15 @@ const { isTimerDue } = require('../misc/timers.js');
  * Sendet faellige Timer (commands/timer, alexmoderat 31.10.2026). Tickt jede Minute; Live-Status nur fuer Channels
  * mit Online-/Offline-Timern abfragen, und pro Channel nur einmal.
  */
+// isLive ist synchron (true/false/null) - ein ".catch" darauf warf bei jedem Live-/Offline-Timer einen Fehler
+const liveOf = (channel) => {
+	try {
+		return bot.Channels.isLive(channel) ?? null;
+	} catch {
+		return null;
+	}
+};
+
 module.exports = defineCron({
 	name: 'timers',
 	expression: '15 * * * * *',
@@ -30,7 +39,7 @@ module.exports = defineCron({
 			let live = null;
 			if (timer.Online_Only || timer.Offline_Only) {
 				if (!liveCache.has(channel.id)) {
-					liveCache.set(channel.id, await bot.Channels.isLive(channel).catch(() => null));
+					liveCache.set(channel.id, liveOf(channel));
 				}
 				live = liveCache.get(channel.id) ?? null;
 			}
@@ -41,7 +50,7 @@ module.exports = defineCron({
 				const other = bot.Channels.get(Number(timer.Live_Channel));
 				if (other) {
 					if (!liveCache.has(other.id)) {
-						liveCache.set(other.id, await bot.Channels.isLive(other).catch(() => null));
+						liveCache.set(other.id, liveOf(other));
 					}
 					otherLive = liveCache.get(other.id) ?? null;
 				}

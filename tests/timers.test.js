@@ -67,7 +67,7 @@ test('Timer-Cron: sendet faellige Timer wirklich (07.-19.11.2026 still ueberspru
 		Channels: {
 			get: (id) => channels[id],
 			isWritable: (c) => c.mode !== 'Inactive' && c.mode !== 'Read',
-			isLive: async () => false,
+			isLive: () => false, // synchron wie src/services/channels.js
 			send: async (c, text) => sent.push(`${c.name}: ${text}`),
 		},
 	};
