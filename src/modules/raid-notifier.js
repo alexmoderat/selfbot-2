@@ -71,15 +71,16 @@ const countPost = async (channel, reminder, text) => {
 	}
 };
 
-// Zeitpunkt der Erinnerung: 5-120 s vor Start
-const MIN_LEAD_S = 5;
+// Zeitpunkt der Erinnerung: 0-120 s vor Start (0 = genau beim Start, ninou2 19.11.2026: "is it possible to use 0 as value",
+// fuer eine eigene "has started"-Meldung; vorher 5-120)
+const MIN_LEAD_S = 0;
 const MAX_LEAD_S = 120;
 const clampLead = (value) => {
 	const n = Number.parseInt(String(value ?? REMINDER_LEAD_S), 10);
 	return Number.isNaN(n) ? REMINDER_LEAD_S : Math.min(MAX_LEAD_S, Math.max(MIN_LEAD_S, n));
 };
 // Raid Notify je Channel (ninou2, 14.11.2026): standardmaessig aus; eine Liste von Benachrichtigungen, jede mit eigenem Schalter,
-// Zeitpunkt (5-120 s vor Start), Text (null = Standardtext) und Anzahl (x1-x5). Gespeichert in den Channel-Daten "raidNotify":
+// Zeitpunkt (0-120 s vor Start), Text (null = Standardtext) und Anzahl (x1-x5). Gespeichert in den Channel-Daten "raidNotify":
 // { enabled, items: [{ id, on, seconds, text, times }] }. Der erste Eintrag ist der 120-s-Ping (= bei der Ankuendigung).
 const MAX_ITEMS = 10;
 const defaultText = () => DEFAULT_RAID_MESSAGE;
