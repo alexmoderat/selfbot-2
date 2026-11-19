@@ -22,9 +22,18 @@ const msg = (text) => ({ displayName: 'ninou2', invocation: 'ask', args: text ? 
 
 test('ask: Antwort einzeilig ohne Markdown, hart gekuerzt', () => {
 	assert.equal(ask.cleanAnswer('**No.** Berlin\nhas `cold` winters.'), 'No. Berlin has cold winters.');
-	const long = ask.cleanAnswer('a'.repeat(1000));
-	assert.equal(long.length, 400);
+	const long = ask.cleanAnswer('a'.repeat(5000));
+	assert.equal(long.length, 1320);
 	assert.ok(long.endsWith('…'));
+});
+
+test('ask: lange Antwort an Wortgrenzen auf Nachrichten verteilt', () => {
+	assert.deepEqual(ask.splitAnswer('short answer.'), ['short answer.']);
+	const words = Array.from({ length: 200 }, (_, i) => `zzq${i}`).join(' ');
+	const parts = ask.splitAnswer(words);
+	assert.ok(parts.length > 1);
+	assert.ok(parts.every((p) => p.length <= 440));
+	assert.equal(parts.join(' '), words);
 });
 
 test('ask: Text aus Gemini-Antwort, Gedanken-Teile ignoriert, leer/gesperrt = null', () => {
@@ -52,6 +61,13 @@ test('ask: Antwort, Kontingent aufgebraucht (429), Fehlerstatus', async () => {
 		assert.equal(lastRequest.method, 'POST');
 		assert.equal(lastRequest.headers['x-goog-api-key'], 'zzq-test');
 		assert.equal(lastRequest.json.contents[0].parts[0].text, 'does it snow a lot in berlin');
+
+		const long = Array.from({ length: 150 }, (_, i) => `zzq${i}`).join(' ');
+		nextResponse = { statusCode: 200, body: { candidates: [{ content: { parts: [{ text: long }] } }] } };
+		const result = await ask.execute(null, msg('zzq'));
+		assert.ok(result.text.startsWith('@ninou2, zzq0 '));
+		assert.ok(result.followUps.length >= 1);
+		assert.equal([result.text.slice('@ninou2, '.length), ...result.followUps].join(' '), long);
 
 		nextResponse = { statusCode: 429, body: {} };
 		assert.match((await ask.execute(null, msg('zzq'))).text, /limit is used up/);

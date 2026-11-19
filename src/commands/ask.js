@@ -4,15 +4,20 @@ const { got } = require('../token/got.js');
  * Frage an eine KI, wie Supibots $gpt (ninou2, 19.11.2026: "was thinking about an !ask command just like the GPT one from
  * supibot", "if it cost nothing"). Kostenlos ueber das Gratis-Kontingent der Gemini-API (Schluessel GEMINI_API_KEY aus
  * Google AI Studio, Modell per GEMINI_MODEL aenderbar, Standard gemini-flash-lite-latest). Statt einer zweiten KI zum Zusammenfassen wird Gemini direkt um eine
- * kurze Antwort gebeten und zur Sicherheit hart gekuerzt; ist das Tageskontingent aufgebraucht (429), kommt "try again later".
+ * kurze Antwort gebeten, lange Antworten gehen auf bis zu 3 Nachrichten; ist das Tageskontingent aufgebraucht (429), kommt "try again later".
  */
 // gemini-2.5-flash gibt es fuer neue Schluessel nicht mehr, die grossen Flash-Modelle waren beim Einrichten (19.11.2026)
 // ueberlastet (503/Timeout) - die Lite-Variante antwortet zuverlaessig
 const DEFAULT_MODEL = 'gemini-flash-lite-latest';
 const MAX_QUESTION = 500;
-const MAX_ANSWER = 400;
+// Lange Antworten auf mehrere Nachrichten verteilt (ninou2, 19.11.2026: "if the answer [is] long, the [bot] post it [in]
+// multiple messages" wie andere Bots), hoechstens 3 Nachrichten
+const PART_SIZE = 440;
+const MAX_PARTS = 3;
+const MAX_ANSWER = PART_SIZE * MAX_PARTS;
 const SYSTEM_PROMPT =
-	'You are a helpful bot in a Twitch chat. Answer the question in at most 300 characters, in one or two sentences, ' +
+	'You are a helpful bot in a Twitch chat. Answer as briefly as the question allows: simple questions in one or two ' +
+	'sentences, never more than 1000 characters, ' +
 	'in the same language as the question. Plain text only: no markdown, no lists, no line breaks, no links.';
 
 /** Antwort aus der Gemini-Antwort holen; null = gesperrt/leer */
@@ -26,13 +31,29 @@ const extractAnswer = (body) => {
 	return text.trim() ? text : null;
 };
 
-/** Eine Zeile, ohne Markdown-Sternchen/Backticks, auf MAX_ANSWER Zeichen gekuerzt */
+/** Eine Zeile, ohne Markdown-Sternchen/Backticks, auf MAX_ANSWER Zeichen gekuerzt (Ende mit …) */
 const cleanAnswer = (text) => {
 	const line = String(text)
 		.replaceAll(/[*_`#]+/g, '')
 		.replaceAll(/\s+/g, ' ')
 		.trim();
 	return line.length > MAX_ANSWER ? `${line.slice(0, MAX_ANSWER - 1).trimEnd()}…` : line;
+};
+
+/** Antwort an Wortgrenzen in Stuecke von hoechstens size Zeichen teilen */
+const splitAnswer = (text, size = PART_SIZE) => {
+	const parts = [];
+	let rest = text.trim();
+	while (rest.length > size) {
+		const cut = rest.lastIndexOf(' ', size);
+		const at = cut > size / 2 ? cut : size;
+		parts.push(rest.slice(0, at).trimEnd());
+		rest = rest.slice(at).trimStart();
+	}
+	if (rest) {
+		parts.push(rest);
+	}
+	return parts;
 };
 
 const askGemini = async (question, apiKey, model = DEFAULT_MODEL) => {
@@ -43,7 +64,7 @@ const askGemini = async (question, apiKey, model = DEFAULT_MODEL) => {
 		json: {
 			systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
 			contents: [{ role: 'user', parts: [{ text: question }] }],
-			generationConfig: { maxOutputTokens: 256 },
+			generationConfig: { maxOutputTokens: 512 },
 		},
 		timeout: { request: 30_000 },
 		retry: { limit: 0 },
@@ -90,7 +111,11 @@ module.exports = {
 
 		try {
 			const result = await askGemini(question, apiKey, process.env.GEMINI_MODEL || DEFAULT_MODEL);
-			return { text: `@${display}, ${result.answer ?? result.error}` };
+			if (!result.answer) {
+				return { text: `@${display}, ${result.error}` };
+			}
+			const [first, ...followUps] = splitAnswer(result.answer);
+			return { text: `@${display}, ${first}`, followUps };
 		} catch (e) {
 			console.warn(`[ask] ${e instanceof Error ? e.message : e}`);
 			return { text: `@${display}, the AI didn't answer, try again later.` };
@@ -98,4 +123,4 @@ module.exports = {
 	},
 };
 
-Object.assign(module.exports, { extractAnswer, cleanAnswer, askGemini, SYSTEM_PROMPT });
+Object.assign(module.exports, { extractAnswer, cleanAnswer, splitAnswer, askGemini, SYSTEM_PROMPT });

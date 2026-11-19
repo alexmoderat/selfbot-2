@@ -23,6 +23,8 @@ const config = getConfig();
 const cooldowns = new CooldownManager(config.values.pendingCommandTimeout);
 // Je Sperre nur einmal "slow down" melden
 const cooldownNotified = new Map();
+// Abstand zwischen Folge-Nachrichten einer Antwort (Twitch-Limit fuer Nicht-Mods: 1 Nachricht/s pro Channel)
+const FOLLOW_UP_GAP_MS = 1500;
 setInterval(() => cooldowns.prune(), 10 * 60_000).unref();
 
 /** Prefix des Channels (setprefix) oder der Standard-Prefix */
@@ -206,6 +208,23 @@ const checkAndExecute = async (msg, options = {}) => {
 				execution.reason = 'banphrase';
 			}
 		}
+		// Folge-Nachrichten (z. B. lange !ask-Antworten) durch dieselben Filter; schlaegt einer an, entfallen sie
+		if (Array.isArray(execution.followUps) && execution.followUps.length > 0) {
+			const filtered = [];
+			for (const part of execution.followUps) {
+				let text = channel.linksAllowed ? part : replaceLinks(part, '[LINK]');
+				if (!command.flags.includes('skip-banphrase')) {
+					const banphrase = await Banphrase.execute(text, channel);
+					if (!banphrase.passed) {
+						filtered.length = 0;
+						break;
+					}
+					text = banphrase.string;
+				}
+				filtered.push(text);
+			}
+			execution.followUps = filtered;
+		}
 	}
 
 	if (execution.text && command.flags.includes('mention') && channel) {
@@ -256,13 +275,20 @@ const handler = async (msg) => {
 		return result.reason !== 'no-command';
 	}
 
-	// Ausloesender Befehl am Ende, nur fuer ninou2 (siehe misc/trigger-suffix.js)
-	const text = withTrigger(trimMessage(result.text, config.messageLimit), msg, config.messageLimit);
+	// Folge-Nachrichten nur im Channel (ninou2, 19.11.2026: lange !ask-Antworten "post it in multiple messages" wie andere Bots)
+	const followUps = !result.whisper && msg.channelData && Array.isArray(result.followUps) ? result.followUps.filter(Boolean) : [];
+	// Ausloesender Befehl am Ende, nur fuer ninou2 (siehe misc/trigger-suffix.js) - bei mehreren Nachrichten an der letzten
+	const finish = (value) => withTrigger(trimMessage(value, config.messageLimit), msg, config.messageLimit);
+	const text = followUps.length > 0 ? trimMessage(result.text, config.messageLimit) : finish(result.text);
 	if (result.whisper || !msg.channelData) {
 		await msg.whisper(text);
 	} else {
 		// Wie sb-v2: normal senden, als Reply nur wenn der Command es verlangt
 		await msg.send(text, Boolean(result.reply));
+		for (const [i, part] of followUps.entries()) {
+			await new Promise((resolve) => setTimeout(resolve, FOLLOW_UP_GAP_MS));
+			await msg.send(i === followUps.length - 1 ? finish(part) : trimMessage(part, config.messageLimit), false);
+		}
 	}
 	return true;
 };
