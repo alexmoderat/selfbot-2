@@ -20,13 +20,15 @@ const ordinal = (n) => {
 };
 
 /**
- * "the 18th november 2026 UTC" (ninou2, 19.11.2026: "woud be better if the date will be : on the 19th november 2026",
- * "AND u add UTC", "AND the date get : rd/th at the end the day date")
+ * "the 18th november 2026 at 16:02 UTC" (ninou2, 19.11.2026: "woud be better if the date will be : on the 19th november 2026",
+ * "AND u add [Uhrzeit] UTC", "AND the date get : rd/th at the end the day date"; dann: "didnt the UTC numbers" - also mit
+ * Uhrzeit in UTC, nicht nur dem Wort)
  */
 const formatRecordDate = (date) => {
 	const d = new Date(date);
 	const month = d.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' }).toLowerCase();
-	return `the ${ordinal(d.getUTCDate())} ${month} ${d.getUTCFullYear()} UTC`;
+	const time = `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+	return `the ${ordinal(d.getUTCDate())} ${month} ${d.getUTCFullYear()} at ${time} UTC`;
 };
 
 const recordHead = (record) =>
