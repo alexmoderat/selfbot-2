@@ -61,4 +61,20 @@ const isTimerDue = (timer, live, now, otherLive = null) => {
 	return timer.Last_Sent === null || now - timer.Last_Sent >= timer.Interval_Seconds * 1000;
 };
 
-module.exports = { MIN_INTERVAL, MAX_INTERVAL, MAX_TIMERS_PER_CHANNEL, MAX_MESSAGE_LENGTH, parseTimerInterval, isTimerDue, timerMode, formatInterval };
+/**
+ * Timer einer Sync-Gruppe zaehlen das Intervall ab dem letzten Senden irgendeines Timers der Gruppe (ninou2, 19.11.2026:
+ * "should Sync both chats too", "if a +ed has been sent in an offline chat, the next one should be sent after 1h10s in the
+ * next offline chat" - DeepDankDungeonBot hat einen gemeinsamen Cooldown fuer beide Chats). Liefert den Timer mit dem
+ * spaetesten Last_Sent der Gruppe; ohne Gruppe unveraendert.
+ */
+const withGroupLastSent = (timer, all) => {
+	if (!timer.Sync_Group) {
+		return timer;
+	}
+	const latest = all
+		.filter((t) => t.Sync_Group === timer.Sync_Group)
+		.reduce((max, t) => (t.Last_Sent && (!max || t.Last_Sent > max) ? t.Last_Sent : max), timer.Last_Sent ?? null);
+	return { ...timer, Last_Sent: latest };
+};
+
+module.exports = { withGroupLastSent, MIN_INTERVAL, MAX_INTERVAL, MAX_TIMERS_PER_CHANNEL, MAX_MESSAGE_LENGTH, parseTimerInterval, isTimerDue, timerMode, formatInterval };

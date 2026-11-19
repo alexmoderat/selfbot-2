@@ -259,6 +259,13 @@ module.exports = [
 				required: false,
 				default: null,
 			},
+			// Timer mit gleicher Gruppe teilen sich den Zeitpunkt des letzten Sendens (gemeinsamer +ed-Cooldown)
+			syncGroup: {
+				column: 'Sync_Group',
+				type: 'String',
+				required: false,
+				default: null,
+			},
 			enabled: {
 				column: 'Enabled',
 				type: 'Boolean',

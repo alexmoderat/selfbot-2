@@ -8,6 +8,8 @@ const { MAX_MESSAGE_LENGTH, MAX_TIMERS_PER_CHANNEL, parseTimerInterval, timerMod
  * onlyoffline:true = nur wenn der Stream offline ist (alexmoderat, 19.11.2026: automatisches +ed alle 1 h 10 s bei ninou2,
  * DeepDankDungeonBot antwortet nur offline - ninou2: "if im offline, it type +ED in here"). whenlive:<channel> = zusaetzlich nur,
  * wenn dieser andere Channel live ist (Ausweich-Channel fuer +ed, waehrend ninou2 live ist; alexmoderat, 19.11.2026).
+ * sync:<name> = Timer mit gleichem Namen (auch in anderen Channels) teilen sich das Intervall: nach einem Senden irgendwo
+ * kommt der naechste erst nach Ablauf des Intervalls (ninou2, 19.11.2026: +ed in beiden Chats, gemeinsamer Dungeon-Cooldown).
  */
 const MAX_INLINE = 350;
 const PREVIEW_LENGTH = 40;
@@ -15,7 +17,17 @@ const PREVIEW_LENGTH = 40;
 /** "live only, when #ninou2 is live" */
 const modeText = (timer) => {
 	const other = timer.Live_Channel ? bot.Channels.get(Number(timer.Live_Channel)) : null;
-	return `${timerMode(timer)}${timer.Live_Channel ? `, when #${other?.name ?? timer.Live_Channel} is live` : ''}`;
+	const sync = timer.Sync_Group ? `, synced "${timer.Sync_Group}"` : '';
+	return `${timerMode(timer)}${timer.Live_Channel ? `, when #${other?.name ?? timer.Live_Channel} is live` : ''}${sync}`;
+};
+
+/** sync:<name> -> { name } | { clear } | { error } */
+const resolveSync = (value) => {
+	const name = String(value).trim().toLowerCase();
+	if (['', 'none', 'off', 'false', '-'].includes(name)) {
+		return { clear: true };
+	}
+	return /^[a-z0-9_-]{1,30}$/.test(name) ? { name } : { error: 'sync name: 1-30 letters, digits, - or _ (e.g. sync:ed).' };
 };
 
 /** whenlive:<channel> -> { id } | { clear } | { error } */
@@ -39,13 +51,14 @@ module.exports = {
 	aliases: ['timers'],
 	cooldown: 3000,
 	description: 'Posts a message in this channel every X time (by default only while the stream is live).',
-	usage: 'timer add <interval> <text> [offline:true | onlyoffline:true] [whenlive:channel] | timer list | timer remove|on|off <id> | timer edit <id> [interval:4h] [text]',
+	usage: 'timer add <interval> <text> [offline:true | onlyoffline:true] [whenlive:channel] [sync:name] | timer list | timer remove|on|off <id> | timer edit <id> [interval:4h] [text]',
 	flags: ['mod'],
 	params: [
 		{ name: 'interval', type: 'string' },
 		{ name: 'offline', type: 'boolean' },
 		{ name: 'onlyoffline', type: 'boolean' },
 		{ name: 'whenlive', type: 'string' },
+		{ name: 'sync', type: 'string' },
 	],
 	execute: async (client, msg) => {
 		const [sub, ...args] = msg.args;
@@ -84,7 +97,7 @@ module.exports = {
 			const ms = intervalRaw ? parseTimerInterval(intervalRaw) : null;
 			const message = words.join(' ').trim();
 			if (!ms || !message) {
-				return { text: `@${display}, Usage: ${msg.prefix}${msg.invocation} add <interval 5m-7d, e.g. 4h> <text> [offline:true | onlyoffline:true] [whenlive:channel]` };
+				return { text: `@${display}, Usage: ${msg.prefix}${msg.invocation} add <interval 5m-7d, e.g. 4h> <text> [offline:true | onlyoffline:true] [whenlive:channel] [sync:name]` };
 			} else if (message.length > MAX_MESSAGE_LENGTH) {
 				return { text: `@${display}, the text is too long (max ${MAX_MESSAGE_LENGTH} characters).` };
 			} else if (all.length >= MAX_TIMERS_PER_CHANNEL) {
@@ -99,16 +112,25 @@ module.exports = {
 				}
 				liveChannel = resolved.id ?? null;
 			}
+			let syncGroup = null;
+			if (msg.params.sync !== undefined) {
+				const resolved = resolveSync(msg.params.sync);
+				if (resolved.error) {
+					return { text: `@${display}, ${resolved.error}` };
+				}
+				syncGroup = resolved.name ?? null;
+			}
 			const offlineOnly = msg.params.onlyoffline === true;
 			const onlineOnly = !offlineOnly && msg.params.offline !== true;
-			const id = await timers.add(channel, message, Math.round(ms / 1000), onlineOnly, msg.sender.name, offlineOnly, liveChannel);
+			const id = await timers.add(channel, message, Math.round(ms / 1000), onlineOnly, msg.sender.name, offlineOnly, liveChannel, syncGroup);
 			const when = offlineOnly
 				? 'only while the stream is offline, first one within a minute of going offline'
 				: onlineOnly
 					? 'while the stream is live, first one within a minute of going live'
 					: 'first one within a minute';
 			const other = liveChannel ? `, and only while #${bot.Channels.get(liveChannel)?.name} is live` : '';
-			return { text: `@${display}, ✅ timer #${id} added: every ${formatInterval(ms / 1000)}, ${when}${other}.` };
+			const sync = syncGroup ? `, sharing its interval with all "${syncGroup}" timers` : '';
+			return { text: `@${display}, ✅ timer #${id} added: every ${formatInterval(ms / 1000)}, ${when}${other}${sync}.` };
 		}
 
 		if (!['remove', 'delete', 'on', 'off', 'edit'].includes(action)) {
@@ -149,6 +171,13 @@ module.exports = {
 			}
 			values.Live_Channel = resolved.id ?? null;
 		}
+		if (msg.params.sync !== undefined) {
+			const resolved = resolveSync(msg.params.sync);
+			if (resolved.error) {
+				return { text: `@${display}, ${resolved.error}` };
+			}
+			values.Sync_Group = resolved.name ?? null;
+		}
 		if (msg.params.onlyoffline !== undefined) {
 			values.Offline_Only = msg.params.onlyoffline;
 			values.Online_Only = msg.params.onlyoffline ? false : (values.Online_Only ?? existing.Online_Only);
@@ -162,7 +191,7 @@ module.exports = {
 		}
 
 		if (Object.keys(values).length === 0) {
-			return { text: `@${display}, Usage: ${msg.prefix}${msg.invocation} edit <id> [interval:4h] [offline:true | onlyoffline:true] [whenlive:channel|none] [new text]` };
+			return { text: `@${display}, Usage: ${msg.prefix}${msg.invocation} edit <id> [interval:4h] [offline:true | onlyoffline:true] [whenlive:channel|none] [sync:name|none] [new text]` };
 		}
 
 		await timers.update(existing, values);

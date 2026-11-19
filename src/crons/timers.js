@@ -1,7 +1,7 @@
 const { commands } = require('../clients/modules/commands.js');
 const { defineCron } = require('../clients/modules/timers.js');
 const timers = require('../services/timers.js');
-const { isTimerDue } = require('../misc/timers.js');
+const { isTimerDue, withGroupLastSent } = require('../misc/timers.js');
 
 /**
  * Sendet faellige Timer (commands/timer, alexmoderat 31.10.2026). Tickt jede Minute; Live-Status nur fuer Channels
@@ -56,12 +56,15 @@ module.exports = defineCron({
 				}
 			}
 
-			if (!isTimerDue(timer, live, now, otherLive)) {
+			// Sync-Gruppe: Intervall ab dem letzten Senden irgendeines Timers der Gruppe
+			if (!isTimerDue(withGroupLastSent(timer, enabled), live, now, otherLive)) {
 				continue;
 			}
 
-			// Erst markieren, dann senden: ein Sendefehler soll nicht jede Minute neu feuern
+			// Erst markieren, dann senden: ein Sendefehler soll nicht jede Minute neu feuern; Last_Sent auch hier im Speicher
+			// setzen, damit ein zweiter Timer derselben Gruppe im selben Durchlauf nicht ebenfalls sendet
 			await timers.markSent(timer);
+			timer.Last_Sent = now;
 			await bot.Channels.send(channel, timer.Message).catch((e) => console.warn(`[timers] #${channel.name} #${timer.ID}`, e));
 		}
 	},
