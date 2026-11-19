@@ -69,7 +69,7 @@ const askGemini = async (question, apiKey, model = DEFAULT_MODEL) => {
 module.exports = {
 	name: 'ask',
 	aliases: [],
-	cooldown: 30_000,
+	cooldown: 10_000,
 	description: 'Asks an AI (Google Gemini) a question and posts a short answer.',
 	usage: 'ask <question>',
 	flags: ['cooldown-notice', 'no-prefix', 'external-input'],
