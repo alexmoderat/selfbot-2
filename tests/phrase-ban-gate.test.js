@@ -34,7 +34,7 @@ test('shouldBanPhraseHit: generierter Bot-Name wird unabhaengig vom Alter gebann
 	assert.equal(shouldBanPhraseHit('jacke245_again', { ageDays: 947 }), false);
 });
 
-test('Viewbot-Phrase: komischer Name reicht, ohne Altersgrenze (fleetingax12h, 19.11.2026)', () => {
+test('Viewbot-Phrase: immer bannen, ohne Namens- und Altersregel (fleetingax12h, 19.11.2026)', () => {
 	assert.equal(isViewbotPhrase({ Reason: 'Viewbot Services', Preset: null }), true);
 	assert.equal(isViewbotPhrase({ Reason: 'Viewbot Service', Preset: null }), true);
 	assert.equal(isViewbotPhrase({ Reason: 'seller bot', Preset: null }), true);
@@ -45,5 +45,5 @@ test('Viewbot-Phrase: komischer Name reicht, ohne Altersgrenze (fleetingax12h, 1
 	assert.equal(shouldBanPhraseHit('fleetingax12h', { ageDays: 20 }, true), true);
 	assert.equal(shouldBanPhraseHit('cut_rateredistribution8', { ageDays: 400 }, true), true);
 	assert.equal(shouldBanPhraseHit('fleetingax12h', { ageDays: 20 }, false), false); // andere Phrasen: weiter 7 Tage
-	assert.equal(shouldBanPhraseHit('reksua', { ageDays: 1 }, true), false); // normaler Name: weiter keine Aktion
+	assert.equal(shouldBanPhraseHit('reksua', { ageDays: 900 }, true), true); // auch normaler Name, altes Konto
 });

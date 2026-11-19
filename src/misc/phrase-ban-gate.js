@@ -24,11 +24,11 @@ const isWeirdName = (login) => {
 const isGeneratedBotName = (login) => /^[a-z][a-z0-9]{17,}$/.test(String(login ?? '').toLowerCase());
 
 /**
- * Viewbot-/Seller-Phrase (Grund "Viewbot Service(s)"/"seller bot" oder Phrase im sellerbot-Preset): komischer Name reicht, ohne
- * Altersgrenze. alexmoderat, 19.11.2026: fleetingax12h (Konto 20 Tage alt, "Best viewers with streamboo .com" in #im_row1) und
- * cut_rateredistribution8 rutschten durch die 7-Tage-Regel - "ja, ohne Altersgrenze", auch ein 2 Jahre altes Konto hatte schon
- * einen streamboo-Spamsatz geschrieben. Bewusst in Kauf genommen: ein alter Account mit komischem Namen, der so einen Satz im
- * Spass zitiert (Reksua10, 15.11.), wird wieder gebannt.
+ * Viewbot-/Seller-Phrase (Grund "Viewbot Service(s)"/"seller bot" oder Phrase im sellerbot-Preset): immer bannen, ohne Namens-
+ * und Altersregel (Mods/VIPs/Subs/Broadcaster sind schon vorher ausgenommen). alexmoderat, 19.11.2026: fleetingax12h (Konto
+ * 20 Tage alt, "Best viewers with streamboo .com" in #im_row1) und cut_rateredistribution8 rutschten durch die 7-Tage-Regel -
+ * "ja, ohne Altersgrenze", ein 2 Jahre altes Konto hatte schon einen streamboo-Spamsatz geschrieben, "das war sogar n normaler
+ * name". Bewusst in Kauf genommen: wer so einen Satz im Spass zitiert (Reksua10, 15.11.), wird wieder gebannt.
  */
 const VIEWBOT_REASON = /^(viewbot services?|seller ?bot)$/i;
 const isViewbotPhrase = (matched, sellerPresetId = null) =>
@@ -38,7 +38,7 @@ const isViewbotPhrase = (matched, sellerPresetId = null) =>
 const shouldBanPhraseHit = (login, age, viewbot = false) => {
 	if (isGeneratedBotName(login)) {
 		return true;
-	} else if (viewbot && isWeirdName(login)) {
+	} else if (viewbot) {
 		return true;
 	} else if (!isWeirdName(login)) {
 		return false;
@@ -50,7 +50,7 @@ const shouldBanPhraseHit = (login, age, viewbot = false) => {
 /** Fuer die Module: Alter holen und entscheiden */
 const mayBanPhraseHit = async (login, userId, matched = null, sellerPresetId = null) => {
 	const viewbot = isViewbotPhrase(matched, sellerPresetId);
-	if (isGeneratedBotName(login) || (viewbot && isWeirdName(login))) {
+	if (viewbot || isGeneratedBotName(login)) {
 		return true;
 	}
 	return shouldBanPhraseHit(login, await accountAgeDays(userId, { byId: true }), viewbot);
