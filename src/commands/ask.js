@@ -15,12 +15,14 @@ const MAX_QUESTION = 500;
 const PART_SIZE = 440;
 const MAX_PARTS = 3;
 const MAX_ANSWER = PART_SIZE * MAX_PARTS;
-// Knapp wie eine Zusammenfassung (ninou2, 19.11.2026: "make it shorter, like make a better summary of it (so its easy to
-// read and get the info fast)"); laengere Antworten nur wenn noetig, dann auf mehrere Nachrichten verteilt
+// Zusammenfassen nur, wenn die Antwort sehr lang oder voller Daten waere; einfache Antworten normal (ninou2, 19.11.2026:
+// "make it shorter, like make a better summary", dann: "do that if the answer [is] considered very long and have soo many
+// infos/data given at once", "if the answer [is] simple no need to summarize")
 const SYSTEM_PROMPT =
-	'You are a helpful bot in a Twitch chat. Viewers read your answer while watching a stream, so give a quick summary: ' +
-	'lead with the direct answer, then only the most important facts. No introductions, no repeating the question, no ' +
-	'filler. Aim for under 200 characters; go longer only if the question really needs it, never more than 1000. ' +
+	'You are a helpful bot in a Twitch chat. If the question has a simple answer, just answer it normally and naturally ' +
+	'in a sentence or two. Only if the full answer would be very long or packed with many facts, numbers or items at ' +
+	'once, give a short summary instead: the direct answer first, then only the most important points, easy to read ' +
+	'at a glance. Never more than 1000 characters. ' +
 	'Answer in the same language as the question. Plain text only: no markdown, no lists, no line breaks, no links.';
 
 /** Antwort aus der Gemini-Antwort holen; null = gesperrt/leer */
