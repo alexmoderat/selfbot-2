@@ -2049,7 +2049,9 @@
     }
 
     // Kein apiFetch: dessen 401 schickt zur Startseite, hier reicht der Hinweis auf den Login
-    async function reminderRequest(path, options) {
+    // success: Toast nach dem Aendern/Entfernen (ninou2, 19.11.2026: "if u get a notification the top right that it
+    // worked ( as other changes when u do them on the website u get that message )")
+    async function reminderRequest(path, options, success) {
       const el = document.getElementById('reminderList');
       try {
         const res = await fetch(path, options);
@@ -2060,13 +2062,14 @@
         const data = await res.json();
         if (!res.ok) { showToast(data.error || 'That did not work.', 'error'); return; }
         renderReminders(data.reminders);
+        if (success) showToast(success, 'success');
       }
       catch {
         showToast('Could not reach the bot, try again later.', 'error');
       }
     }
     const loadReminders = () => reminderRequest('api/my/reminders', { cache: 'no-store' });
-    const removeWebReminder = (source, id) => reminderRequest(`api/my/reminders/${encodeURIComponent(source)}/${id}`, { method: 'DELETE' });
+    const removeWebReminder = (source, id) => reminderRequest(`api/my/reminders/${encodeURIComponent(source)}/${id}`, { method: 'DELETE' }, 'Reminder removed.');
 
     // ninou2, 07.11.2026: Remove fragt erst nach ("a confirmation button with yes or no ... so people wont missclick")
     function askRemoveReminder(source, id) {
@@ -2104,7 +2107,7 @@
       if (!text) { showToast("The reminder text can't be empty.", 'error'); return; }
       reminderRequest(`api/my/reminders/${encodeURIComponent(source)}/${id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text })
-      });
+      }, 'Reminder saved.');
     }
 
     async function loadStats() {
