@@ -5,7 +5,7 @@ const { isTimerDue } = require('../misc/timers.js');
 
 /**
  * Sendet faellige Timer (commands/timer, alexmoderat 31.10.2026). Tickt jede Minute; Live-Status nur fuer Channels
- * mit Online-Timern abfragen, und pro Channel nur einmal.
+ * mit Online-/Offline-Timern abfragen, und pro Channel nur einmal.
  */
 module.exports = defineCron({
 	name: 'timers',
@@ -26,7 +26,7 @@ module.exports = defineCron({
 			}
 
 			let live = null;
-			if (timer.Online_Only) {
+			if (timer.Online_Only || timer.Offline_Only) {
 				if (!liveCache.has(channel.id)) {
 					liveCache.set(channel.id, await bot.Channels.isLive(channel).catch(() => null));
 				}

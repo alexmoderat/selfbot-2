@@ -19,17 +19,21 @@ const parseTimerInterval = (input) => {
 	return ms !== null && ms >= MIN_INTERVAL && ms <= MAX_INTERVAL ? ms : null;
 };
 
+/** Anzeige der Live-Bedingung */
+const timerMode = (timer) => (timer.Offline_Only ? 'offline only' : timer.Online_Only ? 'live only' : 'always');
+
 /**
- * Faellig, wenn aktiv, (bei Online_Only) live und das Intervall seit dem letzten Senden um ist. Noch nie gesendet
+ * Faellig, wenn aktiv, (bei Online_Only) live bzw. (bei Offline_Only) offline und das Intervall seit dem letzten Senden um ist. Noch nie gesendet
  * -> sofort, d. h. ein neuer Timer meldet sich im naechsten Cron-Tick. "live" null (unbekannt) zaehlt als offline,
- * damit ein Online-Timer bei API-Problemen lieber schweigt als in einen leeren Chat zu posten.
+ * damit ein Online-Timer bei API-Problemen lieber schweigt als in einen leeren Chat zu posten; ein Offline-Timer schweigt
+ * bei unbekanntem Status ebenfalls (lieber nicht in einen laufenden Stream posten).
  */
 const isTimerDue = (timer, live, now) => {
-	if (!timer.Enabled || (timer.Online_Only && live !== true)) {
+	if (!timer.Enabled || (timer.Online_Only && live !== true) || (timer.Offline_Only && live !== false)) {
 		return false;
 	}
 
 	return timer.Last_Sent === null || now - timer.Last_Sent >= timer.Interval_Seconds * 1000;
 };
 
-module.exports = { MIN_INTERVAL, MAX_INTERVAL, MAX_TIMERS_PER_CHANNEL, MAX_MESSAGE_LENGTH, parseTimerInterval, isTimerDue };
+module.exports = { MIN_INTERVAL, MAX_INTERVAL, MAX_TIMERS_PER_CHANNEL, MAX_MESSAGE_LENGTH, parseTimerInterval, isTimerDue, timerMode };

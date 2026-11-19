@@ -245,6 +245,13 @@ module.exports = [
 				required: false,
 				default: true,
 			},
+			// nur senden, wenn der Channel offline ist (alexmoderat, 19.11.2026, fuer ein automatisches +ed bei ninou2)
+			offlineOnly: {
+				column: 'Offline_Only',
+				type: 'Boolean',
+				required: false,
+				default: false,
+			},
 			enabled: {
 				column: 'Enabled',
 				type: 'Boolean',

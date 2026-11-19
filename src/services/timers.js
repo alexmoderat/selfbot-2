@@ -1,5 +1,5 @@
 // Timer pro Channel (Collection channelTimer): Speicherung fuer commands/timer, Versand in crons/timers.
-// Datensaetze in der alten Form ({ ID, Channel, Message, Interval_Seconds, Online_Only, Enabled, Last_Sent }).
+// Datensaetze in der alten Form ({ ID, Channel, Message, Interval_Seconds, Online_Only, Offline_Only, Enabled, Last_Sent }).
 
 const toRow = (doc) => {
 	const row = bot.DB.toRow('ChannelTimer', doc);
@@ -11,12 +11,13 @@ const list = async (channel) => (await bot.DB.ChannelTimer.find({ channel: chann
 const listEnabled = async () => (await bot.DB.ChannelTimer.find({ enabled: true }).lean()).map(toRow);
 
 /** @returns {Promise<number>} ID des neuen Timers */
-const add = async (channel, message, intervalSeconds, onlineOnly, createdBy) => {
+const add = async (channel, message, intervalSeconds, onlineOnly, createdBy, offlineOnly = false) => {
 	const doc = await bot.DB.createWithId('ChannelTimer', {
 		channel: channel.id,
 		message,
 		intervalSeconds,
 		onlineOnly,
+		offlineOnly,
 		enabled: true,
 		createdBy,
 		created: new Date(),
