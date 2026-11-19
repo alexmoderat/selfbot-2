@@ -31,8 +31,9 @@ const formatRecordDate = (date) => {
 	return `the ${ordinal(d.getUTCDate())} ${month} ${d.getUTCFullYear()} at ${time} UTC`;
 };
 
+// Anzahl in eckigen Klammern (ninou2, 19.11.2026: "[18 channels]", "between brackets")
 const recordHead = (record) =>
-	`the most number of channels with the bot that were live at one time was recorded on ${formatRecordDate(record.Achieved)} with ${record.Value} ${record.Value === 1 ? 'channel' : 'channels'}`;
+	`the most number of channels with the bot that were live at one time was recorded on ${formatRecordDate(record.Achieved)} with [${record.Value} ${record.Value === 1 ? 'channel' : 'channels'}]`;
 
 module.exports = {
 	name: 'whoislivebest',

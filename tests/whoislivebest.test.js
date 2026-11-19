@@ -16,7 +16,7 @@ test('Ordnungszahl-Endungen inkl. 11th-13th', () => {
 test('Rekord-Satz mit Anzahl', () => {
 	assert.equal(
 		recordHead({ Value: 13, Achieved: new Date('2026-11-18T16:02:15Z') }),
-		'the most number of channels with the bot that were live at one time was recorded on the 18th november 2026 at 16:02 UTC with 13 channels',
+		'the most number of channels with the bot that were live at one time was recorded on the 18th november 2026 at 16:02 UTC with [13 channels]',
 	);
-	assert.match(recordHead({ Value: 1, Achieved: new Date('2026-11-18T16:02:15Z') }), /with 1 channel$/);
+	assert.match(recordHead({ Value: 1, Achieved: new Date('2026-11-18T16:02:15Z') }), /with \[1 channel\]$/);
 });
