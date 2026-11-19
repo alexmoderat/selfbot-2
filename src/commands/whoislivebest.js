@@ -10,11 +10,23 @@ const { formatListPage } = require('../misc/list-reply.js');
  */
 const MESSAGE_LIMIT = 480;
 
-/** "18 november 2026", UTC wie followage/mc */
+/** 1st, 2nd, 3rd, 4th ... 11th, 12th, 13th, 21st, 22nd, 23rd ... */
+const ordinal = (n) => {
+	const tens = n % 100;
+	if (tens >= 11 && tens <= 13) {
+		return `${n}th`;
+	}
+	return `${n}${{ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] ?? 'th'}`;
+};
+
+/**
+ * "the 18th november 2026 UTC" (ninou2, 19.11.2026: "woud be better if the date will be : on the 19th november 2026",
+ * "AND u add UTC", "AND the date get : rd/th at the end the day date")
+ */
 const formatRecordDate = (date) => {
 	const d = new Date(date);
 	const month = d.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' }).toLowerCase();
-	return `${d.getUTCDate()} ${month} ${d.getUTCFullYear()}`;
+	return `the ${ordinal(d.getUTCDate())} ${month} ${d.getUTCFullYear()} UTC`;
 };
 
 const recordHead = (record) =>
@@ -54,4 +66,4 @@ module.exports = {
 	},
 };
 
-Object.assign(module.exports, { formatRecordDate, recordHead });
+Object.assign(module.exports, { formatRecordDate, recordHead, ordinal });
