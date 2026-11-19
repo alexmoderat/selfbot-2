@@ -1,7 +1,6 @@
 const timers = require('../services/timers.js');
-const { formatDuration } = require('../misc/duration.js');
 const { uploadList } = require('../misc/haste.js');
-const { MAX_MESSAGE_LENGTH, MAX_TIMERS_PER_CHANNEL, parseTimerInterval, timerMode } = require('../misc/timers.js');
+const { MAX_MESSAGE_LENGTH, MAX_TIMERS_PER_CHANNEL, parseTimerInterval, timerMode, formatInterval } = require('../misc/timers.js');
 
 /**
  * Wiederkehrende Nachrichten pro Channel (alexmoderat, 31.10.2026: "ja wir sollten mal timer adden"; Anlass ninou2:
@@ -32,7 +31,7 @@ const resolveWhenLive = (value) => {
 const describe = (timer) => {
 	const preview = timer.Message.length > PREVIEW_LENGTH ? `${timer.Message.slice(0, PREVIEW_LENGTH)}…` : timer.Message;
 	const flags = [modeText(timer), ...(timer.Enabled ? [] : ['off'])];
-	return `#${timer.ID} every ${formatDuration(timer.Interval_Seconds * 1000)} (${flags.join(', ')}): ${preview}`;
+	return `#${timer.ID} every ${formatInterval(timer.Interval_Seconds)} (${flags.join(', ')}): ${preview}`;
 };
 
 module.exports = {
@@ -74,7 +73,7 @@ module.exports = {
 				`Timers in #${channel.name}`,
 				all.map(
 					(i) =>
-						`#${i.ID} every ${formatDuration(i.Interval_Seconds * 1000)} (${modeText(i)}${i.Enabled ? '' : ', off'}): ${i.Message}`,
+						`#${i.ID} every ${formatInterval(i.Interval_Seconds)} (${modeText(i)}${i.Enabled ? '' : ', off'}): ${i.Message}`,
 				),
 			);
 			return { text: `@${display}, ${all.length} timers in #${channel.name}: ${link}` };
@@ -109,7 +108,7 @@ module.exports = {
 					? 'while the stream is live, first one within a minute of going live'
 					: 'first one within a minute';
 			const other = liveChannel ? `, and only while #${bot.Channels.get(liveChannel)?.name} is live` : '';
-			return { text: `@${display}, ✅ timer #${id} added: every ${formatDuration(ms)}, ${when}${other}.` };
+			return { text: `@${display}, ✅ timer #${id} added: every ${formatInterval(ms / 1000)}, ${when}${other}.` };
 		}
 
 		if (!['remove', 'delete', 'on', 'off', 'edit'].includes(action)) {

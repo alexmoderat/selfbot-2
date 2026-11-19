@@ -19,6 +19,27 @@ const parseTimerInterval = (input) => {
 	return ms !== null && ms >= MIN_INTERVAL && ms <= MAX_INTERVAL ? ms : null;
 };
 
+/** Intervall genau anzeigen, mit Sekunden ("1h 10s" statt gerundet "1h" - alexmoderat, 19.11.2026) */
+const formatInterval = (seconds) => {
+	const total = Math.round(seconds);
+	const units = [
+		['d', 86_400],
+		['h', 3600],
+		['m', 60],
+		['s', 1],
+	];
+	const parts = [];
+	let rest = total;
+	for (const [unit, size] of units) {
+		const n = Math.floor(rest / size);
+		rest -= n * size;
+		if (n > 0) {
+			parts.push(`${n}${unit}`);
+		}
+	}
+	return parts.join(' ') || '0s';
+};
+
 /** Anzeige der Live-Bedingung */
 const timerMode = (timer) => (timer.Offline_Only ? 'offline only' : timer.Online_Only ? 'live only' : 'always');
 
@@ -40,4 +61,4 @@ const isTimerDue = (timer, live, now, otherLive = null) => {
 	return timer.Last_Sent === null || now - timer.Last_Sent >= timer.Interval_Seconds * 1000;
 };
 
-module.exports = { MIN_INTERVAL, MAX_INTERVAL, MAX_TIMERS_PER_CHANNEL, MAX_MESSAGE_LENGTH, parseTimerInterval, isTimerDue, timerMode };
+module.exports = { MIN_INTERVAL, MAX_INTERVAL, MAX_TIMERS_PER_CHANNEL, MAX_MESSAGE_LENGTH, parseTimerInterval, isTimerDue, timerMode, formatInterval };

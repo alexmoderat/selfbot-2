@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { isTimerDue, parseTimerInterval, timerMode } = require('../src/misc/timers.js');
+const { isTimerDue, parseTimerInterval, timerMode, formatInterval } = require('../src/misc/timers.js');
 
 const base = { Enabled: true, Online_Only: false, Offline_Only: false, Interval_Seconds: 3610, Last_Sent: null };
 const now = Date.parse('2026-11-19T20:00:00Z');
@@ -39,4 +39,10 @@ test('Timer: whenlive - nur wenn der andere Channel sicher live ist', () => {
 	assert.equal(isTimerDue(timer, false, now, null), false); // unbekannt
 	assert.equal(isTimerDue(timer, true, now, true), false); // hier selbst live
 	assert.equal(isTimerDue({ ...base, Offline_Only: true }, false, now), true); // ohne whenlive wie bisher
+});
+
+test('Timer: Intervall genau mit Sekunden anzeigen', () => {
+	assert.equal(formatInterval(3610), '1h 10s');
+	assert.equal(formatInterval(14_400), '4h');
+	assert.equal(formatInterval(90_061), '1d 1h 1m 1s');
 });
