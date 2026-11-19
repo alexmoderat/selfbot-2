@@ -15,10 +15,13 @@ const MAX_QUESTION = 500;
 const PART_SIZE = 440;
 const MAX_PARTS = 3;
 const MAX_ANSWER = PART_SIZE * MAX_PARTS;
+// Knapp wie eine Zusammenfassung (ninou2, 19.11.2026: "make it shorter, like make a better summary of it (so its easy to
+// read and get the info fast)"); laengere Antworten nur wenn noetig, dann auf mehrere Nachrichten verteilt
 const SYSTEM_PROMPT =
-	'You are a helpful bot in a Twitch chat. Answer as briefly as the question allows: simple questions in one or two ' +
-	'sentences, never more than 1000 characters, ' +
-	'in the same language as the question. Plain text only: no markdown, no lists, no line breaks, no links.';
+	'You are a helpful bot in a Twitch chat. Viewers read your answer while watching a stream, so give a quick summary: ' +
+	'lead with the direct answer, then only the most important facts. No introductions, no repeating the question, no ' +
+	'filler. Aim for under 200 characters; go longer only if the question really needs it, never more than 1000. ' +
+	'Answer in the same language as the question. Plain text only: no markdown, no lists, no line breaks, no links.';
 
 /** Antwort aus der Gemini-Antwort holen; null = gesperrt/leer */
 const extractAnswer = (body) => {
