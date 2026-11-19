@@ -46,3 +46,49 @@ test('Timer: Intervall genau mit Sekunden anzeigen', () => {
 	assert.equal(formatInterval(14_400), '4h');
 	assert.equal(formatInterval(90_061), '1d 1h 1m 1s');
 });
+
+test('Timer-Cron: sendet faellige Timer wirklich (07.-19.11.2026 still uebersprungen, "writable" gab es nicht mehr)', async () => {
+	const servicesPath = require.resolve('../src/services/timers.js');
+	const saved = require.cache[servicesPath];
+	const sent = [];
+	const marked = [];
+	const timer = { ID: 4, Channel: 70, Message: '+ed', Interval_Seconds: 3610, Online_Only: false, Offline_Only: true, Live_Channel: null, Enabled: true, Last_Sent: null };
+	require.cache[servicesPath] = {
+		id: servicesPath,
+		filename: servicesPath,
+		loaded: true,
+		exports: { listEnabled: async () => [timer], markSent: async (t) => marked.push(t.ID) },
+	};
+	const cronPath = require.resolve('../src/crons/timers.js');
+	delete require.cache[cronPath];
+	const channels = { 70: { id: 70, name: 'ninou2', mode: 'Write' }, 71: { id: 71, name: 'zzq', mode: 'Read' } };
+	const prevBot = global.bot;
+	global.bot = {
+		Channels: {
+			get: (id) => channels[id],
+			isWritable: (c) => c.mode !== 'Inactive' && c.mode !== 'Read',
+			isLive: async () => false,
+			send: async (c, text) => sent.push(`${c.name}: ${text}`),
+		},
+	};
+	try {
+		const cron = require('../src/crons/timers.js');
+		await cron.code();
+		assert.deepEqual(sent, ['ninou2: +ed']);
+		assert.deepEqual(marked, [4]);
+
+		// Nur-lesen-Channel: nichts senden
+		sent.length = 0;
+		Object.assign(timer, { Channel: 71 });
+		await cron.code();
+		assert.deepEqual(sent, []);
+	} finally {
+		global.bot = prevBot;
+		delete require.cache[cronPath];
+		if (saved) {
+			require.cache[servicesPath] = saved;
+		} else {
+			delete require.cache[servicesPath];
+		}
+	}
+});

@@ -21,7 +21,9 @@ module.exports = defineCron({
 		const liveCache = new Map();
 		for (const timer of enabled) {
 			const channel = bot.Channels.get(timer.Channel);
-			if (!channel?.writable) {
+			// Channels sind seit der MongoDB-Umstellung (07.11.2026) einfache Objekte ohne "writable" - die Abfrage darauf hat
+			// seitdem jeden Timer still uebersprungen (ninou2, 19.11.2026: "didnt post the +Ed")
+			if (!channel || !bot.Channels.isWritable(channel)) {
 				continue;
 			}
 
