@@ -39,12 +39,12 @@ const uploadCommandList = async (entries) => {
 };
 
 /**
- * Link zur Command-Liste: die oeffentliche Seite /commands (alexmoderat, 01.11.2026: "wäre glaube richtige Website
- * besser"), ohne WEB_BASE_URL weiter die Haste-Liste
+ * Link zur Command-Liste in der Werbe-Nachricht: der Tab "Use" im Dashboard (ninou2, 20.11.2026: "not the right link ...
+ * this the correct link: https://auth.alexmoderat.eu/dashboard#use"); ohne WEB_BASE_URL weiter die Haste-Liste
  */
 const buildCommandsUrl = async () => {
 	const base = baseUrl();
-	return base ? `${base}/commands` : await uploadCommandList(buildEntries());
+	return base ? `${base}/dashboard#use` : await uploadCommandList(buildEntries());
 };
 
 module.exports = { buildEntries, buildCommandsUrl };
