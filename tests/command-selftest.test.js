@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 global.bot = global.bot ?? {};
-const { evaluate, judge } = require('../src/crons/command-selftest.js');
+const { evaluate, judge } = require('../src/clients/modules/crons/command-selftest.js');
 
 const fresh = () => ({ failures: 0, alerting: false, lastAlertAt: 0 });
 

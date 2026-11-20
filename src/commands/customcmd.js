@@ -1,5 +1,5 @@
-const customCommands = require('../services/custom-commands.js');
-const { uuidPrefix } = require('../services/moderation-phrases.js');
+const customCommands = require('../util/custom-commands.js');
+const { uuidPrefix } = require('../util/moderation-phrases.js');
 
 /**
  * Custom Commands verwalten, aus sb-v2 (Ausfuehrung: singletons/custom-commands.ts). Aenderungen wirken sofort.

@@ -1,5 +1,5 @@
 const { describeFailure, searchGameId, updateBroadcastSettings } = require('../misc/broadcast-settings.js');
-const { findGame } = require('../modules/stream-infos-restore.js');
+const { findGame } = require('../clients/modules/chat/stream-infos-restore.js');
 
 // Eingefuegte !csi2-Zeile: "!setgame X !settitle Y" setzt beides (ninou2, 13.11.2026)
 const COMBINED = /^(.+?)\s+!settitle\s+(.+)$/i;

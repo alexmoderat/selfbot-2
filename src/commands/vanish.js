@@ -1,5 +1,5 @@
 const { MODERATOR_BADGES } = require('../misc/text-analysis.js');
-const { banUser, targetFromChannel } = require('../services/moderation.js');
+const { banUser, targetFromChannel } = require('../util/moderation.js');
 
 module.exports = {
 	name: 'vanish',

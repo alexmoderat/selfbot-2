@@ -1,6 +1,6 @@
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { getWatchStreak } = require('../services/channel-stats.js');
-const { streamData } = require('../services/stream-tracking.js');
+const { getWatchStreak } = require('../util/channel-stats.js');
+const { streamData } = require('../util/stream-tracking.js');
 const { formatStreakStart } = require('../misc/tracking-format.js');
 
 /**

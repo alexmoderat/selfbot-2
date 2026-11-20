@@ -1,4 +1,4 @@
-const { answerNthBotBan, formatBotbansText, getAutobanCounts } = require('../services/moderation.js');
+const { answerNthBotBan, formatBotbansText, getAutobanCounts } = require('../util/moderation.js');
 
 /**
  * Auto-Ban-Zahlen eines Channels plus zwei Schalter (aus sb-v2):

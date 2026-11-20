@@ -4,11 +4,11 @@ const cron = require('node-cron');
 const { filterByConfig } = require('../../config.js');
 const { Logger } = require('../../misc/logger.js');
 
-// Crons wie DontAddThisBot (node-cron, Datei clients/modules/timers.js), Definitionen wie bisher in src/crons/*.js:
+// Crons wie DontAddThisBot (node-cron, Datei clients/modules/timers.js), Definitionen wie bisher in clients/modules/crons/*.js:
 //   module.exports = defineCron({ name, expression, description, code() {} })
 // expression mit Sekunden-Feld (6 Felder) wie im alten Bot. Ein Lauf gleichzeitig, sonst stapeln sich langsame Crons.
 
-const CRON_DIR = path.join(__dirname, '..', '..', 'crons');
+const CRON_DIR = path.join(__dirname, 'crons');
 const tasks = [];
 
 /** Nur Durchreichen (bisher classes/cron.ts) */

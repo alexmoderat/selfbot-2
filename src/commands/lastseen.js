@@ -1,5 +1,5 @@
-const Filter = require('../services/filter.js');
-const { chatLogger } = require('../services/chat-logger.js');
+const Filter = require('../util/filter.js');
+const { chatLogger } = require('../util/chat-logger.js');
 
 // Supibots commands/lastseen (ohne Channel-Namen - genau der Datenschutz-Punkt, wegen dem sb-v2 ein optout brauchte).
 // "lastseen optout" / "lastseen optin" aus sb-v2 bleiben als Kurzform fuer Supibots "optout lastseen" / "unoptout lastseen".

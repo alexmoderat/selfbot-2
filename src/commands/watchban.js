@@ -1,5 +1,5 @@
 const { listOrLink } = require('../misc/list-reply.js');
-const { addWatchChannel, listWatchChannels, removeWatchChannel } = require('../services/watch-channels.js');
+const { addWatchChannel, listWatchChannels, removeWatchChannel } = require('../util/watch-channels.js');
 
 /**
  * Alte Aufrufe addwatch / removewatch / listwatch aus sb-v2. Dort schrieben sie in data/watch-channels.json, die seit

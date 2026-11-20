@@ -1,6 +1,6 @@
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { banUser, targetFromChannel } = require('../services/moderation.js');
-const botList = require('../services/twitchinsights-bots.js');
+const { banUser, targetFromChannel } = require('../util/moderation.js');
+const botList = require('../util/twitchinsights-bots.js');
 
 /**
  * Abgleich mit der TwitchInsights-Botliste, aus sb-v2.

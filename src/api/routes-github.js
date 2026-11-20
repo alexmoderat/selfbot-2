@@ -1,7 +1,7 @@
 const crypto = require('node:crypto');
 const express = require('express');
 const { formatGithubEvent } = require('../misc/github-events.js');
-const { sendAlert } = require('../services/moderation.js');
+const { sendAlert } = require('../util/moderation.js');
 
 /**
  * POST /github/webhook: GitHub-Webhook (Content type application/json, Secret GITHUB_WEBHOOK_SECRET). Prueft die Signatur

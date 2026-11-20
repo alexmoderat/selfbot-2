@@ -5,7 +5,7 @@ const crypto = require('node:crypto');
 
 const gql = require('../misc/twitch-gql.js');
 const { idOf, modShortcuts } = require('../misc/commands/debug/mod-shortcuts.js');
-const { getModerationStats } = require('../modules/banphrase-filter.js');
+const { getModerationStats } = require('../clients/modules/chat/banphrase-filter.js');
 
 // Supibots commands/debug (alexmoderat, 23.10.2026: "Supibot debug + Schwaerzen"). Aus sb-v2s eval dazu:
 // - Aliase eval/js

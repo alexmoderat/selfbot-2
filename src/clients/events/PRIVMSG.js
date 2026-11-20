@@ -3,13 +3,13 @@ const { Logger, LogLevel } = require('../../misc/logger.js');
 const { invisChars } = require('../../misc/regex.js');
 const { toBadgeList, stripReplyMention, MODERATOR_BADGES } = require('../../util/twitch/utils.js');
 const { handler } = require('../modules/handler.js');
-const Users = require('../../services/users.js');
-const AFK = require('../../services/afk.js');
-const Reminders = require('../../services/reminders.js');
+const Users = require('../../util/users.js');
+const AFK = require('../../util/afk.js');
+const Reminders = require('../../util/reminders.js');
 const ChatModules = require('../modules/chat-modules.js');
-const chatterRegistry = require('../../services/chatter-registry.js');
-const colorCycler = require('../../services/color-cycler.js');
-const { chatLogger } = require('../../services/chat-logger.js');
+const chatterRegistry = require('../../util/chatter-registry.js');
+const colorCycler = require('../../util/color-cycler.js');
+const { chatLogger } = require('../../util/chat-logger.js');
 
 // Wie DontAddThisBot: client.on('PRIVMSG') baut msgData mit send() und gibt sie an den Handler.
 // Davor wie bisher: Doppel-Erkennung, Channel-/User-Datensatz, AFK-Rueckkehr und wartende Reminder.

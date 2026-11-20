@@ -8,10 +8,10 @@ const path = require('node:path');
 const { promisify } = require('node:util');
 const { Router } = require('express');
 
-const phrases = require('../services/moderation-phrases.js');
-const { getRecentActions } = require('../services/moderation.js');
-const { getRecent } = require('../services/event-feed.js');
-const { recentChat } = require('../modules/chat-console-log.js');
+const phrases = require('../util/moderation-phrases.js');
+const { getRecentActions } = require('../util/moderation.js');
+const { getRecent } = require('../util/event-feed.js');
+const { recentChat } = require('../clients/modules/chat/chat-console-log.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 const { fetchChannelRoleList, fetchUserRoleList } = require('../misc/roles-tv.js');
 const { getValidToken, helixAsUser } = require('../misc/user-tokens.js');

@@ -1,5 +1,5 @@
-const triggers = require('../services/trigger-commands.js');
-const { uuidPrefix } = require('../services/moderation-phrases.js');
+const triggers = require('../util/trigger-commands.js');
+const { uuidPrefix } = require('../util/moderation-phrases.js');
 const { uploadToHaste } = require('../misc/haste.js');
 
 /**

@@ -1,5 +1,5 @@
 const { getCommand } = require('../clients/modules/commands.js');
-const customCommands = require('../services/custom-commands.js');
+const customCommands = require('../util/custom-commands.js');
 
 /**
  * Wie oft ein Command benutzt wurde, im Channel und ueberall (ninou2, 28.10.2026: "the command : !howmany !hm",

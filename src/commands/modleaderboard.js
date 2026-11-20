@@ -1,5 +1,5 @@
 const { uploadList } = require('../misc/haste.js');
-const { getTop, refresh } = require('../services/mod-leaderboard.js');
+const { getTop, refresh } = require('../util/mod-leaderboard.js');
 
 /**
  * Wer in den meisten unserer Channels Mod ist (ninou2, 19.08.2026: "is there a leaderboard for most mod a twitch

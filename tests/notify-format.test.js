@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { formatTitleChange, formatOfflineText } = require('../src/services/notifications.js');
+const { formatTitleChange, formatOfflineText } = require('../src/util/notifications.js');
 
 test('Titel-Meldung: Live-Dauer nur wenn live (ninou2, 10.11.2026)', () => {
 	assert.equal(

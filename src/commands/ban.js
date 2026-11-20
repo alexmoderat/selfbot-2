@@ -1,6 +1,6 @@
 const { getCommand } = require('../clients/modules/commands.js');
 const { SupiError } = require('../misc/error.js');
-const Filter = require('../services/filter.js');
+const Filter = require('../util/filter.js');
 const { isArgumentsData } = Filter;
 
 // Supibots commands/ban - ersetzt sb-v2s disablecmd/enablecmd/listdisabled (alexmoderat, 23.10.2026: "Supibot ban/Filter").

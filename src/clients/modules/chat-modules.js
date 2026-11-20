@@ -4,13 +4,13 @@ const { filterByConfig } = require('../../config.js');
 const { Logger } = require('../../misc/logger.js');
 const { isServed } = require('../JoinChannels.js');
 
-// Chat-Module (bisher classes/chat-module.ts, gleiche Schnittstelle): Dateien in src/modules/ mit
+// Chat-Module (bisher classes/chat-module.ts, gleiche Schnittstelle): Dateien in src/clients/modules/chat/ mit
 //   module.exports = { name, description, scope: 'global' | 'channel', initialize?, destroy?, handlers: { message(context, runtime) {}, ... } }
 // scope 'channel' laeuft nur in Channels mit Eintrag in channelChatModules (runtime.args = dort gespeicherte Argumente).
 // Events: message, online, offline, usernotice, userJoin, follow, channelState, clearchat, clearmsg sowie die
 // PubSub-Namen (raw, modAction, automodQueue, lowTrust, ...). context enthaelt immer platform (bot.Twitch) und channel.
 
-const MODULE_DIR = path.join(__dirname, '..', '..', 'modules');
+const MODULE_DIR = path.join(__dirname, 'chat');
 const definitions = new Map();
 const channelAttachments = new Map(); // channelId -> Map(name -> { args })
 

@@ -2,7 +2,7 @@ const { existsSync, writeFileSync } = require('node:fs');
 const path = require('node:path');
 const { Router } = require('express');
 
-const { JOIN_MESSAGE_DELAY, joinByLogin, joinMessages, markModerator } = require('../services/channel-manager.js');
+const { JOIN_MESSAGE_DELAY, joinByLogin, joinMessages, markModerator } = require('../util/channel-manager.js');
 const { storeBotRefreshToken, getUserToken } = require('../util/twitch/twitch-utils.js');
 const {
 	ADD_BOT_SCOPES,

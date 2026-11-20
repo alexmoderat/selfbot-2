@@ -1,5 +1,5 @@
 const { listOrLink } = require('../misc/list-reply.js');
-const { addToWatchlist, getWatchlist, removeFromWatchlist } = require('../services/watchlist.js');
+const { addToWatchlist, getWatchlist, removeFromWatchlist } = require('../util/watchlist.js');
 
 /**
  * Eigene "suspicious chatter"-Liste je Channel, rein informativ, aus sb-v2. Twitchs natives Feature hat keine

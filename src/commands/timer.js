@@ -1,4 +1,4 @@
-const timers = require('../services/timers.js');
+const timers = require('../util/timers.js');
 const { uploadList } = require('../misc/haste.js');
 const { MAX_MESSAGE_LENGTH, MAX_TIMERS_PER_CHANNEL, parseTimerInterval, timerMode, formatInterval } = require('../misc/timers.js');
 

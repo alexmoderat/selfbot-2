@@ -1,6 +1,6 @@
 const { got } = require('../token/got.js');
 const { setTimeout: sleep } = require('node:timers/promises');
-const { banUser, resolveTarget } = require('../services/moderation.js');
+const { banUser, resolveTarget } = require('../util/moderation.js');
 const { formatAutoBanReason } = require('../misc/ban-reason.js');
 
 const BAN_DELAY = 650; // ~92 Bans/min, unter Twitchs 100/min

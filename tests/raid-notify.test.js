@@ -16,7 +16,7 @@ global.bot = {
 	Twitch: { selfName: 'bot' },
 };
 
-const raid = require('../src/modules/raid-notifier.js');
+const raid = require('../src/clients/modules/chat/raid-notifier.js');
 
 const reset = () => {
 	store.clear();
@@ -136,7 +136,7 @@ test('Probelauf: nur der Testende wird erwaehnt, Zaehler bleibt, 30 s Sperre', a
 });
 
 test('Raid Notify: negative Zeit postet so viele Sekunden nach dem Start (ninou2, 19.11.2026: "-1 = 121s, -3 = 123s")', async () => {
-	const raid = require('../src/modules/raid-notifier.js');
+	const raid = require('../src/clients/modules/chat/raid-notifier.js');
 	const delays = [];
 	const realTimeout = global.setTimeout;
 	global.setTimeout = (fn, ms) => {

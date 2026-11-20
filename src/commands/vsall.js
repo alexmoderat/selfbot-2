@@ -1,6 +1,6 @@
 const { topListHint } = require('../misc/tracking-format.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { getBestWatchStreak } = require('../services/channel-stats.js');
+const { getBestWatchStreak } = require('../util/channel-stats.js');
 const { formatShortDate } = require('../misc/tracking-format.js');
 
 /** Laengster gesehener Watch-Streak eines Zuschauers in irgendeinem Channel, aus sb-v2 */

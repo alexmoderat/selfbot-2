@@ -1,4 +1,4 @@
-const { findExtra } = require('../services/channel-manager.js');
+const { findExtra } = require('../util/channel-manager.js');
 const { uploadList } = require('../misc/haste.js');
 
 /** Channels, in denen der Bot noch aktiv, aber nicht (mehr) Mod ist - aus sb-v2 */

@@ -1,5 +1,5 @@
 const { randomUUID } = require('node:crypto');
-const { formatAutobanChange, lastAutobanChange, setAutobanSwitch } = require('../services/autoban-log.js');
+const { formatAutobanChange, lastAutobanChange, setAutobanSwitch } = require('../util/autoban-log.js');
 
 /**
  * Schaltet die Autoban-Mechanismen pro Channel an oder aus (aus sb-v2). Ohne Unterbefehl gilt der Promo-Check.

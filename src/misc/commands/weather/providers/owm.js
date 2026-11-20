@@ -4,7 +4,7 @@ const SupiDate = require('../../../date.js');
 const { SupiError } = require('../../../error.js');
 const { degreeShape, percentShape, probabilityShape, unixTimestampShape } = require('../../../schemas.js');
 const { postToHastebin } = require('../../../command-utils.js');
-const logger = require('../../../../services/log.js');
+const logger = require('../../../../util/log.js');
 
 const { isResultFailure } = require('../../../../clients/modules/commands.js');
 

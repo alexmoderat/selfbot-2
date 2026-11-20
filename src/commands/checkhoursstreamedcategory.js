@@ -1,5 +1,5 @@
 const { categoryHoursReport } = require('../misc/category-hours-report.js');
-const { streamData } = require('../services/stream-tracking.js');
+const { streamData } = require('../util/stream-tracking.js');
 const { formatCategoryDuration, matchCategories } = require('../misc/category-hours.js');
 const { MONTHS, parseMonthYear, isPeriodWord } = require('../misc/stream-hours.js');
 const { packLines, replyInChunks } = require('../misc/tracking-format.js');

@@ -1,6 +1,6 @@
 const { uploadToOwnHaste } = require('../misc/haste.js');
-const { resolveStreamer, watchStreamer, watchTitle } = require('../services/notifications.js');
-const { cleanTimes } = require('../services/tweet-notify.js');
+const { resolveStreamer, watchStreamer, watchTitle } = require('../util/notifications.js');
+const { cleanTimes } = require('../util/tweet-notify.js');
 
 /**
  * Benachrichtigungen einrichten, aus sb-v2:

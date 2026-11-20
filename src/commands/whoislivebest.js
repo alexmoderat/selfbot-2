@@ -1,4 +1,4 @@
-const { getRecord } = require('../services/channel-stats.js');
+const { getRecord } = require('../util/channel-stats.js');
 const { uploadToOwnHaste } = require('../misc/haste.js');
 const { formatListPage } = require('../misc/list-reply.js');
 

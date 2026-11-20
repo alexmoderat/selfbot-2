@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 
 global.bot = global.bot ?? {};
 const { formatStreamInfosChange, formatSavedStreamInfos, parseSaveArgs } = require('../src/commands/streaminfoschange.js');
-const { parseStreamInfosLine } = require('../src/modules/stream-infos-restore.js');
+const { parseStreamInfosLine } = require('../src/clients/modules/chat/stream-infos-restore.js');
 
 test('!csi2: Antwort mit !setgame/!settitle, !csi bleibt bei /setgame', () => {
 	assert.equal(formatStreamInfosChange('Remnant', 'Part 01', true), 'the current stream infos are : !setgame Remnant !settitle Part 01');

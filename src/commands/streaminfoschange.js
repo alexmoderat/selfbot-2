@@ -1,6 +1,6 @@
 const { got } = require('../token/got.js');
 const { getPermissions } = require('../clients/modules/handler.js');
-const { parseStreamInfosLine } = require('../modules/stream-infos-restore.js');
+const { parseStreamInfosLine } = require('../clients/modules/chat/stream-infos-restore.js');
 
 /**
  * Aktuelle Stream-Infos als fertige /setgame- und /settitle-Zeile zum Kopieren (ninou2, 27.10.2026: "command

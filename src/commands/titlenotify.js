@@ -1,6 +1,6 @@
 const { listOrLink } = require('../misc/list-reply.js');
-const { resolveStreamer, watchTitle } = require('../services/notifications.js');
-const { MAX_MESSAGE, MAX_TIMES, cleanMessage, cleanTimes, homeChannel } = require('../services/tweet-notify.js');
+const { resolveStreamer, watchTitle } = require('../util/notifications.js');
+const { MAX_MESSAGE, MAX_TIMES, cleanMessage, cleanTimes, homeChannel } = require('../util/tweet-notify.js');
 
 /**
  * Alarm auf Titelwechsel eines Streamers, aus sb-v2 - Vorwarnung, die meisten setzen den Titel kurz vor dem

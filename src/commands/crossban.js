@@ -1,5 +1,5 @@
 const { setTimeout: sleep } = require('node:timers/promises');
-const { banUser, resolveTarget } = require('../services/moderation.js');
+const { banUser, resolveTarget } = require('../util/moderation.js');
 const { fetchModeratedChannels, fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 const { formatAutoBanReason } = require('../misc/ban-reason.js');
 

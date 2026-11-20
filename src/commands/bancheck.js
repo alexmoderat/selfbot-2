@@ -1,4 +1,4 @@
-const phrases = require('../services/moderation-phrases.js');
+const phrases = require('../util/moderation-phrases.js');
 const { deobfuscate } = require('../misc/text-analysis.js');
 
 /**

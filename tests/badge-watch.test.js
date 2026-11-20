@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 
 global.bot = global.bot ?? {};
 const { parseBadges, parseEmotes, parseEvents } = require('../src/misc/streamdatabase.js');
-const { newBadges, formatBadge, formatEmote } = require('../src/crons/badge-watch.js');
+const { newBadges, formatBadge, formatEmote } = require('../src/clients/modules/crons/badge-watch.js');
 
 const page = (list) =>
 	`<html><script id="__NEXT_DATA__" type="application/json">${JSON.stringify({ props: { pageProps: { initialTwitchGlobalBadges: list } } })}</script></html>`;
@@ -74,13 +74,13 @@ test('Aktionen: wie und bis wann', () => {
 });
 
 test('badgeAlerts ist als Channel-Eigenschaft deklariert (sonst "Unknown channel data property")', () => {
-	const { channelDataSchema, checkValue } = require('../src/services/data-properties.js');
+	const { channelDataSchema, checkValue } = require('../src/util/data-properties.js');
 	assert.equal(channelDataSchema.badgeAlerts, 'object');
 	assert.ok(checkValue('object', { enabled: true, message: 'hi' }));
 });
 
 test('formatMany: mehrere neue in einer Sammelmeldung, lange Listen werden aufgeteilt', () => {
-	const { formatMany } = require('../src/crons/badge-watch.js');
+	const { formatMany } = require('../src/clients/modules/crons/badge-watch.js');
 	const items = [{ key: 'a:1', title: 'Alpha' }, { key: 'b:1', title: 'Beta' }];
 	const events = new Map([['a:1', { how: 'watch 30 min', until: '2026-11-15' }]]);
 	const [one, ...rest] = formatMany('badge', items, 'hi', events);
@@ -203,14 +203,14 @@ test('Zeitfenster aus den Aktionen: parseWindows und activeWindows', () => {
 	assert.equal(activeWindows(windows, Date.parse('2026-11-13T15:59:00Z')).length, 0);
 	assert.equal(activeWindows(windows, Date.parse('2026-11-13T16:00:00Z')).length, 1);
 	assert.equal(activeWindows(windows, Date.parse('2026-11-15T16:00:00Z')).length, 0);
-	const { formatWindow } = require('../src/crons/event-watch.js');
+	const { formatWindow } = require('../src/clients/modules/crons/event-watch.js');
 	assert.equal(formatWindow(windows[0]), 'Twitch global badge now available: K/DA Fan [watch 30 min] The event ends November 15, 2026 at 15:59. (UTC)');
 	const { eventStatus } = require('../src/misc/streamdatabase.js');
 	assert.equal(eventStatus(formatWindow(windows[0]), Date.parse('2026-11-14T00:00:00Z')), '[AVAILABLE!]');
 });
 
 test('Raid Notify: Zeitpunkt der Erinnerung wird auf -30 bis 120 Sekunden begrenzt (0 = beim Start, negativ = danach)', () => {
-	const { clampLead, MIN_LEAD_S, MAX_LEAD_S } = require('../src/modules/raid-notifier.js');
+	const { clampLead, MIN_LEAD_S, MAX_LEAD_S } = require('../src/clients/modules/chat/raid-notifier.js');
 	assert.equal(MIN_LEAD_S, -30);
 	assert.equal(MAX_LEAD_S, 120);
 	assert.equal(clampLead(undefined), 20);
@@ -235,8 +235,8 @@ test('event-watch: Tweet-Notify-Abonnenten bekommen eigenen Text und Anzahl, Bad
 	let active = [];
 	windows.fetchWindows = async () => [];
 	windows.activeWindows = () => active;
-	delete require.cache[require.resolve('../src/crons/event-watch.js')]; // damit die Stubs greifen
-	const { runEventWatch } = require('../src/crons/event-watch.js');
+	delete require.cache[require.resolve('../src/clients/modules/crons/event-watch.js')]; // damit die Stubs greifen
+	const { runEventWatch } = require('../src/clients/modules/crons/event-watch.js');
 	const saved = global.bot;
 	global.bot = {
 		Redis: { getJSON: async (k) => redis.store.get(k) ?? null, setJSON: async (k, v) => void redis.store.set(k, v) },
@@ -259,7 +259,7 @@ test('event-watch: Tweet-Notify-Abonnenten bekommen eigenen Text und Anzahl, Bad
 });
 
 test('Raid Notify: Test laeuft in echter Zeit wie ein Raid mit 120 s Countdown (ninou2, 20.11.2026)', () => {
-	const { testSchedule } = require('../src/modules/raid-notifier.js');
+	const { testSchedule } = require('../src/clients/modules/chat/raid-notifier.js');
 	const items = [
 		{ id: 3, on: true, seconds: -4, times: 1 },
 		{ id: 1, on: true, seconds: 120, times: 3 },

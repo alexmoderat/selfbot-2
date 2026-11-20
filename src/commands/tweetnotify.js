@@ -1,5 +1,5 @@
 const { listOrLink } = require('../misc/list-reply.js');
-const { HANDLE, MAX_MESSAGE, MAX_TIMES, cleanHandle, cleanMessage, cleanTimes, accountExists, homeChannel } = require('../services/tweet-notify.js');
+const { HANDLE, MAX_MESSAGE, MAX_TIMES, cleanHandle, cleanMessage, cleanTimes, accountExists, homeChannel } = require('../util/tweet-notify.js');
 
 /**
  * Tweet-Alarm: Ping mit Link, sobald ein X/Twitter-Account einen neuen Tweet postet (ninou2, 13.11.2026: "a twitter command,

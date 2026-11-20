@@ -1,4 +1,4 @@
-const { streamData } = require('../services/stream-tracking.js');
+const { streamData } = require('../util/stream-tracking.js');
 const {
 	MIN_STREAM_SECONDS,
 	countDaysInYear,

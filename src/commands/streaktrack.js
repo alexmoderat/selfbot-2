@@ -1,4 +1,4 @@
-const { streamData } = require('../services/stream-tracking.js');
+const { streamData } = require('../util/stream-tracking.js');
 const { ordinal } = require('../misc/streamer-streak.js');
 
 /** "10th sep 2026" (ninou2, 29.09.2026) */

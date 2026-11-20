@@ -5,7 +5,7 @@ const { timingSafeEqual } = require('node:crypto');
 const { Router } = require('express');
 
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { pubsub } = require('../services/pubsub.js');
+const { pubsub } = require('../util/pubsub.js');
 const { getBanStatusBatch, getChatRestrictedReasons, getUserProfile, gqlPublic } = require('../misc/twitch-gql.js');
 const { getKnownNames, getMonitoredStatus } = require('../misc/catquery-api.js');
 const { splitKind, summarize } = require('../misc/sightings.js');

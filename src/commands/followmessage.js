@@ -1,4 +1,4 @@
-const { DEFAULT_FOLLOW_MESSAGE } = require('../modules/follow-announce.js');
+const { DEFAULT_FOLLOW_MESSAGE } = require('../clients/modules/chat/follow-announce.js');
 
 /** Follow-Ansage im Chat verwalten (Modul follow-announce), opt-in je Channel, aus sb-v2 */
 module.exports = {

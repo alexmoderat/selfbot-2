@@ -1,4 +1,4 @@
-const { streamData } = require('../services/stream-tracking.js');
+const { streamData } = require('../util/stream-tracking.js');
 const { uploadToOwnHaste } = require('../misc/haste.js');
 const { formatStreamExport, hasExportData } = require('../misc/stream-export.js');
 

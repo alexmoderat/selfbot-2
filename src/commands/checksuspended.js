@@ -1,6 +1,6 @@
 const { listOrLink } = require('../misc/list-reply.js');
 
-const { listSuspended, reactivateChannel } = require('../services/channel-suspension.js');
+const { listSuspended, reactivateChannel } = require('../util/channel-suspension.js');
 const { getBanStatusBatch } = require('../misc/twitch-gql.js');
 
 /**

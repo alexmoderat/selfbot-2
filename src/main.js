@@ -25,14 +25,14 @@ const { getTimers } = require('./clients/modules/timers.js');
 
 bot.Client = client;
 bot.Twitch = platform;
-bot.Channels = require('./services/channels.js');
-bot.Users = require('./services/users.js');
-bot.Filter = require('./services/filter.js');
-bot.Banphrase = require('./services/banphrase.js');
-bot.AFK = require('./services/afk.js');
-bot.Reminders = require('./services/reminders.js');
+bot.Channels = require('./util/channels.js');
+bot.Users = require('./util/users.js');
+bot.Filter = require('./util/filter.js');
+bot.Banphrase = require('./util/banphrase.js');
+bot.AFK = require('./util/afk.js');
+bot.Reminders = require('./util/reminders.js');
 // Custom Commands der Channels (!discord usw.), der Handler fragt sie, wenn kein eingebauter Command passt
-bot.CustomCommands = require('./services/custom-commands.js');
+bot.CustomCommands = require('./util/custom-commands.js');
 bot.ChatModules = ChatModules;
 bot.Commands = commands;
 
