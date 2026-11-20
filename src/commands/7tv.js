@@ -28,7 +28,10 @@ const {
  *    benutzt; vorher antwortet er anderen nur mit "not set up"
  */
 const MAX_EMOTE_LIMIT = 250;
-const EDITOR_HINT = 'Check if I am set up as the 7TV editor for this channel';
+// 401 = der 7TV-Token des Bots ist abgelaufen/ungueltig, nicht fehlende Editor-Rechte (20.11.2026: Token seit 16.11. abgelaufen,
+// Meldung schickte Im_Row1 faelschlich zu den Editor-Einstellungen)
+const editorHint = (statusCode) =>
+	statusCode === 401 ? "my 7TV login has expired, alexmoderat has to renew it" : 'Check if I am set up as the 7TV editor for this channel';
 
 const canManage = (permissions) => permissions.administrator || permissions.channelOwner || permissions.moderator;
 
@@ -135,7 +138,7 @@ const add = {
 			const candidate = combinedEmoteData[index];
 			const result = await removeEmote(token, candidate.id, localData.emoteSetId);
 			if (!result.success) {
-				return { success: false, text: `Could not add emote! ${EDITOR_HINT} (error code ${result.statusCode})` };
+				return { success: false, text: `Could not add emote! ${editorHint(result.statusCode)} (error code ${result.statusCode})` };
 			}
 
 			const [removedEmote] = combinedEmoteData.splice(index, 1);
@@ -144,7 +147,7 @@ const add = {
 
 		const addResult = await addEmote(token, emoteId, localData.emoteSetId);
 		if (!addResult.success) {
-			return { success: false, text: `Could not add emote! ${EDITOR_HINT} (error code ${addResult.statusCode})` };
+			return { success: false, text: `Could not add emote! ${editorHint(addResult.statusCode)} (error code ${addResult.statusCode})` };
 		}
 
 		combinedEmoteData.push({
@@ -240,7 +243,7 @@ const remove = {
 
 		const result = await removeEmote(fetchSevenTvToken(), emoteData.id, localData.emoteSetId);
 		if (!result.success) {
-			return { success: false, text: `Could not remove emote! ${EDITOR_HINT} (error code ${result.statusCode})` };
+			return { success: false, text: `Could not remove emote! ${editorHint(result.statusCode)} (error code ${result.statusCode})` };
 		}
 
 		localData.emotes.splice(index, 1);
@@ -293,7 +296,7 @@ const directAdd = async (msg, ...args) => {
 
 	const result = await addEmote(fetchSevenTvToken(), emoteId, setId, alias);
 	if (!result.success) {
-		return { success: false, text: `Could not add emote! ${result.error ?? EDITOR_HINT} (error code ${result.statusCode})` };
+		return { success: false, text: `Could not add emote! ${result.error ?? editorHint(result.statusCode)} (error code ${result.statusCode})` };
 	}
 
 	return {
@@ -339,7 +342,7 @@ const directRemove = async (msg, ...args) => {
 
 	const result = await removeEmote(fetchSevenTvToken(), target.id, setId);
 	if (!result.success) {
-		return { success: false, text: `Could not remove emote! ${result.error ?? EDITOR_HINT} (error code ${result.statusCode})` };
+		return { success: false, text: `Could not remove emote! ${result.error ?? editorHint(result.statusCode)} (error code ${result.statusCode})` };
 	}
 
 	return { success: true, text: `Removed ${target.alias}.` };
