@@ -1273,7 +1273,7 @@
       <div class="section-header">
         <div class="section-title">Raid Notify <span class="count-pill" id="countRaid">0</span></div>
       </div>
-      <p class="section-desc">Each row is one message to everyone who joined with <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">!subraid</code> in your channel. <b>Time</b> is how many seconds before the raid starts it is posted (120 = right when it is announced, 0 = when the raid starts, -1 to -30 = that many seconds after it started). Click Time, Message or Times to change them. Use <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{users}</code> for the names and <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{seconds}</code> for the seconds left. If you switch all of them off or remove them, Raid Notify turns itself off.</p>
+      <p class="section-desc">Each row is one message to everyone who joined with <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">!subraid</code> in your channel. <b>Time</b> is how many seconds before the raid starts it is posted (120 = right when it is announced, 0 = when the raid starts, +1 to +30 = that many seconds after it started). Click Time, Message or Times to change them. Use <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{users}</code> for the names and <code style="background:#1f7fb322;color:#3a9bd0;padding:1px 6px;border-radius:4px;font-size:14px">{seconds}</code> for the seconds left. If you switch all of them off or remove them, Raid Notify turns itself off.</p>
 
       <div id="raidList"></div>
       <div style="margin-top:10px"><button type="button" class="btn btn-primary" id="raidAddButton" style="font-size:12px;padding:5px 11px" onclick="addRaidItem()">+ Add notification</button>
@@ -3128,6 +3128,15 @@
       const active = raidSort?.key === key;
       return `<button type="button" class="sort-head raid-sort${active ? ' active' : ''}" onclick="setRaidSort('${key}')">${active ? `<span class="raid-sort-arrow">${raidSort.desc ? '▲' : '▼'}</span>` : ''}${label}</button>`;
     }
+    // Zeit nach dem Start als +N statt negativ anzeigen/eingeben (ninou2, 20.11.2026: "to avoid all the + - numbers",
+    // "when we type the settings : +1 ; +2 .... +10"); intern bleibt es negativ (-N = N s nach dem Start)
+    function raidTimeLabel(s) { return s < 0 ? `+${-s}` : String(s); }
+    function parseRaidTime(text) {
+      const t = String(text).trim().replace(/s$/i, '').trim();
+      if (!/^[+-]?\d+$/.test(t)) return NaN;
+      return t.startsWith('+') ? -Number(t.slice(1)) : Number(t);
+    }
+
     function raidSortedItems(items) {
       const list = items.map((item, index) => ({ item, index }));
       if (!raidSort) return list;
@@ -3191,10 +3200,10 @@
               <div class="cell-actions"><button class="btn btn-danger" onclick="removeRaidItem(${item.id}, this)">Remove</button></div>
               <div class="raid-name"><span>Raid notification ${index + 1}</span>
                 <div class="toggle-pair">${toggleBtn(item.on, 'ON', `setRaidItem(${item.id}, { on: true })`)}<button class="${item.on ? '' : 'active off-red'}" onclick="setRaidItem(${item.id}, { on: false })">OFF</button></div></div>
-              <div class="cell-muted msg-cell" title="Click to change (${r.minSeconds} to ${r.maxSeconds} seconds before the start, negative = after the start)" onclick="editRaidCell(this, ${item.id}, 'seconds')">${item.seconds}s</div>
+              <div class="cell-muted msg-cell" title="Click to change (${r.maxSeconds} to 0 = seconds before the start, +1 to +${-r.minSeconds} = seconds after the start)" onclick="editRaidCell(this, ${item.id}, 'seconds')">${raidTimeLabel(item.seconds)}s</div>
               <div class="cell-muted msg-cell${item.custom ? ' raid-custom' : ''}" title="${item.custom ? 'Custom message' : 'Default message'} - click to edit" onclick="editRaidCell(this, ${item.id}, 'text')">${esc(item.text)}</div>
               <div class="cell-muted msg-cell" title="Click to change (1-5)" onclick="editRaidCell(this, ${item.id}, 'times')">${item.times}×</div>
-              <span class="uses-pill raid-uses" title="how often a ${item.seconds}s notification was posted in your channel (kept when you remove and add it again)">${esc(item.uses ?? 0)} use${item.uses === 1 ? '' : 's'}</span>
+              <span class="uses-pill raid-uses" title="how often a ${raidTimeLabel(item.seconds)}s notification was posted in your channel (kept when you remove and add it again)">${esc(item.uses ?? 0)} use${item.uses === 1 ? '' : 's'}</span>
             </div>`).join('')}
         </div>` : buildEmpty('No raid notifications.');
       document.getElementById('raidSubs').innerHTML = r.subscribers.length
@@ -3283,9 +3292,11 @@
       const isText = field === 'text';
       cell.innerHTML = isText
         ? '<span class="msg-edit"><input type="text" maxlength="400"><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button><span class="def-wrap"><button type="button" class="msg-def" title="Use the default message">Default</button></span></span>'
-        : '<span class="times-edit"><input type="number"></span><span class="times-pop"><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button></span>';
+        : field === 'seconds'
+          ? '<span class="times-edit"><input type="text" inputmode="numeric" maxlength="4"></span><span class="times-pop"><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button></span>'
+          : '<span class="times-edit"><input type="number"></span><span class="times-pop"><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button></span>';
       const input = cell.querySelector('input');
-      if (field === 'seconds') { input.min = r.minSeconds; input.max = r.maxSeconds; input.value = item.seconds; }
+      if (field === 'seconds') { input.value = raidTimeLabel(item.seconds); input.title = `${r.maxSeconds} to 0 = before the start, +1 to +${-r.minSeconds} = after the start`; }
       else if (field === 'times') { input.min = 1; input.max = 5; input.value = item.times; }
       else input.value = item.text;
       input.focus();
@@ -3297,11 +3308,12 @@
       const save = async (value) => {
         if (done) return;
         done = true;
-        const unchanged = value === undefined ? (isText ? input.value.trim() === item.text : Number(input.value) === item[field]) : false;
-        if (unchanged) { close(); return; }
+        const num = field === 'seconds' ? parseRaidTime(input.value) : Number(input.value);
+        const unchanged = value === undefined ? (isText ? input.value.trim() === item.text : num === item[field]) : false;
+        if (unchanged || (!isText && value === undefined && Number.isNaN(num))) { close(); return; }
         const body = value !== undefined ? { text: value }
           : isText ? { text: input.value.trim() }
-          : { [field]: Number(input.value) };
+          : { [field]: num };
         close();
         await setRaidItem(id, body);
       };
