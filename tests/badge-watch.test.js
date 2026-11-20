@@ -209,9 +209,9 @@ test('Zeitfenster aus den Aktionen: parseWindows und activeWindows', () => {
 	assert.equal(eventStatus(formatWindow(windows[0]), Date.parse('2026-11-14T00:00:00Z')), '[AVAILABLE!]');
 });
 
-test('Raid Notify: Zeitpunkt der Erinnerung wird auf -10 bis 120 Sekunden begrenzt (0 = beim Start, negativ = danach)', () => {
+test('Raid Notify: Zeitpunkt der Erinnerung wird auf -30 bis 120 Sekunden begrenzt (0 = beim Start, negativ = danach)', () => {
 	const { clampLead, MIN_LEAD_S, MAX_LEAD_S } = require('../src/modules/raid-notifier.js');
-	assert.equal(MIN_LEAD_S, -10);
+	assert.equal(MIN_LEAD_S, -30);
 	assert.equal(MAX_LEAD_S, 120);
 	assert.equal(clampLead(undefined), 20);
 	assert.equal(clampLead('abc'), 20);
@@ -219,7 +219,8 @@ test('Raid Notify: Zeitpunkt der Erinnerung wird auf -10 bis 120 Sekunden begren
 	assert.equal(clampLead('0'), 0);
 	assert.equal(clampLead(-3), -3);
 	assert.equal(clampLead('-10'), -10);
-	assert.equal(clampLead(-50), -10);
+	assert.equal(clampLead('-12'), -12);
+	assert.equal(clampLead(-50), -30);
 	assert.equal(clampLead(500), 120);
 	assert.equal(clampLead('45'), 45);
 });

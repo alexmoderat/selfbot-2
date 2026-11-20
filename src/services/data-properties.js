@@ -51,7 +51,7 @@ const channelDataSchema = {
 	sevenTvStreamerOnly: 'boolean',
 	// Dashboard: neue globale Badges/Emotes melden - { enabled, message } (Default aus)
 	badgeAlerts: 'object',
-	// Raid Notify (ninou2, 14.11.2026): { enabled, seconds } - Raid-Pings im Channel, Standard aus; seconds = Erinnerung vor Start (-10 bis 120, negativ = nach dem Start)
+	// Raid Notify (ninou2, 14.11.2026): { enabled, seconds } - Raid-Pings im Channel, Standard aus; seconds = Erinnerung vor Start (-30 bis 120, negativ = nach dem Start)
 	raidNotify: 'object',
 	// strengere Rechte-Stufe je Command: Name -> "mod" | "streamer"
 	commandLevels: 'object',
