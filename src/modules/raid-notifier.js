@@ -212,7 +212,7 @@ const RESULT_WAIT_MS = 15_000;
 let pendingResult = null;
 
 // DDDB haengt unsichtbare Zeichen (U+E0000 u. a.) an, die nicht mitkopiert werden sollen
-const cleanResultText = (text) => text.replace(/[\u{E0000}-\u{E007F}͏​-‍⁠﻿]/gu, '').trim();
+const cleanResultText = (text) => text.replace(/[\u{E0000}-\u{E007F}\u034F\u200B-\u200D\u2060\uFEFF]/gu, '').trim();
 
 const relayResult = async (text, seenChannelIds) => {
 	const subscribers = await getSubscribers();
