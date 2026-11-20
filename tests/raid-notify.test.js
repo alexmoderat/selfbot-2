@@ -161,3 +161,35 @@ test('Raid Notify: negative Zeit postet so viele Sekunden nach dem Start (ninou2
 	}
 	assert.deepEqual(delays.sort((a, b) => a - b), [120_000, 123_000]);
 });
+
+test('Raid-Ergebnis: nur in Live-Channels mit Raid Notify, in denen DDDB es nicht selbst gepostet hat (ninou2, 20.11.2026)', async () => {
+	const raid = require('../src/modules/raid-notifier.js');
+	const savedBot = global.bot;
+	const channels = {
+		1: { id: 1, name: 'live_on', mode: 'Write', live: true, on: true },
+		2: { id: 2, name: 'offline_on', mode: 'Write', live: false, on: true },
+		3: { id: 3, name: 'live_off', mode: 'Write', live: true, on: false },
+		4: { id: 4, name: 'live_seen', mode: 'Write', live: true, on: true },
+	};
+	const posted = [];
+	global.bot = {
+		DB: { RaidSubscriber: { find: () => ({ lean: async () => [1, 2, 3, 4].map((c) => ({ channel: c, userAlias: 7 })) }) } },
+		Users: { get: async () => ({ name: 'zzquser' }) },
+		Channels: {
+			get: (id) => channels[id],
+			isLive: (c) => c.live,
+			getData: (c) => (c.on ? { enabled: true, items: [{ id: 1, on: true, seconds: 120, text: null, times: 1 }], uses: {} } : null),
+			setData: async () => {},
+			send: async (c, text) => void posted.push([c.name, text]),
+		},
+	};
+	try {
+		const text = raid.cleanResultText('28 users beat the raid level [1151] - 4629 experience rewarded!💎 \u{E0000}');
+		assert.ok(raid.RESULT_PATTERN.test(text));
+		assert.ok(raid.RESULT_PATTERN.test('18 users failed to beat the raid level [1455] - No experience rewarded!💀'));
+		assert.equal(await raid.relayResult(text, new Set([4])), 1);
+	} finally {
+		global.bot = savedBot;
+	}
+	assert.deepEqual(posted, [['live_on', '28 users beat the raid level [1151] - 4629 experience rewarded!💎']]);
+});
