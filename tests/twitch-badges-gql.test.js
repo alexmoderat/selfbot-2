@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { parseGqlBadges } = require('../src/token/twitch-badges-gql.js');
+const { parseGqlBadges } = require('../src/selfbot/token/twitch-badges-gql.js');
 
 test('parseGqlBadges: Schluessel set_id:version, Channel-Badges ausgelassen', () => {
 	const list = parseGqlBadges({

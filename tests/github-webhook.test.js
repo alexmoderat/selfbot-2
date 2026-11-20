@@ -2,8 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 global.bot = global.bot ?? {};
-const { formatGithubEvent } = require('../src/util/github-events.js');
-const { validSignature, isDuplicate } = require('../src/api/github.js');
+const { formatGithubEvent } = require('../src/selfbot/util/github-events.js');
+const { validSignature, isDuplicate } = require('../src/selfbot/api/github.js');
 
 const base = { repository: { full_name: 'a/b' }, sender: { login: 'u' } };
 

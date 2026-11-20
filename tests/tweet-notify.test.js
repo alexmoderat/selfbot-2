@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 global.bot = global.bot ?? {};
-const { cleanHandle, cleanMessage, HANDLE, isStandalone, freshTweets, formatTweetAlert } = require('../src/util/tweet-notify.js');
+const { cleanHandle, cleanMessage, HANDLE, isStandalone, freshTweets, formatTweetAlert } = require('../src/selfbot/util/tweet-notify.js');
 
 test('cleanHandle: @, URL und Gross-/Kleinschreibung', () => {
 	assert.equal(cleanHandle('@XQC'), 'xqc');
@@ -44,13 +44,13 @@ test('Zusatztext: wird bereinigt, gekuerzt und an die Meldung gehaengt', () => {
 
 test('Title Notify: Zusatztext steht hinter der Meldung', () => {
 	global.bot = global.bot ?? {};
-	const { formatTitleChange } = require('../src/util/notifications.js');
+	const { formatTitleChange } = require('../src/selfbot/util/notifications.js');
 	assert.equal(formatTitleChange(['a'], 'xqc', ' Neu ', 'Just Chatting', null, 'LETSGO'), '@a — @xqc changed their title: " Neu " (Category: Just Chatting) LETSGO');
 	assert.equal(formatTitleChange(['a'], 'xqc', 'Neu', null), '@a — @xqc changed their title: " Neu "');
 });
 
 test('Anzahl der Meldungen: 1-5, ungueltig = 1', () => {
-	const { cleanTimes, MAX_TIMES } = require('../src/util/tweet-notify.js');
+	const { cleanTimes, MAX_TIMES } = require('../src/selfbot/util/tweet-notify.js');
 	assert.equal(MAX_TIMES, 5);
 	assert.equal(cleanTimes(undefined), 1);
 	assert.equal(cleanTimes('3'), 3);
@@ -60,7 +60,7 @@ test('Anzahl der Meldungen: 1-5, ungueltig = 1', () => {
 });
 
 test('Alter des Tweets in Klammern', () => {
-	const { agoTag, formatTweetAlert } = require('../src/util/tweet-notify.js');
+	const { agoTag, formatTweetAlert } = require('../src/selfbot/util/tweet-notify.js');
 	const now = Date.parse('2026-11-14T00:30:00Z');
 	assert.equal(agoTag('2026-11-14T00:19:00Z', now), '[11min ago]');
 	assert.equal(agoTag('2026-11-14T00:29:40Z', now), '[just now]');

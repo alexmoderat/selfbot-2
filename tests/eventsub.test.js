@@ -10,8 +10,8 @@ global.bot = {
 	ChatModules: { dispatch: (event, context) => dispatched.push({ event, context }) },
 };
 
-const { wantsChannel } = require('../src/util/twitch/eventSub.js');
-const eventSubEvents = require('../src/util/twitch/eventSubEvents.js');
+const { wantsChannel } = require('../src/selfbot/util/twitch/eventSub.js');
+const eventSubEvents = require('../src/selfbot/util/twitch/eventSubEvents.js');
 
 test('wantsChannel: Follows nur mit Mod-Rechten, eigener Channel immer', () => {
 	assert.strictEqual(wantsChannel({ name: 'a', twitchId: '1', mode: 'Moderator' }), true);

@@ -7,7 +7,7 @@ const path = require('node:path');
 // (git pull, Pakete, Pruefen, Neustart); einen Build-Schritt gibt es nicht, der Bot ist Plain JavaScript.
 
 const shell = promisify(exec);
-const basePath = path.join(__dirname, '..', '..');
+const basePath = path.join(__dirname, '..', '..', '..');
 
 const restartMethods = {
 	pull: {

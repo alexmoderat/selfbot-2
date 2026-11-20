@@ -24,7 +24,7 @@ let commit = null;
 const getCommit = () => {
 	if (commit === null) {
 		try {
-			commit = execSync('git rev-parse --short HEAD', { cwd: path.join(__dirname, '..', '..') })
+			commit = execSync('git rev-parse --short HEAD', { cwd: path.join(__dirname, '..', '..', '..') })
 				.toString()
 				.trim();
 		} catch {

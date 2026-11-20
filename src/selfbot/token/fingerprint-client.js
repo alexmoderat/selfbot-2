@@ -25,7 +25,7 @@ const loadNative = () => {
 	}
 	const file = PLATFORM_FILE[process.platform];
 	try {
-		native = file ? require(path.join(__dirname, '..', '..', 'native', 'boring-ssl-client', 'build', file)) : null;
+		native = file ? require(path.join(__dirname, '..', '..', '..', 'native', 'boring-ssl-client', 'build', file)) : null;
 		if (native) {
 			console.log('[fingerprint-client] Chrome-TLS-Fingerprint-Addon geladen');
 		}

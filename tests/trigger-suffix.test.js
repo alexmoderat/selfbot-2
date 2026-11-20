@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { withTrigger } = require('../src/util/trigger-suffix.js');
+const { withTrigger } = require('../src/selfbot/util/trigger-suffix.js');
 
 const NINOU2 = 4293;
 const msg = (invocation, commandName, id = NINOU2, prefix = '!') => ({ invocation, commandName, prefix, sender: { id } });

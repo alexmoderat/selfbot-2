@@ -2,7 +2,7 @@ const { describe, it, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 global.bot = { Channels: { isLive: () => null } };
-const Filter = require('../src/util/filter.js');
+const Filter = require('../src/selfbot/util/filter.js');
 
 const make = (data) =>
 	Filter.fromDoc({

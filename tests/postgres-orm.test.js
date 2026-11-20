@@ -1,8 +1,8 @@
 const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { Params, compileFilter, compileAggregate, compileUpdate } = require('../src/database/orm/translate.js');
-const { buildFields, Mixed } = require('../src/database/orm/schema.js');
+const { Params, compileFilter, compileAggregate, compileUpdate } = require('../src/selfbot/database/orm/translate.js');
+const { buildFields, Mixed } = require('../src/selfbot/database/orm/schema.js');
 
 const fields = buildFields({
 	_id: Number,
@@ -79,8 +79,8 @@ describe('Update und Aggregation -> SQL', () => {
 const url = process.env.TEST_POSTGRES_URL;
 
 describe('Postgres-Modell', { skip: url ? false : 'TEST_POSTGRES_URL fehlt' }, () => {
-	const sql = require('../src/database/postgres.js');
-	const { createModel } = require('../src/database/orm/model.js');
+	const sql = require('../src/selfbot/database/postgres.js');
+	const { createModel } = require('../src/selfbot/database/orm/model.js');
 	let Item;
 	let Plain;
 

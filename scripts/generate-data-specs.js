@@ -159,5 +159,5 @@ const header = `// Collections der Features (bisher MariaDB selfbot_data), erzeu
 const output = `${header}\nmodule.exports = ${JSON.stringify(specs, null, '\t')
 	.replaceAll(/"([a-zA-Z_][a-zA-Z0-9_]*)":/g, '$1:')
 	.replaceAll('"', "'")};\n`;
-writeFileSync(path.join(__dirname, '..', 'src', 'database', 'models', 'data-specs.js'), output);
+writeFileSync(path.join(__dirname, '..', 'src', 'selfbot', 'database', 'models', 'data-specs.js'), output);
 console.log(`${specs.length} Collections geschrieben`);

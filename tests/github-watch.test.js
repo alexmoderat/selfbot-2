@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 global.bot = global.bot ?? {};
-const { formatApiEvent, newEvents, latestId } = require('../src/clients/modules/crons/github-watch.js');
+const { formatApiEvent, newEvents, latestId } = require('../src/selfbot/clients/modules/crons/github-watch.js');
 
 const ev = (id, type, payload = {}) => ({ id: String(id), type, repo: { name: 'a/b' }, actor: { login: 'u' }, payload });
 

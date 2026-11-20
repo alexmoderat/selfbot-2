@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { botPermsMissing } = require('../src/clients/modules/handler.js');
+const { botPermsMissing } = require('../src/selfbot/clients/modules/handler.js');
 
 test('botPerms: ohne Angabe oder ohne Channel keine Pruefung', () => {
 	assert.equal(botPermsMissing({}, { mode: 'Write' }), null);

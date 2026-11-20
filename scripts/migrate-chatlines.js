@@ -6,8 +6,8 @@
 //   node --env-file=.env scripts/migrate-chatlines.js ninou2     nur einzelne Channels
 
 const mariadb = require('mariadb');
-const { getConfig } = require('../src/config.js');
-const DB = require('../src/database/db.js');
+const { getConfig } = require('../src/selfbot/config.js');
+const DB = require('../src/selfbot/database/db.js');
 
 const BATCH = 5000;
 const SCHEMA = 'selfbot_chat_line';

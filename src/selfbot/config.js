@@ -2,7 +2,7 @@ const { existsSync, readFileSync } = require('node:fs');
 const path = require('node:path');
 
 // config.json (lokal, git-ignoriert) hat Vorrang, sonst die Vorlage example.config.json
-const ROOT = path.join(__dirname, '..');
+const ROOT = path.join(__dirname, '..', '..');
 
 const REQUIRED = ['selfName', 'selfId', 'prefix', 'messageLimit', 'dedupeWindow', 'postgres', 'redis', 'console', 'responses', 'values', 'modules'];
 

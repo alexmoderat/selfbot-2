@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { isGeneratedName, isEmoteOnly, isShoutoutText, isYoungAccount, isEmoteWave } = require('../src/util/emote-wave.js');
+const { isGeneratedName, isEmoteOnly, isShoutoutText, isYoungAccount, isEmoteWave } = require('../src/selfbot/util/emote-wave.js');
 
 const known = new Set(['DogeFace', 'Skull']);
 

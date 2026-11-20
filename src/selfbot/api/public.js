@@ -48,7 +48,7 @@ const execFileAsync = promisify(execFile);
 
 const PROCESS_START = Date.now();
 
-const ROOT = path.join(__dirname, '..', '..');
+const ROOT = path.join(__dirname, '..', '..', '..');
 
 const AUTOJOIN_STATS_FILE = '/root/twitch-autojoin-bot/stats.json';
 

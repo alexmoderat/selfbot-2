@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { formatRecordDate, recordHead, ordinal } = require('../src/commands/whoislivebest.js');
+const { formatRecordDate, recordHead, ordinal } = require('../src/selfbot/commands/whoislivebest.js');
 
 test('Rekord-Datum "the 19th november 2026 UTC" (ninou2, 19.11.2026)', () => {
 	assert.equal(formatRecordDate('2026-11-19T20:30:00.000Z'), 'the 19th november 2026 at 20:30 UTC');

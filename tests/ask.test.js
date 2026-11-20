@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 // got() faken, damit kein echter Gemini-Aufruf passiert
-const gotPath = require.resolve('../src/token/got.js');
+const gotPath = require.resolve('../src/selfbot/token/got.js');
 let nextResponse = null;
 let lastRequest = null;
 require.cache[gotPath] = {
@@ -16,7 +16,7 @@ require.cache[gotPath] = {
 		},
 	},
 };
-const ask = require('../src/commands/ask.js');
+const ask = require('../src/selfbot/commands/ask.js');
 
 const msg = (text) => ({ displayName: 'ninou2', invocation: 'ask', args: text ? text.split(' ') : [] });
 

@@ -7,8 +7,8 @@
 // Mongo-Adresse: config.json "mongo.uri" oder Umgebungsvariable MONGO_URI. Mongo wird nur gelesen.
 
 const { MongoClient } = require('mongodb');
-const { getConfig } = require('../src/config.js');
-const DB = require('../src/database/db.js');
+const { getConfig } = require('../src/selfbot/config.js');
+const DB = require('../src/selfbot/database/db.js');
 
 const BATCH = 5000;
 

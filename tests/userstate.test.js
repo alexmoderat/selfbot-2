@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { wantedModerator } = require('../src/clients/events/USERSTATE.js');
+const { wantedModerator } = require('../src/selfbot/clients/events/USERSTATE.js');
 
 const channel = (mode, twitchId = '1') => ({ name: 'x', mode, twitchId });
 
