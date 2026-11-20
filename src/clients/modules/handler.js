@@ -57,6 +57,22 @@ const checkPermissions = (command, msg) => {
  * Command pruefen und ausfuehren (auch fuer Custom Commands und das Dashboard nutzbar)
  * @returns {Promise<{ success?: boolean, reason?: string, text?: string|null, reply?: boolean, whisper?: boolean }>}
  */
+/** Fehlende Bot-Rechte laut command.botPerms ('mod' oder 'vip'), sonst null; Mod-Rechte genuegen auch fuer VIP-Commands */
+const botPermsMissing = (command, channel) => {
+	const wanted = command.botPerms ?? [];
+	if (!channel || wanted.length === 0) {
+		return null;
+	}
+	const isMod = channel.mode === 'Moderator';
+	if (wanted.includes('mod') && !isMod) {
+		return 'moderator';
+	}
+	if (wanted.includes('vip') && !isMod && channel.mode !== 'VIP') {
+		return 'VIP';
+	}
+	return null;
+};
+
 const checkAndExecute = async (msg, options = {}) => {
 	const channel = msg.channelData;
 	const user = msg.sender;
@@ -128,6 +144,13 @@ const checkAndExecute = async (msg, options = {}) => {
 	} else if (failedParams !== null) {
 		finish(command.cooldown);
 		return { success: false, reason: 'params', text: failedParams };
+	}
+
+	// Wie DontAddThisBots command.botPerms: Commands, die im Channel Mod- oder VIP-Rechte des Bots brauchen (Mode des Channels)
+	const missingBotPerm = botPermsMissing(command, channel);
+	if (missingBotPerm) {
+		finish(1000);
+		return { success: false, reason: 'bot-perms', text: `@${msg.displayName}, This command requires the bot to be a ${missingBotPerm}.` };
 	}
 
 	// Loeschen/Zuruecksetzen nur mit "yes" am Ende (ninou2, 06.10.2026)
@@ -293,4 +316,4 @@ const handler = async (msg) => {
 	return true;
 };
 
-module.exports = { handler, checkAndExecute, getPrefix, getPermissions, permissionOf, _cooldowns: cooldowns };
+module.exports = { handler, checkAndExecute, botPermsMissing, getPrefix, getPermissions, permissionOf, _cooldowns: cooldowns };
