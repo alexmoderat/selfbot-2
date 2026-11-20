@@ -125,7 +125,7 @@ test('!badgeinfo: Anzahl 1-5, Badges und Emotes gemischt, neueste zuerst', () =>
 
 test('badge-history: neueste zuerst, nach KEEP abgeschnitten', async () => {
 	const store = new Map();
-	global.bot.Redis = { getJSON: async (k) => store.get(k) ?? null, setJSON: async (k, v) => store.set(k, v) };
+	global.bot.Cache = { getJSON: async (k) => store.get(k) ?? null, setJSON: async (k, v) => store.set(k, v) };
 	const { recordRecent, getRecent, KEEP } = require('../src/selfbot/util/badge-history.js');
 	await recordRecent('badge', [{ title: 'A' }, { title: 'B' }], '2026-11-13T10:00:00.000Z');
 	await recordRecent('badge', [{ title: 'C' }], '2026-11-13T11:00:00.000Z');
@@ -166,7 +166,7 @@ test('Tweets: parseTweets (ohne angehefteten und t.co-Links) und parseGlobalTwee
 
 test('badge-history: wasAnnounced/markAnnounced', async () => {
 	const store = new Map();
-	global.bot.Redis = { getJSON: async (k) => store.get(k) ?? null, setJSON: async (k, v) => store.set(k, v) };
+	global.bot.Cache = { getJSON: async (k) => store.get(k) ?? null, setJSON: async (k, v) => store.set(k, v) };
 	const { wasAnnounced, markAnnounced } = require('../src/selfbot/util/badge-history.js');
 	assert.equal(await wasAnnounced('added:badge:x'), false);
 	await markAnnounced('added:badge:x');
@@ -266,7 +266,7 @@ test('event-watch: Tweet-Notify-Abonnenten bekommen eigenen Text und Anzahl, Bad
 	const { runEventWatch } = require('../src/selfbot/clients/modules/crons/event-watch.js');
 	const saved = global.bot;
 	global.bot = {
-		Redis: { getJSON: async (k) => redis.store.get(k) ?? null, setJSON: async (k, v) => void redis.store.set(k, v) },
+		Cache: { getJSON: async (k) => redis.store.get(k) ?? null, setJSON: async (k, v) => void redis.store.set(k, v) },
 		Channels: { get: () => channel, all: () => [channel], getData: async () => ({ enabled: true, message: 'ALT' }), send: async (c, t) => void sent.push(t) },
 		Users: { get: async () => ({ name: 'ninou2' }) },
 		DB: { TweetNotify: { find: () => ({ lean: async () => [{ channel: 70, account: 'streamdatabase', userAlias: 1, message: 'NEU', times: 2 }] }) } },

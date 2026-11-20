@@ -79,10 +79,10 @@ const enabledChannels = async () => {
 
 const runSource = async (source, getTargets) => {
 	const items = await source.fetch();
-	const stored = await bot.Redis.getJSON(source.stateKey).catch(() => null);
+	const stored = await bot.Cache.getJSON(source.stateKey).catch(() => null);
 	const known = Array.isArray(stored) ? new Set(stored) : null;
 	const fresh = newBadges(items, known);
-	await bot.Redis.setJSON(
+	await bot.Cache.setJSON(
 		source.stateKey,
 		items.map((i) => i.key),
 		STATE_TTL,

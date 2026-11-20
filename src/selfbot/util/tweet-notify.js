@@ -57,9 +57,9 @@ const freshTweets = (tweets, seen, now = Date.now()) => (seen ? tweets.filter((i
 const checkAccount = async (account) => {
 	const tweets = await fetchTweetsOf(account);
 	const key = `tweet-notify:seen:${account}`;
-	const stored = await bot.Redis.getJSON(key).catch(() => null);
+	const stored = await bot.Cache.getJSON(key).catch(() => null);
 	const seen = Array.isArray(stored) ? new Set(stored) : null;
-	await bot.Redis.setJSON(key, tweets.map((i) => i.id).slice(0, 60), 60 * 864e5);
+	await bot.Cache.setJSON(key, tweets.map((i) => i.id).slice(0, 60), 60 * 864e5);
 	return { tweets, fresh: freshTweets(tweets, seen), firstRun: !seen };
 };
 

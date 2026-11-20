@@ -414,7 +414,7 @@ class Owm3WeatherProvider {
 
 	async oneCall(coords) {
 		const cacheKey = getOwm3CacheKey(coords);
-		const cacheData = await bot.Redis.getJSON(cacheKey);
+		const cacheData = await bot.Cache.getJSON(cacheKey);
 		if (cacheData) {
 			return cacheData;
 		}
@@ -471,7 +471,7 @@ class Owm3WeatherProvider {
 		}
 
 		const { data } = rawData;
-		await bot.Redis.setJSON(cacheKey, data, 10 * 60_000);
+		await bot.Cache.setJSON(cacheKey, data, 10 * 60_000);
 		return data;
 	}
 }
@@ -545,7 +545,7 @@ class Owm4WeatherProvider {
 
 	async fetch(type, coords, start) {
 		const cacheKey = getOwm4CacheKey(coords, type);
-		const cacheData = await bot.Redis.getJSON(cacheKey);
+		const cacheData = await bot.Cache.getJSON(cacheKey);
 		if (cacheData) {
 			if (type === 'current') {
 				return cacheData;
@@ -638,7 +638,7 @@ class Owm4WeatherProvider {
 			data = daily4ResponseSchema.parse(response.body);
 		}
 
-		await bot.Redis.setJSON(cacheKey, data, 10 * 60_000);
+		await bot.Cache.setJSON(cacheKey, data, 10 * 60_000);
 		return data;
 	}
 }

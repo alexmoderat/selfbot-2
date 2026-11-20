@@ -12,13 +12,13 @@ const recordRecent = async (kind, entries, at = new Date().toISOString()) => {
 		return;
 	}
 
-	const stored = (await bot.Redis.getJSON(keyOf(kind)).catch(() => null)) ?? [];
+	const stored = (await bot.Cache.getJSON(keyOf(kind)).catch(() => null)) ?? [];
 	const added = entries.map((i) => ({ ...i, at })).reverse();
-	await bot.Redis.setJSON(keyOf(kind), [...added, ...(Array.isArray(stored) ? stored : [])].slice(0, KEEP), TTL);
+	await bot.Cache.setJSON(keyOf(kind), [...added, ...(Array.isArray(stored) ? stored : [])].slice(0, KEEP), TTL);
 };
 
 const getRecent = async (kind, count) => {
-	const stored = await bot.Redis.getJSON(keyOf(kind)).catch(() => null);
+	const stored = await bot.Cache.getJSON(keyOf(kind)).catch(() => null);
 	return (Array.isArray(stored) ? stored : []).slice(0, count);
 };
 
@@ -31,15 +31,15 @@ const ANNOUNCED_KEEP = 300;
 const ANNOUNCED_TTL = 3 * 864e5;
 
 const wasAnnounced = async (key) => {
-	const stored = await bot.Redis.getJSON(ANNOUNCED_KEY).catch(() => null);
+	const stored = await bot.Cache.getJSON(ANNOUNCED_KEY).catch(() => null);
 	return Array.isArray(stored) && stored.includes(key);
 };
 
 const markAnnounced = async (key) => {
-	const stored = await bot.Redis.getJSON(ANNOUNCED_KEY).catch(() => null);
+	const stored = await bot.Cache.getJSON(ANNOUNCED_KEY).catch(() => null);
 	const list = Array.isArray(stored) ? stored : [];
 	if (!list.includes(key)) {
-		await bot.Redis.setJSON(ANNOUNCED_KEY, [...list, key].slice(-ANNOUNCED_KEEP), ANNOUNCED_TTL);
+		await bot.Cache.setJSON(ANNOUNCED_KEY, [...list, key].slice(-ANNOUNCED_KEEP), ANNOUNCED_TTL);
 	}
 };
 

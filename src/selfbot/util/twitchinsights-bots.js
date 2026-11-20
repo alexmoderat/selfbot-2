@@ -23,13 +23,13 @@ const refresh = async () => {
 	}
 
 	bots = new Set(list);
-	await bot.Redis.setJSON(CACHE_KEY, list);
+	await bot.Cache.setJSON(CACHE_KEY, list);
 	console.log(`[twitchinsights] Botliste: ${list.length} Eintraege`);
 };
 
 /** Liste laden (Redis sofort, frisch im Hintergrund) und den 6-h-Takt starten */
 const initialize = async () => {
-	const cached = await bot.Redis.getJSON(CACHE_KEY);
+	const cached = await bot.Cache.getJSON(CACHE_KEY);
 	if (Array.isArray(cached)) {
 		bots = new Set(cached);
 	}

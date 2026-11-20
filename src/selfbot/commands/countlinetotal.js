@@ -20,13 +20,13 @@ module.exports = {
 		}
 
 		let historyText = '';
-		const history = await bot.Redis.getJSON(cacheKey);
+		const history = await bot.Cache.getJSON(cacheKey);
 		if (history) {
 			const days = (SupiDate.now() - history.timestamp) / 864e5;
 			const linesPerHour = bot.Utils.round((Number(chatLineAmount) - history.amount) / (days * 24), 0);
 			historyText = ` Lines are being added at a rate of ${bot.Utils.groupDigits(linesPerHour)} lines/hr.`;
 		} else {
-			await bot.Redis.setJSON(cacheKey, { timestamp: SupiDate.now(), amount: Number(chatLineAmount) }, 365 * 864e5);
+			await bot.Cache.setJSON(cacheKey, { timestamp: SupiDate.now(), amount: Number(chatLineAmount) }, 365 * 864e5);
 		}
 
 		return { text: `Currently logging ${bot.Utils.groupDigits(Number(chatLineAmount))} lines in total across all channels.${historyText}` };

@@ -7,7 +7,7 @@ const { createRowFactory } = require('./row.js');
 
 const models = { ...coreModels, ...dataModels };
 
-// Postgres wie bei DontAddThisBot (bot.SQL = pg-Pool); bot.DB.<Model> bedient die Tabellen weiter wie die frueheren
+// Postgres wie bei DontAddThisBot (bot.PG = pg-Pool); bot.DB.<Model> bedient die Tabellen weiter wie die frueheren
 // Mongoose-Modelle (find/findOne/updateOne/aggregate/...), uebersetzt in SQL (orm/).
 
 let expireTimer = null;

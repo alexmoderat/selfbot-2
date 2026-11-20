@@ -56,17 +56,17 @@ const authLink = (login) => `${baseUrl()}/auth/${encodeURIComponent(login.toLowe
 
 const createState = async (data) => {
 	const state = randomBytes(16).toString('hex');
-	await bot.Redis.setJSON(`${STATE_PREFIX}${state}`, JSON.stringify(data), STATE_TTL);
+	await bot.Cache.setJSON(`${STATE_PREFIX}${state}`, JSON.stringify(data), STATE_TTL);
 	return state;
 };
 
 const consumeState = async (state) => {
 	const key = `${STATE_PREFIX}${state}`;
-	const raw = await bot.Redis.getJSON(key);
+	const raw = await bot.Cache.getJSON(key);
 	if (!raw) {
 		return null;
 	}
-	await bot.Redis.setJSON(key, null, 1);
+	await bot.Cache.setJSON(key, null, 1);
 	return JSON.parse(raw);
 };
 

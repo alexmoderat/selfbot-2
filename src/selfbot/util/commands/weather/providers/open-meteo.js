@@ -261,7 +261,7 @@ class OpenMeteoProvider {
 
 	async fetch(coords, report, params) {
 		const cacheKey = getCacheKey(coords, report);
-		const cacheData = await bot.Redis.getJSON(cacheKey);
+		const cacheData = await bot.Cache.getJSON(cacheKey);
 		if (cacheData) {
 			return cacheData;
 		}
@@ -292,7 +292,7 @@ class OpenMeteoProvider {
 			};
 		}
 
-		await bot.Redis.setJSON(cacheKey, response.body, 600_000);
+		await bot.Cache.setJSON(cacheKey, response.body, 600_000);
 		return response.body;
 	}
 }

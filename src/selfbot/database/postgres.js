@@ -1,6 +1,6 @@
 const { Pool, types } = require('pg');
 
-// Postgres wie bei DontAddThisBot (bot.SQL = pg-Pool), Verbindung aus config.json ("postgres": { host, port, user, password, database }).
+// Postgres wie bei DontAddThisBot (bot.PG = pg-Pool), Verbindung aus config.json ("postgres": { host, port, user, password, database }).
 // Der Pool entsteht erst bei open(), damit die Modelle schon beim Laden darauf zeigen koennen.
 
 // bigint (Zaehler, IDs, count) und numeric kommen als Zahl statt als Text

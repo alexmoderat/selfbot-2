@@ -15,14 +15,14 @@ const randomHexColor = (random = Math.random) => {
 };
 
 const initialize = async () => {
-	enabled = (await bot.Redis.getJSON(CACHE_KEY)) === 'on';
+	enabled = (await bot.Cache.getJSON(CACHE_KEY)) === 'on';
 };
 
 const isEnabled = () => enabled;
 
 const setEnabled = async (on) => {
 	enabled = on;
-	await bot.Redis.setJSON(CACHE_KEY, on ? 'on' : 'off');
+	await bot.Cache.setJSON(CACHE_KEY, on ? 'on' : 'off');
 };
 
 /** Nach jeder gesendeten Nachricht aufrufen - ohne Wirkung, wenn aus */

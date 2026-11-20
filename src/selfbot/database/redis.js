@@ -1,7 +1,7 @@
 const Redis = require('ioredis');
 const { Logger } = require('../misc/logger.js');
 
-// Redis wie bei DontAddThisBot (bot.Redis), dazu JSON-Helfer statt supi-core Cache.
+// Redis wie bei DontAddThisBot (bot.Cache), dazu JSON-Helfer statt supi-core Cache.
 // Eigene DB-Nummer aus config.json, damit sich Schluessel nicht mit selfbot/sb-v2 ueberschneiden.
 
 const PREFIX = 'selfbot-next:';

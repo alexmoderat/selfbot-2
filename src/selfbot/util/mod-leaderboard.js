@@ -99,7 +99,7 @@ const refresh = async (channels, ownLogin) => {
 
 		state = { entries: await rankModerators(modLists, ownLogin.toLowerCase(), isKnownBot), builtAt: Date.now() };
 		loaded = true;
-		await bot.Redis.setJSON(CACHE_KEY, state);
+		await bot.Cache.setJSON(CACHE_KEY, state);
 		console.log(`[mod-leaderboard] Neu aufgebaut - ${state.entries.length} Eintraege, ${failed} Channel(s) uebersprungen`);
 	} finally {
 		building = false;
@@ -109,7 +109,7 @@ const refresh = async (channels, ownLogin) => {
 const getTop = async (limit = 10) => {
 	if (!loaded) {
 		loaded = true;
-		const cached = await bot.Redis.getJSON(CACHE_KEY).catch(() => null);
+		const cached = await bot.Cache.getJSON(CACHE_KEY).catch(() => null);
 		if (cached && Array.isArray(cached.entries)) {
 			state = cached;
 		}

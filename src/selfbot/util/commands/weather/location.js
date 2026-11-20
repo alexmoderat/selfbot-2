@@ -78,7 +78,7 @@ const getWeatherLocation = async (msg, args) => {
 		const location = args.join(' ');
 		const cacheKey = getGeoCacheKey(location);
 
-		let geoData = await bot.Redis.getJSON(cacheKey);
+		let geoData = await bot.Cache.getJSON(cacheKey);
 		if (!geoData) {
 			const data = await fetchGeoLocationData(location);
 			if (!data.success) {
@@ -92,7 +92,7 @@ const getWeatherLocation = async (msg, args) => {
 				};
 			}
 
-			await bot.Redis.setJSON(cacheKey, geoData, 7 * 864e5);
+			await bot.Cache.setJSON(cacheKey, geoData, 7 * 864e5);
 		}
 
 		if (geoData.empty) {

@@ -66,7 +66,7 @@ router.get(
 		const dbLatency = async () => {
 			const start = Date.now();
 			try {
-				await bot.SQL.query('SELECT 1');
+				await bot.PG.query('SELECT 1');
 				return Date.now() - start;
 			} catch {
 				return null;
@@ -133,7 +133,7 @@ router.get(
 		}
 		// Laufzeit der Datenbank (bisher MariaDB "Uptime", jetzt Postgres seit dem Start des Servers)
 		const uptime = (
-			await bot.SQL.query('SELECT EXTRACT(EPOCH FROM now() - pg_postmaster_start_time()) AS uptime')
+			await bot.PG.query('SELECT EXTRACT(EPOCH FROM now() - pg_postmaster_start_time()) AS uptime')
 				.then((result) => result.rows[0])
 				.catch(() => null)
 		)?.uptime;

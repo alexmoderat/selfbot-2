@@ -53,9 +53,9 @@ const formatSubscriberAlert = (users, text, custom) => withCustom(`${users.map((
 const runEventWatch = async () => {
 	const windows = await fetchWindows();
 	const active = activeWindows(windows);
-	const stored = await bot.Redis.getJSON(STATE_KEY).catch(() => null);
+	const stored = await bot.Cache.getJSON(STATE_KEY).catch(() => null);
 	const before = Array.isArray(stored) ? new Set(stored) : null;
-	await bot.Redis.setJSON(
+	await bot.Cache.setJSON(
 		STATE_KEY,
 		active.map((i) => i.key),
 		STATE_TTL,

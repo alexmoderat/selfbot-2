@@ -9,8 +9,8 @@ const config = getConfig();
 global.bot = {
 	Config: config,
 	DB: require('./database/db.js'),
-	SQL: require('./database/postgres.js'),
-	Redis: require('./database/redis.js').create(config.redis),
+	PG: require('./database/postgres.js'),
+	Cache: require('./database/redis.js').create(config.redis),
 	Utils: require('./misc'),
 	Logger,
 	/** Twitch-IDs der gerade live gemeldeten Channels */

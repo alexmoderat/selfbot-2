@@ -29,13 +29,13 @@ const requestToken = async (params) => {
 
 let appTokenPromise = null;
 const getAppToken = async () => {
-	const cached = await bot.Redis.getJSON(APP_TOKEN_KEY);
+	const cached = await bot.Cache.getJSON(APP_TOKEN_KEY);
 	if (cached) {
 		return cached;
 	}
 	appTokenPromise ??= (async () => {
 		const body = await requestToken({ grant_type: 'client_credentials' });
-		await bot.Redis.setJSON(APP_TOKEN_KEY, body.access_token, Math.max(60, body.expires_in - 300) * 1000);
+		await bot.Cache.setJSON(APP_TOKEN_KEY, body.access_token, Math.max(60, body.expires_in - 300) * 1000);
 		return body.access_token;
 	})().finally(() => {
 		appTokenPromise = null;
@@ -58,20 +58,20 @@ const getUserToken = async () => {
 		return process.env.TWITCH_USER_TOKEN;
 	}
 
-	const cached = await bot.Redis.getJSON(USER_TOKEN_KEY);
+	const cached = await bot.Cache.getJSON(USER_TOKEN_KEY);
 	if (cached) {
 		return cached;
 	}
 	userTokenPromise ??= (async () => {
 		const envToken = requireEnv('TWITCH_REFRESH_TOKEN');
-		const stored = await bot.Redis.getJSON(REFRESH_TOKEN_KEY);
+		const stored = await bot.Cache.getJSON(REFRESH_TOKEN_KEY);
 		const refreshToken = resolveRefreshToken(envToken, stored);
 
 		const body = await requestToken({ grant_type: 'refresh_token', refresh_token: refreshToken });
 		if (body.refresh_token && body.refresh_token !== refreshToken) {
-			await bot.Redis.setJSON(REFRESH_TOKEN_KEY, { source: envToken, current: body.refresh_token });
+			await bot.Cache.setJSON(REFRESH_TOKEN_KEY, { source: envToken, current: body.refresh_token });
 		}
-		await bot.Redis.setJSON(USER_TOKEN_KEY, body.access_token, Math.max(60, body.expires_in - 300) * 1000);
+		await bot.Cache.setJSON(USER_TOKEN_KEY, body.access_token, Math.max(60, body.expires_in - 300) * 1000);
 		return body.access_token;
 	})().finally(() => {
 		userTokenPromise = null;
@@ -81,12 +81,12 @@ const getUserToken = async () => {
 
 /** Neuer Refresh-Token des Bot-Kontos (Web-Login /bot-auth), alter Access-Token wird verworfen */
 const storeBotRefreshToken = async (refreshToken) => {
-	await bot.Redis.setJSON(REFRESH_TOKEN_KEY, { source: requireEnv('TWITCH_REFRESH_TOKEN'), current: refreshToken });
-	await bot.Redis.setJSON(USER_TOKEN_KEY, null);
+	await bot.Cache.setJSON(REFRESH_TOKEN_KEY, { source: requireEnv('TWITCH_REFRESH_TOKEN'), current: refreshToken });
+	await bot.Cache.setJSON(USER_TOKEN_KEY, null);
 };
 
-const invalidateUserToken = () => bot.Redis.setJSON(USER_TOKEN_KEY, null);
-const invalidateAppToken = () => bot.Redis.setJSON(APP_TOKEN_KEY, null);
+const invalidateUserToken = () => bot.Cache.setJSON(USER_TOKEN_KEY, null);
+const invalidateAppToken = () => bot.Cache.setJSON(APP_TOKEN_KEY, null);
 
 /**
  * Helix-Aufruf; mit app: true per App-Token, sonst per User-Token des Bots. Bei 401 einmal neuer Token.

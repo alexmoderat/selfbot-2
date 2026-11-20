@@ -56,8 +56,8 @@ const targetOf = (relative) => {
 
 const API_RENAMES = [
 	[/\bcore\.Utils\./g, 'bot.Utils.'],
-	[/\bcore\.Cache\.getByPrefix\(/g, 'bot.Redis.getJSON('],
-	[/\bcore\.Cache\.setByPrefix\(/g, 'bot.Redis.setJSON( /* TODO(port): expiry-Objekt -> ms */ '],
+	[/\bcore\.Cache\.getByPrefix\(/g, 'bot.Cache.getJSON('],
+	[/\bcore\.Cache\.setByPrefix\(/g, 'bot.Cache.setJSON( /* TODO(port): expiry-Objekt -> ms */ '],
 	[/\bsb\.Channel\.getJoinableForPlatform\([^)]*\)/g, 'bot.Channels.getJoinable()'],
 	// Plattform-Argument (immer Twitch) entfaellt; zuerst die Form mit sb.Platform.get(...), dann der Rest
 	[
@@ -123,8 +123,8 @@ const API_RENAMES = [
 		},
 	],
 	// Redis mit Ablaufzeit: setByPrefix(key, value, { expiry: x }) -> setJSON(key, value, x)
-	[/bot\.Redis\.setJSON\( \/\* TODO\(port\): expiry-Objekt -> ms \*\/ ([^;]*?), \{ expiry: ([^{}]+?) \}\)/g, 'bot.Redis.setJSON($1, $2)'],
-	[/bot\.Redis\.setJSON\( \/\* TODO\(port\): expiry-Objekt -> ms \*\/ ([^;{}]*?)\)/g, 'bot.Redis.setJSON($1)'],
+	[/bot\.Redis\.setJSON\( \/\* TODO\(port\): expiry-Objekt -> ms \*\/ ([^;]*?), \{ expiry: ([^{}]+?) \}\)/g, 'bot.Cache.setJSON($1, $2)'],
+	[/bot\.Redis\.setJSON\( \/\* TODO\(port\): expiry-Objekt -> ms \*\/ ([^;{}]*?)\)/g, 'bot.Cache.setJSON($1)'],
 	// Plattform-Objekt -> bot.Twitch (gleiche Methodennamen)
 	[/TODO_PORT_PLATFORM/g, 'bot.Twitch'],
 	[/\bsb\.Platform\.list\b/g, '[bot.Twitch]'],
