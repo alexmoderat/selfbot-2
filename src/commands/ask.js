@@ -1,4 +1,5 @@
 const { got } = require('../token/got.js');
+const conversations = require('../misc/ask-conversations.js');
 
 /**
  * Frage an eine KI, wie Supibots $gpt (ninou2, 19.11.2026: "was thinking about an !ask command just like the GPT one from
@@ -61,14 +62,21 @@ const splitAnswer = (text, size = PART_SIZE) => {
 	return parts;
 };
 
-const askGemini = async (question, apiKey, model = DEFAULT_MODEL) => {
+/** history = frueherer Verlauf [{ question, answer }], damit die KI das Gespraech fortsetzen kann */
+const askGemini = async (question, apiKey, model = DEFAULT_MODEL, history = []) => {
 	const response = await got('Global')({
 		url: `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
 		method: 'POST',
 		headers: { 'x-goog-api-key': apiKey },
 		json: {
 			systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-			contents: [{ role: 'user', parts: [{ text: question }] }],
+			contents: [
+				...history.flatMap((turn) => [
+					{ role: 'user', parts: [{ text: turn.question }] },
+					{ role: 'model', parts: [{ text: turn.answer }] },
+				]),
+				{ role: 'user', parts: [{ text: question }] },
+			],
 			generationConfig: { maxOutputTokens: 512 },
 		},
 		timeout: { request: 30_000 },
@@ -92,40 +100,49 @@ const askGemini = async (question, apiKey, model = DEFAULT_MODEL) => {
 	return { answer: cleanAnswer(answer) };
 };
 
+/**
+ * Gemeinsamer Ablauf von !ask und !askc: continueChat = an das laufende Gespraech des Users anhaengen (nur wenn die letzte
+ * Frage hoechstens 5 Minuten her ist), sonst neues Gespraech.
+ */
+const answerQuestion = async (msg, { continueChat }) => {
+	const display = msg.displayName;
+	const question = msg.args.join(' ').trim();
+	if (!question) {
+		return { text: `@${display}, Usage: ${msg.invocation} <question>` };
+	}
+	if (question.length > MAX_QUESTION) {
+		return { text: `@${display}, your question is too long (max ${MAX_QUESTION} characters).` };
+	}
+
+	const apiKey = process.env.GEMINI_API_KEY;
+	if (!apiKey) {
+		return { text: `@${display}, the AI isn't set up yet.` };
+	}
+
+	const key = String(msg.sender?.id ?? msg.displayName);
+	const history = continueChat ? conversations.active(key) : [];
+	try {
+		const result = await askGemini(question, apiKey, process.env.GEMINI_MODEL || DEFAULT_MODEL, history);
+		if (!result.answer) {
+			return { text: `@${display}, ${result.error}` };
+		}
+		conversations.remember(key, question, result.answer, { keep: history.length > 0 });
+		const [first, ...followUps] = splitAnswer(result.answer);
+		return { text: `@${display}, ${first}`, followUps };
+	} catch (e) {
+		console.warn(`[ask] ${e instanceof Error ? e.message : e}`);
+		return { text: `@${display}, the AI didn't answer, try again later.` };
+	}
+};
+
 module.exports = {
 	name: 'ask',
 	aliases: [],
 	cooldown: 10_000,
-	description: 'Asks an AI (Google Gemini) a question and posts a short answer.',
+	description: 'Asks an AI (Google Gemini) a question and posts a short answer. Follow up within 5 minutes with askc.',
 	usage: 'ask <question>',
 	flags: ['cooldown-notice', 'no-prefix', 'external-input'],
-	execute: async (client, msg) => {
-		const display = msg.displayName;
-		const question = msg.args.join(' ').trim();
-		if (!question) {
-			return { text: `@${display}, Usage: ${msg.invocation} <question>` };
-		}
-		if (question.length > MAX_QUESTION) {
-			return { text: `@${display}, your question is too long (max ${MAX_QUESTION} characters).` };
-		}
-
-		const apiKey = process.env.GEMINI_API_KEY;
-		if (!apiKey) {
-			return { text: `@${display}, the AI isn't set up yet.` };
-		}
-
-		try {
-			const result = await askGemini(question, apiKey, process.env.GEMINI_MODEL || DEFAULT_MODEL);
-			if (!result.answer) {
-				return { text: `@${display}, ${result.error}` };
-			}
-			const [first, ...followUps] = splitAnswer(result.answer);
-			return { text: `@${display}, ${first}`, followUps };
-		} catch (e) {
-			console.warn(`[ask] ${e instanceof Error ? e.message : e}`);
-			return { text: `@${display}, the AI didn't answer, try again later.` };
-		}
-	},
+	execute: async (client, msg) => await answerQuestion(msg, { continueChat: false }),
 };
 
-Object.assign(module.exports, { extractAnswer, cleanAnswer, splitAnswer, askGemini, SYSTEM_PROMPT });
+Object.assign(module.exports, { answerQuestion, extractAnswer, cleanAnswer, splitAnswer, askGemini, SYSTEM_PROMPT });
