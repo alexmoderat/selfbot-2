@@ -26,6 +26,18 @@ const validate = (config) => {
 	return config;
 };
 
+/** Schalter fuer Donts eigene Teile (docs/dont-konzept.md); alles aus, bis config.json "dont" etwas freigibt */
+const DONT_DEFAULTS = { api: false, pubsub: false, kattahCookie: false, bannedChannels: false, stvSocket: false };
+
+const withDontDefaults = (value) => ({
+	...value,
+	dont: {
+		...DONT_DEFAULTS,
+		...value.dont,
+		commands: { disableAll: true, whitelist: [], blacklist: [], ...value.dont?.commands },
+	},
+});
+
 let config = null;
 exports.getConfig = () => {
 	if (config) {
@@ -34,7 +46,7 @@ exports.getConfig = () => {
 
 	const local = path.join(ROOT, 'config.json');
 	const file = existsSync(local) ? local : path.join(ROOT, 'example.config.json');
-	config = validate(JSON.parse(readFileSync(file, 'utf8')));
+	config = withDontDefaults(validate(JSON.parse(readFileSync(file, 'utf8'))));
 	return config;
 };
 
@@ -50,5 +62,5 @@ exports.filterByConfig = (items, getName, list) => {
 
 /** Nur fuer Tests */
 exports.setConfig = (value) => {
-	config = value;
+	config = value && withDontDefaults(value);
 };

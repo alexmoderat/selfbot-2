@@ -6,3 +6,14 @@ coverage
 yarn.lock
 native/*/target
 native/*/build
+
+# Donts Dateien bleiben wortwoertlich (Formatierung von Dont), siehe docs/dont-abweichungen.md
+/src/main.js
+/src/api/
+/src/clients/
+/src/commands/
+/src/database/
+/src/misc/
+/src/token/
+/src/util/
+!/src/database/db.js

@@ -1,23 +1,25 @@
-// selfbot-next - alexmoderat's Twitch-Bot, aufgebaut wie DontAddThisBot:
-// IRC ueber dank-twitch-irc, Postgres, globales "bot"-Objekt, src/commands/*.js
+// selfbot-next - alexmoderat's Twitch-Bot auf der Grundlage von DontAddThisBot.
+// Donts src/main.js legt "bot" an (Redis, DB, Utils, SQL) und ruft start() hier auf; alles Eigene haengt sich daran
+// (siehe docs/dont-konzept.md). Eigene Namen am Dont-Objekt: Config, PG (unser Pool), Cache (unser Redis),
+// DB.<Model> und Utils.<Helfer> werden ergaenzt, nichts von Donts Belegung wird ueberschrieben.
 
 const { getConfig } = require('./config.js');
 const { Logger, LogLevel } = require('./misc/logger.js');
 
 const config = getConfig();
 
-global.bot = {
+Object.assign(bot, {
 	Config: config,
-	DB: require('./database/db.js'),
 	PG: require('./database/postgres.js'),
 	Cache: require('./database/redis.js').create(config.redis),
-	Utils: require('./misc'),
 	Logger,
 	/** Twitch-IDs der gerade live gemeldeten Channels */
 	Live: new Set(),
-};
+});
+Object.assign(bot.DB, require('./database/db.js'));
+Object.assign(bot.Utils, require('./misc'));
 
-const { client, connect } = require('./util/twitch/connections.js');
+const { client } = require('./util/twitch/connections.js');
 const { Twitch, platform } = require('./clients/twitch.js');
 const { startCmds, commands } = require('./clients/modules/commands.js');
 const ChatModules = require('./clients/modules/chat-modules.js');
@@ -37,6 +39,7 @@ bot.CustomCommands = require('./util/custom-commands.js');
 bot.ChatModules = ChatModules;
 bot.Commands = commands;
 
+/** Eigene Dienste starten; wird von Donts main.js aufgerufen und liefert das Ready-Promise (bot.Ready) */
 const start = async () => {
 	console.time('[main] Start');
 	await bot.DB.connect(config.postgres);
@@ -78,8 +81,6 @@ const start = async () => {
 		process.exit(err ? 1 : 0);
 	});
 
-	await connect();
-
 	// Live-Status: beim Start und alle 2 Minuten per Helix (bis PubSub stream-up/-down portiert ist)
 	const refreshLive = () => platform.loadLiveChannels().catch((e) => Logger.warn('[twitch] Live-Status nicht ladbar', e.message));
 	await refreshLive();
@@ -105,7 +106,10 @@ process.once('SIGINT', () => {
 	setTimeout(() => process.exit(0), 3000).unref();
 });
 
-start().catch((e) => {
-	Logger.error('[main] Start fehlgeschlagen', e);
-	process.exit(1);
-});
+module.exports = {
+	start: () =>
+		start().catch((e) => {
+			Logger.error('[main] Start fehlgeschlagen', e);
+			process.exit(1);
+		}),
+};

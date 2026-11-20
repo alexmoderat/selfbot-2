@@ -19,4 +19,18 @@ module.exports = [
 			'no-misleading-character-class': 'off',
 		},
 	},
+	{
+		// Donts Dateien bleiben wortwoertlich; seine eigene Konfiguration (.eslintrc.yml) hatte no-unused-vars aus,
+		// die uebrigen Treffer sind Donts Schreibweise und werden hier nicht verfolgt
+		files: ['src/main.js', 'src/api/**', 'src/clients/**', 'src/commands/**', 'src/database/redis.js', 'src/database/postgres.js', 'src/misc/**', 'src/token/**', 'src/util/**'],
+		rules: {
+			'no-unused-vars': 'off',
+			'no-constant-binary-expression': 'off',
+			'no-useless-escape': 'off',
+			'no-empty': 'off',
+			'no-case-declarations': 'off',
+			'no-prototype-builtins': 'off',
+			'no-async-promise-executor': 'off',
+		},
+	},
 ];
