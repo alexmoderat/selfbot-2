@@ -495,7 +495,9 @@
 
     /* Raid Notify (ninou2, 14.11.2026): Entfernen, Schalter, Zeit, Nachricht, Anzahl */
     .raid-table .data-table-head,
-    .raid-table .data-row { grid-template-columns: 62px 206px 42px 1fr 46px; column-gap: 8px; }
+    .raid-table .data-row { grid-template-columns: 62px 206px 78px 1fr 46px; column-gap: 8px; }
+    /* ninou2, 20.11.2026: "arrows are back but the numbers space soo [small I can't] see them", "just reduce the MESSAGE column
+       just a little bit" - Time-Spalte 42 -> 78 px (Platz fuer "+30" plus Pfeile), Message (1fr) gibt den Platz ab */
     .raid-table .cell-actions { justify-content: flex-start; }
     /* Sortier-Pfeil links vom Wort (verschiebt den Text nicht); Zahl der Spalte Times mittig */
     .raid-table .raid-sort { position: relative; }
