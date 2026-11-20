@@ -55,7 +55,7 @@ const start = async () => {
 
 	// Web (Dashboard, OAuth, Status-/Statistikseiten, /v1) und interne API - Ports aus config.json, nur 127.0.0.1
 	if (config.web?.port) {
-		require('./api/index.js').startWebServer(config.web.port);
+		require('./api/server.js').startWebServer(config.web.port);
 	}
 	if (config.api?.port) {
 		bot.API = require('./api/internal.js')(config.api.port);

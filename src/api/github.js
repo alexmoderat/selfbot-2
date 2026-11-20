@@ -1,6 +1,9 @@
 const crypto = require('node:crypto');
+
 const express = require('express');
+
 const { formatGithubEvent } = require('../misc/github-events.js');
+
 const { sendAlert } = require('../util/moderation.js');
 
 /**
@@ -8,6 +11,7 @@ const { sendAlert } = require('../util/moderation.js');
  * (X-Hub-Signature-256 ueber den Rohtext), dedupliziert ueber X-GitHub-Delivery und schickt den Text per Discord (sendAlert). Ohne Secret antwortet die Route mit 503.
  */
 const SEEN_MAX = 200;
+
 const seen = new Set();
 
 const validSignature = (secret, rawBody, header) => {
@@ -33,26 +37,13 @@ const isDuplicate = (id) => {
 	return false;
 };
 
-const createGithubRouter = () => {
-	const router = express.Router();
-	router.post('/github/webhook', async (req, res) => {
-		const secret = process.env.GITHUB_WEBHOOK_SECRET;
-		if (!secret) {
-			return res.status(503).json({ error: 'webhook not configured' });
-		} else if (!validSignature(secret, req.rawBody, req.get('x-hub-signature-256'))) {
-			return res.status(401).json({ error: 'invalid signature' });
-		}
-
-		res.status(204).end();
-		if (isDuplicate(req.get('x-github-delivery'))) {
-			return;
-		}
-		const text = formatGithubEvent(req.get('x-github-event'), req.body);
-		if (text) {
-			await sendAlert(text).catch((e) => console.warn(`[github] senden: ${e?.message}`));
-		}
-	});
-	return router;
+module.exports = {
+	crypto,
+	express,
+	formatGithubEvent,
+	sendAlert,
+	SEEN_MAX,
+	seen,
+	validSignature,
+	isDuplicate,
 };
-
-module.exports = { createGithubRouter, validSignature, isDuplicate };

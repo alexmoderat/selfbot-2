@@ -1,32 +1,35 @@
+const { readdirSync } = require('node:fs');
 const path = require('node:path');
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 
-const { createAuthRouter } = require('./routes-auth.js');
-const { createDashboardRouter } = require('./routes-dashboard.js');
-const { createPublicRouter } = require('./routes-public.js');
-const { createV1Router } = require('./routes-v1.js');
-const { createGithubRouter } = require('./routes-github.js');
+const { Logger, LogLevel } = require('../misc/logger.js');
+const { PUBLIC_DIR } = require('./context.js');
 const { createOpenApiSpec } = require('./openapi.js');
 const { cleanExpiredSessions } = require('./sessions.js');
 const { baseUrl } = require('../misc/user-tokens.js');
 
 /**
- * Web-Server (Block 9), Nachfolger von sb-v2s auth-server.ts: OAuth, Dashboard, Status-/Statistikseiten, /v1-API.
- * Laeuft hinter nginx unter WEB_BASE_URL (Testphase: https://auth.alexmoderat.eu/selfbot, Prefix wird abgeschnitten);
- * die Seiten in public/ verwenden deshalb relative Pfade.
+ * Web-Server wie DontAddThisBots api/server.js: jede Datei in routes/<METHODE>/ exportiert einen express.Router und wird
+ * automatisch geladen (OAuth, Dashboard, Status-/Statistikseiten, /v1-API). Die Reihenfolge (GET, POST, PUT, PATCH,
+ * DELETE, dann alphabetisch) ist fest, damit sich Routen mit gleichem Pfad immer gleich aufloesen.
  */
-const PUBLIC_DIR = path.join(__dirname, 'public');
+const ROUTES_DIR = path.join(__dirname, 'routes');
+const METHOD_ORDER = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+
+const loadRoutes = (app) => {
+	const folders = readdirSync(ROUTES_DIR).sort((a, b) => METHOD_ORDER.indexOf(a) - METHOD_ORDER.indexOf(b));
+	for (const folder of folders) {
+		for (const file of readdirSync(path.join(ROUTES_DIR, folder))
+			.filter((i) => i.endsWith('.js'))
+			.sort()) {
+			app.use(require(path.join(ROUTES_DIR, folder, file)));
+			Logger.log(LogLevel.DEBUG, `[${folder}] Endpoint ${file} is running!`);
+		}
+	}
+};
 
 const startWebServer = (port) => {
-	const basePath = (() => {
-		try {
-			return new URL(baseUrl()).pathname.replace(/\/+$/, '');
-		} catch {
-			return '';
-		}
-	})();
-
 	const app = express();
 	app.set('trust proxy', 'loopback');
 	// Rohtext nur fuer den GitHub-Webhook (Signaturpruefung)
@@ -47,12 +50,7 @@ const startWebServer = (port) => {
 		}),
 	);
 	app.use('/docs', swaggerUi.serve, swaggerUi.setup(createOpenApiSpec()));
-
-	app.use(createGithubRouter());
-	app.use(createAuthRouter(PUBLIC_DIR, basePath));
-	app.use(createPublicRouter());
-	app.use(createDashboardRouter());
-	app.use(createV1Router());
+	loadRoutes(app);
 
 	const server = app.listen(port, '127.0.0.1', () => {
 		console.log(`[web] lauscht auf 127.0.0.1:${port} (${baseUrl() || 'ohne WEB_BASE_URL'})`);
@@ -70,4 +68,4 @@ const startWebServer = (port) => {
 	return server;
 };
 
-module.exports = { startWebServer };
+module.exports = { startWebServer, loadRoutes };

@@ -7,7 +7,7 @@ const { sendAlert } = require('../../../util/moderation.js');
  * Meldet neue Sterne, Forks, Issues, PRs und Releases beobachteter GitHub-Repos per Discord (alexmoderat, 12.11.2026:
  * EEVA-inc/Moltorino, kein Admin-Zugriff fuer einen Webhook -> Polling der oeffentlichen Events-API, kein Token noetig,
  * ETag-Abfragen zaehlen nicht gegen das Limit von 60/h). Erster Lauf nach dem Start setzt nur den Stand.
- * GITHUB_WATCH_REPOS: Komma-Liste "owner/repo" (leer = aus, Standard EEVA-inc/Moltorino), optional GITHUB_TOKEN. Fuer Repos mit Admin-Zugriff gibt es den Webhook (api/routes-github.js).
+ * GITHUB_WATCH_REPOS: Komma-Liste "owner/repo" (leer = aus, Standard EEVA-inc/Moltorino), optional GITHUB_TOKEN. Fuer Repos mit Admin-Zugriff gibt es den Webhook (api/github.js).
  */
 const MAX_MESSAGES_PER_RUN = 5;
 const EVENT_NAMES = {
