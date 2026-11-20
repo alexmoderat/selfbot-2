@@ -207,6 +207,54 @@ const runRaid = async (subscribers, duration) => {
 	return batches;
 };
 
+// Ergebnis weitergeben (ninou2, 20.11.2026: "when im live, the RAid Bot cant post the results, can AlexBot copy pasta and post
+// the RAid BoT result message when im live"): DeepDankDungeonBot schweigt in Channels, die gerade live sind. Nach dem ersten
+// Ergebnis kurz warten, dann in jeden Channel mit Raid Notify, der live ist und in dem DDDB das Ergebnis nicht selbst gepostet hat.
+const RESULT_PATTERN = /users (?:beat|failed to beat) the raid level/i;
+const RESULT_WAIT_MS = 15_000;
+let pendingResult = null;
+
+// DDDB haengt unsichtbare Zeichen (U+E0000 u. a.) an, die nicht mitkopiert werden sollen
+const cleanResultText = (text) => text.replace(/[\u{E0000}-\u{E007F}\u034F\u200B-\u200D\u2060\uFEFF]/gu, '').trim();
+
+const relayResult = async (text, seenChannelIds) => {
+	const subscribers = await getSubscribers();
+	let relayed = 0;
+	for (const channelId of subscribers.keys()) {
+		const channel = bot.Channels.get(channelId);
+		if (!channel || channel.mode === 'Inactive' || seenChannelIds.has(channel.id)) {
+			continue;
+		}
+		let live = null;
+		try {
+			live = bot.Channels.isLive(channel);
+		} catch {
+			live = null;
+		}
+		if (live !== true || !(await getConfig(channel)).enabled) {
+			continue;
+		}
+		await bot.Channels.send(channel, text).catch(() => {});
+		relayed++;
+	}
+	return relayed;
+};
+
+const onResult = (channel, message) => {
+	if (pendingResult) {
+		pendingResult.seen.add(channel.id);
+		return;
+	}
+	const current = { text: cleanResultText(message), seen: new Set([channel.id]) };
+	pendingResult = current;
+	setTimeout(() => {
+		pendingResult = null;
+		void relayResult(current.text, current.seen)
+			.then((n) => n > 0 && console.log(`[raid-notifier] Ergebnis in ${n} Live-Channel(s) weitergegeben`))
+			.catch((e) => console.warn('[raid-notifier] Ergebnis', e?.message ?? e));
+	}, RESULT_WAIT_MS);
+};
+
 const lastTest = new Map();
 const TEST_COOLDOWN_MS = 30_000;
 const TEST_GAP_MS = 1_200;
@@ -268,7 +316,14 @@ module.exports = defineChatModule({
 	handlers: {
 		message: async (context) => {
 			const { user, message, channel } = context;
-			if (user.twitchId !== ANNOUNCER_ID || !RAID_PATTERN.test(message)) {
+			if (user.twitchId !== ANNOUNCER_ID) {
+				return;
+			}
+			if (RESULT_PATTERN.test(message)) {
+				onResult(channel, message);
+				return;
+			}
+			if (!RAID_PATTERN.test(message)) {
 				return;
 			}
 			if (Date.now() - lastRaid < DEDUP_TTL_MS) {
@@ -289,6 +344,9 @@ module.exports = defineChatModule({
 });
 
 Object.assign(module.exports, {
+	relayResult,
+	cleanResultText,
+	RESULT_PATTERN,
 	sendTest,
 	testSchedule,
 	bumpUses,
