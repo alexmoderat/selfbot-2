@@ -1,229 +1,429 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Known Bots</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; background: #060606; color: #ffffff; min-height: 100vh; }
-    header { background: #111111; border-bottom: 1px solid #2a2a2a; padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-    header h1 { font-size: 1.38rem; color: #1f7fb3; }
-    .stats { display: flex; gap: 12px; margin-left: auto; flex-wrap: wrap; }
-    .stat { background: #161616; border: 1px solid #2a2a2a; border-radius: 6px; padding: 6px 14px; font-size: 0.98rem; }
-    .stat span { color: #1f7fb3; font-weight: bold; }
-    main { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
-    .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-    input[type=text] { background: #161616; border: 1px solid #3a3a3a; color: #ffffff; border-radius: 6px; padding: 8px 14px; font-size: 1.03rem; flex: 1; min-width: 200px; outline: none; }
-    input[type=text]:focus { border-color: #1f7fb3; }
-    button { background: #1f7fb3; color: white; border: none; border-radius: 6px; padding: 8px 18px; font-size: 1.03rem; cursor: pointer; white-space: nowrap; }
-    button:hover { background: #196a96; }
-    button.secondary { background: #161616; border: 1px solid #3a3a3a; }
-    button.secondary:hover { background: #2a2a2a; }
-    .upload-area { background: #161616; border: 1px solid #2a2a2a; border-radius: 8px; padding: 20px; margin-bottom: 20px; display: none; }
-    .upload-area h3 { margin-bottom: 12px; font-size: 1.09rem; color: #adafae; }
-    .upload-area textarea { width: 100%; height: 120px; background: #060606; border: 1px solid #3a3a3a; color: #ffffff; border-radius: 6px; padding: 10px; font-size: 0.98rem; font-family: monospace; resize: vertical; outline: none; }
-    .upload-area textarea:focus { border-color: #1f7fb3; }
-    .upload-row { display: flex; gap: 10px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
-    .upload-row input[type=text] { max-width: 260px; }
-    #upload-status { font-size: 0.98rem; color: #adafae; }
-    table { width: 100%; border-collapse: collapse; font-size: 1.01rem; }
-    th { background: #111111; color: #adafae; font-weight: 600; text-align: left; padding: 10px 14px; border-bottom: 1px solid #2a2a2a; position: sticky; top: 0; }
-    td { padding: 9px 14px; border-bottom: 1px solid #161616; }
-    tr:hover td { background: #1a1a1a; }
-    .source-badge { display: inline-block; background: #161616; border: 1px solid #3a3a3a; border-radius: 4px; padding: 2px 8px; font-size: 0.86rem; color: #adafae; }
-    .source-badge.viewbot { border-color: #e91916; color: #e91916; }
-    .source-badge.followbot { border-color: #f0ad4e; color: #f0ad4e; }
-    .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 20px; align-items: center; flex-wrap: wrap; }
-    .pagination button { padding: 6px 14px; font-size: 0.98rem; }
-    .pagination .page-info { color: #adafae; font-size: 0.98rem; }
-    .no-results { text-align: center; color: #adafae; padding: 40px; }
-    .loading { text-align: center; color: #adafae; padding: 40px; }
-    #search-result { margin-bottom: 16px; padding: 12px 16px; border-radius: 6px; display: none; font-size: 1.03rem; }
-    #search-result.found { background: #1a2a1a; border: 1px solid #2ea043; color: #3fb950; }
-    #search-result.not-found { background: #2a1a1a; border: 1px solid #6e2b2b; color: #f85149; }
-  </style>
-</head>
-<body>
-<header>
-  <h1>Known Bots</h1>
-  <div class="stats">
-    <div class="stat">Gesamt: <span id="stat-total">…</span></div>
-    <div class="stat">Viewbots: <span id="stat-view">…</span></div>
-    <div class="stat">Followbots: <span id="stat-follow">…</span></div>
-  </div>
-</header>
-<main>
-  <div class="controls">
-    <input type="text" id="search" placeholder="Login oder User-ID suchen…">
-    <button onclick="doSearch()">Suchen</button>
-    <button class="secondary" onclick="toggleUpload()">+ Hochladen</button>
-  </div>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Known Bots</title>
+		<style>
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+			body {
+				font-family: Arial, sans-serif;
+				background: #060606;
+				color: #ffffff;
+				min-height: 100vh;
+			}
+			header {
+				background: #111111;
+				border-bottom: 1px solid #2a2a2a;
+				padding: 16px 24px;
+				display: flex;
+				align-items: center;
+				gap: 16px;
+				flex-wrap: wrap;
+			}
+			header h1 {
+				font-size: 1.38rem;
+				color: #1f7fb3;
+			}
+			.stats {
+				display: flex;
+				gap: 12px;
+				margin-left: auto;
+				flex-wrap: wrap;
+			}
+			.stat {
+				background: #161616;
+				border: 1px solid #2a2a2a;
+				border-radius: 6px;
+				padding: 6px 14px;
+				font-size: 0.98rem;
+			}
+			.stat span {
+				color: #1f7fb3;
+				font-weight: bold;
+			}
+			main {
+				max-width: 1100px;
+				margin: 0 auto;
+				padding: 24px 16px;
+			}
+			.controls {
+				display: flex;
+				gap: 10px;
+				margin-bottom: 20px;
+				flex-wrap: wrap;
+			}
+			input[type='text'] {
+				background: #161616;
+				border: 1px solid #3a3a3a;
+				color: #ffffff;
+				border-radius: 6px;
+				padding: 8px 14px;
+				font-size: 1.03rem;
+				flex: 1;
+				min-width: 200px;
+				outline: none;
+			}
+			input[type='text']:focus {
+				border-color: #1f7fb3;
+			}
+			button {
+				background: #1f7fb3;
+				color: white;
+				border: none;
+				border-radius: 6px;
+				padding: 8px 18px;
+				font-size: 1.03rem;
+				cursor: pointer;
+				white-space: nowrap;
+			}
+			button:hover {
+				background: #196a96;
+			}
+			button.secondary {
+				background: #161616;
+				border: 1px solid #3a3a3a;
+			}
+			button.secondary:hover {
+				background: #2a2a2a;
+			}
+			.upload-area {
+				background: #161616;
+				border: 1px solid #2a2a2a;
+				border-radius: 8px;
+				padding: 20px;
+				margin-bottom: 20px;
+				display: none;
+			}
+			.upload-area h3 {
+				margin-bottom: 12px;
+				font-size: 1.09rem;
+				color: #adafae;
+			}
+			.upload-area textarea {
+				width: 100%;
+				height: 120px;
+				background: #060606;
+				border: 1px solid #3a3a3a;
+				color: #ffffff;
+				border-radius: 6px;
+				padding: 10px;
+				font-size: 0.98rem;
+				font-family: monospace;
+				resize: vertical;
+				outline: none;
+			}
+			.upload-area textarea:focus {
+				border-color: #1f7fb3;
+			}
+			.upload-row {
+				display: flex;
+				gap: 10px;
+				margin-top: 10px;
+				align-items: center;
+				flex-wrap: wrap;
+			}
+			.upload-row input[type='text'] {
+				max-width: 260px;
+			}
+			#upload-status {
+				font-size: 0.98rem;
+				color: #adafae;
+			}
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 1.01rem;
+			}
+			th {
+				background: #111111;
+				color: #adafae;
+				font-weight: 600;
+				text-align: left;
+				padding: 10px 14px;
+				border-bottom: 1px solid #2a2a2a;
+				position: sticky;
+				top: 0;
+			}
+			td {
+				padding: 9px 14px;
+				border-bottom: 1px solid #161616;
+			}
+			tr:hover td {
+				background: #1a1a1a;
+			}
+			.source-badge {
+				display: inline-block;
+				background: #161616;
+				border: 1px solid #3a3a3a;
+				border-radius: 4px;
+				padding: 2px 8px;
+				font-size: 0.86rem;
+				color: #adafae;
+			}
+			.source-badge.viewbot {
+				border-color: #e91916;
+				color: #e91916;
+			}
+			.source-badge.followbot {
+				border-color: #f0ad4e;
+				color: #f0ad4e;
+			}
+			.pagination {
+				display: flex;
+				gap: 8px;
+				justify-content: center;
+				margin-top: 20px;
+				align-items: center;
+				flex-wrap: wrap;
+			}
+			.pagination button {
+				padding: 6px 14px;
+				font-size: 0.98rem;
+			}
+			.pagination .page-info {
+				color: #adafae;
+				font-size: 0.98rem;
+			}
+			.no-results {
+				text-align: center;
+				color: #adafae;
+				padding: 40px;
+			}
+			.loading {
+				text-align: center;
+				color: #adafae;
+				padding: 40px;
+			}
+			#search-result {
+				margin-bottom: 16px;
+				padding: 12px 16px;
+				border-radius: 6px;
+				display: none;
+				font-size: 1.03rem;
+			}
+			#search-result.found {
+				background: #1a2a1a;
+				border: 1px solid #2ea043;
+				color: #3fb950;
+			}
+			#search-result.not-found {
+				background: #2a1a1a;
+				border: 1px solid #6e2b2b;
+				color: #f85149;
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<h1>Known Bots</h1>
+			<div class="stats">
+				<div class="stat">Gesamt: <span id="stat-total">…</span></div>
+				<div class="stat">Viewbots: <span id="stat-view">…</span></div>
+				<div class="stat">Followbots: <span id="stat-follow">…</span></div>
+			</div>
+		</header>
+		<main>
+			<div class="controls">
+				<input type="text" id="search" placeholder="Login oder User-ID suchen…" />
+				<button onclick="doSearch()">Suchen</button>
+				<button class="secondary" onclick="toggleUpload()">+ Hochladen</button>
+			</div>
 
-  <div id="search-result"></div>
+			<div id="search-result"></div>
 
-  <div class="upload-area" id="upload-area">
-    <h3>Bots hinzufügen — eine Login/ID pro Zeile, oder tab-separiert (id&nbsp;&nbsp;login&nbsp;&nbsp;source)</h3>
-    <textarea id="upload-text" placeholder="login1&#10;login2&#10;oder:&#10;123456789&#9;login1&#9;viewbot"></textarea>
-    <div class="upload-row">
-      <input type="text" id="api-token" placeholder="API-Token" type="password">
-      <input type="text" id="upload-source" placeholder="Source (z.B. viewbot)">
-      <button onclick="doUpload()">Hochladen</button>
-      <span id="upload-status"></span>
-    </div>
-  </div>
+			<div class="upload-area" id="upload-area">
+				<h3>Bots hinzufügen — eine Login/ID pro Zeile, oder tab-separiert (id&nbsp;&nbsp;login&nbsp;&nbsp;source)</h3>
+				<textarea id="upload-text" placeholder="login1&#10;login2&#10;oder:&#10;123456789&#9;login1&#9;viewbot"></textarea>
+				<div class="upload-row">
+					<input type="text" id="api-token" placeholder="API-Token" type="password" />
+					<input type="text" id="upload-source" placeholder="Source (z.B. viewbot)" />
+					<button onclick="doUpload()">Hochladen</button>
+					<span id="upload-status"></span>
+				</div>
+			</div>
 
-  <div id="table-wrap">
-    <div class="loading" id="loading">Lade…</div>
-    <table id="bot-table" style="display:none">
-      <thead><tr><th>Login</th><th>User-ID</th><th>Source</th><th>Hinzugefügt</th></tr></thead>
-      <tbody id="bot-body"></tbody>
-    </table>
-    <div class="no-results" id="no-results" style="display:none">Keine Einträge gefunden.</div>
-  </div>
+			<div id="table-wrap">
+				<div class="loading" id="loading">Lade…</div>
+				<table id="bot-table" style="display: none">
+					<thead>
+						<tr>
+							<th>Login</th>
+							<th>User-ID</th>
+							<th>Source</th>
+							<th>Hinzugefügt</th>
+						</tr>
+					</thead>
+					<tbody id="bot-body"></tbody>
+				</table>
+				<div class="no-results" id="no-results" style="display: none">Keine Einträge gefunden.</div>
+			</div>
 
-  <div class="pagination" id="pagination"></div>
-</main>
+			<div class="pagination" id="pagination"></div>
+		</main>
 
-<script>
-const LIMIT = 50;
-let currentOffset = 0;
-let totalBots = 0;
-let searchQuery = '';
+		<script>
+			const LIMIT = 50;
+			let currentOffset = 0;
+			let totalBots = 0;
+			let searchQuery = '';
 
-async function loadBots(offset = 0) {
-  document.getElementById('loading').style.display = 'block';
-  document.getElementById('bot-table').style.display = 'none';
-  document.getElementById('no-results').style.display = 'none';
+			async function loadBots(offset = 0) {
+				document.getElementById('loading').style.display = 'block';
+				document.getElementById('bot-table').style.display = 'none';
+				document.getElementById('no-results').style.display = 'none';
 
-  const url = `v1/public/bots?limit=${LIMIT}&offset=${offset}`;
-  const res = await fetch(url);
-  const data = await res.json();
+				const url = `v1/public/bots?limit=${LIMIT}&offset=${offset}`;
+				const res = await fetch(url);
+				const data = await res.json();
 
-  totalBots = data.total;
-  currentOffset = offset;
-  renderTable(data.bots);
-  renderPagination(data.total, offset);
-  updateStats(data.total);
-}
+				totalBots = data.total;
+				currentOffset = offset;
+				renderTable(data.bots);
+				renderPagination(data.total, offset);
+				updateStats(data.total);
+			}
 
-async function updateStats(total) {
-  document.getElementById('stat-total').textContent = total.toLocaleString('de-DE');
-  // fetch source counts
-  try {
-    const res = await fetch('v1/public/bots?limit=0');
-  } catch(_) {}
-}
+			async function updateStats(total) {
+				document.getElementById('stat-total').textContent = total.toLocaleString('de-DE');
+				// fetch source counts
+				try {
+					const res = await fetch('v1/public/bots?limit=0');
+				} catch (_) {}
+			}
 
-function renderTable(bots) {
-  document.getElementById('loading').style.display = 'none';
-  if (!bots || bots.length === 0) {
-    document.getElementById('no-results').style.display = 'block';
-    return;
-  }
-  const tbody = document.getElementById('bot-body');
-  tbody.innerHTML = bots.map(b => {
-    const src = b.source || '';
-    const badgeClass = src.includes('view') ? 'viewbot' : src.includes('follow') ? 'followbot' : '';
-    const date = b.added_at ? new Date(b.added_at).toLocaleDateString('de-DE') : '—';
-    return `<tr>
+			function renderTable(bots) {
+				document.getElementById('loading').style.display = 'none';
+				if (!bots || bots.length === 0) {
+					document.getElementById('no-results').style.display = 'block';
+					return;
+				}
+				const tbody = document.getElementById('bot-body');
+				tbody.innerHTML = bots
+					.map((b) => {
+						const src = b.source || '';
+						const badgeClass = src.includes('view') ? 'viewbot' : src.includes('follow') ? 'followbot' : '';
+						const date = b.added_at ? new Date(b.added_at).toLocaleDateString('de-DE') : '—';
+						return `<tr>
       <td>${esc(b.login)}</td>
       <td style="color:#adafae;font-size:0.94rem">${b.user_id || '—'}</td>
       <td>${src ? `<span class="source-badge ${badgeClass}">${esc(src)}</span>` : '—'}</td>
       <td style="color:#adafae;font-size:0.94rem">${date}</td>
     </tr>`;
-  }).join('');
-  document.getElementById('bot-table').style.display = 'table';
-}
+					})
+					.join('');
+				document.getElementById('bot-table').style.display = 'table';
+			}
 
-function renderPagination(total, offset) {
-  const totalPages = Math.ceil(total / LIMIT);
-  const currentPage = Math.floor(offset / LIMIT) + 1;
-  const el = document.getElementById('pagination');
-  if (totalPages <= 1) { el.innerHTML = ''; return; }
-  let html = '';
-  if (currentPage > 1) html += `<button onclick="loadBots(${(currentPage-2)*LIMIT})">‹ Zurück</button>`;
-  html += `<span class="page-info">Seite ${currentPage} / ${totalPages} (${total.toLocaleString('de-DE')} Einträge)</span>`;
-  if (currentPage < totalPages) html += `<button onclick="loadBots(${currentPage*LIMIT})">Weiter ›</button>`;
-  el.innerHTML = html;
-}
+			function renderPagination(total, offset) {
+				const totalPages = Math.ceil(total / LIMIT);
+				const currentPage = Math.floor(offset / LIMIT) + 1;
+				const el = document.getElementById('pagination');
+				if (totalPages <= 1) {
+					el.innerHTML = '';
+					return;
+				}
+				let html = '';
+				if (currentPage > 1) html += `<button onclick="loadBots(${(currentPage - 2) * LIMIT})">‹ Zurück</button>`;
+				html += `<span class="page-info">Seite ${currentPage} / ${totalPages} (${total.toLocaleString('de-DE')} Einträge)</span>`;
+				if (currentPage < totalPages) html += `<button onclick="loadBots(${currentPage * LIMIT})">Weiter ›</button>`;
+				el.innerHTML = html;
+			}
 
-async function doSearch() {
-  const q = document.getElementById('search').value.trim();
-  const el = document.getElementById('search-result');
-  if (!q) { el.style.display = 'none'; loadBots(0); return; }
+			async function doSearch() {
+				const q = document.getElementById('search').value.trim();
+				const el = document.getElementById('search-result');
+				if (!q) {
+					el.style.display = 'none';
+					loadBots(0);
+					return;
+				}
 
-  const res = await fetch(`v1/public/bots/${encodeURIComponent(q)}`);
-  const data = await res.json();
-  if (data.known_bot) {
-    const date = data.added_at ? new Date(data.added_at).toLocaleDateString('de-DE') : '—';
-    el.className = 'found';
-    el.innerHTML = `✓ <strong>${esc(data.login)}</strong> ist ein bekannter Bot — ID: ${data.user_id || '—'}, Source: ${data.source || '—'}, Hinzugefügt: ${date}`;
-  } else {
-    el.className = 'not-found';
-    el.innerHTML = `✗ <strong>${esc(q)}</strong> ist nicht in der Liste.`;
-  }
-  el.style.display = 'block';
-}
+				const res = await fetch(`v1/public/bots/${encodeURIComponent(q)}`);
+				const data = await res.json();
+				if (data.known_bot) {
+					const date = data.added_at ? new Date(data.added_at).toLocaleDateString('de-DE') : '—';
+					el.className = 'found';
+					el.innerHTML = `✓ <strong>${esc(data.login)}</strong> ist ein bekannter Bot — ID: ${data.user_id || '—'}, Source: ${data.source || '—'}, Hinzugefügt: ${date}`;
+				} else {
+					el.className = 'not-found';
+					el.innerHTML = `✗ <strong>${esc(q)}</strong> ist nicht in der Liste.`;
+				}
+				el.style.display = 'block';
+			}
 
-document.getElementById('search').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+			document.getElementById('search').addEventListener('keydown', (e) => {
+				if (e.key === 'Enter') doSearch();
+			});
 
-function toggleUpload() {
-  const el = document.getElementById('upload-area');
-  el.style.display = el.style.display === 'block' ? 'none' : 'block';
-}
+			function toggleUpload() {
+				const el = document.getElementById('upload-area');
+				el.style.display = el.style.display === 'block' ? 'none' : 'block';
+			}
 
-async function doUpload() {
-  const text = document.getElementById('upload-text').value.trim();
-  const token = document.getElementById('api-token').value.trim();
-  const source = document.getElementById('upload-source').value.trim();
-  const status = document.getElementById('upload-status');
-  if (!text || !token) { status.textContent = 'Text und API-Token erforderlich.'; return; }
+			async function doUpload() {
+				const text = document.getElementById('upload-text').value.trim();
+				const token = document.getElementById('api-token').value.trim();
+				const source = document.getElementById('upload-source').value.trim();
+				const status = document.getElementById('upload-status');
+				if (!text || !token) {
+					status.textContent = 'Text und API-Token erforderlich.';
+					return;
+				}
 
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  const bots = lines.map(line => {
-    const parts = line.split(/\t/);
-    if (parts.length >= 2) {
-      const maybeId = parts[0].match(/^\d+$/) ? parts[0] : null;
-      return { user_id: maybeId, login: parts[1] || parts[0], source: parts[2] || source || null };
-    }
-    return { login: line, source: source || null };
-  });
+				const lines = text
+					.split('\n')
+					.map((l) => l.trim())
+					.filter(Boolean);
+				const bots = lines.map((line) => {
+					const parts = line.split(/\t/);
+					if (parts.length >= 2) {
+						const maybeId = parts[0].match(/^\d+$/) ? parts[0] : null;
+						return { user_id: maybeId, login: parts[1] || parts[0], source: parts[2] || source || null };
+					}
+					return { login: line, source: source || null };
+				});
 
-  status.textContent = `Sende ${bots.length} Einträge…`;
-  try {
-    const res = await fetch('v1/bots', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify(bots)
-    });
-    const data = await res.json();
-    if (data.success) {
-      status.textContent = `✓ ${data.added} Bots hinzugefügt.`;
-      document.getElementById('upload-text').value = '';
-      loadBots(0);
-    } else {
-      status.textContent = `Fehler: ${data.error}`;
-    }
-  } catch(e) { status.textContent = `Fehler: ${e.message}`; }
-}
+				status.textContent = `Sende ${bots.length} Einträge…`;
+				try {
+					const res = await fetch('v1/bots', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+						body: JSON.stringify(bots),
+					});
+					const data = await res.json();
+					if (data.success) {
+						status.textContent = `✓ ${data.added} Bots hinzugefügt.`;
+						document.getElementById('upload-text').value = '';
+						loadBots(0);
+					} else {
+						status.textContent = `Fehler: ${data.error}`;
+					}
+				} catch (e) {
+					status.textContent = `Fehler: ${e.message}`;
+				}
+			}
 
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+			function esc(s) {
+				return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+			}
 
-async function loadSourceStats() {
-  try {
-    const res = await fetch('v1/public/bots/stats');
-    const d = await res.json();
-    document.getElementById('stat-total').textContent = d.total.toLocaleString('de-DE');
-    document.getElementById('stat-view').textContent = d.viewbots.toLocaleString('de-DE');
-    document.getElementById('stat-follow').textContent = d.followbots.toLocaleString('de-DE');
-  } catch(_) {}
-}
+			async function loadSourceStats() {
+				try {
+					const res = await fetch('v1/public/bots/stats');
+					const d = await res.json();
+					document.getElementById('stat-total').textContent = d.total.toLocaleString('de-DE');
+					document.getElementById('stat-view').textContent = d.viewbots.toLocaleString('de-DE');
+					document.getElementById('stat-follow').textContent = d.followbots.toLocaleString('de-DE');
+				} catch (_) {}
+			}
 
-loadBots(0);
-loadSourceStats();
-</script>
-</body>
+			loadBots(0);
+			loadSourceStats();
+		</script>
+	</body>
 </html>

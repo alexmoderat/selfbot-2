@@ -1,7 +1,7 @@
 const express = require('express');
 const {
 	got,
-	sbv2,
+	utilityDb,
 	commands,
 	execSync,
 	existsSync,
@@ -261,12 +261,12 @@ router.get(
 		if (!user) {
 			return res.json(empty);
 		}
-		const texts = (await sbv2.query('SELECT DISTINCT normalized_text AS t FROM chat_data.first_message_sightings WHERE user_id = ? LIMIT 200', [user.id])).map((i) => i.t);
+		const texts = (await utilityDb.query('SELECT DISTINCT normalized_text AS t FROM first_message_sightings WHERE user_id = ? LIMIT 200', [user.id])).map((i) => i.t);
 
 		let bestReason = null;
 		let bestChannels = [];
 		for (const text of texts) {
-			const channels = (await sbv2.query('SELECT DISTINCT channel AS c FROM chat_data.first_message_sightings WHERE normalized_text = ?', [text])).map((i) => i.c);
+			const channels = (await utilityDb.query('SELECT DISTINCT channel AS c FROM first_message_sightings WHERE normalized_text = ?', [text])).map((i) => i.c);
 			if (channels.length >= 2 && channels.length > bestChannels.length) {
 				bestChannels = channels;
 				bestReason = CATEGORY_LABELS[text.split('::')[0]] ?? 'Suspicious repeated message';

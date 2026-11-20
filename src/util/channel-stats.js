@@ -1,4 +1,4 @@
-const sbv2 = require('../database/sbv2.js');
+const utility = require('../database/utility.js');
 const botList = require('./twitchinsights-bots.js');
 
 // Datenschicht fuer das Tracking, aus sb-v2s watchtime-maria, peak-viewers-maria, raids-maria, watch-streak-maria,
@@ -24,7 +24,7 @@ let knownBots = null;
  */
 const isKnownBot = async (login) => {
 	if (!knownBots || Date.now() - knownBots.at > KNOWN_BOTS_TTL) {
-		const rows = await sbv2.query('SELECT login FROM chat_data.known_bots').catch(() => null);
+		const rows = await utility.query('SELECT login FROM known_bots').catch(() => null);
 		knownBots = { at: Date.now(), set: new Set((rows?.map((i) => i.login) ?? [...(knownBots?.set ?? [])]).map((i) => String(i).toLowerCase())) };
 	}
 
@@ -174,13 +174,10 @@ const getTopWatchStreaks = async (channelId, limit) => {
 
 /* ---------- Laengster Sub (chat_data.longest_sub, vom autojoin-bot gefuellt, nur lesen) ---------- */
 
-const getLongestSub = async (userId) => (await sbv2.query('SELECT user_id, username, channel, max_months FROM chat_data.longest_sub WHERE user_id = ? LIMIT 1', [userId]))[0] ?? null;
+const getLongestSub = async (userId) => (await utility.query('SELECT user_id, username, channel, max_months FROM longest_sub WHERE user_id = ? LIMIT 1', [userId]))[0] ?? null;
 
 const getLongestSubRange = async (fromRank, toRank) =>
-	await sbv2.query('SELECT user_id, username, channel, max_months FROM chat_data.longest_sub ORDER BY max_months DESC LIMIT ? OFFSET ?', [
-		Math.max(0, toRank - fromRank + 1),
-		Math.max(0, fromRank - 1),
-	]);
+	await utility.query('SELECT user_id, username, channel, max_months FROM longest_sub ORDER BY max_months DESC LIMIT ? OFFSET ?', [Math.max(0, toRank - fromRank + 1), Math.max(0, fromRank - 1)]);
 
 /* ---------- Stream-Zustand (Start, Spiel, Kategoriewechsel) ---------- */
 

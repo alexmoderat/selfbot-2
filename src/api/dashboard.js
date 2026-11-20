@@ -18,7 +18,7 @@ const { cleanHandle, cleanMessage, cleanTimes, accountExists, HANDLE } = require
 
 const raidNotifier = require('../clients/modules/chat/raid-notifier.js');
 
-const sbv2 = require('../database/sbv2.js');
+const utilityDb = require('../database/utility.js');
 
 const { getPrefix } = require('../clients/modules/handler.js');
 
@@ -162,7 +162,7 @@ const executionCounts = async (match) =>
 const usageCounts = async (channel) => {
 	const [rows, utility] = await Promise.all([
 		executionCounts({ channelId: channel.id }),
-		sbv2.query(`SELECT command AS Command, COUNT(*) AS Uses FROM ${UTILITY_TABLE} WHERE channel = ? GROUP BY command`, [channel.name]),
+		utilityDb.query(`SELECT command AS "Command", COUNT(*) AS "Uses" FROM ${UTILITY_TABLE} WHERE channel = ? GROUP BY command`, [channel.name]),
 	]);
 	return addUtilityRows(new Map(rows.map((i) => [i.Command, Number(i.Uses)])), utility);
 };
@@ -172,7 +172,7 @@ const usageCounts = async (channel) => {
  * "commands tab should include all COMMANDS that the [bot] execute, does not matter if its by [the utility-bot]
  * or if it come from the supibot code". Utility-Namen, die bei uns ein Alias sind, laufen unter unserem Namen.
  */
-const UTILITY_TABLE = 'chat_data.utility_command_executions';
+const UTILITY_TABLE = 'command_executions';
 
 /** Unter welchen Namen der utility-bot einen unserer Commands protokolliert haben kann (Name und Aliase) */
 const utilityNamesFor = (name) => {
@@ -200,7 +200,7 @@ const addUtilityRows = (map, rows) => {
 const lastUsedCounts = async (channel) => {
 	const [own, utility] = await Promise.all([
 		bot.DB.CommandExecution.aggregate([{ $match: { channelId: channel.id } }, { $group: { _id: '$command', last: { $max: '$executed' } } }]),
-		sbv2.query(`SELECT command AS Command, MAX(executed_at) AS Last FROM ${UTILITY_TABLE} WHERE channel = ? GROUP BY command`, [channel.name]),
+		utilityDb.query(`SELECT command AS "Command", MAX(executed_at) AS "Last" FROM ${UTILITY_TABLE} WHERE channel = ? GROUP BY command`, [channel.name]),
 	]);
 	const map = new Map();
 	const add = (name, value) => {
@@ -220,7 +220,10 @@ const lastUsedCounts = async (channel) => {
 
 /** Aufrufe je Command ueber alle Channels (ninou2, 07.11.2026: "global" neben den eigenen Uses) */
 const globalUsageCounts = async () => {
-	const [own, utility] = await Promise.all([executionCounts({ command: { $not: /^custom:/ } }), sbv2.query(`SELECT command AS Command, COUNT(*) AS Uses FROM ${UTILITY_TABLE} GROUP BY command`)]);
+	const [own, utility] = await Promise.all([
+		executionCounts({ command: { $not: /^custom:/ } }),
+		utilityDb.query(`SELECT command AS "Command", COUNT(*) AS "Uses" FROM ${UTILITY_TABLE} GROUP BY command`),
+	]);
 	return addUtilityRows(new Map(own.map((i) => [i.Command, Number(i.Uses)])), utility);
 };
 
@@ -492,7 +495,7 @@ module.exports = {
 	accountExists,
 	HANDLE,
 	raidNotifier,
-	sbv2,
+	utilityDb,
 	getPrefix,
 	fetchTwitchUser,
 	applyLevel,

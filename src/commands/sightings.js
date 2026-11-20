@@ -1,4 +1,4 @@
-const sbv2 = require('../database/sbv2.js');
+const utility = require('../database/utility.js');
 const { got } = require('../token/got.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 const { uploadToHaste } = require('../token/haste.js');
@@ -69,9 +69,9 @@ module.exports = {
 			return { text: `@${display}, user "${login}" not found.` };
 		}
 
-		// chat_data gehoert sb-v2/utility-bot (geteilte Daten in MariaDB)
-		const rows = await sbv2.query(
-			'SELECT channel AS Channel_Name, seen_at AS Seen_At, normalized_text AS Normalized_Text FROM chat_data.first_message_sightings WHERE user_id = ? ORDER BY seen_at ASC LIMIT ?',
+		// gehoert utility-next (geteilte Daten in Postgres utility_next)
+		const rows = await utility.query(
+			'SELECT channel AS "Channel_Name", seen_at AS "Seen_At", normalized_text AS "Normalized_Text" FROM first_message_sightings WHERE user_id = ? ORDER BY seen_at ASC LIMIT ?',
 			[user.id, MAX_ROWS + 1],
 		);
 

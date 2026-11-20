@@ -1,4 +1,4 @@
-const sbv2 = require('../database/sbv2.js');
+const utility = require('../database/utility.js');
 
 /**
  * Sub-Zaehler ueber praktisch ganz Twitch, aus sb-v2 (ninou2, 12.10.2026: "make the commands !subs"). Gezaehlt wird
@@ -31,14 +31,14 @@ module.exports = {
 			if (!own) {
 				return { text: null };
 			}
-			const value = arg === 'on' ? 1 : 0;
-			// chat_data gehoert sb-v2/autojoin-bot (geteilte Daten in MariaDB)
-			await sbv2.query('INSERT INTO chat_data.global_sub_counter (channel, enabled) VALUES (?, ?) ON DUPLICATE KEY UPDATE enabled = ?', [own, value, value]);
+			const value = arg === 'on';
+			// gehoert utility-next (geteilte Daten in Postgres utility_next)
+			await utility.query('INSERT INTO global_sub_counter (channel, enabled) VALUES (?, ?) ON CONFLICT (channel) DO UPDATE SET enabled = EXCLUDED.enabled', [own, value]);
 			return { text: `@${display}, sub counter turned ${arg.toUpperCase()}.` };
 		}
 
 		const target = (arg ?? own).replace(/^[@#]+/, '').toLowerCase();
-		const rows = await sbv2.query('SELECT enabled, sub_count, resub_count, gift_count FROM chat_data.global_sub_counter WHERE channel = ?', [target]);
+		const rows = await utility.query('SELECT enabled, sub_count, resub_count, gift_count FROM global_sub_counter WHERE channel = ?', [target]);
 		const row = rows[0] ?? null;
 
 		const who = target === own ? '' : `@${target}: `;

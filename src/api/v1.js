@@ -1,6 +1,6 @@
 const { got } = require('../token/got.js');
 
-const sbv2 = require('../database/sbv2.js');
+const utilityDb = require('../database/utility.js');
 
 const { timingSafeEqual } = require('node:crypto');
 
@@ -202,7 +202,7 @@ const subAndFollow = async (req, res, withMeta) => {
 
 module.exports = {
 	got,
-	sbv2,
+	utilityDb,
 	timingSafeEqual,
 	Router,
 	fetchTwitchUser,

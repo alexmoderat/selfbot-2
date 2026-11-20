@@ -1,7 +1,7 @@
 const express = require('express');
 const {
 	got,
-	sbv2,
+	utilityDb,
 	fetchTwitchUser,
 	pubsub,
 	getChatRestrictedReasons,
@@ -41,8 +41,8 @@ v1('/v1/sightings', async (req, res) => {
 	if (!user) {
 		return res.status(404).json({ error: 'User not found' });
 	}
-	const rows = await sbv2.query(
-		'SELECT channel AS Channel_Name, seen_at AS Seen_At, normalized_text AS Normalized_Text FROM chat_data.first_message_sightings WHERE user_id = ? ORDER BY seen_at ASC LIMIT 501',
+	const rows = await utilityDb.query(
+		'SELECT channel AS "Channel_Name", seen_at AS "Seen_At", normalized_text AS "Normalized_Text" FROM first_message_sightings WHERE user_id = ? ORDER BY seen_at ASC LIMIT 501',
 		[user.id],
 	);
 	const truncated = rows.length > 500;
@@ -541,15 +541,15 @@ v1('/v1/7tv/user', async (req, res) => {
 	return res.json(response.body);
 });
 
-/* ---------- oeffentliche Bot-Liste (chat_data.known_bots, gepflegt vom autojoin-bot) ---------- */
+/* ---------- oeffentliche Bot-Liste (known_bots, gepflegt vom autojoin-bot) ---------- */
 
 router.get(
 	'/v1/public/bots',
 	route(async (req, res) => {
 		const limit = Math.min(Number.parseInt(one(req.query.limit) || '1000', 10), 10_000);
 		const offset = Number.parseInt(one(req.query.offset) || '0', 10) || 0;
-		const bots = await sbv2.query('SELECT user_id, login, source, added_at FROM chat_data.known_bots ORDER BY added_at DESC LIMIT ? OFFSET ?', [limit, offset]);
-		const total = (await sbv2.query('SELECT COUNT(*) AS c FROM chat_data.known_bots'))[0]?.c ?? 0;
+		const bots = await utilityDb.query('SELECT user_id, login, source, added_at FROM known_bots ORDER BY added_at DESC LIMIT ? OFFSET ?', [limit, offset]);
+		const total = (await utilityDb.query('SELECT COUNT(*) AS c FROM known_bots'))[0]?.c ?? 0;
 		return res.json({ total: Number(total), limit, offset, bots });
 	}),
 );
@@ -557,8 +557,8 @@ router.get(
 router.get(
 	'/v1/public/bots/stats',
 	route(async (_req, res) => {
-		const rows = await sbv2.query(
-			"SELECT COUNT(*) AS total, SUM(CASE WHEN source LIKE '%viewbot%' THEN 1 ELSE 0 END) AS viewbots, SUM(CASE WHEN source LIKE '%followbot%' THEN 1 ELSE 0 END) AS followbots FROM chat_data.known_bots",
+		const rows = await utilityDb.query(
+			"SELECT COUNT(*) AS total, SUM(CASE WHEN source LIKE '%viewbot%' THEN 1 ELSE 0 END) AS viewbots, SUM(CASE WHEN source LIKE '%followbot%' THEN 1 ELSE 0 END) AS followbots FROM known_bots",
 		);
 		return res.json({ total: Number(rows[0]?.total ?? 0), viewbots: Number(rows[0]?.viewbots ?? 0), followbots: Number(rows[0]?.followbots ?? 0) });
 	}),
@@ -568,7 +568,7 @@ router.get(
 	'/v1/public/bots/:login',
 	route(async (req, res) => {
 		const login = String(req.params.login).toLowerCase().trim();
-		const rows = await sbv2.query('SELECT user_id, login, source, added_at FROM chat_data.known_bots WHERE login = ? OR user_id = ?', [login, login]);
+		const rows = await utilityDb.query('SELECT user_id, login, source, added_at FROM known_bots WHERE login = ? OR user_id = ?', [login, login]);
 		if (rows.length === 0) {
 			return res.status(404).json({ known_bot: false });
 		}

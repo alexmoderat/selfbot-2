@@ -1,5 +1,5 @@
 const SupiDate = require('../util/date.js');
-const sbv2 = require('../database/sbv2.js');
+const utilityDb = require('../database/utility.js');
 
 /**
  * Offene Reminder eines Nutzers fuer die Dashboard-Seite "My reminders" (ninou2, 03.11.2026: "make [it its] own [page] on the
@@ -50,18 +50,18 @@ const createdFields = (value) => {
 };
 
 const listReminders = async (user) => {
-	// Reminder des utility-bots liegen in dessen Tabellen (chat_data, geteilte sb-v2-Daten)
+	// Reminder des utility-bots liegen in dessen Tabellen (Postgres utility_next, gehoeren utility-next)
 	const name = user.name.toLowerCase();
 	const [timed, next, own] = await Promise.all([
-		sbv2.query('SELECT id, channel, message, due_at, created_at FROM chat_data.reminders WHERE LOWER(username) = ? ORDER BY due_at', [name]),
-		sbv2.query('SELECT id, channel, message, set_by, created_at FROM chat_data.user_reminders WHERE LOWER(target_user) = ? ORDER BY created_at', [name]),
+		utilityDb.query('SELECT id, channel, message, due_at, created_at FROM reminders WHERE LOWER(username) = ? ORDER BY due_at', [name]),
+		utilityDb.query('SELECT id, channel, message, set_by, created_at FROM user_reminders WHERE LOWER(target_user) = ? ORDER BY created_at', [name]),
 		listSelfbot(user),
 	]);
 	// ninou2, 07.11.2026: "the list should include all reminders a user set" -- auch die fuer andere gesetzten
-	const setForOthers = await sbv2.query(
-		'SELECT id, channel, message, target_user, created_at FROM chat_data.user_reminders WHERE LOWER(set_by) = ? AND LOWER(target_user) <> ? ORDER BY created_at',
-		[name, name],
-	);
+	const setForOthers = await utilityDb.query('SELECT id, channel, message, target_user, created_at FROM user_reminders WHERE LOWER(set_by) = ? AND LOWER(target_user) <> ? ORDER BY created_at', [
+		name,
+		name,
+	]);
 
 	return [
 		...timed.map((i) => ({
@@ -122,10 +122,7 @@ const pastDate = (value) => {
 const listReminderHistory = async (user) => {
 	const name = user.name.toLowerCase();
 	const [utility, selfbot] = await Promise.all([
-		sbv2.query('SELECT id, channel, username, set_by, message, created_at, due_at, finished_at, cancelled FROM chat_data.reminder_history WHERE LOWER(username) = ? OR LOWER(set_by) = ?', [
-			name,
-			name,
-		]),
+		utilityDb.query('SELECT id, channel, username, set_by, message, created_at, due_at, finished_at, cancelled FROM reminder_history WHERE LOWER(username) = ? OR LOWER(set_by) = ?', [name, name]),
 		bot.DB.ReminderHistory.find({ $or: [{ userTo: user.id }, { userFrom: user.id }] }).lean(),
 	]);
 
@@ -178,7 +175,7 @@ const reminderPeriodCounts = (createdAts, now = new Date()) => {
 /** Entfernte Utility-Reminder landen als "Removed" in der History (die Zustellung archiviert der utility-bot selbst) */
 const archiveRemoved = async (sql, values) => {
 	try {
-		await sbv2.query(sql, values);
+		await utilityDb.query(sql, values);
 	} catch (e) {
 		console.warn('reminder_history: Archivieren fehlgeschlagen', e);
 	}
@@ -189,16 +186,16 @@ const removeReminder = async (user, source, id) => {
 	const name = user.name.toLowerCase();
 	if (source === 'utility-timed') {
 		await archiveRemoved(
-			"INSERT IGNORE INTO chat_data.reminder_history (original_id, kind, channel, username, set_by, message, created_at, due_at, finished_at, cancelled) SELECT id, 'timed', channel, username, username, message, created_at, due_at, NOW(3), 1 FROM chat_data.reminders WHERE id = ? AND LOWER(username) = ?",
+			"INSERT INTO reminder_history (original_id, kind, channel, username, set_by, message, created_at, due_at, finished_at, cancelled) SELECT id, 'timed', channel, username, username, message, created_at, due_at, now(), true FROM reminders WHERE id = ? AND LOWER(username) = ? ON CONFLICT DO NOTHING",
 			[Number(id), name],
 		);
-		await sbv2.query('DELETE FROM chat_data.reminders WHERE id = ? AND LOWER(username) = ?', [Number(id), name]);
+		await utilityDb.query('DELETE FROM reminders WHERE id = ? AND LOWER(username) = ?', [Number(id), name]);
 	} else if (source === 'utility-next') {
 		await archiveRemoved(
-			"INSERT IGNORE INTO chat_data.reminder_history (original_id, kind, channel, username, set_by, message, created_at, finished_at, cancelled) SELECT id, 'next', channel, target_user, set_by, message, created_at, NOW(3), 1 FROM chat_data.user_reminders WHERE id = ? AND (LOWER(target_user) = ? OR LOWER(set_by) = ?)",
+			"INSERT INTO reminder_history (original_id, kind, channel, username, set_by, message, created_at, finished_at, cancelled) SELECT id, 'next', channel, target_user, set_by, message, created_at, now(), true FROM user_reminders WHERE id = ? AND (LOWER(target_user) = ? OR LOWER(set_by) = ?) ON CONFLICT DO NOTHING",
 			[Number(id), name, name],
 		);
-		await sbv2.query('DELETE FROM chat_data.user_reminders WHERE id = ? AND (LOWER(target_user) = ? OR LOWER(set_by) = ?)', [Number(id), name, name]);
+		await utilityDb.query('DELETE FROM user_reminders WHERE id = ? AND (LOWER(target_user) = ? OR LOWER(set_by) = ?)', [Number(id), name, name]);
 	} else {
 		const reminder = bot.Reminders.get(id);
 		if (reminder && (reminder.User_To === user.id || reminder.User_From === user.id)) {
@@ -211,10 +208,10 @@ const removeReminder = async (user, source, id) => {
 const editReminder = async (user, source, id, text) => {
 	const name = user.name.toLowerCase();
 	if (source === 'utility-timed') {
-		const result = await sbv2.query('UPDATE chat_data.reminders SET message = ? WHERE id = ? AND LOWER(username) = ?', [text, Number(id), name]);
+		const result = await utilityDb.query('UPDATE reminders SET message = ? WHERE id = ? AND LOWER(username) = ?', [text, Number(id), name]);
 		return (result.affectedRows ?? 0) > 0;
 	} else if (source === 'utility-next') {
-		const result = await sbv2.query('UPDATE chat_data.user_reminders SET message = ? WHERE id = ? AND LOWER(set_by) = ?', [text, Number(id), name]);
+		const result = await utilityDb.query('UPDATE user_reminders SET message = ? WHERE id = ? AND LOWER(set_by) = ?', [text, Number(id), name]);
 		return (result.affectedRows ?? 0) > 0;
 	}
 

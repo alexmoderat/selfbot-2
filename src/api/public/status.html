@@ -1,259 +1,454 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bot-Status</title>
-<style>
-  :root {
-    --bg: #060606; --card: #111111; --border: #262626;
-    --text: #ffffff; --dim: #adafae; --accent: #1f7fb3;
-    --ok: #3ba55d; --warn: #faa61a; --bad: #ed4245;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; padding: 24px; background: var(--bg); color: var(--text);
-    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
-    max-width: 1100px; margin-inline: auto;
-  }
-  h1 { font-size: 23px; margin: 0 0 4px; }
-  .sub { color: var(--dim); font-size: 15px; margin-bottom: 24px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 16px; }
-  .card {
-    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-    padding: 16px 18px;
-  }
-  .card h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--dim); margin: 0 0 12px; }
-  .row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 16px; border-bottom: 1px solid var(--border); }
-  .row:last-child { border-bottom: none; }
-  .row .k { color: var(--dim); }
-  .row .v { font-weight: 600; }
-  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; }
-  .dot.ok   { background: var(--ok); }
-  .dot.warn { background: var(--warn); }
-  .dot.bad  { background: var(--bad); }
-  .proc-list { display: flex; flex-direction: column; gap: 8px; }
-  .proc { display: flex; align-items: center; justify-content: space-between; font-size: 16px; padding: 6px 0; }
-  .proc .name { display: flex; align-items: center; }
-  .proc .meta { color: var(--dim); font-size: 14.5px; }
-  .feed { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 4px 18px; max-height: 420px; overflow-y: auto; }
-  .feed .line { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 14.5px; padding: 6px 0; border-bottom: 1px solid var(--border); color: var(--dim); white-space: pre-wrap; word-break: break-word; }
-  .feed .line:last-child { border-bottom: none; }
-  .feed-empty { color: var(--dim); font-size: 15px; padding: 16px 0; text-align: center; }
-  .err { color: var(--bad); font-size: 15px; margin-top: 8px; }
-  a { color: var(--accent); }
-  .tabs { display: flex; gap: 4px; margin: 0 0 -1px; }
-  .tab {
-    background: transparent; border: 1px solid var(--border); border-bottom: none;
-    color: var(--dim); font-size: 15px; font-weight: 600; padding: 9px 16px;
-    border-radius: 8px 8px 0 0; cursor: pointer; font-family: inherit;
-  }
-  .tab.active { background: var(--card); color: var(--text); }
-  .tab .count { color: var(--dim); font-weight: 400; margin-left: 4px; }
-  .tab.active .count { color: var(--dim); }
-  .feed-panel { border-radius: 0 8px 8px 8px; }
-  .ban-tag {
-    display: inline-block; font-size: 12.5px; font-weight: 700; text-transform: uppercase;
-    padding: 1px 6px; border-radius: 4px; margin-right: 8px;
-  }
-  .ban-tag.ban     { background: rgba(237,66,69,.18); color: #ff8a8d; }
-  .ban-tag.timeout { background: rgba(250,166,26,.18); color: var(--warn); }
-</style>
-</head>
-<body>
-  <h1>🤖 Bot-Status</h1>
-  <div class="sub" id="updated">lädt…</div>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Bot-Status</title>
+		<style>
+			:root {
+				--bg: #060606;
+				--card: #111111;
+				--border: #262626;
+				--text: #ffffff;
+				--dim: #adafae;
+				--accent: #1f7fb3;
+				--ok: #3ba55d;
+				--warn: #faa61a;
+				--bad: #ed4245;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				padding: 24px;
+				background: var(--bg);
+				color: var(--text);
+				font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+				max-width: 1100px;
+				margin-inline: auto;
+			}
+			h1 {
+				font-size: 23px;
+				margin: 0 0 4px;
+			}
+			.sub {
+				color: var(--dim);
+				font-size: 15px;
+				margin-bottom: 24px;
+			}
+			.grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+				gap: 16px;
+				margin-bottom: 16px;
+			}
+			.card {
+				background: var(--card);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 16px 18px;
+			}
+			.card h2 {
+				font-size: 15px;
+				text-transform: uppercase;
+				letter-spacing: 0.04em;
+				color: var(--dim);
+				margin: 0 0 12px;
+			}
+			.row {
+				display: flex;
+				justify-content: space-between;
+				padding: 5px 0;
+				font-size: 16px;
+				border-bottom: 1px solid var(--border);
+			}
+			.row:last-child {
+				border-bottom: none;
+			}
+			.row .k {
+				color: var(--dim);
+			}
+			.row .v {
+				font-weight: 600;
+			}
+			.dot {
+				display: inline-block;
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				margin-right: 7px;
+			}
+			.dot.ok {
+				background: var(--ok);
+			}
+			.dot.warn {
+				background: var(--warn);
+			}
+			.dot.bad {
+				background: var(--bad);
+			}
+			.proc-list {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+			}
+			.proc {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				font-size: 16px;
+				padding: 6px 0;
+			}
+			.proc .name {
+				display: flex;
+				align-items: center;
+			}
+			.proc .meta {
+				color: var(--dim);
+				font-size: 14.5px;
+			}
+			.feed {
+				background: var(--card);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 4px 18px;
+				max-height: 420px;
+				overflow-y: auto;
+			}
+			.feed .line {
+				font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+				font-size: 14.5px;
+				padding: 6px 0;
+				border-bottom: 1px solid var(--border);
+				color: var(--dim);
+				white-space: pre-wrap;
+				word-break: break-word;
+			}
+			.feed .line:last-child {
+				border-bottom: none;
+			}
+			.feed-empty {
+				color: var(--dim);
+				font-size: 15px;
+				padding: 16px 0;
+				text-align: center;
+			}
+			.err {
+				color: var(--bad);
+				font-size: 15px;
+				margin-top: 8px;
+			}
+			a {
+				color: var(--accent);
+			}
+			.tabs {
+				display: flex;
+				gap: 4px;
+				margin: 0 0 -1px;
+			}
+			.tab {
+				background: transparent;
+				border: 1px solid var(--border);
+				border-bottom: none;
+				color: var(--dim);
+				font-size: 15px;
+				font-weight: 600;
+				padding: 9px 16px;
+				border-radius: 8px 8px 0 0;
+				cursor: pointer;
+				font-family: inherit;
+			}
+			.tab.active {
+				background: var(--card);
+				color: var(--text);
+			}
+			.tab .count {
+				color: var(--dim);
+				font-weight: 400;
+				margin-left: 4px;
+			}
+			.tab.active .count {
+				color: var(--dim);
+			}
+			.feed-panel {
+				border-radius: 0 8px 8px 8px;
+			}
+			.ban-tag {
+				display: inline-block;
+				font-size: 12.5px;
+				font-weight: 700;
+				text-transform: uppercase;
+				padding: 1px 6px;
+				border-radius: 4px;
+				margin-right: 8px;
+			}
+			.ban-tag.ban {
+				background: rgba(237, 66, 69, 0.18);
+				color: #ff8a8d;
+			}
+			.ban-tag.timeout {
+				background: rgba(250, 166, 26, 0.18);
+				color: var(--warn);
+			}
+		</style>
+	</head>
+	<body>
+		<h1>🤖 Bot-Status</h1>
+		<div class="sub" id="updated">lädt…</div>
 
-  <div class="grid">
-    <div class="card">
-      <h2>Prozesse</h2>
-      <div class="proc-list" id="proc-list">–</div>
-    </div>
-    <div class="card">
-      <h2>sb-v2</h2>
-      <div id="self-stats">–</div>
-    </div>
-    <div class="card">
-      <h2>Infrastruktur</h2>
-      <div id="infra-stats">–</div>
-    </div>
-  </div>
+		<div class="grid">
+			<div class="card">
+				<h2>Prozesse</h2>
+				<div class="proc-list" id="proc-list">–</div>
+			</div>
+			<div class="card">
+				<h2>sb-v2</h2>
+				<div id="self-stats">–</div>
+			</div>
+			<div class="card">
+				<h2>Infrastruktur</h2>
+				<div id="infra-stats">–</div>
+			</div>
+		</div>
 
-  <div class="tabs" id="tabs">
-    <button class="tab active" data-tab="chat">Live-Chat<span class="count" id="tab-count-chat"></span></button>
-    <button class="tab" data-tab="events">Letzte Ereignisse<span class="count" id="tab-count-events"></span></button>
-    <button class="tab" data-tab="mod">Mod-Actions<span class="count" id="tab-count-mod"></span></button>
-    <button class="tab" data-tab="raw">Rohe Events<span class="count" id="tab-count-raw"></span></button>
-  </div>
-  <div class="feed feed-panel" id="feed">–</div>
+		<div class="tabs" id="tabs">
+			<button class="tab active" data-tab="chat">Live-Chat<span class="count" id="tab-count-chat"></span></button>
+			<button class="tab" data-tab="events">Letzte Ereignisse<span class="count" id="tab-count-events"></span></button>
+			<button class="tab" data-tab="mod">Mod-Actions<span class="count" id="tab-count-mod"></span></button>
+			<button class="tab" data-tab="raw">Rohe Events<span class="count" id="tab-count-raw"></span></button>
+		</div>
+		<div class="feed feed-panel" id="feed">–</div>
 
-  <script>
-    function fmtUptime(ms) {
-      if (ms == null) return '—';
-      const s = Math.floor(ms / 1000);
-      const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
-      const parts = [];
-      if (d) parts.push(d + 'd');
-      if (d || h) parts.push(h + 'h');
-      parts.push(m + 'm');
-      return parts.join(' ');
-    }
+		<script>
+			function fmtUptime(ms) {
+				if (ms == null) return '—';
+				const s = Math.floor(ms / 1000);
+				const d = Math.floor(s / 86400),
+					h = Math.floor((s % 86400) / 3600),
+					m = Math.floor((s % 3600) / 60);
+				const parts = [];
+				if (d) parts.push(d + 'd');
+				if (d || h) parts.push(h + 'h');
+				parts.push(m + 'm');
+				return parts.join(' ');
+			}
 
-    function row(k, v) {
-      return '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
-    }
+			function row(k, v) {
+				return '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+			}
 
-    function esc(s) {
-      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
+			function esc(s) {
+				return String(s ?? '')
+					.replace(/&/g, '&amp;')
+					.replace(/</g, '&lt;')
+					.replace(/>/g, '&gt;');
+			}
 
-    async function load() {
-      let data;
-      try {
-        const res = await fetch('api/status', { cache: 'no-store' });
-        data = await res.json();
-      } catch (e) {
-        document.getElementById('updated').innerHTML = '<span class="err">Status nicht erreichbar — ' + esc(e.message) + '</span>';
-        return;
-      }
+			async function load() {
+				let data;
+				try {
+					const res = await fetch('api/status', { cache: 'no-store' });
+					data = await res.json();
+				} catch (e) {
+					document.getElementById('updated').innerHTML = '<span class="err">Status nicht erreichbar — ' + esc(e.message) + '</span>';
+					return;
+				}
 
-      document.getElementById('updated').textContent =
-        'Stand: ' + new Date(data.timestamp).toLocaleTimeString('de-DE') + ' · aktualisiert alle 10s';
+				document.getElementById('updated').textContent = 'Stand: ' + new Date(data.timestamp).toLocaleTimeString('de-DE') + ' · aktualisiert alle 10s';
 
-      // Prozesse
-      const procEl = document.getElementById('proc-list');
-      if (!data.pm2) {
-        procEl.innerHTML = '<div class="feed-empty">pm2 nicht abfragbar</div>';
-      } else {
-        procEl.innerHTML = data.pm2.map(p => {
-          const dot = p.status === 'online' ? 'ok' : (p.status === 'stopped' ? 'warn' : 'bad');
-          return '<div class="proc">'
-            + '<span class="name"><span class="dot ' + dot + '"></span>' + esc(p.name) + '</span>'
-            + '<span class="meta">' + esc(p.status) + ' · ' + fmtUptime(p.uptimeMs)
-            + (p.restarts ? ' · ' + p.restarts + '× neu gestartet' : '')
-            + (p.memoryMiB != null ? ' · ' + p.memoryMiB + ' MiB' : '') + '</span>'
-            + '</div>';
-        }).join('');
-      }
+				// Prozesse
+				const procEl = document.getElementById('proc-list');
+				if (!data.pm2) {
+					procEl.innerHTML = '<div class="feed-empty">pm2 nicht abfragbar</div>';
+				} else {
+					procEl.innerHTML = data.pm2
+						.map((p) => {
+							const dot = p.status === 'online' ? 'ok' : p.status === 'stopped' ? 'warn' : 'bad';
+							return (
+								'<div class="proc">' +
+								'<span class="name"><span class="dot ' +
+								dot +
+								'"></span>' +
+								esc(p.name) +
+								'</span>' +
+								'<span class="meta">' +
+								esc(p.status) +
+								' · ' +
+								fmtUptime(p.uptimeMs) +
+								(p.restarts ? ' · ' + p.restarts + '× neu gestartet' : '') +
+								(p.memoryMiB != null ? ' · ' + p.memoryMiB + ' MiB' : '') +
+								'</span>' +
+								'</div>'
+							);
+						})
+						.join('');
+				}
 
-      // sb-v2 Vitalwerte
-      document.getElementById('self-stats').innerHTML =
-        row('Uptime', fmtUptime(data.selbst.uptimeMs)) +
-        row('Channels', data.selbst.channels ?? '—') +
-        row('Speicher', data.selbst.memoryMiB + ' MiB') +
-        row('Commit', '<code>' + esc(data.selbst.commit) + '</code>') +
-        row('Node', esc(data.selbst.node));
+				// sb-v2 Vitalwerte
+				document.getElementById('self-stats').innerHTML =
+					row('Uptime', fmtUptime(data.selbst.uptimeMs)) +
+					row('Channels', data.selbst.channels ?? '—') +
+					row('Speicher', data.selbst.memoryMiB + ' MiB') +
+					row('Commit', '<code>' + esc(data.selbst.commit) + '</code>') +
+					row('Node', esc(data.selbst.node));
 
-      // Infrastruktur
-      const dbColor = data.dbLatenzMs == null ? 'bad' : (data.dbLatenzMs > 200 ? 'warn' : 'ok');
-      document.getElementById('infra-stats').innerHTML =
-        row('Datenbank', '<span class="dot ' + dbColor + '"></span>' + (data.dbLatenzMs == null ? 'nicht erreichbar' : data.dbLatenzMs + ' ms')) +
-        row('justlog',
-          (data.justlogChannels == null ? 'nicht erreichbar' : data.justlogChannels + ' Channels')
-          // Stand des letzten Abgleichs dazu — sonst sieht eine abweichende
-          // Zahl (z.B. gegenueber "sb-v2 Channels") wie ein Fehler aus, dabei
-          // laeuft der Sync nur stuendlich und ist nie aktueller als das.
-          + '<br><small style="font-size:13px;color:var(--dim);font-weight:400;">Stand: '
-          + (data.justlogSyncedAt ? new Date(data.justlogSyncedAt).toLocaleTimeString('de-DE') : 'noch kein Abgleich seit Start')
-          + '</small>');
+				// Infrastruktur
+				const dbColor = data.dbLatenzMs == null ? 'bad' : data.dbLatenzMs > 200 ? 'warn' : 'ok';
+				document.getElementById('infra-stats').innerHTML =
+					row('Datenbank', '<span class="dot ' + dbColor + '"></span>' + (data.dbLatenzMs == null ? 'nicht erreichbar' : data.dbLatenzMs + ' ms')) +
+					row(
+						'justlog',
+						(data.justlogChannels == null ? 'nicht erreichbar' : data.justlogChannels + ' Channels') +
+							// Stand des letzten Abgleichs dazu — sonst sieht eine abweichende
+							// Zahl (z.B. gegenueber "sb-v2 Channels") wie ein Fehler aus, dabei
+							// laeuft der Sync nur stuendlich und ist nie aktueller als das.
+							'<br><small style="font-size:13px;color:var(--dim);font-weight:400;">Stand: ' +
+							(data.justlogSyncedAt ? new Date(data.justlogSyncedAt).toLocaleTimeString('de-DE') : 'noch kein Abgleich seit Start') +
+							'</small>',
+					);
 
-      // Mod-Actions und rohe Events kommen aus eigenen Endpunkten — separat
-      // geholt statt in /api/status verdoppelt.
-      let modData = { actions: [] };
-      try {
-        modData = await (await fetch('api/mod-actions', { cache: 'no-store' })).json();
-      } catch { /* Feed bleibt leer, kein Absturz der ganzen Seite */ }
+				// Mod-Actions und rohe Events kommen aus eigenen Endpunkten — separat
+				// geholt statt in /api/status verdoppelt.
+				let modData = { actions: [] };
+				try {
+					modData = await (await fetch('api/mod-actions', { cache: 'no-store' })).json();
+				} catch {
+					/* Feed bleibt leer, kein Absturz der ganzen Seite */
+				}
 
-      let rawData = { events: [] };
-      try {
-        rawData = await (await fetch('api/events/raw', { cache: 'no-store' })).json();
-      } catch { /* Feed bleibt leer, kein Absturz der ganzen Seite */ }
+				let rawData = { events: [] };
+				try {
+					rawData = await (await fetch('api/events/raw', { cache: 'no-store' })).json();
+				} catch {
+					/* Feed bleibt leer, kein Absturz der ganzen Seite */
+				}
 
-      state.chat = data.chatFeed || [];
-      state.events = data.letzteEreignisse || [];
-      state.mod = modData.actions || [];
-      state.totalBans = modData.totalBans;
-      state.raw = rawData.events || [];
+				state.chat = data.chatFeed || [];
+				state.events = data.letzteEreignisse || [];
+				state.mod = modData.actions || [];
+				state.totalBans = modData.totalBans;
+				state.raw = rawData.events || [];
 
-      document.getElementById('tab-count-chat').textContent = state.chat.length ? ' ' + state.chat.length : '';
-      document.getElementById('tab-count-events').textContent = state.events.length ? ' ' + state.events.length : '';
-      document.getElementById('tab-count-mod').textContent = state.mod.length ? ' ' + state.mod.length : '';
-      document.getElementById('tab-count-raw').textContent = state.raw.length ? ' ' + state.raw.length : '';
+				document.getElementById('tab-count-chat').textContent = state.chat.length ? ' ' + state.chat.length : '';
+				document.getElementById('tab-count-events').textContent = state.events.length ? ' ' + state.events.length : '';
+				document.getElementById('tab-count-mod').textContent = state.mod.length ? ' ' + state.mod.length : '';
+				document.getElementById('tab-count-raw').textContent = state.raw.length ? ' ' + state.raw.length : '';
 
-      renderActiveTab();
-    }
+				renderActiveTab();
+			}
 
-    // ── Tabs ─────────────────────────────────────────────────────────────────
-    // Ein gemeinsamer Feed-Container statt drei gestapelter — Live-Chat,
-    // Ereignisse und Mod-Actions teilen sich denselben Platz, nur der Inhalt
-    // wechselt. state haelt die zuletzt geladenen Daten, damit ein Tab-Wechsel
-    // sofort rendert statt auf den naechsten Poll zu warten.
-    const state = { chat: [], events: [], mod: [], raw: [], activeTab: 'chat', totalBans: null };
+			// ── Tabs ─────────────────────────────────────────────────────────────────
+			// Ein gemeinsamer Feed-Container statt drei gestapelter — Live-Chat,
+			// Ereignisse und Mod-Actions teilen sich denselben Platz, nur der Inhalt
+			// wechselt. state haelt die zuletzt geladenen Daten, damit ein Tab-Wechsel
+			// sofort rendert statt auf den naechsten Poll zu warten.
+			const state = { chat: [], events: [], mod: [], raw: [], activeTab: 'chat', totalBans: null };
 
-    function fmtZeit(ts) {
-      return ts ? new Date(ts).toLocaleTimeString('de-DE') : '';
-    }
+			function fmtZeit(ts) {
+				return ts ? new Date(ts).toLocaleTimeString('de-DE') : '';
+			}
 
-    function renderChat() {
-      if (!state.chat.length) {
-        return '<div class="feed-empty">kein Chat-Feed (CHAT_LOG ist aus) oder noch keine Nachricht seit dem letzten Neustart</div>';
-      }
-      return state.chat.map(m =>
-        '<div class="line">' + fmtZeit(m.ts) + '&nbsp; '
-        + '<span style="color:var(--accent)">#' + esc(m.channel) + '</span> '
-        + '<b>' + esc(m.user) + ':</b> ' + esc(m.message)
-        + '</div>'
-      ).join('');
-    }
+			function renderChat() {
+				if (!state.chat.length) {
+					return '<div class="feed-empty">kein Chat-Feed (CHAT_LOG ist aus) oder noch keine Nachricht seit dem letzten Neustart</div>';
+				}
+				return state.chat
+					.map(
+						(m) =>
+							'<div class="line">' +
+							fmtZeit(m.ts) +
+							'&nbsp; ' +
+							'<span style="color:var(--accent)">#' +
+							esc(m.channel) +
+							'</span> ' +
+							'<b>' +
+							esc(m.user) +
+							':</b> ' +
+							esc(m.message) +
+							'</div>',
+					)
+					.join('');
+			}
 
-    function renderEvents() {
-      if (!state.events.length) return '<div class="feed-empty">keine besonderen Ereignisse</div>';
-      return state.events.map(l => '<div class="line">' + esc(l) + '</div>').join('');
-    }
+			function renderEvents() {
+				if (!state.events.length) return '<div class="feed-empty">keine besonderen Ereignisse</div>';
+				return state.events.map((l) => '<div class="line">' + esc(l) + '</div>').join('');
+			}
 
-    function renderMod() {
-      if (!state.mod.length) return '<div class="feed-empty">keine Mod-Actions seit dem letzten Neustart</div>';
-      const kopf = state.totalBans != null
-        ? '<div class="line" style="color:var(--text);font-weight:600;">Bans insgesamt: ' + state.totalBans + '</div>' : '';
-      return kopf + state.mod.map(a => {
-        const art = a.type === 'ban' ? 'ban' : 'timeout';
-        return '<div class="line">' + fmtZeit(a.ts) + '&nbsp; '
-          + '<span class="ban-tag ' + art + '">' + esc(a.type || art) + '</span>'
-          + '<b>' + esc(a.username) + '</b> in <span style="color:var(--accent)">#' + esc(a.channel) + '</span>'
-          + (a.reason ? ' — ' + esc(a.reason) : (a.status ? ' — ' + esc(a.status) : ''))
-          + (a.modName ? ' <span style="color:var(--dim)">(' + esc(a.modName) + ')</span>' : '')
-          + '</div>';
-      }).join('');
-    }
+			function renderMod() {
+				if (!state.mod.length) return '<div class="feed-empty">keine Mod-Actions seit dem letzten Neustart</div>';
+				const kopf = state.totalBans != null ? '<div class="line" style="color:var(--text);font-weight:600;">Bans insgesamt: ' + state.totalBans + '</div>' : '';
+				return (
+					kopf +
+					state.mod
+						.map((a) => {
+							const art = a.type === 'ban' ? 'ban' : 'timeout';
+							return (
+								'<div class="line">' +
+								fmtZeit(a.ts) +
+								'&nbsp; ' +
+								'<span class="ban-tag ' +
+								art +
+								'">' +
+								esc(a.type || art) +
+								'</span>' +
+								'<b>' +
+								esc(a.username) +
+								'</b> in <span style="color:var(--accent)">#' +
+								esc(a.channel) +
+								'</span>' +
+								(a.reason ? ' — ' + esc(a.reason) : a.status ? ' — ' + esc(a.status) : '') +
+								(a.modName ? ' <span style="color:var(--dim)">(' + esc(a.modName) + ')</span>' : '') +
+								'</div>'
+							);
+						})
+						.join('')
+				);
+			}
 
-    function renderRaw() {
-      if (!state.raw.length) return '<div class="feed-empty">noch keine rohen Events seit dem letzten Neustart</div>';
-      return state.raw.map(e => {
-        let json;
-        try { json = JSON.stringify(e.payload, null, 0); } catch { json = String(e.payload); }
-        return '<div class="line">' + fmtZeit(e.ts) + '&nbsp; '
-          + '<b style="color:var(--accent)">[' + esc(e.prefix) + ']</b> '
-          + '<span style="color:var(--dim)">' + esc(e.channel) + '</span><br>'
-          + esc(json)
-          + '</div>';
-      }).join('');
-    }
+			function renderRaw() {
+				if (!state.raw.length) return '<div class="feed-empty">noch keine rohen Events seit dem letzten Neustart</div>';
+				return state.raw
+					.map((e) => {
+						let json;
+						try {
+							json = JSON.stringify(e.payload, null, 0);
+						} catch {
+							json = String(e.payload);
+						}
+						return (
+							'<div class="line">' +
+							fmtZeit(e.ts) +
+							'&nbsp; ' +
+							'<b style="color:var(--accent)">[' +
+							esc(e.prefix) +
+							']</b> ' +
+							'<span style="color:var(--dim)">' +
+							esc(e.channel) +
+							'</span><br>' +
+							esc(json) +
+							'</div>'
+						);
+					})
+					.join('');
+			}
 
-    function renderActiveTab() {
-      const renderer = { chat: renderChat, events: renderEvents, mod: renderMod, raw: renderRaw }[state.activeTab];
-      document.getElementById('feed').innerHTML = renderer();
-    }
+			function renderActiveTab() {
+				const renderer = { chat: renderChat, events: renderEvents, mod: renderMod, raw: renderRaw }[state.activeTab];
+				document.getElementById('feed').innerHTML = renderer();
+			}
 
-    document.getElementById('tabs').addEventListener('click', (e) => {
-      const btn = e.target.closest('.tab');
-      if (!btn) return;
-      state.activeTab = btn.dataset.tab;
-      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === btn));
-      renderActiveTab();
-    });
+			document.getElementById('tabs').addEventListener('click', (e) => {
+				const btn = e.target.closest('.tab');
+				if (!btn) return;
+				state.activeTab = btn.dataset.tab;
+				document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t === btn));
+				renderActiveTab();
+			});
 
-    load();
-    setInterval(load, 10000);
-  </script>
-</body>
+			load();
+			setInterval(load, 10000);
+		</script>
+	</body>
 </html>

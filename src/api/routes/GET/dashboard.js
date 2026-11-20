@@ -4,7 +4,7 @@ const {
 	phrases,
 	customCommands,
 	raidNotifier,
-	sbv2,
+	utilityDb,
 	getPrefix,
 	effectiveLevel,
 	BANPHRASE_REASONS,
@@ -252,7 +252,7 @@ router.get(
 			const names = utilityNamesFor(name);
 			const [own, utility] = await Promise.all([
 				usesByUser({ command: name }),
-				sbv2.query(`SELECT username AS Name, COUNT(*) AS Uses FROM ${UTILITY_TABLE} WHERE command IN (?) GROUP BY username`, [names]),
+				utilityDb.query(`SELECT username AS "Name", COUNT(*) AS "Uses" FROM ${UTILITY_TABLE} WHERE command = ANY(?) GROUP BY username`, [names]),
 			]);
 			const merged = new Map();
 			for (const row of [...own, ...utility]) {
@@ -274,7 +274,7 @@ router.get(
 			const [total, mine, [utility]] = await Promise.all([
 				bot.DB.CommandExecution.countDocuments({ command: name }),
 				self ? bot.DB.CommandExecution.countDocuments({ command: name, userId: self.id }) : 0,
-				sbv2.query(`SELECT COUNT(*) AS Total, COALESCE(SUM(username = ?), 0) AS Mine FROM ${UTILITY_TABLE} WHERE command IN (?)`, [login, utilityNamesFor(name)]),
+				utilityDb.query(`SELECT COUNT(*) AS "Total", COUNT(*) FILTER (WHERE username = ?) AS "Mine" FROM ${UTILITY_TABLE} WHERE command = ANY(?)`, [login, utilityNamesFor(name)]),
 			]);
 			res.json({
 				total: total + Number(utility?.Total ?? 0),
@@ -289,7 +289,10 @@ router.get(
 			usesByUser({ channelId: channel.id, command }),
 			custom
 				? Promise.resolve([])
-				: sbv2.query(`SELECT username AS Name, COUNT(*) AS Uses FROM ${UTILITY_TABLE} WHERE channel = ? AND command IN (?) GROUP BY username`, [channel.name, utilityNamesFor(name)]),
+				: utilityDb.query(`SELECT username AS "Name", COUNT(*) AS "Uses" FROM ${UTILITY_TABLE} WHERE channel = ? AND command = ANY(?) GROUP BY username`, [
+						channel.name,
+						utilityNamesFor(name),
+					]),
 		]);
 		const merged = new Map();
 		for (const row of [...rows, ...utility]) {
@@ -327,7 +330,7 @@ router.get(
 				{ $match: { command: { $not: /^custom:/ }, invocation: { $ne: null } } },
 				{ $group: { _id: { command: '$command', invocation: { $toLower: '$invocation' } }, Uses: { $sum: 1 } } },
 			]).then((rows) => rows.map((i) => ({ Command: i._id.command, Invocation: i._id.invocation, Uses: i.Uses }))),
-			sbv2.query(`SELECT command AS Command, invocation AS Invocation, COUNT(*) AS Uses FROM ${UTILITY_TABLE} WHERE invocation IS NOT NULL GROUP BY command, invocation`),
+			utilityDb.query(`SELECT command AS "Command", invocation AS "Invocation", COUNT(*) AS "Uses" FROM ${UTILITY_TABLE} WHERE invocation IS NOT NULL GROUP BY command, invocation`),
 		]);
 		const invocations = new Map();
 		for (const row of [...ownInv, ...utilityInv.map((i) => ({ ...i, Command: ownName(i.Command) }))]) {

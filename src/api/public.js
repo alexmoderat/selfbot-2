@@ -1,6 +1,7 @@
 const { got } = require('../token/got.js');
 
 const sbv2 = require('../database/sbv2.js');
+const utilityDb = require('../database/utility.js');
 
 const { commands, toListed } = require('../clients/modules/commands.js');
 
@@ -70,6 +71,7 @@ const one = (value) => (Array.isArray(value) ? String(value[0] ?? '') : value ==
 
 /** Zaehler aus den geteilten sb-v2-Tabellen (chat_data, MariaDB) */
 const countShared = async (sql, params = []) => Number((await sbv2.query(sql, params))[0]?.c ?? 0);
+const countUtility = async (sql, params = []) => Number((await utilityDb.query(sql, params))[0]?.c ?? 0);
 
 const escapeLike = (value) => value.replaceAll(/[\\%_]/g, '\\$&');
 
@@ -113,7 +115,7 @@ const computeNetworkStats = async () => {
 	const categories = {};
 	const bans = {};
 	for (const [cat, label] of Object.entries(CATEGORY_LABELS)) {
-		const rows = await sbv2.query('SELECT COUNT(DISTINCT user_id) AS users, COUNT(*) AS sightings FROM chat_data.first_message_sightings WHERE normalized_text LIKE ?', [`${cat}::%`]);
+		const rows = await utilityDb.query('SELECT COUNT(DISTINCT user_id) AS users, COUNT(*) AS sightings FROM first_message_sightings WHERE normalized_text LIKE ?', [`${cat}::%`]);
 		categories[cat] = { distinctUsers: Number(rows[0]?.users ?? 0), sightings: Number(rows[0]?.sightings ?? 0) };
 
 		// Wie LIKE '%label%' (MariaDB ohne Gross-/Kleinschreibung)
@@ -122,7 +124,7 @@ const computeNetworkStats = async () => {
 		const kletztenbrot = await countShared('SELECT COUNT(DISTINCT username) AS c FROM kletztenbrot_chat_data.ban_log WHERE reason LIKE ?', [`%${escapeLike(label)}%`]).catch(() => 0);
 		bans[cat] = { main, kletztenbrot };
 	}
-	const monitoredUsers = await countShared('SELECT COUNT(DISTINCT user_id) AS c FROM chat_data.first_message_sightings');
+	const monitoredUsers = await countUtility('SELECT COUNT(DISTINCT user_id) AS c FROM first_message_sightings');
 	return { categories, bans, categoryLabels: CATEGORY_LABELS, monitoredUsers };
 };
 
@@ -186,6 +188,7 @@ const route = (handler) => (req, res) => {
 module.exports = {
 	got,
 	sbv2,
+	utilityDb,
 	commands,
 	toListed,
 	execFile,
@@ -223,6 +226,7 @@ module.exports = {
 	SCAM_REASON_PATTERN,
 	one,
 	countShared,
+	countUtility,
 	escapeLike,
 	formatDbUptime,
 	get totalBans() {

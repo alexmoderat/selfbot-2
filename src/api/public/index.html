@@ -1,136 +1,189 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AlexBot – Add to your channel</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-      background: #060606;
-      color: #ffffff;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-    .card {
-      background: #111111;
-      border: 1px solid #262626;
-      border-radius: 12px;
-      padding: 48px 40px;
-      max-width: 480px;
-      width: 100%;
-      text-align: center;
-    }
-    .logo {
-      font-size: 55px;
-      margin-bottom: 16px;
-    }
-    h1 {
-      font-size: 30px;
-      font-weight: 700;
-      margin-bottom: 10px;
-      color: #ffffff;
-    }
-    p {
-      font-size: 17px;
-      color: #adafae;
-      line-height: 1.6;
-      margin-bottom: 32px;
-    }
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 28px;
-      border-radius: 8px;
-      font-size: 17px;
-      font-weight: 600;
-      text-decoration: none;
-      cursor: pointer;
-      border: none;
-      transition: background 0.15s;
-    }
-    .btn-twitch {
-      background: #1f7fb3;
-      color: #fff;
-    }
-    .btn-twitch:hover { background: #196a96; }
-    .join-btn { display: flex; justify-content: center; margin-bottom: 10px; }
-    .btn-login { background: #282828; color: #ffffff; display: flex; justify-content: center; }
-    .btn-login:hover { background: #383838; }
-    .ignore { color: #adafae; display: block; font-size: 16px; margin-top: 14px; text-decoration: underline; }
-    .ignore:hover { color: #ffffff; }
-    .features {
-      margin-top: 40px;
-      display: grid;
-      gap: 12px;
-      text-align: left;
-    }
-    .feature {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      background: #060606;
-      border-radius: 8px;
-      padding: 12px 14px;
-      font-size: 16px;
-      color: #adafae;
-    }
-    .feature-icon { font-size: 20.5px; flex-shrink: 0; margin-top: 1px; }
-    .feature-text strong { display: block; color: #ffffff; margin-bottom: 2px; }
-    footer {
-      margin-top: 24px;
-      font-size: 14px;
-      color: #888888;
-    }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="logo">🤖</div>
-    <h1>AlexBot</h1>
-    <!-- ninou2, 03.11.2026: "its not good for people to get faced with the message to join their channel when they first open the website", "the old tab with LOG IN button and add IGNORE under it" -->
-    <p>Add the bot to your channel, log in to manage it, or have a look around first.</p>
-    <a href="dashboard#join" class="btn btn-twitch join-btn" onclick="try { sessionStorage.setItem('guestPromptDone', '1'); } catch {}">Log in and join my channel</a>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>AlexBot – Add to your channel</title>
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+			body {
+				font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+				background: #060606;
+				color: #ffffff;
+				min-height: 100vh;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				padding: 24px;
+			}
+			.card {
+				background: #111111;
+				border: 1px solid #262626;
+				border-radius: 12px;
+				padding: 48px 40px;
+				max-width: 480px;
+				width: 100%;
+				text-align: center;
+			}
+			.logo {
+				font-size: 55px;
+				margin-bottom: 16px;
+			}
+			h1 {
+				font-size: 30px;
+				font-weight: 700;
+				margin-bottom: 10px;
+				color: #ffffff;
+			}
+			p {
+				font-size: 17px;
+				color: #adafae;
+				line-height: 1.6;
+				margin-bottom: 32px;
+			}
+			.btn {
+				display: inline-flex;
+				align-items: center;
+				gap: 10px;
+				padding: 14px 28px;
+				border-radius: 8px;
+				font-size: 17px;
+				font-weight: 600;
+				text-decoration: none;
+				cursor: pointer;
+				border: none;
+				transition: background 0.15s;
+			}
+			.btn-twitch {
+				background: #1f7fb3;
+				color: #fff;
+			}
+			.btn-twitch:hover {
+				background: #196a96;
+			}
+			.join-btn {
+				display: flex;
+				justify-content: center;
+				margin-bottom: 10px;
+			}
+			.btn-login {
+				background: #282828;
+				color: #ffffff;
+				display: flex;
+				justify-content: center;
+			}
+			.btn-login:hover {
+				background: #383838;
+			}
+			.ignore {
+				color: #adafae;
+				display: block;
+				font-size: 16px;
+				margin-top: 14px;
+				text-decoration: underline;
+			}
+			.ignore:hover {
+				color: #ffffff;
+			}
+			.features {
+				margin-top: 40px;
+				display: grid;
+				gap: 12px;
+				text-align: left;
+			}
+			.feature {
+				display: flex;
+				align-items: flex-start;
+				gap: 12px;
+				background: #060606;
+				border-radius: 8px;
+				padding: 12px 14px;
+				font-size: 16px;
+				color: #adafae;
+			}
+			.feature-icon {
+				font-size: 20.5px;
+				flex-shrink: 0;
+				margin-top: 1px;
+			}
+			.feature-text strong {
+				display: block;
+				color: #ffffff;
+				margin-bottom: 2px;
+			}
+			footer {
+				margin-top: 24px;
+				font-size: 14px;
+				color: #888888;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="card">
+			<div class="logo">🤖</div>
+			<h1>AlexBot</h1>
+			<!-- ninou2, 03.11.2026: "its not good for people to get faced with the message to join their channel when they first open the website", "the old tab with LOG IN button and add IGNORE under it" -->
+			<p>Add the bot to your channel, log in to manage it, or have a look around first.</p>
+			<a
+				href="dashboard#join"
+				class="btn btn-twitch join-btn"
+				onclick="
+					try {
+						sessionStorage.setItem('guestPromptDone', '1');
+					} catch {}
+				"
+				>Log in and join my channel</a
+			>
 
-    <a href="login" class="btn btn-login">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M2.149 0L.537 4.119v16.836h5.731V24h3.224l3.045-3.045h4.657l6.269-6.269V0H2.149zm19.164 13.612l-3.582 3.582H12l-3.045 3.045v-3.045H4.119V2.149h17.194v11.463z"/>
-        <path d="M17.194 5.373h-2.149v6.269h2.149V5.373zm-5.731 0H9.314v6.269h2.149V5.373z"/>
-      </svg>
-      Log in with Twitch
-    </a>
-    <a href="dashboard" class="ignore" onclick="try { sessionStorage.setItem('guestPromptDone', '1'); } catch {}">Ignore</a>
+			<a href="login" class="btn btn-login">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+					<path d="M2.149 0L.537 4.119v16.836h5.731V24h3.224l3.045-3.045h4.657l6.269-6.269V0H2.149zm19.164 13.612l-3.582 3.582H12l-3.045 3.045v-3.045H4.119V2.149h17.194v11.463z" />
+					<path d="M17.194 5.373h-2.149v6.269h2.149V5.373zm-5.731 0H9.314v6.269h2.149V5.373z" />
+				</svg>
+				Log in with Twitch
+			</a>
+			<a
+				href="dashboard"
+				class="ignore"
+				onclick="
+					try {
+						sessionStorage.setItem('guestPromptDone', '1');
+					} catch {}
+				"
+				>Ignore</a
+			>
 
-    <div class="features">
-      <div class="feature">
-        <span class="feature-icon">🚫</span>
-        <div class="feature-text">
-          <strong>Custom Banphrases</strong>
-          Set your own banphrases — the bot bans automatically when triggered.
-        </div>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">🔔</span>
-        <div class="feature-text">
-          <strong>Live &amp; Ban Notifications</strong>
-          Get notified in chat when a streamer goes live or gets banned.
-        </div>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">🛡️</span>
-        <div class="feature-text">
-          <strong>Auto Moderation</strong>
-          Catches ban evaders and suspicious users automatically.
-        </div>
-      </div>
-    </div>
-  </div>
-  <footer>auth.alexmoderat.eu — <a href="stats" style="color:#adafae">live stats</a></footer>
-</body>
+			<div class="features">
+				<div class="feature">
+					<span class="feature-icon">🚫</span>
+					<div class="feature-text">
+						<strong>Custom Banphrases</strong>
+						Set your own banphrases — the bot bans automatically when triggered.
+					</div>
+				</div>
+				<div class="feature">
+					<span class="feature-icon">🔔</span>
+					<div class="feature-text">
+						<strong>Live &amp; Ban Notifications</strong>
+						Get notified in chat when a streamer goes live or gets banned.
+					</div>
+				</div>
+				<div class="feature">
+					<span class="feature-icon">🛡️</span>
+					<div class="feature-text">
+						<strong>Auto Moderation</strong>
+						Catches ban evaders and suspicious users automatically.
+					</div>
+				</div>
+			</div>
+		</div>
+		<footer>auth.alexmoderat.eu — <a href="stats" style="color: #adafae">live stats</a></footer>
+	</body>
 </html>

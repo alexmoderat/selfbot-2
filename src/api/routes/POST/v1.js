@@ -1,5 +1,5 @@
 const express = require('express');
-const { sbv2, one, route } = require('../../v1.js');
+const { utilityDb, one, route } = require('../../v1.js');
 
 const router = express.Router();
 
@@ -22,9 +22,9 @@ router.post(
 			if (!entry.login) {
 				continue;
 			}
-			// chat_data.known_bots gehoert dem autojoin-bot (geteilte sb-v2-Daten in MariaDB)
-			await sbv2.query(
-				'INSERT INTO chat_data.known_bots (login, user_id, source) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE user_id = COALESCE(VALUES(user_id), user_id), source = COALESCE(VALUES(source), source)',
+			// known_bots gehoert dem autojoin-bot (geteilte sb-v2-Daten in MariaDB)
+			await utilityDb.query(
+				'INSERT INTO known_bots (login, user_id, source) VALUES (?, ?, ?) ON CONFLICT (login) DO UPDATE SET user_id = COALESCE(EXCLUDED.user_id, known_bots.user_id), source = COALESCE(EXCLUDED.source, known_bots.source)',
 				[entry.login.toLowerCase(), entry.user_id ? String(entry.user_id) : null, entry.source ?? null],
 			);
 			added++;

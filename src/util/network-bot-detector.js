@@ -1,4 +1,4 @@
-const sbv2 = require('../database/sbv2.js');
+const utility = require('../database/utility.js');
 
 const { autoBan, targetFromChannel } = require('./moderation.js');
 const { formatAutoBanReason } = require('./ban-reason.js');
@@ -21,8 +21,8 @@ const lastMessages = new Map();
 const countChannels = async (rule, key, userId) => {
 	const cutoff = new Date(Date.now() - WINDOW);
 	const byUser = rule.category === 'fm';
-	const rows = await sbv2.query(
-		`SELECT COUNT(DISTINCT channel) AS Count FROM chat_data.first_message_sightings WHERE normalized_text = ? AND seen_at >= ?${byUser ? ' AND user_id = ?' : ''}`,
+	const rows = await utility.query(
+		`SELECT COUNT(DISTINCT channel) AS "Count" FROM first_message_sightings WHERE normalized_text = ? AND seen_at >= ?${byUser ? ' AND user_id = ?' : ''}`,
 		byUser ? [key, cutoff, userId] : [key, cutoff],
 	);
 	return Number(rows[0]?.Count ?? 0);
@@ -30,14 +30,14 @@ const countChannels = async (rule, key, userId) => {
 
 /** Sichtung speichern - ausser dieselbe Nachricht kam binnen 5 s schon (Shared-Chat-Duplikat, CatQuery-Vorgabe) */
 const recordSighting = async (key, userId, channelName) => {
-	const [row] = await sbv2.query('SELECT seen_at AS Seen_At FROM chat_data.first_message_sightings WHERE normalized_text = ? AND user_id = ? ORDER BY seen_at DESC LIMIT 1', [key, userId]);
+	const [row] = await utility.query('SELECT seen_at AS "Seen_At" FROM first_message_sightings WHERE normalized_text = ? AND user_id = ? ORDER BY seen_at DESC LIMIT 1', [key, userId]);
 	const last = row?.Seen_At ?? null;
 
 	if (last && Date.now() - Number(last.valueOf()) < MIN_GAP) {
 		return false;
 	}
 
-	await sbv2.query('INSERT INTO chat_data.first_message_sightings (normalized_text, user_id, channel) VALUES (?, ?, ?)', [key, userId, channelName]);
+	await utility.query('INSERT INTO first_message_sightings (normalized_text, user_id, channel) VALUES (?, ?, ?)', [key, userId, channelName]);
 	return true;
 };
 

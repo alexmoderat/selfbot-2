@@ -1,158 +1,367 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Twitch Roles Lookup</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #060606; color: #ffffff; font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Twitch Roles Lookup</title>
+		<style>
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+			body {
+				background: #060606;
+				color: #ffffff;
+				font-family: 'Inter', system-ui, sans-serif;
+				min-height: 100vh;
+			}
 
-  header { background: #111111; border-bottom: 1px solid #2a2a2a; padding: 16px 24px; display: flex; align-items: center; gap: 16px; }
-  header h1 { font-size: 23px; font-weight: 700; }
-  header h1 span { color: #1f7fb3; }
+			header {
+				background: #111111;
+				border-bottom: 1px solid #2a2a2a;
+				padding: 16px 24px;
+				display: flex;
+				align-items: center;
+				gap: 16px;
+			}
+			header h1 {
+				font-size: 23px;
+				font-weight: 700;
+			}
+			header h1 span {
+				color: #1f7fb3;
+			}
 
-  .stats-bar { background: #161616; border-bottom: 1px solid #2a2a2a; padding: 8px 24px; display: flex; gap: 24px; font-size: 15px; color: #adafae; }
-  .stats-bar span b { color: #ffffff; }
+			.stats-bar {
+				background: #161616;
+				border-bottom: 1px solid #2a2a2a;
+				padding: 8px 24px;
+				display: flex;
+				gap: 24px;
+				font-size: 15px;
+				color: #adafae;
+			}
+			.stats-bar span b {
+				color: #ffffff;
+			}
 
-  .container { max-width: 900px; margin: 0 auto; padding: 32px 16px; }
+			.container {
+				max-width: 900px;
+				margin: 0 auto;
+				padding: 32px 16px;
+			}
 
-  .search-box { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
-  .search-box h2 { font-size: 18.5px; margin-bottom: 16px; color: #adafae; font-weight: 500; }
+			.search-box {
+				background: #111111;
+				border: 1px solid #2a2a2a;
+				border-radius: 12px;
+				padding: 24px;
+				margin-bottom: 24px;
+			}
+			.search-box h2 {
+				font-size: 18.5px;
+				margin-bottom: 16px;
+				color: #adafae;
+				font-weight: 500;
+			}
 
-  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-  .tab { padding: 8px 16px; border-radius: 6px; border: 1px solid #2a2a2a; background: transparent; color: #adafae; cursor: pointer; font-size: 16px; transition: all .15s; }
-  .tab.active { background: #1f7fb3; border-color: #1f7fb3; color: #fff; }
+			.tabs {
+				display: flex;
+				gap: 8px;
+				margin-bottom: 16px;
+			}
+			.tab {
+				padding: 8px 16px;
+				border-radius: 6px;
+				border: 1px solid #2a2a2a;
+				background: transparent;
+				color: #adafae;
+				cursor: pointer;
+				font-size: 16px;
+				transition: all 0.15s;
+			}
+			.tab.active {
+				background: #1f7fb3;
+				border-color: #1f7fb3;
+				color: #fff;
+			}
 
-  .input-row { display: flex; gap: 8px; }
-  .input-row input { flex: 1; background: #060606; border: 1px solid #2a2a2a; border-radius: 6px; padding: 10px 14px; color: #ffffff; font-size: 17px; outline: none; }
-  .input-row input:focus { border-color: #1f7fb3; }
-  .input-row button { background: #1f7fb3; border: none; border-radius: 6px; padding: 10px 20px; color: #fff; font-size: 17px; font-weight: 600; cursor: pointer; }
-  .input-row button:hover { background: #196a96; }
+			.input-row {
+				display: flex;
+				gap: 8px;
+			}
+			.input-row input {
+				flex: 1;
+				background: #060606;
+				border: 1px solid #2a2a2a;
+				border-radius: 6px;
+				padding: 10px 14px;
+				color: #ffffff;
+				font-size: 17px;
+				outline: none;
+			}
+			.input-row input:focus {
+				border-color: #1f7fb3;
+			}
+			.input-row button {
+				background: #1f7fb3;
+				border: none;
+				border-radius: 6px;
+				padding: 10px 20px;
+				color: #fff;
+				font-size: 17px;
+				font-weight: 600;
+				cursor: pointer;
+			}
+			.input-row button:hover {
+				background: #196a96;
+			}
 
-  .results { background: #111111; border: 1px solid #2a2a2a; border-radius: 12px; overflow: hidden; }
-  .results-header { padding: 16px 20px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; justify-content: space-between; }
-  .results-header h3 { font-size: 18.5px; }
-  .results-header .badge { background: #2a2a2a; padding: 3px 10px; border-radius: 20px; font-size: 15px; color: #adafae; }
+			.results {
+				background: #111111;
+				border: 1px solid #2a2a2a;
+				border-radius: 12px;
+				overflow: hidden;
+			}
+			.results-header {
+				padding: 16px 20px;
+				border-bottom: 1px solid #2a2a2a;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+			}
+			.results-header h3 {
+				font-size: 18.5px;
+			}
+			.results-header .badge {
+				background: #2a2a2a;
+				padding: 3px 10px;
+				border-radius: 20px;
+				font-size: 15px;
+				color: #adafae;
+			}
 
-  .role-section { border-bottom: 1px solid #2a2a2a; }
-  .role-section:last-child { border-bottom: none; }
-  .role-header { padding: 12px 20px; background: #161616; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
-  .role-header:hover { background: #252528; }
-  .role-badge { padding: 2px 10px; border-radius: 20px; font-size: 14px; font-weight: 700; text-transform: uppercase; }
-  .role-badge.mod { background: #00ad03; color: #fff; }
-  .role-badge.vip { background: #e91916; color: #fff; }
-  .role-badge.artist { background: #f7971d; color: #fff; }
-  .role-count { color: #adafae; font-size: 15px; margin-left: auto; }
-  .role-chevron { color: #adafae; transition: transform .2s; }
-  .role-chevron.open { transform: rotate(90deg); }
+			.role-section {
+				border-bottom: 1px solid #2a2a2a;
+			}
+			.role-section:last-child {
+				border-bottom: none;
+			}
+			.role-header {
+				padding: 12px 20px;
+				background: #161616;
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				cursor: pointer;
+				user-select: none;
+			}
+			.role-header:hover {
+				background: #252528;
+			}
+			.role-badge {
+				padding: 2px 10px;
+				border-radius: 20px;
+				font-size: 14px;
+				font-weight: 700;
+				text-transform: uppercase;
+			}
+			.role-badge.mod {
+				background: #00ad03;
+				color: #fff;
+			}
+			.role-badge.vip {
+				background: #e91916;
+				color: #fff;
+			}
+			.role-badge.artist {
+				background: #f7971d;
+				color: #fff;
+			}
+			.role-count {
+				color: #adafae;
+				font-size: 15px;
+				margin-left: auto;
+			}
+			.role-chevron {
+				color: #adafae;
+				transition: transform 0.2s;
+			}
+			.role-chevron.open {
+				transform: rotate(90deg);
+			}
 
-  .role-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1px; background: #2a2a2a; }
-  .role-item { background: #111111; padding: 10px 20px; display: flex; align-items: center; gap: 10px; font-size: 16px; }
-  .role-item:hover { background: #161616; }
-  .role-item img { width: 24px; height: 24px; border-radius: 50%; }
-  .role-item .name { flex: 1; }
-  .role-item a { color: #1f7fb3; text-decoration: none; }
-  .role-item a:hover { text-decoration: underline; }
-  .role-item .date { color: #adafae; font-size: 12.5px; }
-  .bot-badge { background: #7b2d2d; color: #ff9090; font-size: 11.5px; font-weight: 700; padding: 1px 6px; border-radius: 10px; letter-spacing: .3px; }
+			.role-items {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+				gap: 1px;
+				background: #2a2a2a;
+			}
+			.role-item {
+				background: #111111;
+				padding: 10px 20px;
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				font-size: 16px;
+			}
+			.role-item:hover {
+				background: #161616;
+			}
+			.role-item img {
+				width: 24px;
+				height: 24px;
+				border-radius: 50%;
+			}
+			.role-item .name {
+				flex: 1;
+			}
+			.role-item a {
+				color: #1f7fb3;
+				text-decoration: none;
+			}
+			.role-item a:hover {
+				text-decoration: underline;
+			}
+			.role-item .date {
+				color: #adafae;
+				font-size: 12.5px;
+			}
+			.bot-badge {
+				background: #7b2d2d;
+				color: #ff9090;
+				font-size: 11.5px;
+				font-weight: 700;
+				padding: 1px 6px;
+				border-radius: 10px;
+				letter-spacing: 0.3px;
+			}
 
-  .last-crawled { padding: 12px 20px; background: #1a1a1a; font-size: 14px; color: #adafae; border-top: 1px solid #2a2a2a; }
+			.last-crawled {
+				padding: 12px 20px;
+				background: #1a1a1a;
+				font-size: 14px;
+				color: #adafae;
+				border-top: 1px solid #2a2a2a;
+			}
 
-  .loading { text-align: center; padding: 48px; color: #adafae; }
-  .error { text-align: center; padding: 48px; color: #eb4034; }
-  .empty { text-align: center; padding: 48px; color: #adafae; }
+			.loading {
+				text-align: center;
+				padding: 48px;
+				color: #adafae;
+			}
+			.error {
+				text-align: center;
+				padding: 48px;
+				color: #eb4034;
+			}
+			.empty {
+				text-align: center;
+				padding: 48px;
+				color: #adafae;
+			}
 
-  .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #2a2a2a; border-top-color: #1f7fb3; border-radius: 50%; animation: spin .7s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-</style>
-</head>
-<body>
-<header>
-  <h1><span>Twitch</span> Roles Lookup</h1>
-</header>
-<div class="stats-bar" id="statsBar">Loading stats...</div>
+			.spinner {
+				display: inline-block;
+				width: 24px;
+				height: 24px;
+				border: 3px solid #2a2a2a;
+				border-top-color: #1f7fb3;
+				border-radius: 50%;
+				animation: spin 0.7s linear infinite;
+			}
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<h1><span>Twitch</span> Roles Lookup</h1>
+		</header>
+		<div class="stats-bar" id="statsBar">Loading stats...</div>
 
-<div class="container">
-  <div class="search-box">
-    <h2>Search by user or channel</h2>
-    <div class="tabs">
-      <button class="tab active" data-mode="user" onclick="setMode('user')">User</button>
-      <button class="tab" data-mode="channel" onclick="setMode('channel')">Channel</button>
-    </div>
-    <div class="input-row">
-      <input type="text" id="searchInput" placeholder="Enter username..." onkeydown="if(event.key==='Enter')search()">
-      <button onclick="search()">Search</button>
-    </div>
-  </div>
+		<div class="container">
+			<div class="search-box">
+				<h2>Search by user or channel</h2>
+				<div class="tabs">
+					<button class="tab active" data-mode="user" onclick="setMode('user')">User</button>
+					<button class="tab" data-mode="channel" onclick="setMode('channel')">Channel</button>
+				</div>
+				<div class="input-row">
+					<input type="text" id="searchInput" placeholder="Enter username..." onkeydown="if (event.key === 'Enter') search();" />
+					<button onclick="search()">Search</button>
+				</div>
+			</div>
 
-  <div id="results"></div>
-</div>
+			<div id="results"></div>
+		</div>
 
-<script>
-let mode = 'user';
+		<script>
+			let mode = 'user';
 
-function setMode(m) {
-  mode = m;
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.mode === m));
-  document.getElementById('searchInput').placeholder = m === 'user' ? 'Enter username...' : 'Enter channel name...';
-}
+			function setMode(m) {
+				mode = m;
+				document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.mode === m));
+				document.getElementById('searchInput').placeholder = m === 'user' ? 'Enter username...' : 'Enter channel name...';
+			}
 
-async function search() {
-  const val = document.getElementById('searchInput').value.trim().toLowerCase();
-  if (!val) return;
-  const el = document.getElementById('results');
-  el.innerHTML = '<div class="results"><div class="loading"><div class="spinner"></div></div></div>';
+			async function search() {
+				const val = document.getElementById('searchInput').value.trim().toLowerCase();
+				if (!val) return;
+				const el = document.getElementById('results');
+				el.innerHTML = '<div class="results"><div class="loading"><div class="spinner"></div></div></div>';
 
-  try {
-    const res = await fetch(`api/roles/${mode}/${encodeURIComponent(val)}`);
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    renderResults(data);
-  } catch(e) {
-    el.innerHTML = `<div class="results"><div class="error">Error: ${e.message}</div></div>`;
-  }
-}
+				try {
+					const res = await fetch(`api/roles/${mode}/${encodeURIComponent(val)}`);
+					const data = await res.json();
+					if (data.error) throw new Error(data.error);
+					renderResults(data);
+				} catch (e) {
+					el.innerHTML = `<div class="results"><div class="error">Error: ${e.message}</div></div>`;
+				}
+			}
 
-function timeAgo(dateStr) {
-  if (!dateStr) return '';
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const d = Math.floor(diff / 86400000);
-  const h = Math.floor(diff / 3600000);
-  const m = Math.floor(diff / 60000);
-  if (d > 365) return `${Math.floor(d/365)}y ago`;
-  if (d > 30) return `${Math.floor(d/30)}mo ago`;
-  if (d > 0) return `${d}d ago`;
-  if (h > 0) return `${h}h ago`;
-  if (m > 0) return `${m}m ago`;
-  return 'just now';
-}
+			function timeAgo(dateStr) {
+				if (!dateStr) return '';
+				const diff = Date.now() - new Date(dateStr).getTime();
+				const d = Math.floor(diff / 86400000);
+				const h = Math.floor(diff / 3600000);
+				const m = Math.floor(diff / 60000);
+				if (d > 365) return `${Math.floor(d / 365)}y ago`;
+				if (d > 30) return `${Math.floor(d / 30)}mo ago`;
+				if (d > 0) return `${d}d ago`;
+				if (h > 0) return `${h}h ago`;
+				if (m > 0) return `${m}m ago`;
+				return 'just now';
+			}
 
-function renderResults(data) {
-  const el = document.getElementById('results');
-  if (!data.total) {
-    el.innerHTML = '<div class="results"><div class="empty">No roles found.</div></div>';
-    return;
-  }
+			function renderResults(data) {
+				const el = document.getElementById('results');
+				if (!data.total) {
+					el.innerHTML = '<div class="results"><div class="empty">No roles found.</div></div>';
+					return;
+				}
 
-  const roleOrder = ['mod', 'vip', 'artist'];
-  const botLabel = (data.is_bot || false) ? ' <span class="bot-badge">BOT</span>' : '';
-  const title = mode === 'user'
-    ? `Roles for <b>${data.user}</b>${botLabel}`
-    : `Roles in <b>#${data.channel}</b>`;
+				const roleOrder = ['mod', 'vip', 'artist'];
+				const botLabel = data.is_bot || false ? ' <span class="bot-badge">BOT</span>' : '';
+				const title = mode === 'user' ? `Roles for <b>${data.user}</b>${botLabel}` : `Roles in <b>#${data.channel}</b>`;
 
-  let html = `<div class="results">
+				let html = `<div class="results">
     <div class="results-header">
       <h3>${title}</h3>
       <span class="badge">${data.total} entries</span>
     </div>`;
 
-  for (const role of roleOrder) {
-    const items = data.roles[role];
-    if (!items?.length) continue;
-    const label = mode === 'user' ? 'channel' : 'user';
+				for (const role of roleOrder) {
+					const items = data.roles[role];
+					if (!items?.length) continue;
+					const label = mode === 'user' ? 'channel' : 'user';
 
-    html += `<div class="role-section">
+					html += `<div class="role-section">
       <div class="role-header" onclick="toggleSection(this)">
         <span class="role-badge ${role}">${role}</span>
         <span class="role-count">${items.length} ${label}s</span>
@@ -160,57 +369,65 @@ function renderResults(data) {
       </div>
       <div class="role-items">`;
 
-    for (const item of items) {
-      const name  = mode === 'user' ? item.channel : item.user;
-      const link  = `https://twitch.tv/${name}`;
-      const date  = timeAgo(item.first_seen);
-      const bot   = item.is_bot ? '<span class="bot-badge">BOT</span>' : '';
-      html += `<div class="role-item">
+					for (const item of items) {
+						const name = mode === 'user' ? item.channel : item.user;
+						const link = `https://twitch.tv/${name}`;
+						const date = timeAgo(item.first_seen);
+						const bot = item.is_bot ? '<span class="bot-badge">BOT</span>' : '';
+						html += `<div class="role-item">
         <span class="name"><a href="${link}" target="_blank">${name}</a>${bot}</span>
         <span class="date">${date}</span>
       </div>`;
-    }
-    html += `</div></div>`;
-  }
+					}
+					html += `</div></div>`;
+				}
 
-  if (data.last_crawled) {
-    html += `<div class="last-crawled">Last crawled: ${timeAgo(data.last_crawled)} (${new Date(data.last_crawled).toLocaleString()})</div>`;
-  }
+				if (data.last_crawled) {
+					html += `<div class="last-crawled">Last crawled: ${timeAgo(data.last_crawled)} (${new Date(data.last_crawled).toLocaleString()})</div>`;
+				}
 
-  html += '</div>';
-  el.innerHTML = html;
-}
+				html += '</div>';
+				el.innerHTML = html;
+			}
 
-function toggleSection(header) {
-  const items = header.nextElementSibling;
-  const chev  = header.querySelector('.role-chevron');
-  const open  = items.style.display !== 'none';
-  items.style.display = open ? 'none' : 'grid';
-  chev.classList.toggle('open', !open);
-}
+			function toggleSection(header) {
+				const items = header.nextElementSibling;
+				const chev = header.querySelector('.role-chevron');
+				const open = items.style.display !== 'none';
+				items.style.display = open ? 'none' : 'grid';
+				chev.classList.toggle('open', !open);
+			}
 
-async function loadStats() {
-  try {
-    const res  = await fetch('api/roles/stats');
-    const data = await res.json();
-    document.getElementById('statsBar').innerHTML =
-      `<span>Channels in DB: <b>${Number(data.channels_total).toLocaleString()}</b></span>` +
-      `<span>Crawled: <b>${Number(data.channels_crawled).toLocaleString()}</b></span>` +
-      `<span>Total entries: <b>${Number(data.entries_total).toLocaleString()}</b></span>` +
-      `<span>Mods: <b>${Number(data.mods_total).toLocaleString()}</b></span>` +
-      `<span>VIPs: <b>${Number(data.vips_total).toLocaleString()}</b></span>` +
-      (data.bots_total ? `<span>Known bots: <b>${Number(data.bots_total).toLocaleString()}</b></span>` : '');
-  } catch {}
-}
+			async function loadStats() {
+				try {
+					const res = await fetch('api/roles/stats');
+					const data = await res.json();
+					document.getElementById('statsBar').innerHTML =
+						`<span>Channels in DB: <b>${Number(data.channels_total).toLocaleString()}</b></span>` +
+						`<span>Crawled: <b>${Number(data.channels_crawled).toLocaleString()}</b></span>` +
+						`<span>Total entries: <b>${Number(data.entries_total).toLocaleString()}</b></span>` +
+						`<span>Mods: <b>${Number(data.mods_total).toLocaleString()}</b></span>` +
+						`<span>VIPs: <b>${Number(data.vips_total).toLocaleString()}</b></span>` +
+						(data.bots_total ? `<span>Known bots: <b>${Number(data.bots_total).toLocaleString()}</b></span>` : '');
+				} catch {}
+			}
 
-loadStats();
-setInterval(loadStats, 30000);
+			loadStats();
+			setInterval(loadStats, 30000);
 
-// auto-search from URL param
-const urlUser = new URLSearchParams(location.search).get('user');
-const urlChan = new URLSearchParams(location.search).get('channel');
-if (urlUser) { setMode('user'); document.getElementById('searchInput').value = urlUser; search(); }
-if (urlChan) { setMode('channel'); document.getElementById('searchInput').value = urlChan; search(); }
-</script>
-</body>
+			// auto-search from URL param
+			const urlUser = new URLSearchParams(location.search).get('user');
+			const urlChan = new URLSearchParams(location.search).get('channel');
+			if (urlUser) {
+				setMode('user');
+				document.getElementById('searchInput').value = urlUser;
+				search();
+			}
+			if (urlChan) {
+				setMode('channel');
+				document.getElementById('searchInput').value = urlChan;
+				search();
+			}
+		</script>
+	</body>
 </html>

@@ -1,399 +1,411 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat Logs</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Chat Logs</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
 
-    body {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      color: #e0e0e0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      min-height: 100vh;
-      padding: 20px;
-    }
+			body {
+				background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+				color: #e0e0e0;
+				font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+				min-height: 100vh;
+				padding: 20px;
+			}
 
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+			.container {
+				max-width: 1200px;
+				margin: 0 auto;
+			}
 
-    header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
+			header {
+				text-align: center;
+				margin-bottom: 30px;
+			}
 
-    h1 {
-      font-size: 2.5em;
-      margin-bottom: 10px;
-      background: linear-gradient(45deg, #1f7fb3, #ff006e);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+			h1 {
+				font-size: 2.5em;
+				margin-bottom: 10px;
+				background: linear-gradient(45deg, #1f7fb3, #ff006e);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+			}
 
-    .controls {
-      display: grid;
-      grid-template-columns: 1fr 1fr auto auto;
-      gap: 15px;
-      margin-bottom: 30px;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 20px;
-      border-radius: 8px;
-      border: 1px solid rgba(255, 0, 110, 0.2);
-    }
+			.controls {
+				display: grid;
+				grid-template-columns: 1fr 1fr auto auto;
+				gap: 15px;
+				margin-bottom: 30px;
+				background: rgba(0, 0, 0, 0.3);
+				padding: 20px;
+				border-radius: 8px;
+				border: 1px solid rgba(255, 0, 110, 0.2);
+			}
 
-    @media (max-width: 768px) {
-      .controls {
-        grid-template-columns: 1fr;
-      }
-    }
+			@media (max-width: 768px) {
+				.controls {
+					grid-template-columns: 1fr;
+				}
+			}
 
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
+			.control-group {
+				display: flex;
+				flex-direction: column;
+				gap: 5px;
+			}
 
-    label {
-      font-size: 0.9em;
-      color: #b0b0b0;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
+			label {
+				font-size: 0.9em;
+				color: #b0b0b0;
+				text-transform: uppercase;
+				font-weight: 600;
+			}
 
-    select, input {
-      padding: 10px 15px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 0, 110, 0.3);
-      color: #e0e0e0;
-      border-radius: 4px;
-      font-size: 1em;
-      transition: all 0.3s;
-    }
+			select,
+			input {
+				padding: 10px 15px;
+				background: rgba(255, 255, 255, 0.05);
+				border: 1px solid rgba(255, 0, 110, 0.3);
+				color: #e0e0e0;
+				border-radius: 4px;
+				font-size: 1em;
+				transition: all 0.3s;
+			}
 
-    select:focus, input:focus {
-      outline: none;
-      border-color: #ff006e;
-      background: rgba(255, 255, 255, 0.08);
-      box-shadow: 0 0 10px rgba(255, 0, 110, 0.2);
-    }
+			select:focus,
+			input:focus {
+				outline: none;
+				border-color: #ff006e;
+				background: rgba(255, 255, 255, 0.08);
+				box-shadow: 0 0 10px rgba(255, 0, 110, 0.2);
+			}
 
-    button {
-      padding: 10px 20px;
-      background: linear-gradient(45deg, #1f7fb3, #ff006e);
-      border: none;
-      color: white;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s;
-      align-self: flex-end;
-    }
+			button {
+				padding: 10px 20px;
+				background: linear-gradient(45deg, #1f7fb3, #ff006e);
+				border: none;
+				color: white;
+				border-radius: 4px;
+				cursor: pointer;
+				font-weight: 600;
+				transition: all 0.3s;
+				align-self: flex-end;
+			}
 
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(255, 0, 110, 0.3);
-    }
+			button:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 5px 15px rgba(255, 0, 110, 0.3);
+			}
 
-    button:active {
-      transform: translateY(0);
-    }
+			button:active {
+				transform: translateY(0);
+			}
 
-    .logs-container {
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(255, 0, 110, 0.2);
-      border-radius: 8px;
-      overflow: hidden;
-      max-height: 70vh;
-      overflow-y: auto;
-    }
+			.logs-container {
+				background: rgba(0, 0, 0, 0.2);
+				border: 1px solid rgba(255, 0, 110, 0.2);
+				border-radius: 8px;
+				overflow: hidden;
+				max-height: 70vh;
+				overflow-y: auto;
+			}
 
-    .log-entry {
-      padding: 12px 20px;
-      border-bottom: 1px solid rgba(255, 0, 110, 0.1);
-      display: flex;
-      gap: 15px;
-      transition: all 0.2s;
-    }
+			.log-entry {
+				padding: 12px 20px;
+				border-bottom: 1px solid rgba(255, 0, 110, 0.1);
+				display: flex;
+				gap: 15px;
+				transition: all 0.2s;
+			}
 
-    .log-entry:hover {
-      background: rgba(255, 0, 110, 0.05);
-    }
+			.log-entry:hover {
+				background: rgba(255, 0, 110, 0.05);
+			}
 
-    .log-entry:last-child {
-      border-bottom: none;
-    }
+			.log-entry:last-child {
+				border-bottom: none;
+			}
 
-    .log-timestamp {
-      color: #888;
-      font-size: 0.85em;
-      white-space: nowrap;
-      min-width: 170px;
-      font-family: 'Courier New', monospace;
-    }
+			.log-timestamp {
+				color: #888;
+				font-size: 0.85em;
+				white-space: nowrap;
+				min-width: 170px;
+				font-family: 'Courier New', monospace;
+			}
 
-    .log-user {
-      color: #1f7fb3;
-      font-weight: 600;
-      min-width: 120px;
-      white-space: nowrap;
-    }
+			.log-user {
+				color: #1f7fb3;
+				font-weight: 600;
+				min-width: 120px;
+				white-space: nowrap;
+			}
 
-    .log-message {
-      flex: 1;
-      word-break: break-word;
-      white-space: pre-wrap;
-    }
+			.log-message {
+				flex: 1;
+				word-break: break-word;
+				white-space: pre-wrap;
+			}
 
-    .empty-state {
-      padding: 40px 20px;
-      text-align: center;
-      color: #666;
-    }
+			.empty-state {
+				padding: 40px 20px;
+				text-align: center;
+				color: #666;
+			}
 
-    .loading {
-      text-align: center;
-      padding: 20px;
-      color: #888;
-    }
+			.loading {
+				text-align: center;
+				padding: 20px;
+				color: #888;
+			}
 
-    .pagination {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 20px;
-      align-items: center;
-    }
+			.pagination {
+				display: flex;
+				gap: 10px;
+				justify-content: center;
+				margin-top: 20px;
+				align-items: center;
+			}
 
-    .pagination button {
-      padding: 8px 16px;
-      font-size: 0.9em;
-    }
+			.pagination button {
+				padding: 8px 16px;
+				font-size: 0.9em;
+			}
 
-    .pagination span {
-      color: #888;
-      font-size: 0.9em;
-    }
+			.pagination span {
+				color: #888;
+				font-size: 0.9em;
+			}
 
-    .status {
-      margin-top: 10px;
-      font-size: 0.9em;
-      color: #888;
-    }
+			.status {
+				margin-top: 10px;
+				font-size: 0.9em;
+				color: #888;
+			}
 
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
+			::-webkit-scrollbar {
+				width: 8px;
+			}
 
-    ::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.2);
-    }
+			::-webkit-scrollbar-track {
+				background: rgba(0, 0, 0, 0.2);
+			}
 
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 0, 110, 0.3);
-      border-radius: 4px;
-    }
+			::-webkit-scrollbar-thumb {
+				background: rgba(255, 0, 110, 0.3);
+				border-radius: 4px;
+			}
 
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 0, 110, 0.5);
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>📜 Chat Logs</h1>
-    </header>
+			::-webkit-scrollbar-thumb:hover {
+				background: rgba(255, 0, 110, 0.5);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<header>
+				<h1>📜 Chat Logs</h1>
+			</header>
 
-    <div class="controls">
-      <div class="control-group">
-        <label for="channelSelect">Channel</label>
-        <select id="channelSelect">
-          <option value="">Select a channel...</option>
-        </select>
-      </div>
+			<div class="controls">
+				<div class="control-group">
+					<label for="channelSelect">Channel</label>
+					<select id="channelSelect">
+						<option value="">Select a channel...</option>
+					</select>
+				</div>
 
-      <div class="control-group">
-        <label for="searchInput">Search</label>
-        <input type="text" id="searchInput" placeholder="Search messages...">
-      </div>
+				<div class="control-group">
+					<label for="searchInput">Search</label>
+					<input type="text" id="searchInput" placeholder="Search messages..." />
+				</div>
 
-      <div class="control-group">
-        <label>&nbsp;</label>
-        <button onclick="search()">Search</button>
-      </div>
+				<div class="control-group">
+					<label>&nbsp;</label>
+					<button onclick="search()">Search</button>
+				</div>
 
-      <div class="control-group">
-        <label>&nbsp;</label>
-        <button onclick="clearSearch()">Clear</button>
-      </div>
-    </div>
+				<div class="control-group">
+					<label>&nbsp;</label>
+					<button onclick="clearSearch()">Clear</button>
+				</div>
+			</div>
 
-    <div class="logs-container" id="logsContainer">
-      <div class="empty-state">Select a channel to view logs</div>
-    </div>
+			<div class="logs-container" id="logsContainer">
+				<div class="empty-state">Select a channel to view logs</div>
+			</div>
 
-    <div class="pagination">
-      <button onclick="previousPage()" id="prevBtn" disabled>← Previous</button>
-      <span id="pageInfo">Page 1</span>
-      <button onclick="nextPage()" id="nextBtn" disabled>Next →</button>
-    </div>
+			<div class="pagination">
+				<button onclick="previousPage()" id="prevBtn" disabled>← Previous</button>
+				<span id="pageInfo">Page 1</span>
+				<button onclick="nextPage()" id="nextBtn" disabled>Next →</button>
+			</div>
 
-    <div class="status" id="status"></div>
-  </div>
+			<div class="status" id="status"></div>
+		</div>
 
-  <script>
-    const CHANNELS = [
-      'alexmoderat', 'potatbotat', 'svdylan', 'kronosaoe', 'testaccountalexmoderat',
-      'fluxzen_uwu_', 'itsbr0dyy', 'wiihxhx', 'theshadowmvn', 'asafn_',
-      // Add more as needed
-    ];
+		<script>
+			const CHANNELS = [
+				'alexmoderat',
+				'potatbotat',
+				'svdylan',
+				'kronosaoe',
+				'testaccountalexmoderat',
+				'fluxzen_uwu_',
+				'itsbr0dyy',
+				'wiihxhx',
+				'theshadowmvn',
+				'asafn_',
+				// Add more as needed
+			];
 
-    let currentChannel = '';
-    let currentOffset = 0;
-    let currentSearch = '';
-    const LIMIT = 50;
+			let currentChannel = '';
+			let currentOffset = 0;
+			let currentSearch = '';
+			const LIMIT = 50;
 
-    // Initialize
-    window.addEventListener('DOMContentLoaded', () => {
-      const select = document.getElementById('channelSelect');
-      for (const ch of CHANNELS) {
-        const opt = document.createElement('option');
-        opt.value = ch;
-        opt.textContent = '#' + ch;
-        select.appendChild(opt);
-      }
+			// Initialize
+			window.addEventListener('DOMContentLoaded', () => {
+				const select = document.getElementById('channelSelect');
+				for (const ch of CHANNELS) {
+					const opt = document.createElement('option');
+					opt.value = ch;
+					opt.textContent = '#' + ch;
+					select.appendChild(opt);
+				}
 
-      // Auto-select first channel from URL or localStorage
-      const saved = localStorage.getItem('selectedChannel');
-      if (saved && CHANNELS.includes(saved)) {
-        select.value = saved;
-        currentChannel = saved;
-        loadLogs();
-      }
-    });
+				// Auto-select first channel from URL or localStorage
+				const saved = localStorage.getItem('selectedChannel');
+				if (saved && CHANNELS.includes(saved)) {
+					select.value = saved;
+					currentChannel = saved;
+					loadLogs();
+				}
+			});
 
-    document.getElementById('channelSelect').addEventListener('change', (e) => {
-      currentChannel = e.target.value;
-      currentOffset = 0;
-      currentSearch = '';
-      document.getElementById('searchInput').value = '';
-      if (currentChannel) {
-        localStorage.setItem('selectedChannel', currentChannel);
-        loadLogs();
-      } else {
-        document.getElementById('logsContainer').innerHTML = '<div class="empty-state">Select a channel to view logs</div>';
-      }
-    });
+			document.getElementById('channelSelect').addEventListener('change', (e) => {
+				currentChannel = e.target.value;
+				currentOffset = 0;
+				currentSearch = '';
+				document.getElementById('searchInput').value = '';
+				if (currentChannel) {
+					localStorage.setItem('selectedChannel', currentChannel);
+					loadLogs();
+				} else {
+					document.getElementById('logsContainer').innerHTML = '<div class="empty-state">Select a channel to view logs</div>';
+				}
+			});
 
-    document.getElementById('searchInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') search();
-    });
+			document.getElementById('searchInput').addEventListener('keypress', (e) => {
+				if (e.key === 'Enter') search();
+			});
 
-    async function loadLogs() {
-      if (!currentChannel) return;
+			async function loadLogs() {
+				if (!currentChannel) return;
 
-      const container = document.getElementById('logsContainer');
-      container.innerHTML = '<div class="loading">Loading...</div>';
+				const container = document.getElementById('logsContainer');
+				container.innerHTML = '<div class="loading">Loading...</div>';
 
-      try {
-        let url = `api/logs/${currentChannel}?limit=${LIMIT}&offset=${currentOffset}`;
-        if (currentSearch) url += `&search=${encodeURIComponent(currentSearch)}`;
+				try {
+					let url = `api/logs/${currentChannel}?limit=${LIMIT}&offset=${currentOffset}`;
+					if (currentSearch) url += `&search=${encodeURIComponent(currentSearch)}`;
 
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Failed to load logs');
+					const res = await fetch(url);
+					if (!res.ok) throw new Error('Failed to load logs');
 
-        const data = await res.json();
-        displayLogs(data.logs);
-        updatePagination(data.count);
-        updateStatus(`Loaded ${data.count} messages from #${data.channel}`);
-      } catch (err) {
-        container.innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
-        updateStatus('');
-      }
-    }
+					const data = await res.json();
+					displayLogs(data.logs);
+					updatePagination(data.count);
+					updateStatus(`Loaded ${data.count} messages from #${data.channel}`);
+				} catch (err) {
+					container.innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
+					updateStatus('');
+				}
+			}
 
-    function displayLogs(logs) {
-      const container = document.getElementById('logsContainer');
+			function displayLogs(logs) {
+				const container = document.getElementById('logsContainer');
 
-      if (logs.length === 0) {
-        container.innerHTML = '<div class="empty-state">No messages found</div>';
-        return;
-      }
+				if (logs.length === 0) {
+					container.innerHTML = '<div class="empty-state">No messages found</div>';
+					return;
+				}
 
-      container.innerHTML = logs.map(log => {
-        const date = new Date(log.created_at);
-        const timeStr = date.toLocaleString();
-        return `
+				container.innerHTML = logs
+					.map((log) => {
+						const date = new Date(log.created_at);
+						const timeStr = date.toLocaleString();
+						return `
           <div class="log-entry">
             <div class="log-timestamp">${timeStr}</div>
             <div class="log-user">${escapeHtml(log.username)}</div>
             <div class="log-message">${escapeHtml(log.message)}</div>
           </div>
         `;
-      }).join('');
-    }
+					})
+					.join('');
+			}
 
-    function updatePagination(count) {
-      const prevBtn = document.getElementById('prevBtn');
-      const nextBtn = document.getElementById('nextBtn');
-      const pageInfo = document.getElementById('pageInfo');
+			function updatePagination(count) {
+				const prevBtn = document.getElementById('prevBtn');
+				const nextBtn = document.getElementById('nextBtn');
+				const pageInfo = document.getElementById('pageInfo');
 
-      prevBtn.disabled = currentOffset === 0;
-      nextBtn.disabled = count < LIMIT;
-      pageInfo.textContent = `Offset: ${currentOffset}`;
-    }
+				prevBtn.disabled = currentOffset === 0;
+				nextBtn.disabled = count < LIMIT;
+				pageInfo.textContent = `Offset: ${currentOffset}`;
+			}
 
-    function previousPage() {
-      currentOffset = Math.max(0, currentOffset - LIMIT);
-      loadLogs();
-      window.scrollTo(0, 0);
-    }
+			function previousPage() {
+				currentOffset = Math.max(0, currentOffset - LIMIT);
+				loadLogs();
+				window.scrollTo(0, 0);
+			}
 
-    function nextPage() {
-      currentOffset += LIMIT;
-      loadLogs();
-      window.scrollTo(0, 0);
-    }
+			function nextPage() {
+				currentOffset += LIMIT;
+				loadLogs();
+				window.scrollTo(0, 0);
+			}
 
-    function search() {
-      const input = document.getElementById('searchInput').value.trim();
-      if (!input) {
-        clearSearch();
-        return;
-      }
-      currentSearch = input;
-      currentOffset = 0;
-      loadLogs();
-    }
+			function search() {
+				const input = document.getElementById('searchInput').value.trim();
+				if (!input) {
+					clearSearch();
+					return;
+				}
+				currentSearch = input;
+				currentOffset = 0;
+				loadLogs();
+			}
 
-    function clearSearch() {
-      currentSearch = '';
-      currentOffset = 0;
-      document.getElementById('searchInput').value = '';
-      loadLogs();
-    }
+			function clearSearch() {
+				currentSearch = '';
+				currentOffset = 0;
+				document.getElementById('searchInput').value = '';
+				loadLogs();
+			}
 
-    function updateStatus(msg) {
-      document.getElementById('status').textContent = msg;
-    }
+			function updateStatus(msg) {
+				document.getElementById('status').textContent = msg;
+			}
 
-    function escapeHtml(text) {
-      const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-      };
-      return text.replace(/[&<>"']/g, m => map[m]);
-    }
-  </script>
-</body>
+			function escapeHtml(text) {
+				const map = {
+					'&': '&amp;',
+					'<': '&lt;',
+					'>': '&gt;',
+					'"': '&quot;',
+					"'": '&#039;',
+				};
+				return text.replace(/[&<>"']/g, (m) => map[m]);
+			}
+		</script>
+	</body>
 </html>
