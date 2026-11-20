@@ -451,9 +451,7 @@ v1('/v1/twitch/userfollows', async (req, res) => {
 			let cursor;
 			do {
 				const searchParams = { user_id: user.id, first: 100, ...(cursor ? { after: cursor } : {}) };
-				const response = token
-					? await helixAsUser(token, { url: 'channels/followed', searchParams })
-					: await got('Helix')({ url: 'channels/followed', searchParams });
+				const response = token ? await helixAsUser(token, { url: 'channels/followed', searchParams }) : await got('Helix')({ url: 'channels/followed', searchParams });
 				if (!response.ok) {
 					break;
 				}
@@ -550,10 +548,7 @@ router.get(
 	route(async (req, res) => {
 		const limit = Math.min(Number.parseInt(one(req.query.limit) || '1000', 10), 10_000);
 		const offset = Number.parseInt(one(req.query.offset) || '0', 10) || 0;
-		const bots = await sbv2.query('SELECT user_id, login, source, added_at FROM chat_data.known_bots ORDER BY added_at DESC LIMIT ? OFFSET ?', [
-			limit,
-			offset,
-		]);
+		const bots = await sbv2.query('SELECT user_id, login, source, added_at FROM chat_data.known_bots ORDER BY added_at DESC LIMIT ? OFFSET ?', [limit, offset]);
 		const total = (await sbv2.query('SELECT COUNT(*) AS c FROM chat_data.known_bots'))[0]?.c ?? 0;
 		return res.json({ total: Number(total), limit, offset, bots });
 	}),

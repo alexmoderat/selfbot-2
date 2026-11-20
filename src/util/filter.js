@@ -4,20 +4,7 @@ const Users = require('./users.js');
 // Supibots Filter (bisher classes/filter.ts): sperrt Kombinationen aus User/Channel/Command/Aufruf.
 // Verwaltet ueber die Commands ban/unban. Ein Filter ist ein einfaches Objekt aus fromDoc().
 
-const TYPES = [
-	'Blacklist',
-	'Whitelist',
-	'Opt-out',
-	'Block',
-	'Unping',
-	'Unmention',
-	'Cooldown',
-	'Flags',
-	'Offline-only',
-	'Online-only',
-	'Arguments',
-	'Reminder-prevention',
-];
+const TYPES = ['Blacklist', 'Whitelist', 'Opt-out', 'Block', 'Unping', 'Unmention', 'Cooldown', 'Flags', 'Offline-only', 'Online-only', 'Arguments', 'Reminder-prevention'];
 
 const filters = new Map();
 
@@ -174,8 +161,7 @@ const applyData = (filter, input) => {
 };
 
 /** Prioritaet wie bei Supibot als Bitmaske: User > Aufruf > Command > Channel */
-const priority = (filter) =>
-	(filter.channelId ? 0b0000_0010 : 0) | (filter.command ? 0b0000_0100 : 0) | (filter.invocation ? 0b0000_1000 : 0) | (filter.userId ? 0b0001_0000 : 0);
+const priority = (filter) => (filter.channelId ? 0b0000_0010 : 0) | (filter.command ? 0b0000_0100 : 0) | (filter.invocation ? 0b0000_1000 : 0) | (filter.userId ? 0b0001_0000 : 0);
 
 const load = async () => {
 	filters.clear();
@@ -393,9 +379,7 @@ const getMentionStatus = (options) => getLocals('Unmention', options).length ===
 
 /** Unping: Namen bekommen ein unsichtbares Zeichen an zweiter Stelle; nicht vor "." und "@" (URLs, Mails) */
 const applyUnping = async (options) => {
-	const list = getLocals('Unping', { ...options, skipUserCheck: true }).filter(
-		(i) => i.blockedUser === null || options.executor === null || i.blockedUser === options.executor?.id,
-	);
+	const list = getLocals('Unping', { ...options, skipUserCheck: true }).filter((i) => i.blockedUser === null || options.executor === null || i.blockedUser === options.executor?.id);
 
 	let { string } = options;
 	for (const filter of list) {
@@ -415,9 +399,7 @@ const getCooldownModifiers = (options) => getLocals('Cooldown', options).sort((a
 const getReminderPreventions = (options) => getLocals('Reminder-prevention', { ...options, skipUserCheck: true }).map((i) => i.userId);
 
 /** Arguments-Daten: Liste aus { string|regex, index|range } (bisher isArgumentsData in classes/filter) */
-const isArgumentsData = (input) =>
-	Array.isArray(input) &&
-	input.every((i) => (typeof i.string === 'string' || i.regex instanceof RegExp) && (Array.isArray(i.range) || typeof i.index === 'number'));
+const isArgumentsData = (input) => Array.isArray(input) && input.every((i) => (typeof i.string === 'string' || i.regex instanceof RegExp) && (Array.isArray(i.range) || typeof i.index === 'number'));
 
 /** Cooldown-Daten: { multiplier } oder { override, respect } */
 const isCooldownData = (input) => Boolean(input && !Array.isArray(input) && (typeof input.multiplier === 'number' || typeof input.override === 'number'));

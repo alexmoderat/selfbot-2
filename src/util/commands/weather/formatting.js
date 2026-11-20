@@ -1,18 +1,6 @@
 const SupiDate = require('../../date.js');
 
-const WEATHER_FORMAT_KEYS = [
-	'cloudCover',
-	'humidity',
-	'icon',
-	'place',
-	'precipitation',
-	'pressure',
-	'sun',
-	'temperature',
-	'apparentTemperature',
-	'windGusts',
-	'windSpeed',
-];
+const WEATHER_FORMAT_KEYS = ['cloudCover', 'humidity', 'icon', 'place', 'precipitation', 'pressure', 'sun', 'temperature', 'apparentTemperature', 'windGusts', 'windSpeed'];
 
 const isWeatherFormatKey = (input) => WEATHER_FORMAT_KEYS.includes(input);
 

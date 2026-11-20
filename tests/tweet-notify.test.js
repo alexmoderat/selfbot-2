@@ -19,7 +19,10 @@ test('freshTweets: Erstlauf meldet nichts, danach nur neue eigene Tweets, aeltes
 	const t = (id, text, min) => ({ id, text, createdAt: new Date(now - min * 60_000).toISOString() });
 	const tweets = [t('4', 'neu b', 1), t('3', 'RT @x: weitergeleitet', 2), t('2', '@wer antwort', 3), t('1', 'alt', 5)];
 	assert.deepEqual(freshTweets(tweets, null, now), []);
-	assert.deepEqual(freshTweets(tweets, new Set(['1']), now).map((i) => i.id), ['4']);
+	assert.deepEqual(
+		freshTweets(tweets, new Set(['1']), now).map((i) => i.id),
+		['4'],
+	);
 	const old = [t('9', 'sehr alt', 600)];
 	assert.deepEqual(freshTweets(old, new Set(), now), []);
 	assert.ok(isStandalone(t('5', 'hallo', 1)));
@@ -62,8 +65,5 @@ test('Alter des Tweets in Klammern', () => {
 	assert.equal(agoTag('2026-11-14T00:19:00Z', now), '[11min ago]');
 	assert.equal(agoTag('2026-11-14T00:29:40Z', now), '[just now]');
 	assert.equal(agoTag('2026-11-13T22:00:00Z', now), '[2h 30min ago]');
-	assert.equal(
-		formatTweetAlert(['a'], 'twitch', { id: '1', text: 'hi', createdAt: '2026-11-14T00:19:00Z' }, '', now),
-		'@a — @twitch tweeted: hi [11min ago] https://x.com/twitch/status/1',
-	);
+	assert.equal(formatTweetAlert(['a'], 'twitch', { id: '1', text: 'hi', createdAt: '2026-11-14T00:19:00Z' }, '', now), '@a — @twitch tweeted: hi [11min ago] https://x.com/twitch/status/1');
 });

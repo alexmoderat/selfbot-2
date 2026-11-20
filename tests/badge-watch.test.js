@@ -5,8 +5,7 @@ global.bot = global.bot ?? {};
 const { parseBadges, parseEmotes, parseEvents } = require('../src/token/streamdatabase.js');
 const { newBadges, formatBadge, formatEmote } = require('../src/clients/modules/crons/badge-watch.js');
 
-const page = (list) =>
-	`<html><script id="__NEXT_DATA__" type="application/json">${JSON.stringify({ props: { pageProps: { initialTwitchGlobalBadges: list } } })}</script></html>`;
+const page = (list) => `<html><script id="__NEXT_DATA__" type="application/json">${JSON.stringify({ props: { pageProps: { initialTwitchGlobalBadges: list } } })}</script></html>`;
 const item = (set_id, id, extra = {}) => ({ current: { set_id, version: { id, title: `T ${set_id}`, description: `D ${set_id}` } }, ...extra });
 
 test('Badges aus der Seite lesen, entfernte auslassen', () => {
@@ -81,13 +80,19 @@ test('badgeAlerts ist als Channel-Eigenschaft deklariert (sonst "Unknown channel
 
 test('formatMany: mehrere neue in einer Sammelmeldung, lange Listen werden aufgeteilt', () => {
 	const { formatMany } = require('../src/clients/modules/crons/badge-watch.js');
-	const items = [{ key: 'a:1', title: 'Alpha' }, { key: 'b:1', title: 'Beta' }];
+	const items = [
+		{ key: 'a:1', title: 'Alpha' },
+		{ key: 'b:1', title: 'Beta' },
+	];
 	const events = new Map([['a:1', { how: 'watch 30 min', until: '2026-11-15' }]]);
 	const [one, ...rest] = formatMany('badge', items, 'hi', events);
 	assert.equal(rest.length, 0);
 	assert.ok(one.startsWith('New global Twitch badges (2): Alpha [watch 30 min, until 2026-11-15], Beta ('));
 	assert.ok(one.endsWith(' hi'));
-	const many = formatMany('emote', Array.from({ length: 60 }, (_, i) => ({ key: `e${i}`, title: `Emote${i}` })));
+	const many = formatMany(
+		'emote',
+		Array.from({ length: 60 }, (_, i) => ({ key: `e${i}`, title: `Emote${i}` })),
+	);
 	assert.ok(many.length > 1);
 	assert.ok(many.every((m) => m.length < 500));
 });
@@ -100,8 +105,18 @@ test('!badgeinfo: Anzahl 1-5, Badges und Emotes gemischt, neueste zuerst', () =>
 	assert.equal(parseCount(['0']), 1);
 	assert.equal(parseCount(['abc']), 1);
 	const at = (min) => new Date(Date.now() - min * 60_000).toISOString();
-	const merged = mergeRecent([{ title: 'B1', at: at(300) }, { title: 'B2', at: at(120) }], [{ title: 'E1', at: at(125) }], 3);
-	assert.deepEqual(merged.map((i) => `${i.kind}:${i.title}`), ['badge:B2', 'emote:E1', 'badge:B1']);
+	const merged = mergeRecent(
+		[
+			{ title: 'B1', at: at(300) },
+			{ title: 'B2', at: at(120) },
+		],
+		[{ title: 'E1', at: at(125) }],
+		3,
+	);
+	assert.deepEqual(
+		merged.map((i) => `${i.kind}:${i.title}`),
+		['badge:B2', 'emote:E1', 'badge:B1'],
+	);
 	const one = formatRecent([{ kind: 'badge', title: 'Alpha', description: 'Desc', how: 'watch 30 min', until: '2026-11-15', at: at(125) }]);
 	assert.equal(one, 'Last global Twitch badge: Alpha - Desc [watch 30 min, until 2026-11-15] (2h 5min ago)');
 	assert.equal(formatRecent([{ kind: 'emote', title: 'Foo', at: at(5) }]), 'Last global Twitch emote: Foo (5min ago)');
@@ -114,9 +129,15 @@ test('badge-history: neueste zuerst, nach KEEP abgeschnitten', async () => {
 	const { recordRecent, getRecent, KEEP } = require('../src/util/badge-history.js');
 	await recordRecent('badge', [{ title: 'A' }, { title: 'B' }], '2026-11-13T10:00:00.000Z');
 	await recordRecent('badge', [{ title: 'C' }], '2026-11-13T11:00:00.000Z');
-	assert.deepEqual((await getRecent('badge', 5)).map((i) => i.title), ['C', 'B', 'A']);
+	assert.deepEqual(
+		(await getRecent('badge', 5)).map((i) => i.title),
+		['C', 'B', 'A'],
+	);
 	assert.equal((await getRecent('badge', 2)).length, 2);
-	await recordRecent('badge', Array.from({ length: 30 }, (_, i) => ({ title: `x${i}` })));
+	await recordRecent(
+		'badge',
+		Array.from({ length: 30 }, (_, i) => ({ title: `x${i}` })),
+	);
 	assert.equal((await getRecent('badge', 99)).length, KEEP);
 	assert.deepEqual(await getRecent('emote', 3), []);
 });
@@ -133,7 +154,10 @@ test('Tweets: parseTweets (ohne angehefteten und t.co-Links) und parseGlobalTwee
 		},
 	};
 	const tweets = parseTweets(body);
-	assert.deepEqual(tweets.map((i) => i.id), ['3', '2']);
+	assert.deepEqual(
+		tweets.map((i) => i.id),
+		['3', '2'],
+	);
 	assert.equal(tweets[1].text, 'Twitch global badge added: Silver Chain');
 	assert.deepEqual(parseGlobalTweet(tweets[1].text), { kind: 'badge', what: 'added', rest: 'Silver Chain' });
 	assert.equal(parseGlobalTweet(tweets[0].text).what, 'now available');
@@ -154,7 +178,10 @@ test('!badgeinfo: Verfuegbarkeits-Tweet mit Link', () => {
 	const at = (min) => new Date(Date.now() - min * 60_000).toISOString();
 	const tweet = { title: 'Twitch global badge now available: Jordan', link: 'https://x.com/StreamDatabase/status/1', at: at(10) };
 	const merged = mergeRecent([{ title: 'B', at: at(60) }], [], 2, [tweet]);
-	assert.deepEqual(merged.map((i) => i.kind), ['tweet', 'badge']);
+	assert.deepEqual(
+		merged.map((i) => i.kind),
+		['tweet', 'badge'],
+	);
 	assert.equal(formatRecent([merged[0]]), 'Last global Twitch info: Twitch global badge now available: Jordan https://x.com/StreamDatabase/status/1 (10min ago)');
 	assert.ok(formatRecent(merged).includes('tweet https://x.com/StreamDatabase/status/1 (10min ago), badge B (1h 0min ago)'));
 });

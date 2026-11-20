@@ -31,8 +31,7 @@ const formatStreamExport = (data) => {
 	];
 
 	const perYear = yearlyBreakdown(days).map(
-		(i) =>
-			`${i.year}: ${i.count}/${daysInYear(i.year)} days, ${hours(yearHours.get(i.year) ?? 0)}, longest streak ${i.longestStreak} days (${i.longestStart} to ${i.longestEnd})`,
+		(i) => `${i.year}: ${i.count}/${daysInYear(i.year)} days, ${hours(yearHours.get(i.year) ?? 0)}, longest streak ${i.longestStreak} days (${i.longestStart} to ${i.longestEnd})`,
 	);
 
 	const daysByMonth = new Map();

@@ -69,17 +69,12 @@ const issuer = async (req) => (await bot.Users.getOrCreate(req.sess?.username ??
 /* ---------- Commands an/aus per Filter ---------- */
 
 const channelBlock = (channel) =>
-	[...Filter.data.values()].find(
-		(i) =>
-			i.Type === 'Blacklist' && i.Channel === channel.id && i.Command === null && i.User_Alias === null && i.Invocation === null && i.Platform === null,
-	);
+	[...Filter.data.values()].find((i) => i.Type === 'Blacklist' && i.Channel === channel.id && i.Command === null && i.User_Alias === null && i.Invocation === null && i.Platform === null);
 
 const ownLevel = (command) => (command.Flags.includes('mod') ? 'mod' : 'everyone');
 
 const commandBlock = (channel, command) =>
-	[...Filter.data.values()].find(
-		(i) => i.Type === 'Blacklist' && i.Channel === channel.id && i.Command === command && i.User_Alias === null && i.Invocation === null,
-	);
+	[...Filter.data.values()].find((i) => i.Type === 'Blacklist' && i.Channel === channel.id && i.Command === command && i.User_Alias === null && i.Invocation === null);
 
 const setBlock = async (existing, wanted, create) => {
 	if (existing) {
@@ -115,9 +110,7 @@ const applyChannelSettings = async (req, channel) => {
 	const { commandsAllowed, moderation, crossban, sevenTvAccess, badgeAlerts, badgeAlertsMessage, raidNotify } = req.body;
 	if (typeof commandsAllowed === 'boolean') {
 		const by = await issuer(req);
-		await setBlock(channelBlock(channel), !commandsAllowed, () =>
-			Filter.create({ Channel: channel.id, Type: 'Blacklist', Response: 'None', Issued_By: by }),
-		);
+		await setBlock(channelBlock(channel), !commandsAllowed, () => Filter.create({ Channel: channel.id, Type: 'Blacklist', Response: 'None', Issued_By: by }));
 	}
 	if (moderation === 'disabled' || moderation === 'automatic') {
 		await setAutobanSwitch(channel, 'autobanDisabled', moderation === 'disabled', req.sess?.username ?? 'dashboard', 'dashboard');
@@ -227,10 +220,7 @@ const lastUsedCounts = async (channel) => {
 
 /** Aufrufe je Command ueber alle Channels (ninou2, 07.11.2026: "global" neben den eigenen Uses) */
 const globalUsageCounts = async () => {
-	const [own, utility] = await Promise.all([
-		executionCounts({ command: { $not: /^custom:/ } }),
-		sbv2.query(`SELECT command AS Command, COUNT(*) AS Uses FROM ${UTILITY_TABLE} GROUP BY command`),
-	]);
+	const [own, utility] = await Promise.all([executionCounts({ command: { $not: /^custom:/ } }), sbv2.query(`SELECT command AS Command, COUNT(*) AS Uses FROM ${UTILITY_TABLE} GROUP BY command`)]);
 	return addUtilityRows(new Map(own.map((i) => [i.Command, Number(i.Uses)])), utility);
 };
 
@@ -482,8 +472,7 @@ const raidRoute = (change) =>
 	});
 
 // Der Bot-Besitzer sieht alle Eintraege, alle anderen nur den eigenen Channel (wie sb-v2)
-const ownerView = async (req) =>
-	req.sess?.channel === twitch().selfName ? await banwatchRows(null) : await banwatchRows(findChannel(req.sess?.channel ?? ''));
+const ownerView = async (req) => (req.sess?.channel === twitch().selfName ? await banwatchRows(null) : await banwatchRows(findChannel(req.sess?.channel ?? '')));
 
 module.exports = {
 	getCommand,

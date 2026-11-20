@@ -86,10 +86,7 @@ const runProbe = async (probe, sender) => {
 	};
 
 	try {
-		const result = await Promise.race([
-			command.execute(bot.Client, msg),
-			new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), TIMEOUT).unref()),
-		]);
+		const result = await Promise.race([command.execute(bot.Client, msg), new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), TIMEOUT).unref())]);
 		return judge(result, replies);
 	} catch (e) {
 		return `Exception: ${e?.message ?? e}`;

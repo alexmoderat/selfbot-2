@@ -45,9 +45,7 @@ module.exports = {
 			};
 		}
 
-		const ok = msg.sender.twitchId
-			? await banUser(targetFromChannel(msg.channelData, msg.sender.twitchId, msg.sender.name), { reason: 'Vanished', duration: 1, skipLog: true })
-			: false;
+		const ok = msg.sender.twitchId ? await banUser(targetFromChannel(msg.channelData, msg.sender.twitchId, msg.sender.name), { reason: 'Vanished', duration: 1, skipLog: true }) : false;
 
 		if (!ok) {
 			const emote = await msg.getBestAvailableEmote(['LULE', 'LULW', 'LuL', 'LUL'], '😄');

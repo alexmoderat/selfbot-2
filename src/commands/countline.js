@@ -18,8 +18,7 @@ module.exports = {
 			return { success: false, text: 'No such user exists in the database!' };
 		}
 
-		const lines = (await bot.DB.MessageMetaUserAlias.findOne({ userAlias: userData.id, channel: channelData.id }, { messageCount: 1 }).lean())
-			?.messageCount;
+		const lines = (await bot.DB.MessageMetaUserAlias.findOne({ userAlias: userData.id, channel: channelData.id }, { messageCount: 1 }).lean())?.messageCount;
 
 		const who = userData.id === msg.sender.id ? 'You have' : 'That user has';
 		if (!lines) {

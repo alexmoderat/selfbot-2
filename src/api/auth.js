@@ -33,18 +33,7 @@ const { checkRunLimits } = require('./command-runner.js');
 
 const { MAX_REMINDER_TEXT, editReminder, isReminderSource, listReminderHistory, listReminders, removeReminder } = require('./reminders.js');
 
-const {
-	COOKIE,
-	LOGIN_COOKIE,
-	SESSION_TTL,
-	createLogin,
-	createSession,
-	currentLogin,
-	deleteLogin,
-	deleteSession,
-	getSession,
-	parseCookies,
-} = require('./sessions.js');
+const { COOKIE, LOGIN_COOKIE, SESSION_TTL, createLogin, createSession, currentLogin, deleteLogin, deleteSession, getSession, parseCookies } = require('./sessions.js');
 
 const { link, page, text } = require('./html.js');
 

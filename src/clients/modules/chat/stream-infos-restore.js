@@ -75,10 +75,7 @@ module.exports = defineChatModule({
 			}
 
 			const result = await updateBroadcastSettings(channel, { title: parsed.title, gameId: game.id, gameName: game.name });
-			await bot.Channels.send(
-				channel,
-				result.ok ? `@${display}, stream infos restored: "${game.name}" - "${parsed.title}"` : describeFailure(result, display),
-			);
+			await bot.Channels.send(channel, result.ok ? `@${display}, stream infos restored: "${game.name}" - "${parsed.title}"` : describeFailure(result, display));
 		},
 	},
 });

@@ -33,11 +33,7 @@ module.exports = {
 			}
 			const value = arg === 'on' ? 1 : 0;
 			// chat_data gehoert sb-v2/autojoin-bot (geteilte Daten in MariaDB)
-			await sbv2.query('INSERT INTO chat_data.global_sub_counter (channel, enabled) VALUES (?, ?) ON DUPLICATE KEY UPDATE enabled = ?', [
-				own,
-				value,
-				value,
-			]);
+			await sbv2.query('INSERT INTO chat_data.global_sub_counter (channel, enabled) VALUES (?, ?) ON DUPLICATE KEY UPDATE enabled = ?', [own, value, value]);
 			return { text: `@${display}, sub counter turned ${arg.toUpperCase()}.` };
 		}
 

@@ -114,11 +114,7 @@ const streamData = {
 
 	/** existed = war schon eingetragen; Upsert statt SELECT-dann-INSERT (race-sicher, sb-v2 11.10.2026) */
 	async addExtraChannel(userId, channel, addedBy) {
-		const result = await bot.DB.StreakExtraChannel.updateOne(
-			{ userId },
-			{ $setOnInsert: { channelName: clean(channel), addedBy, added: new Date() } },
-			{ upsert: true },
-		);
+		const result = await bot.DB.StreakExtraChannel.updateOne({ userId }, { $setOnInsert: { channelName: clean(channel), addedBy, added: new Date() } }, { upsert: true });
 		const row = await bot.DB.StreakExtraChannel.findOne({ userId }, { added: 1 }).lean();
 		return { existed: result.upsertedCount === 0, addedAt: new Date(row?.added ?? Date.now()).toISOString() };
 	},
@@ -143,11 +139,7 @@ const streamData = {
 	async addSeconds(userId, channel, seconds) {
 		const now = new Date();
 		const p = period(now.getUTCFullYear(), now.getUTCMonth() + 1);
-		await bot.DB.StreamHoursMonth.updateOne(
-			{ userId, period: p },
-			{ $set: { channelName: clean(channel) }, $inc: { seconds: Number(seconds) } },
-			{ upsert: true },
-		);
+		await bot.DB.StreamHoursMonth.updateOne({ userId, period: p }, { $set: { channelName: clean(channel) }, $inc: { seconds: Number(seconds) } }, { upsert: true });
 		await bot.DB.StreamHoursFirstSeen.updateOne({ userId }, { $setOnInsert: { channelName: clean(channel), firstSeen: today(now) } }, { upsert: true });
 	},
 
@@ -176,11 +168,7 @@ const streamData = {
 	},
 
 	async getAllYears(userId) {
-		const rows = await bot.DB.StreamHoursMonth.aggregate([
-			{ $match: { userId } },
-			{ $group: { _id: { $substrBytes: ['$period', 0, 4] }, total: { $sum: '$seconds' } } },
-			{ $sort: { _id: 1 } },
-		]);
+		const rows = await bot.DB.StreamHoursMonth.aggregate([{ $match: { userId } }, { $group: { _id: { $substrBytes: ['$period', 0, 4] }, total: { $sum: '$seconds' } } }, { $sort: { _id: 1 } }]);
 		return rows.map((i) => ({ year: Number(i._id), seconds: Number(i.total) }));
 	},
 
@@ -203,11 +191,7 @@ const streamData = {
 		const now = new Date();
 		const p = period(now.getUTCFullYear(), now.getUTCMonth() + 1);
 		const day = new Date(`${today(now)}T00:00:00.000Z`);
-		await bot.DB.CategoryHoursMonth.updateOne(
-			{ userId, period: p, category },
-			{ $set: { channelName: clean(channel) }, $inc: { seconds: Number(seconds) } },
-			{ upsert: true },
-		);
+		await bot.DB.CategoryHoursMonth.updateOne({ userId, period: p, category }, { $set: { channelName: clean(channel) }, $inc: { seconds: Number(seconds) } }, { upsert: true });
 		await bot.DB.CategoryHoursFirstSeen.updateOne({ userId }, { $setOnInsert: { channelName: clean(channel), firstSeen: today(now) } }, { upsert: true });
 		// ninou2, 03.11.2026: "know the exact date day 1st playing a category and when last played" - neue Kategorien
 		// bekommen beide Tage; bestehende haben schon einen Eintrag mit firstDay null, dort wird nur lastDay exakt
@@ -256,11 +240,7 @@ const streamData = {
 
 	/** Jahre mit Kategorie-Daten, neueste zuerst */
 	async getCategoryYears(userId) {
-		const rows = await bot.DB.CategoryHoursMonth.aggregate([
-			{ $match: { userId } },
-			{ $group: { _id: { $substrBytes: ['$period', 0, 4] } } },
-			{ $sort: { _id: -1 } },
-		]);
+		const rows = await bot.DB.CategoryHoursMonth.aggregate([{ $match: { userId } }, { $group: { _id: { $substrBytes: ['$period', 0, 4] } } }, { $sort: { _id: -1 } }]);
 		return rows.map((i) => Number(i._id));
 	},
 

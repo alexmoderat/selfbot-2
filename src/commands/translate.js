@@ -116,8 +116,7 @@ module.exports = {
 	name: 'translate',
 	aliases: ['tl', 'deepl'],
 	cooldown: 3000,
-	description:
-		'Translates text. Default engine: Google (free). "engine:deepl" or the deepl alias uses DeepL instead (supports formality:more|less). Without a language: to English.',
+	description: 'Translates text. Default engine: Google (free). "engine:deepl" or the deepl alias uses DeepL instead (supports formality:more|less). Without a language: to English.',
 	usage: 'translate [language | to:language] [from:language] [engine:google|deepl] [formality:more|less] <text>',
 	flags: ['mod'],
 	execute: async (client, msg) => {

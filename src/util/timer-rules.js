@@ -71,9 +71,7 @@ const withGroupLastSent = (timer, all) => {
 	if (!timer.Sync_Group) {
 		return timer;
 	}
-	const latest = all
-		.filter((t) => t.Sync_Group === timer.Sync_Group)
-		.reduce((max, t) => (t.Last_Sent && (!max || t.Last_Sent > max) ? t.Last_Sent : max), timer.Last_Sent ?? null);
+	const latest = all.filter((t) => t.Sync_Group === timer.Sync_Group).reduce((max, t) => (t.Last_Sent && (!max || t.Last_Sent > max) ? t.Last_Sent : max), timer.Last_Sent ?? null);
 	return { ...timer, Last_Sent: latest };
 };
 

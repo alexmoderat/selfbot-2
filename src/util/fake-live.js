@@ -54,8 +54,7 @@ const removeWatch = async (channel, userId) => {
 };
 
 /** [{ Channel_Name, User_ID }] */
-const listPendingWatches = async () =>
-	(await bot.DB.FakeLiveWatch.find({ expires: { $gte: new Date() } }).lean()).map((i) => ({ Channel_Name: i.channelName, User_ID: i.userId }));
+const listPendingWatches = async () => (await bot.DB.FakeLiveWatch.find({ expires: { $gte: new Date() } }).lean()).map((i) => ({ Channel_Name: i.channelName, User_ID: i.userId }));
 
 const removeExpiredWatches = async () => {
 	await bot.DB.FakeLiveWatch.deleteMany({ expires: { $lt: new Date() } });

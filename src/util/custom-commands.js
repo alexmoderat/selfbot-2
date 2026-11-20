@@ -10,8 +10,7 @@ const CACHE_TTL = 60_000;
 const TEMPLATE_ONLY = new Set(['!raidping', '!raidreminder']);
 const cache = new Map();
 
-const list = async (channel) =>
-	(await bot.DB.CustomCommand.find({ channel: channel.id }).sort({ name: 1 }).lean()).map((doc) => bot.DB.toRow('CustomCommand', doc));
+const list = async (channel) => (await bot.DB.CustomCommand.find({ channel: channel.id }).sort({ name: 1 }).lean()).map((doc) => bot.DB.toRow('CustomCommand', doc));
 
 /** Kurz gecacht - sb-v2s Vorgaenger fragte pro Nachricht die DB */
 const getChannelCommands = async (channel) => {

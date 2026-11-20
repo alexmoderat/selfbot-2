@@ -84,10 +84,7 @@ module.exports = {
 
 			const link = await uploadList(
 				`Timers in #${channel.name}`,
-				all.map(
-					(i) =>
-						`#${i.ID} every ${formatInterval(i.Interval_Seconds)} (${modeText(i)}${i.Enabled ? '' : ', off'}): ${i.Message}`,
-				),
+				all.map((i) => `#${i.ID} every ${formatInterval(i.Interval_Seconds)} (${modeText(i)}${i.Enabled ? '' : ', off'}): ${i.Message}`),
 			);
 			return { text: `@${display}, ${all.length} timers in #${channel.name}: ${link}` };
 		}

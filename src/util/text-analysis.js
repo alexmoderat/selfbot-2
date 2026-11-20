@@ -153,9 +153,7 @@ const normalizeSyllabics = (text) => [...text].map((c) => _syllabicsMap[c] ?? c)
 
 /** Macht aus "s.p.a.m" wieder "spam". */
 function deobfuscate(text) {
-	return normalizeSmallCaps(normalizeSyllabics(normalizeStrokeLetters(stripInvisible(text)))).replace(/\b([a-z])(\.[a-z]){2,}\b/gi, (m) =>
-		m.replace(/\./g, ''),
-	);
+	return normalizeSmallCaps(normalizeSyllabics(normalizeStrokeLetters(stripInvisible(text)))).replace(/\b([a-z])(\.[a-z]){2,}\b/gi, (m) => m.replace(/\./g, ''));
 }
 
 // ── Domains ──────────────────────────────────────────────────────────────────
@@ -321,8 +319,7 @@ const isSpamDomainExempt = (domain) => isAllowlistedDomain(domain) || SPAM_DOMAI
 const DOT_WORD = /\s*[([{]\s*(?:dot|\.)\s*[)\]}]\s*/gi;
 // Gross-/kleinschreibungsbewusst: komplett grosse Endungen sind Begriffe ("som går .NET utbildningen"), Spam schreibt
 // ".com" / ". Com"
-const collapseSpaceBeforeDot = (text) =>
-	text.replace(/([a-z0-9-])\s+\.\s*([a-z][a-zA-Z]+|[A-Z][a-z]+)\b/gi, (m, a, tld) => (/^[A-Z]{2,}$/.test(tld) ? m : `${a}.${tld}`));
+const collapseSpaceBeforeDot = (text) => text.replace(/([a-z0-9-])\s+\.\s*([a-z][a-zA-Z]+|[A-Z][a-z]+)\b/gi, (m, a, tld) => (/^[A-Z]{2,}$/.test(tld) ? m : `${a}.${tld}`));
 
 const domainsIn = (text) => [...new Set((text.match(DOMAIN_REGEX) || []).map(normalizeDomain).filter(Boolean))];
 
@@ -355,17 +352,12 @@ function getHiddenDomains(messageText) {
  */
 function getMessageDomains(messageText) {
 	const base = deobfuscate(deleetify(messageText));
-	const all = [
-		...domainsIn(base.toLowerCase()),
-		...domainsIn(revealLinks(messageText)),
-		...domainsIn(collapseDomainSpaces(joinSpacedLetters(base.toLowerCase()).replace(DOT_WORD, '.'))),
-	];
+	const all = [...domainsIn(base.toLowerCase()), ...domainsIn(revealLinks(messageText)), ...domainsIn(collapseDomainSpaces(joinSpacedLetters(base.toLowerCase()).replace(DOT_WORD, '.')))];
 	return [...new Set(all)].filter((d) => !isSpamDomainExempt(d));
 }
 
 /** Ohne stripInvisible — genau wie im alten suspicious-handler. */
-const deobfuscateLoose = (text) =>
-	normalizeSmallCaps(normalizeSyllabics(normalizeStrokeLetters(text))).replace(/\b([a-z])(\.[a-z]){2,}\b/gi, (m) => m.replace(/\./g, ''));
+const deobfuscateLoose = (text) => normalizeSmallCaps(normalizeSyllabics(normalizeStrokeLetters(text))).replace(/\b([a-z])(\.[a-z]){2,}\b/gi, (m) => m.replace(/\./g, ''));
 
 function getSuspiciousLinkReason(messageText, lowTrustStatus) {
 	// Reihenfolge wie in getLinkSpamReason: collapseDomainSpaces braucht die

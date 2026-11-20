@@ -16,10 +16,9 @@ const buildEntries = () => {
 	const known = new Set(own.flatMap((i) => [i.Name, ...i.Aliases]));
 	const other = otherBotCommandsDir ? loadOtherBotCommands(otherBotCommandsDir).filter((i) => !known.has(i.Name) && i.permission !== 'owner') : [];
 
-	return [
-		...own.map((i) => ({ command: i, prefix: invocationPrefix(i, prefix), chat: true })),
-		...other.map((i) => ({ command: i, prefix: '!', chat: true })),
-	].sort((a, b) => a.command.Name.localeCompare(b.command.Name));
+	return [...own.map((i) => ({ command: i, prefix: invocationPrefix(i, prefix), chat: true })), ...other.map((i) => ({ command: i, prefix: '!', chat: true }))].sort((a, b) =>
+		a.command.Name.localeCompare(b.command.Name),
+	);
 };
 
 /** Volle Liste als Haste-Link (auch fuer den Cron bot-promo); null bei Fehler */

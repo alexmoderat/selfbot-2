@@ -75,13 +75,7 @@ const handleMessage = (raw) => {
 	const roomId = String(tags['room-id'] ?? '');
 
 	// Watch-Streak-Meilensteine aus ALLEN Channels (ninou2, 06.10.2026: der Bot soll den hoechsten Streak ueberall sehen)
-	if (
-		onWatchStreak &&
-		tags['event-type'] === 'usernotice' &&
-		tags['msg-id'] === 'viewermilestone' &&
-		tags['msg-param-category'] === 'watch-streak' &&
-		!watchStreakSeen.has(id)
-	) {
+	if (onWatchStreak && tags['event-type'] === 'usernotice' && tags['msg-id'] === 'viewermilestone' && tags['msg-param-category'] === 'watch-streak' && !watchStreakSeen.has(id)) {
 		watchStreakSeen.set(id, Date.now());
 		if (watchStreakSeen.size > 20_000) {
 			watchStreakSeen.clear();

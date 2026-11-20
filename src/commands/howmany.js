@@ -6,8 +6,7 @@ const customCommands = require('../util/custom-commands.js');
  * Antwort "the command !csi has been used in @ninou2 chat : [500 times] , Global use : [610 times]" - woertlich).
  * Gezaehlt werden alle Aufrufe samt Aliasen aus Command_Execution (seit 23.10.2026; sb-v2 hat keine Zahlen gesammelt).
  */
-const formatHowMany = (shown, channelName, inChannel, global) =>
-	`the command ${shown} has been used in @${channelName} chat : [${inChannel} times] , Global use : [${global} times]`;
+const formatHowMany = (shown, channelName, inChannel, global) => `the command ${shown} has been used in @${channelName} chat : [${inChannel} times] , Global use : [${global} times]`;
 
 const count = async (command, channelId) => {
 	return await bot.DB.CommandExecution.countDocuments({ command, ...(channelId !== null ? { channelId } : {}) });

@@ -1,14 +1,5 @@
 const express = require('express');
-const {
-	isResultFailure,
-	fetchGeoLocationData,
-	toUserLocation,
-	detectTimezone,
-	checkRunLimits,
-	locationRoute,
-	locationView,
-	SIDEBAR_KEY,
-} = require('../../auth.js');
+const { isResultFailure, fetchGeoLocationData, toUserLocation, detectTimezone, checkRunLimits, locationRoute, locationView, SIDEBAR_KEY } = require('../../auth.js');
 
 const router = express.Router();
 
@@ -47,13 +38,7 @@ router.post(
 		const sections = Array.isArray(body.sections) ? body.sections : null;
 		const items = body.items && typeof body.items === 'object' && !Array.isArray(body.items) ? body.items : null;
 		const validList = (list, max) => Array.isArray(list) && list.length <= max && list.every((i) => typeof i === 'string' && SIDEBAR_KEY.test(i));
-		if (
-			!sections ||
-			!items ||
-			!validList(sections, 20) ||
-			Object.keys(items).length > 20 ||
-			!Object.entries(items).every(([key, list]) => SIDEBAR_KEY.test(key) && validList(list, 40))
-		) {
+		if (!sections || !items || !validList(sections, 20) || Object.keys(items).length > 20 || !Object.entries(items).every(([key, list]) => SIDEBAR_KEY.test(key) && validList(list, 40))) {
 			res.status(400).json({ error: 'Invalid sidebar order.' });
 			return;
 		}

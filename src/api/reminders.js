@@ -122,10 +122,10 @@ const pastDate = (value) => {
 const listReminderHistory = async (user) => {
 	const name = user.name.toLowerCase();
 	const [utility, selfbot] = await Promise.all([
-		sbv2.query(
-			'SELECT id, channel, username, set_by, message, created_at, due_at, finished_at, cancelled FROM chat_data.reminder_history WHERE LOWER(username) = ? OR LOWER(set_by) = ?',
-			[name, name],
-		),
+		sbv2.query('SELECT id, channel, username, set_by, message, created_at, due_at, finished_at, cancelled FROM chat_data.reminder_history WHERE LOWER(username) = ? OR LOWER(set_by) = ?', [
+			name,
+			name,
+		]),
 		bot.DB.ReminderHistory.find({ $or: [{ userTo: user.id }, { userFrom: user.id }] }).lean(),
 	]);
 

@@ -348,11 +348,7 @@ const setPresetAutoEnable = async (preset, value) => {
 };
 
 const enablePreset = async (preset, channelId, enabledBy) => {
-	await bot.DB.ModerationPresetChannel.updateOne(
-		{ preset: preset.ID, channel: channelId },
-		{ $setOnInsert: { enabledBy, enabled: new Date() } },
-		{ upsert: true },
-	);
+	await bot.DB.ModerationPresetChannel.updateOne({ preset: preset.ID, channel: channelId }, { $setOnInsert: { enabledBy, enabled: new Date() } }, { upsert: true });
 	await reload();
 };
 
@@ -378,9 +374,7 @@ const getStats = () => ({
 
 /** Trefferzahlen je Phrasen-Wortlaut aus dem Protokoll (fuer !bpstats) */
 const getHitStats = async () => {
-	const rows = await bot.DB.ModerationPhraseHit.aggregate([
-		{ $group: { _id: '$phraseText', hits: { $sum: 1 }, firstHit: { $min: '$hit' }, lastHit: { $max: '$hit' } } },
-	]);
+	const rows = await bot.DB.ModerationPhraseHit.aggregate([{ $group: { _id: '$phraseText', hits: { $sum: 1 }, firstHit: { $min: '$hit' }, lastHit: { $max: '$hit' } } }]);
 
 	return rows.map((i) => ({
 		phrase: i._id,

@@ -2,11 +2,7 @@
 // informativ, kein automatischer Ban. Twitchs eigenes "suspicious chatter"-Feature hat keine oeffentliche API.
 
 const addToWatchlist = async (channel, login, reason, addedBy) => {
-	await bot.DB.Watchlist.updateOne(
-		{ channel: channel.id, login: login.toLowerCase() },
-		{ $set: { reason, addedBy }, $setOnInsert: { added: new Date() } },
-		{ upsert: true },
-	);
+	await bot.DB.Watchlist.updateOne({ channel: channel.id, login: login.toLowerCase() }, { $set: { reason, addedBy }, $setOnInsert: { added: new Date() } }, { upsert: true });
 };
 
 /** true, wenn es einen Eintrag gab */

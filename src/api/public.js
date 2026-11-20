@@ -96,12 +96,10 @@ const getTotalBans = async () => {
 };
 
 const getScammerStatus = async (username) => {
-	const rows = (await bot.DB.ModerationBanLog.find({ username: username.toLowerCase() }, { channelName: 1, reason: 1 }).sort({ created: -1 }).lean()).map(
-		(i) => ({
-			Channel_Name: i.channelName,
-			Reason: i.reason ?? '',
-		}),
-	);
+	const rows = (await bot.DB.ModerationBanLog.find({ username: username.toLowerCase() }, { channelName: 1, reason: 1 }).sort({ created: -1 }).lean()).map((i) => ({
+		Channel_Name: i.channelName,
+		Reason: i.reason ?? '',
+	}));
 	const scamRows = rows.filter((i) => SCAM_REASON_PATTERN.test(i.Reason));
 	if (scamRows.length === 0) {
 		return { monitored: false, reason: null, banCount: 0, channels: [] };
@@ -115,18 +113,13 @@ const computeNetworkStats = async () => {
 	const categories = {};
 	const bans = {};
 	for (const [cat, label] of Object.entries(CATEGORY_LABELS)) {
-		const rows = await sbv2.query(
-			'SELECT COUNT(DISTINCT user_id) AS users, COUNT(*) AS sightings FROM chat_data.first_message_sightings WHERE normalized_text LIKE ?',
-			[`${cat}::%`],
-		);
+		const rows = await sbv2.query('SELECT COUNT(DISTINCT user_id) AS users, COUNT(*) AS sightings FROM chat_data.first_message_sightings WHERE normalized_text LIKE ?', [`${cat}::%`]);
 		categories[cat] = { distinctUsers: Number(rows[0]?.users ?? 0), sightings: Number(rows[0]?.sightings ?? 0) };
 
 		// Wie LIKE '%label%' (MariaDB ohne Gross-/Kleinschreibung)
 		const main = (await bot.DB.ModerationBanLog.distinct('username', { reason: new RegExp(bot.Utils.escapeRegExp(label), 'i') })).length;
 		// Kletztenbrots Bot-Schema (gleicher Server, MariaDB), fehlt das Recht oder das Schema, zaehlt es 0
-		const kletztenbrot = await countShared('SELECT COUNT(DISTINCT username) AS c FROM kletztenbrot_chat_data.ban_log WHERE reason LIKE ?', [
-			`%${escapeLike(label)}%`,
-		]).catch(() => 0);
+		const kletztenbrot = await countShared('SELECT COUNT(DISTINCT username) AS c FROM kletztenbrot_chat_data.ban_log WHERE reason LIKE ?', [`%${escapeLike(label)}%`]).catch(() => 0);
 		bans[cat] = { main, kletztenbrot };
 	}
 	const monitoredUsers = await countShared('SELECT COUNT(DISTINCT user_id) AS c FROM chat_data.first_message_sightings');

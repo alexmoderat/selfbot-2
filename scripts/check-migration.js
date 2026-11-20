@@ -40,9 +40,7 @@ const main = async () => {
 
 		for (const spec of DB.dataSpecs) {
 			// Tabellen neuer Features gibt es nur in Postgres
-			const [known] = await conn.query("SELECT COUNT(*) AS c FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'selfbot_data' AND TABLE_NAME = ?", [
-				spec.table,
-			]);
+			const [known] = await conn.query("SELECT COUNT(*) AS c FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'selfbot_data' AND TABLE_NAME = ?", [spec.table]);
 			if (Number(known.c) === 0) {
 				continue;
 			}
@@ -53,16 +51,9 @@ const main = async () => {
 
 		const channels = new Map((await DB.Channel.find({}, { name: 1 }).lean()).map((i) => [i.name.toLowerCase(), i._id]));
 		const perChannel = new Map(
-			(
-				await DB.ChatLine.aggregate([
-					{ $match: { legacyId: { $type: 'number' } } },
-					{ $group: { _id: '$channel', count: { $sum: 1 }, max: { $max: '$legacyId' } } },
-				])
-			).map((i) => [i._id, i]),
+			(await DB.ChatLine.aggregate([{ $match: { legacyId: { $type: 'number' } } }, { $group: { _id: '$channel', count: { $sum: 1 }, max: { $max: '$legacyId' } } }])).map((i) => [i._id, i]),
 		);
-		const tables = (await conn.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'selfbot_chat_line'")).map(
-			(i) => i.name,
-		);
+		const tables = (await conn.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'selfbot_chat_line'")).map((i) => i.name);
 		let totalRows = 0;
 		let totalDocs = 0;
 		for (const table of tables) {

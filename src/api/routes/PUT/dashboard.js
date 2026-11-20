@@ -1,18 +1,5 @@
 const express = require('express');
-const {
-	cleanHandle,
-	cleanTimes,
-	raidNotifier,
-	requireSession,
-	issuer,
-	route,
-	titleNotifyRows,
-	tweetNotifyRows,
-	bodyFields,
-	urlChannelId,
-	RAID_TEXT_MAX,
-	raidRoute,
-} = require('../../dashboard.js');
+const { cleanHandle, cleanTimes, raidNotifier, requireSession, issuer, route, titleNotifyRows, tweetNotifyRows, bodyFields, urlChannelId, RAID_TEXT_MAX, raidRoute } = require('../../dashboard.js');
 
 const router = express.Router();
 
@@ -23,10 +10,7 @@ router.put(
 		const me = await issuer(req);
 		const channelId = urlChannelId(req);
 		if (channelId !== null) {
-			await bot.DB.TitleNotify.updateOne(
-				{ channel: channelId, userAlias: me, streamerLogin: String(req.params.streamer ?? '').toLowerCase() },
-				{ $set: bodyFields(req.body) },
-			);
+			await bot.DB.TitleNotify.updateOne({ channel: channelId, userAlias: me, streamerLogin: String(req.params.streamer ?? '').toLowerCase() }, { $set: bodyFields(req.body) });
 		}
 		res.json(await titleNotifyRows(me));
 	}),

@@ -63,9 +63,7 @@ const startFirehose = () => {
 			if (!notice.roomId || !userId || !login || !notice.channel || !Number.isFinite(value)) {
 				return;
 			}
-			void recordWatchStreak({ channelId: notice.roomId, channel: notice.channel, userId, login, value }).catch((e) =>
-				Logger.warn('[watch-streak] Speichern fehlgeschlagen', e),
-			);
+			void recordWatchStreak({ channelId: notice.roomId, channel: notice.channel, userId, login, value }).catch((e) => Logger.warn('[watch-streak] Speichern fehlgeschlagen', e));
 		},
 	);
 };

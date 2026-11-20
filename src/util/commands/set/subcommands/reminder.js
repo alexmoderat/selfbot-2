@@ -2,8 +2,7 @@ module.exports = {
 	name: 'reminder',
 	aliases: ['remind', 'reminders'],
 	parameter: 'ID',
-	description:
-		'Unsets an active reminder either set by you, or for you. You can use the <code>from:(user)</code> parameter to quickly unset all timed reminders set for you by a given user.',
+	description: 'Unsets an active reminder either set by you, or for you. You can use the <code>from:(user)</code> parameter to quickly unset all timed reminders set for you by a given user.',
 	flags: {
 		pipe: true,
 	},
@@ -53,9 +52,7 @@ module.exports = {
 			};
 		}
 
-		const reminderIDs = (
-			await bot.DB.Reminder.find({ schedule: { $ne: null }, userFrom: authorUserData.id, userTo: msg.sender.id }, { _id: 1 }).lean()
-		).map((i) => i._id);
+		const reminderIDs = (await bot.DB.Reminder.find({ schedule: { $ne: null }, userFrom: authorUserData.id, userTo: msg.sender.id }, { _id: 1 }).lean()).map((i) => i._id);
 
 		if (reminderIDs.length === 0) {
 			return {

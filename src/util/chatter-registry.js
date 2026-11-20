@@ -32,11 +32,7 @@ const firstSeen = async (channelId, userId) => {
 	}
 
 	try {
-		const result = await bot.DB.ChannelChatter.updateOne(
-			{ channel: Number(channelId), userId },
-			{ $setOnInsert: { firstSeen: new Date() } },
-			{ upsert: true },
-		);
+		const result = await bot.DB.ChannelChatter.updateOne({ channel: Number(channelId), userId }, { $setOnInsert: { firstSeen: new Date() } }, { upsert: true });
 
 		if (set.size >= MAX_CACHED_PER_CHANNEL) {
 			set.clear(); // grob, aber begrenzt den Speicher

@@ -89,11 +89,7 @@ class ChatLogger {
 				continue;
 			}
 			// Zeitversetzt, damit nicht alle Channels gleichzeitig schreiben (wie Supibot)
-			setTimeout(
-				() =>
-					void bot.DB.ChatLine.insertMany(records, { ordered: false }).catch((e) => console.warn('[chat-logger] Zeilen schreiben fehlgeschlagen', e)),
-				i * 250,
-			);
+			setTimeout(() => void bot.DB.ChatLine.insertMany(records, { ordered: false }).catch((e) => console.warn('[chat-logger] Zeilen schreiben fehlgeschlagen', e)), i * 250);
 			i++;
 		}
 	}

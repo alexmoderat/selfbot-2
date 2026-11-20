@@ -12,10 +12,7 @@ module.exports = {
 			return { success: false, text: 'This command is not available in private messages!' };
 		}
 
-		const [sum] = await bot.DB.MessageMetaUserAlias.aggregate([
-			{ $match: { channel: channel.id } },
-			{ $group: { _id: null, total: { $sum: '$messageCount' } } },
-		]);
+		const [sum] = await bot.DB.MessageMetaUserAlias.aggregate([{ $match: { channel: channel.id } }, { $group: { _id: null, total: { $sum: '$messageCount' } } }]);
 		const amount = sum?.total;
 
 		// Gilt fuer undefined (keine Meta-Zeilen) und 0

@@ -48,8 +48,7 @@ const newEvents = (events, lastId) => {
 	return events.filter((e) => BigInt(e.id) > BigInt(lastId)).sort((a, b) => (BigInt(a.id) < BigInt(b.id) ? -1 : 1));
 };
 
-const latestId = (events, fallback) =>
-	Array.isArray(events) && events.length > 0 ? events.reduce((m, e) => (BigInt(e.id) > BigInt(m) ? e.id : m), events[0].id) : fallback;
+const latestId = (events, fallback) => (Array.isArray(events) && events.length > 0 ? events.reduce((m, e) => (BigInt(e.id) > BigInt(m) ? e.id : m), events[0].id) : fallback);
 
 const state = new Map(); // repo -> { lastId, etag }
 
@@ -68,9 +67,7 @@ module.exports = defineCron({
 				headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
 			}
 
-			const response = await got('Global')({ url: `https://api.github.com/repos/${repo}/events?per_page=30`, headers, responseType: 'json' }).catch(
-				() => null,
-			);
+			const response = await got('Global')({ url: `https://api.github.com/repos/${repo}/events?per_page=30`, headers, responseType: 'json' }).catch(() => null);
 			if (!response || response.statusCode === 304) {
 				continue;
 			} else if (!response.ok) {

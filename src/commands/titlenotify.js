@@ -58,10 +58,7 @@ module.exports = {
 
 			const result = await bot.DB.TitleNotifyOptout.deleteOne({ streamerId: id });
 			return {
-				text:
-					result.deletedCount > 0
-						? `@${display}, you're opted back in — others can subscribe to your title changes again.`
-						: `@${display}, you weren't opted out.`,
+				text: result.deletedCount > 0 ? `@${display}, you're opted back in — others can subscribe to your title changes again.` : `@${display}, you weren't opted out.`,
 			};
 		}
 

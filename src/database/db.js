@@ -19,8 +19,7 @@ const connect = async (config) => {
 	Logger.info('[db] Mit Postgres verbunden');
 
 	// Ersatz fuer die TTL-Indizes von MongoDB (JoinerMessage, JoinerBan): stuendlich alte Zeilen loeschen
-	const expire = () =>
-		Promise.all(Object.values(models).map((model) => model.expire())).catch((e) => Logger.warn('[db] Aufraeumen fehlgeschlagen', e.message));
+	const expire = () => Promise.all(Object.values(models).map((model) => model.expire())).catch((e) => Logger.warn('[db] Aufraeumen fehlgeschlagen', e.message));
 	void expire();
 	expireTimer = setInterval(expire, 60 * 60_000);
 	expireTimer.unref();
@@ -28,19 +27,13 @@ const connect = async (config) => {
 
 /** Naechste numerische ID fuer eine Tabelle (wie AUTO_INCREMENT), atomar ueber "counters" */
 const nextId = async (name) => {
-	const { rows } = await sql.query(
-		'INSERT INTO "counters" ("_id", "seq") VALUES ($1, 1) ON CONFLICT ("_id") DO UPDATE SET "seq" = "counters"."seq" + 1 RETURNING "seq"',
-		[name],
-	);
+	const { rows } = await sql.query('INSERT INTO "counters" ("_id", "seq") VALUES ($1, 1) ON CONFLICT ("_id") DO UPDATE SET "seq" = "counters"."seq" + 1 RETURNING "seq"', [name]);
 	return rows[0].seq;
 };
 
 /** Zaehler mindestens auf value setzen (nach der Migration: hoechste uebernommene ID) */
 const ensureCounterAtLeast = async (name, value) => {
-	await sql.query(
-		'INSERT INTO "counters" ("_id", "seq") VALUES ($1, $2) ON CONFLICT ("_id") DO UPDATE SET "seq" = GREATEST("counters"."seq", EXCLUDED."seq")',
-		[name, value],
-	);
+	await sql.query('INSERT INTO "counters" ("_id", "seq") VALUES ($1, $2) ON CONFLICT ("_id") DO UPDATE SET "seq" = GREATEST("counters"."seq", EXCLUDED."seq")', [name, value]);
 };
 
 const disconnect = async () => {

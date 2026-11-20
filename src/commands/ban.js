@@ -236,8 +236,7 @@ module.exports = {
 					const items = [...existing.Data];
 					for (let i = 0; i < items.length; i++) {
 						const item = items[i];
-						const condition =
-							msg.params.all === true ? Boolean(item.range && item.range[0] === 0 && item.range[1] === Infinity) : item.index === index;
+						const condition = msg.params.all === true ? Boolean(item.range && item.range[0] === 0 && item.range[1] === Infinity) : item.index === index;
 
 						if (condition && item.string === string) {
 							items.splice(i, 1);

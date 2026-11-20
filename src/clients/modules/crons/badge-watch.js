@@ -57,7 +57,9 @@ const formatMany = (kind, items, custom = '', events = new Map()) => {
 		messages.push(current);
 	}
 
-	return messages.map((chunk, i) => `New global Twitch ${kind}s${messages.length > 1 ? ` (${i + 1}/${messages.length})` : ` (${items.length})`}: ${chunk.join(', ')}${i === messages.length - 1 ? tail : ''}`);
+	return messages.map(
+		(chunk, i) => `New global Twitch ${kind}s${messages.length > 1 ? ` (${i + 1}/${messages.length})` : ` (${items.length})`}: ${chunk.join(', ')}${i === messages.length - 1 ? tail : ''}`,
+	);
 };
 
 const enabledChannels = async () => {

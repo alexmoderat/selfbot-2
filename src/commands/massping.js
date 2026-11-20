@@ -46,9 +46,7 @@ module.exports = {
 			}
 
 			if (sub === 'blocklist') {
-				const blocked = Filter.getLocals('Blacklist', { command: COMMAND_NAME, skipUserCheck: true }).filter(
-					(i) => i.User_Alias !== null && i.Channel === null,
-				);
+				const blocked = Filter.getLocals('Blacklist', { command: COMMAND_NAME, skipUserCheck: true }).filter((i) => i.User_Alias !== null && i.Channel === null);
 				const names = await Promise.all(blocked.map(async (i) => (await bot.Users.get(i.User_Alias))?.Name ?? `#${i.User_Alias}`));
 				return {
 					text:
@@ -140,9 +138,7 @@ module.exports = {
 			await msg.send(chunks[i]);
 		}
 
-		console.log(
-			`[massping] #${channel.name} von ${msg.sender.name}: ${pinged.length} gepingt${names.length > MAX_PINGS ? ` (gedeckelt, ${names.length} da)` : ''}`,
-		);
+		console.log(`[massping] #${channel.name} von ${msg.sender.name}: ${pinged.length} gepingt${names.length > MAX_PINGS ? ` (gedeckelt, ${names.length} da)` : ''}`);
 		return { text: null };
 	},
 };

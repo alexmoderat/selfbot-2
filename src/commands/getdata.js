@@ -11,8 +11,7 @@ module.exports = {
 	name: 'getdata',
 	aliases: ['gd'],
 	cooldown: 30000,
-	description:
-		"Gives a link to a text file with everything stored about a channel's streams: days, hours, streaks and categories. Defaults to the current channel.",
+	description: "Gives a link to a text file with everything stored about a channel's streams: days, hours, streaks and categories. Defaults to the current channel.",
 	usage: 'getdata [channel]',
 	execute: async (client, msg) => {
 		const [channelRaw] = msg.args;
@@ -35,9 +34,7 @@ module.exports = {
 		}
 
 		const sortedYears = years.toSorted((a, b) => a.year - b.year);
-		const months = (
-			await Promise.all(sortedYears.map(async ({ year }) => (await streamData.getMonthlyBreakdown(userId, year)).map((i) => ({ year, ...i }))))
-		).flat();
+		const months = (await Promise.all(sortedYears.map(async ({ year }) => (await streamData.getMonthlyBreakdown(userId, year)).map((i) => ({ year, ...i }))))).flat();
 		const categoryYears = await Promise.all(
 			categoryYearList.map(async (year) => ({
 				year,

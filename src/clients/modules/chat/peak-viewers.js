@@ -23,9 +23,7 @@ module.exports = defineChatModule({
 			}
 
 			known.set(key, viewers);
-			await recordPeakIfHigher(context.broadcasterId, context.channel.name, year, viewers).catch((e) =>
-				console.warn(`[peak-viewers] #${context.channel?.name}`, e),
-			);
+			await recordPeakIfHigher(context.broadcasterId, context.channel.name, year, viewers).catch((e) => console.warn(`[peak-viewers] #${context.channel?.name}`, e));
 		},
 	},
 });

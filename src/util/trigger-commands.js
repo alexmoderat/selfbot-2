@@ -8,8 +8,7 @@ const CACHE_TTL = 60_000;
 const cache = new Map();
 const cooldowns = new Map();
 
-const list = async (channelId) =>
-	(await bot.DB.TriggerCommand.find({ channel: channelId }).sort({ created: 1 }).lean()).map((doc) => bot.DB.toRow('TriggerCommand', doc));
+const list = async (channelId) => (await bot.DB.TriggerCommand.find({ channel: channelId }).sort({ created: 1 }).lean()).map((doc) => bot.DB.toRow('TriggerCommand', doc));
 
 const getForChannel = async (channel) => {
 	const cached = cache.get(channel.id);

@@ -13,8 +13,7 @@ const createOpenApiSpec = () => ({
 	info: {
 		title: 'AlexBot API',
 		version: '1.0.0',
-		description:
-			'Public endpoints of the bot, plus token-protected /v1 endpoints (use "Authorize" with an API key from WEB_API_KEYS as Bearer; keys go in the Authorization header only).',
+		description: 'Public endpoints of the bot, plus token-protected /v1 endpoints (use "Authorize" with an API key from WEB_API_KEYS as Bearer; keys go in the Authorization header only).',
 	},
 	components: {
 		securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer' } },
@@ -24,8 +23,7 @@ const createOpenApiSpec = () => ({
 		'/api/scammer': {
 			get: {
 				summary: 'Check whether an account is flagged as a scammer/bot in our own bans',
-				description:
-					'Based on ban_log: bans (by any mod/bot) with a clearly categorized reason (Viewbot, SellerBot, Follow-Bot, Malware, Scam, Phishing, Ban-Evader).',
+				description: 'Based on ban_log: bans (by any mod/bot) with a clearly categorized reason (Viewbot, SellerBot, Follow-Bot, Malware, Scam, Phishing, Ban-Evader).',
 				tags: ['Moderation'],
 				parameters: [
 					{
@@ -143,8 +141,7 @@ const createOpenApiSpec = () => ({
 		'/v1/live-chatters': {
 			get: {
 				summary: 'Live streamers among the recent chatters of a channel',
-				description:
-					'Only channels the bot logs. Each candidate carries the CatQuery monitoring status (null if not looked up: only the 40 most active live chatters are checked).',
+				description: 'Only channels the bot logs. Each candidate carries the CatQuery monitoring status (null if not looked up: only the 40 most active live chatters are checked).',
 				tags: ['Radar'],
 				security: [{ bearerAuth: [] }],
 				parameters: [

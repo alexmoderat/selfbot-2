@@ -54,11 +54,7 @@ const addWatchtime = async (channel, users, minutes, live) => {
 
 /** { Username, Minutes, Offline_Minutes } per Login oder User-ID */
 const getWatchtime = async (channel, usernameOrId) =>
-	pick('Watchtime', await bot.DB.Watchtime.findOne({ channel: channel.id, $or: [{ username: usernameOrId }, { userId: usernameOrId }] }).lean(), [
-		'Username',
-		'Minutes',
-		'Offline_Minutes',
-	]);
+	pick('Watchtime', await bot.DB.Watchtime.findOne({ channel: channel.id, $or: [{ username: usernameOrId }, { userId: usernameOrId }] }).lean(), ['Username', 'Minutes', 'Offline_Minutes']);
 
 const getTopWatchtime = async (channel, offline, limit) => {
 	const field = offline ? 'offlineMinutes' : 'minutes';
@@ -71,10 +67,7 @@ const getTopWatchtime = async (channel, offline, limit) => {
 
 /** Meiste Nachrichten im Channel - aus messageMetaUserAlias, [{ Name, Count }] */
 const getTopChatters = async (channel, limit) => {
-	const docs = await bot.DB.MessageMetaUserAlias.find({ channel: channel.id }, { userAlias: 1, messageCount: 1 })
-		.sort({ messageCount: -1 })
-		.limit(limit)
-		.lean();
+	const docs = await bot.DB.MessageMetaUserAlias.find({ channel: channel.id }, { userAlias: 1, messageCount: 1 }).sort({ messageCount: -1 }).limit(limit).lean();
 	const users = await bot.DB.User.find({ _id: { $in: docs.map((i) => i.userAlias) } }, { name: 1 }).lean();
 	const names = new Map(users.map((i) => [i._id, i.name]));
 	return docs.filter((i) => names.has(i.userAlias)).map((i) => ({ Name: names.get(i.userAlias), Count: i.messageCount }));
@@ -100,8 +93,7 @@ const recordPeakIfHigher = async (broadcasterId, channelName, year, viewers) => 
 	);
 };
 
-const getAllTimePeak = async (broadcasterId) =>
-	pick('PeakViewers', await bot.DB.PeakViewers.findOne({ userId: broadcasterId }).sort({ viewers: -1 }).lean(), ['Channel_Name', 'Viewers', 'Seen_At']);
+const getAllTimePeak = async (broadcasterId) => pick('PeakViewers', await bot.DB.PeakViewers.findOne({ userId: broadcasterId }).sort({ viewers: -1 }).lean(), ['Channel_Name', 'Viewers', 'Seen_At']);
 
 const recordRaid = async (channel, raiderLogin, raiderDisplay, viewerCount) => {
 	await bot.DB.createWithId('RaidReceived', {
@@ -182,8 +174,7 @@ const getTopWatchStreaks = async (channelId, limit) => {
 
 /* ---------- Laengster Sub (chat_data.longest_sub, vom autojoin-bot gefuellt, nur lesen) ---------- */
 
-const getLongestSub = async (userId) =>
-	(await sbv2.query('SELECT user_id, username, channel, max_months FROM chat_data.longest_sub WHERE user_id = ? LIMIT 1', [userId]))[0] ?? null;
+const getLongestSub = async (userId) => (await sbv2.query('SELECT user_id, username, channel, max_months FROM chat_data.longest_sub WHERE user_id = ? LIMIT 1', [userId]))[0] ?? null;
 
 const getLongestSubRange = async (fromRank, toRank) =>
 	await sbv2.query('SELECT user_id, username, channel, max_months FROM chat_data.longest_sub ORDER BY max_months DESC LIMIT ? OFFSET ?', [

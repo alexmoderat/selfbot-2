@@ -20,9 +20,7 @@ const formatGithubEvent = (event, payload) => {
 			if (payload.action === 'opened') {
 				return `🔀 New pull request on '${repo}' by ${who}: #${payload.pull_request?.number} ${payload.pull_request?.title}`;
 			}
-			return payload.action === 'closed' && payload.pull_request?.merged
-				? `✅ Pull request merged on '${repo}': #${payload.pull_request?.number} ${payload.pull_request?.title}`
-				: null;
+			return payload.action === 'closed' && payload.pull_request?.merged ? `✅ Pull request merged on '${repo}': #${payload.pull_request?.number} ${payload.pull_request?.title}` : null;
 		case 'release':
 			return payload.action === 'published' ? `🚀 New release on '${repo}': ${payload.release?.name || payload.release?.tag_name}` : null;
 		case 'issue_comment':

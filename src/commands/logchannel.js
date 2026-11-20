@@ -58,9 +58,7 @@ module.exports = {
 			const wasExtra = await removeExtra(channel);
 			if (!match) {
 				return {
-					text: wasExtra
-						? `@${display}, ${channel} removed from the list (the logger was not tracking it anyway).`
-						: `@${display}, ${channel} is not being logged.`,
+					text: wasExtra ? `@${display}, ${channel} removed from the list (the logger was not tracking it anyway).` : `@${display}, ${channel} is not being logged.`,
 				};
 			}
 

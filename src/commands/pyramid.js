@@ -110,10 +110,7 @@ module.exports = {
 		if (locked !== null) {
 			return {
 				success: false,
-				text:
-					locked === Infinity
-						? 'A pyramid is already being built in this channel!'
-						: `A pyramid was just built in this channel, try again in ${locked}s!`,
+				text: locked === Infinity ? 'A pyramid is already being built in this channel!' : `A pyramid was just built in this channel, try again in ${locked}s!`,
 			};
 		}
 

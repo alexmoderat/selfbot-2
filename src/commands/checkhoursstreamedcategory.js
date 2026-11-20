@@ -128,10 +128,7 @@ module.exports = {
 
 		if (period) {
 			const label = period.kind === 'month' ? period.label : String(period.year);
-			const periodRows =
-				period.kind === 'month'
-					? await streamData.getCategoryMonthBreakdown(userId, period.year, period.month)
-					: await streamData.getCategoryYearBreakdown(userId, period.year);
+			const periodRows = period.kind === 'month' ? await streamData.getCategoryMonthBreakdown(userId, period.year, period.month) : await streamData.getCategoryYearBreakdown(userId, period.year);
 
 			const seconds = sumMatching(periodRows, names);
 			if (seconds < 60) {

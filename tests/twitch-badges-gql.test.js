@@ -11,7 +11,10 @@ test('parseGqlBadges: Schluessel set_id:version, Channel-Badges ausgelassen', ()
 			],
 		},
 	});
-	assert.deepEqual(list.map((i) => i.key), ['jordan-x-space-jam:1']);
+	assert.deepEqual(
+		list.map((i) => i.key),
+		['jordan-x-space-jam:1'],
+	);
 	assert.equal(list[0].title, 'Jordan x Space Jam');
 });
 

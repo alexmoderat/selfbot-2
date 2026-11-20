@@ -18,9 +18,7 @@ module.exports = defineChatModule({
 					return {};
 				}
 			};
-			const subscriptions = (
-				await bot.DB.EventSubscription.find({ active: true, type: CHANNEL_LIVE_SUBSCRIPTION_TITLE }, { userAlias: 1, data: 1 }).lean()
-			)
+			const subscriptions = (await bot.DB.EventSubscription.find({ active: true, type: CHANNEL_LIVE_SUBSCRIPTION_TITLE }, { userAlias: 1, data: 1 }).lean())
 				.filter((i) => (parse(i.data).channels ?? []).map(Number).includes(channel.id))
 				.map((i) => ({ userId: i.userAlias }));
 

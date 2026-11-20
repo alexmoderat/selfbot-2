@@ -117,9 +117,7 @@ router.post(
 		}
 		const disabled = Boolean(req.body.disabled);
 		const by = await issuer(req);
-		await setBlock(commandBlock(channel, command.Name), disabled, () =>
-			Filter.create({ Channel: channel.id, Command: command.Name, Type: 'Blacklist', Response: 'None', Issued_By: by }),
-		);
+		await setBlock(commandBlock(channel, command.Name), disabled, () => Filter.create({ Channel: channel.id, Command: command.Name, Type: 'Blacklist', Response: 'None', Issued_By: by }));
 		res.json({ name: command.Name, disabled });
 	}),
 );

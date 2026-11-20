@@ -62,9 +62,7 @@ router.get('/', async (req, res) => {
 	}
 	const twitch = bot.Twitch;
 	const existing = await getToken(twitch.selfName);
-	res.send(
-		page(existing ? '✅ Bot is authorized' : '⚠️ Bot not authorized', link(`${basePath}/bot-auth`, existing ? '🔄 Re-authorize Bot' : '✅ Authorize Bot')),
-	);
+	res.send(page(existing ? '✅ Bot is authorized' : '⚠️ Bot not authorized', link(`${basePath}/bot-auth`, existing ? '🔄 Re-authorize Bot' : '✅ Authorize Bot')));
 });
 
 router.get('/auth/:username', async (req, res) => {
@@ -214,10 +212,7 @@ router.get('/callback', async (req, res) => {
 
 		if (pending.type === 'stats_stream') {
 			const file = path.join(__dirname, '..', '..', 'stats-stream-token.json');
-			writeFileSync(
-				file,
-				JSON.stringify({ access_token: token.access_token, refresh_token: token.refresh_token, channel_id: owner.user_id, login }, null, 2),
-			);
+			writeFileSync(file, JSON.stringify({ access_token: token.access_token, refresh_token: token.refresh_token, channel_id: owner.user_id, login }, null, 2));
 			console.log(`[web] Stats-Stream-Token gespeichert fuer ${login}`);
 			res.send(page('✅ Stats stream authorized!', text(`Account: ${owner.login}`)));
 			return;
@@ -234,10 +229,7 @@ router.get('/callback', async (req, res) => {
 			}
 
 			const loginToken = await createLogin({ username: login, userId: owner.user_id, displayName: owner.login });
-			res.setHeader(
-				'Set-Cookie',
-				`${LOGIN_COOKIE}=${loginToken}; Path=${basePath || '/'}; HttpOnly; Secure; Max-Age=${SESSION_TTL / 1000}; SameSite=Lax`,
-			);
+			res.setHeader('Set-Cookie', `${LOGIN_COOKIE}=${loginToken}; Path=${basePath || '/'}; HttpOnly; Secure; Max-Age=${SESSION_TTL / 1000}; SameSite=Lax`);
 			res.redirect(`${basePath}/dashboard#join`);
 			return;
 		}
@@ -291,12 +283,7 @@ router.get('/callback', async (req, res) => {
 		// (alexmoderat, 29.09.2026: commanderroot-Slot enthielt ninou2s Token)
 		if (login !== pending.username) {
 			console.warn(`[web] /auth/${pending.username}: Token von ${login} abgelehnt`);
-			res.send(
-				page(
-					'❌ Wrong account',
-					text(`This link was for ${pending.username}, but you authorized as ${login}. Use the link for your own account instead.`),
-				),
-			);
+			res.send(page('❌ Wrong account', text(`This link was for ${pending.username}, but you authorized as ${login}. Use the link for your own account instead.`)));
 			return;
 		}
 

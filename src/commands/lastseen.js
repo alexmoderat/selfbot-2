@@ -15,8 +15,7 @@ module.exports = {
 		const sub = user?.toLowerCase();
 		if (sub === 'optout' || sub === 'optin') {
 			const existing = Filter.getLocals('Opt-out', { user: msg.sender, command: module.exports.name, includeInactive: true }).find(
-				(i) =>
-					i.User_Alias === msg.sender.id && i.Command === module.exports.name && i.Channel === null && i.Platform === null && i.Invocation === null,
+				(i) => i.User_Alias === msg.sender.id && i.Command === module.exports.name && i.Channel === null && i.Platform === null && i.Invocation === null,
 			);
 
 			if (sub === 'optout') {
@@ -57,9 +56,7 @@ module.exports = {
 
 		let date = chatLogger.getUserLastSeen(targetUser.id);
 		if (!date) {
-			date =
-				(await bot.DB.MessageMetaUserAlias.findOne({ userAlias: targetUser.id }, { lastMessagePosted: 1 }).sort({ lastMessagePosted: -1 }).lean())
-					?.lastMessagePosted ?? null;
+			date = (await bot.DB.MessageMetaUserAlias.findOne({ userAlias: targetUser.id }, { lastMessagePosted: 1 }).sort({ lastMessagePosted: -1 }).lean())?.lastMessagePosted ?? null;
 
 			if (!date) {
 				return {

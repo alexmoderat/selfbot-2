@@ -240,11 +240,7 @@ const exactInsensitive = (value) => new RegExp(`^${escapeRegExp(value)}$`, 'i');
 const botBanFilter = (channelName) => {
 	const name = escapeRegExp(selfName().toLowerCase());
 	return {
-		$or: [
-			{ automated: true, modName: exactInsensitive(selfName()) },
-			{ reason: new RegExp(`automated by ${name}`, 'i') },
-			{ reason: new RegExp(`^automated ban by ${name}`, 'i') },
-		],
+		$or: [{ automated: true, modName: exactInsensitive(selfName()) }, { reason: new RegExp(`automated by ${name}`, 'i') }, { reason: new RegExp(`^automated ban by ${name}`, 'i') }],
 		...(channelName ? { channelName: exactInsensitive(channelName) } : {}),
 	};
 };
@@ -294,11 +290,7 @@ const answerNthBotBan = async (args, channelName, display) => {
 };
 
 const formatBotbansText = (template, data) =>
-	(template || DEFAULT_BOTBANS_TEMPLATE)
-		.replace('{username}', data.username)
-		.replace('{channel}', data.channel)
-		.replace('{count}', String(data.count))
-		.replace('{global}', String(data.global));
+	(template || DEFAULT_BOTBANS_TEMPLATE).replace('{username}', data.username).replace('{channel}', data.channel).replace('{count}', String(data.count)).replace('{global}', String(data.global));
 
 /** Nach jedem automatischen Ban: Ansage im Channel, wenn dort "banannounce on" gesetzt ist (hoechstens alle 30 s) */
 const announceAutobanCount = async (channel) => {
@@ -334,9 +326,7 @@ let modLogBroadcasterId = null;
  * jemanden autobant das der Bot das in nem Twitch chat schreibt" - "Alexmoderat_modlogs moechte er").
  */
 const announceBan = async (channelName, userName, reason, duration) => {
-	const text = duration
-		? `⏱️ @${userName} was timed out for ${duration}s in #${channelName} — ${reason}`
-		: `🔨 @${userName} was banned in #${channelName} — ${reason}`;
+	const text = duration ? `⏱️ @${userName} was timed out for ${duration}s in #${channelName} — ${reason}` : `🔨 @${userName} was banned in #${channelName} — ${reason}`;
 
 	// Nicht nach Discord: dorthin kommt der Ban ueber discord-mirror (Hermes meldet auch die eigenen Bans)
 	await sayModLog(text);

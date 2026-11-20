@@ -15,9 +15,7 @@ const stringifySafe = (value) => {
 
 /** Fire-and-forget */
 const logCommandExecution = (data) => {
-	bot.DB.CommandExecution.create({ ...data, result: data.result?.slice(0, 1000) ?? null }).catch((e) =>
-		Logger.warn('[log] Command-Log fehlgeschlagen', e.message),
-	);
+	bot.DB.CommandExecution.create({ ...data, result: data.result?.slice(0, 1000) ?? null }).catch((e) => Logger.warn('[log] Command-Log fehlgeschlagen', e.message));
 };
 
 /** Fehler speichern, gibt die ID fuer die Chat-Antwort zurueck (null wenn das Speichern scheitert) */

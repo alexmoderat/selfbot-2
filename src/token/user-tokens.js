@@ -42,14 +42,7 @@ const USER_SCOPES = [
 	'moderator:read:vips',
 	'channel:read:subscriptions',
 ];
-const ADD_BOT_SCOPES = [
-	'chat:read',
-	'chat:edit',
-	'moderator:manage:banned_users',
-	'moderator:manage:suspicious_users',
-	'channel:read:subscriptions',
-	'moderator:read:followers',
-];
+const ADD_BOT_SCOPES = ['chat:read', 'chat:edit', 'moderator:manage:banned_users', 'moderator:manage:suspicious_users', 'channel:read:subscriptions', 'moderator:read:followers'];
 
 const baseUrl = () => (process.env.WEB_BASE_URL ?? '').replace(/\/+$/, '');
 const authClient = () => {

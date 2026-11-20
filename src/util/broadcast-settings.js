@@ -46,9 +46,7 @@ const updateViaEditor = async (broadcasterId, edit) => {
 		fields.push(`game: ${JSON.stringify(edit.gameName)}`);
 	}
 
-	const data = await gqlSmartbox(`mutation { updateBroadcastSettings(input: { ${fields.join(', ')} }) { error broadcastSettings { title } } }`).catch(
-		() => null,
-	);
+	const data = await gqlSmartbox(`mutation { updateBroadcastSettings(input: { ${fields.join(', ')} }) { error broadcastSettings { title } } }`).catch(() => null);
 	if (data === null) {
 		return null; // nicht konfiguriert oder Fehler
 	}

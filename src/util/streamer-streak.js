@@ -217,9 +217,7 @@ function fmtLengthShort(ms) {
 function fmtStreamSpanUtc(startIso, endIso) {
 	const s = new Date(startIso);
 	const e = new Date(endIso);
-	const dayDiff = Math.round(
-		(Date.UTC(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate()) - Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate())) / 86_400_000,
-	);
+	const dayDiff = Math.round((Date.UTC(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate()) - Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate())) / 86_400_000);
 	const plus = dayDiff > 0 ? ` +${dayDiff}d` : '';
 	return `${fmtDate(s.toISOString().slice(0, 10))} [${hhmm(s)} UTC to ${hhmm(e)} UTC${plus}, ⏱${fmtLengthShort(e.getTime() - s.getTime())}]`;
 }

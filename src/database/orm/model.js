@@ -42,7 +42,10 @@ const createModel = ({ name, collection, definition, indexes = [], sql }) => {
 		const entries = Object.entries(projection);
 		const exclude = entries.filter(([, v]) => v === 0 || v === false).map(([k]) => k);
 		if (exclude.length > 0 && exclude.length === entries.length) {
-			return [...fields.keys()].filter((i) => !exclude.includes(i)).map(quote).join(', ');
+			return [...fields.keys()]
+				.filter((i) => !exclude.includes(i))
+				.map(quote)
+				.join(', ');
 		}
 		const wanted = entries.filter(([, v]) => v !== 0 && v !== false).map(([k]) => k);
 		if (!exclude.includes('_id') && !wanted.includes('_id')) wanted.unshift('_id');

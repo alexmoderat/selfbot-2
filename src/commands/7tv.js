@@ -30,8 +30,7 @@ const {
 const MAX_EMOTE_LIMIT = 250;
 // 401 = der 7TV-Token des Bots ist abgelaufen/ungueltig, nicht fehlende Editor-Rechte (20.11.2026: Token seit 16.11. abgelaufen,
 // Meldung schickte Im_Row1 faelschlich zu den Editor-Einstellungen)
-const editorHint = (statusCode) =>
-	statusCode === 401 ? "my 7TV login has expired, alexmoderat has to renew it" : 'Check if I am set up as the 7TV editor for this channel';
+const editorHint = (statusCode) => (statusCode === 401 ? 'my 7TV login has expired, alexmoderat has to renew it' : 'Check if I am set up as the 7TV editor for this channel');
 
 const canManage = (permissions) => permissions.administrator || permissions.channelOwner || permissions.moderator;
 
@@ -42,11 +41,7 @@ const canManage = (permissions) => permissions.administrator || permissions.chan
 const canUseDirect = (permissions, streamerOnly) => permissions.administrator || permissions.channelOwner || (!streamerOnly && permissions.moderator);
 const directDenied = async (msg) => {
 	const streamerOnly = Boolean(await bot.Channels.getData(msg.channelData, 'sevenTvStreamerOnly'));
-	return canUseDirect(getPermissions(msg), streamerOnly)
-		? null
-		: streamerOnly
-			? 'only the streamer can do that in this channel.'
-			: 'only mods and the streamer can do that.';
+	return canUseDirect(getPermissions(msg), streamerOnly) ? null : streamerOnly ? 'only the streamer can do that in this channel.' : 'only mods and the streamer can do that.';
 };
 
 const access = async (msg, mode) => {
@@ -333,10 +328,7 @@ const directRemove = async (msg, ...args) => {
 	if (!target) {
 		return {
 			success: false,
-			text:
-				loose.length > 1
-					? `There are several emotes called ${name} with different capitalization - write it exactly.`
-					: `There's no 7TV emote called ${name} in this channel!`,
+			text: loose.length > 1 ? `There are several emotes called ${name} with different capitalization - write it exactly.` : `There's no 7TV emote called ${name} in this channel!`,
 		};
 	}
 

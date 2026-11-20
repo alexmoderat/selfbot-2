@@ -66,9 +66,7 @@ module.exports = defineCron({
 
 		const action = evaluate(state, ok, Date.now());
 		if (action === 'recover') {
-			await sendAlert(
-				'✅ **SmartBox-GQL wieder erreichbar** — subage, chatters (Nicht-Mod-Channels) und der Editor-Weg von settitle/setgame laufen wieder.',
-			);
+			await sendAlert('✅ **SmartBox-GQL wieder erreichbar** — subage, chatters (Nicht-Mod-Channels) und der Editor-Weg von settitle/setgame laufen wieder.');
 		} else if (action) {
 			await sendAlert(
 				`🔴 **SmartBox-GQL ausgefallen** (${why})\n` +

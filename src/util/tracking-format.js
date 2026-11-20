@@ -137,18 +137,13 @@ const estimateStreakStart = (days, sharedDay, value) => {
 const formatStreakStart = (login, channel, row, days) => {
 	const sharedDay = toDate(row.Seen_At).toISOString().slice(0, 10);
 	const estimate = estimateStreakStart(days, sharedDay, row.Value);
-	const first =
-		row.First_Value && row.First_Seen_At
-			? `first shared streak: ${row.First_Value} on ${fmtDate(toDate(row.First_Seen_At).toISOString().slice(0, 10))}`
-			: null;
+	const first = row.First_Value && row.First_Seen_At ? `first shared streak: ${row.First_Value} on ${fmtDate(toDate(row.First_Seen_At).toISOString().slice(0, 10))}` : null;
 
 	if (estimate) {
 		return `${login}'s streak in #${channel} started around ${fmtDate(estimate)} (estimated from ${row.Value} on ${fmtDate(sharedDay)})${first ? `, ${first}` : ''}`;
 	}
 
-	return first
-		? `${login} in #${channel}: ${first}`
-		: `${login} has no start date in #${channel}, the stream days don't go back far enough for a streak of ${row.Value}`;
+	return first ? `${login} in #${channel}: ${first}` : `${login} has no start date in #${channel}, the stream days don't go back far enough for a streak of ${row.Value}`;
 };
 
 module.exports = {

@@ -64,12 +64,7 @@ const fetchRandom = async (path, channelId, notFound, optedOut) => {
 };
 
 const fetchRandomChannelLine = (channelId) =>
-	fetchRandom(
-		`/channelid/${channelId}/random`,
-		channelId,
-		'Could not load logs for that channel!',
-		'This channel has opted out of having their messages logged via the third party log service!',
-	);
+	fetchRandom(`/channelid/${channelId}/random`, channelId, 'Could not load logs for that channel!', 'This channel has opted out of having their messages logged via the third party log service!');
 
 const fetchRandomUserLine = (channelId, userId) =>
 	fetchRandom(

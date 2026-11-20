@@ -96,16 +96,11 @@ module.exports = {
 		const lengthBefore = data.channels.length;
 		if (invocation === 'subscribe') {
 			data.channels = [...new Set([...data.channels, ...channels])];
-			response =
-				data.channels.length > lengthBefore
-					? `Successfully subscribed to ${data.channels.length - lengthBefore} channels going live.`
-					: 'You did not subscribe to any new channels.';
+			response = data.channels.length > lengthBefore ? `Successfully subscribed to ${data.channels.length - lengthBefore} channels going live.` : 'You did not subscribe to any new channels.';
 		} else {
 			data.channels = data.channels.filter((i) => !channels.includes(i));
 			response =
-				data.channels.length < lengthBefore
-					? `Successfully unsubscribed from ${lengthBefore - data.channels.length} channels going live.`
-					: 'You did not unsubscribe from any channels.';
+				data.channels.length < lengthBefore ? `Successfully unsubscribed from ${lengthBefore - data.channels.length} channels going live.` : 'You did not unsubscribe from any channels.';
 		}
 
 		await save({ Active: data.channels.length !== 0, Data: JSON.stringify(data, null, 4) });

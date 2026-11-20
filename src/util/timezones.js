@@ -132,9 +132,7 @@ const countryNames = new Intl.DisplayNames('en', { type: 'region' });
 const countryName = (code) => countryNames.of(code) ?? code;
 
 const zoneOffsetMinutes = (zone, now) => {
-	const label =
-		new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'longOffset' }).formatToParts(now).find((i) => i.type === 'timeZoneName')?.value ??
-		'GMT';
+	const label = new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'longOffset' }).formatToParts(now).find((i) => i.type === 'timeZoneName')?.value ?? 'GMT';
 	const match = label.match(/GMT([+-])(\d{2}):(\d{2})/);
 	return match ? (match[1] === '-' ? -1 : 1) * (Number(match[2]) * 60 + Number(match[3])) : 0;
 };

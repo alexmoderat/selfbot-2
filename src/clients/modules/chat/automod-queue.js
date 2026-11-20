@@ -55,9 +55,7 @@ module.exports = defineChatModule({
 			// Nur zurueckgehaltene Nachrichten pruefen; genehmigte/abgelehnte nur loggen
 			if (payload.type !== 'automod_caught_message' || status !== 'PENDING') {
 				if (status === 'ALLOWED' || status === 'DENIED') {
-					console.log(
-						`[automod-queue] ${status}: "${text ?? '?'}" von ${login} in #${channel.name}${data.resolver_login ? ` - by ${data.resolver_login}` : ''}`,
-					);
+					console.log(`[automod-queue] ${status}: "${text ?? '?'}" von ${login} in #${channel.name}${data.resolver_login ? ` - by ${data.resolver_login}` : ''}`);
 				}
 				return;
 			} else if (!text || !userId || !messageId) {
@@ -78,7 +76,9 @@ module.exports = defineChatModule({
 			if (matched) {
 				phrases.recordHit(matched, channel.id);
 				if (!(await mayBanPhraseHit(login, userId, matched, phrases.getPreset('sellerbot')?.ID ?? null))) {
-					console.warn(`[automod-queue] Banphrase "${matched.Phrase}" von ${login} in #${channel.name} - kein komischer Name oder aelter als 7 Tage, keine Aktion (Nachricht bleibt in der Queue)`);
+					console.warn(
+						`[automod-queue] Banphrase "${matched.Phrase}" von ${login} in #${channel.name} - kein komischer Name oder aelter als 7 Tage, keine Aktion (Nachricht bleibt in der Queue)`,
+					);
 					return;
 				}
 				const label = localizeViewbotReason(channel.name, matched.Reason || matched.Phrase);

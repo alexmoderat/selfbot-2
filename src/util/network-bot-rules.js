@@ -19,8 +19,7 @@ const DISCORD_SCAM_PATTERN =
 
 // Dieselbe Masche auf anderen Plattformen - Vorfall dave567re in itmustbekhii, 31.08.2026:
 // "... Add me on Snapchat Eny1233 I got tips" - alexmoderat: "Eigene Kategorie".
-const SOCIAL_SCAM_PATTERN =
-	/(add me|hit me up|message me|dm me|reach out to me)\s*(up)?\s*on\s*(my |your )?(snap(chat)?|telegram|insta(gram)?|kik|whats\s?app)\b/i;
+const SOCIAL_SCAM_PATTERN = /(add me|hit me up|message me|dm me|reach out to me)\s*(up)?\s*on\s*(my |your )?(snap(chat)?|telegram|insta(gram)?|kik|whats\s?app)\b/i;
 
 const WINDOW = 10 * 60 * 1000;
 const NEW_ACCOUNT_MAX_AGE = 2 * 24 * 60 * 60 * 1000;
@@ -47,8 +46,7 @@ const COMBINE_WINDOW = 20 * 1000;
  * zweite Variante. Bewusst nur eindeutige TLDs (kurze ccTLDs wie "es"/"im" kollidieren mit normalen Woertern).
  */
 const UNAMBIGUOUS_TLDS = new Set(['com', 'net', 'org', 'ru', 'xyz']);
-const collapseUnambiguousTlds = (message) =>
-	message.toLowerCase().replace(/([a-z0-9-])\s+\.?\s*([a-z]{2,})\b/g, (match, a, b) => (UNAMBIGUOUS_TLDS.has(b) ? `${a}.${b}` : match));
+const collapseUnambiguousTlds = (message) => message.toLowerCase().replace(/([a-z0-9-])\s+\.?\s*([a-z]{2,})\b/g, (match, a, b) => (UNAMBIGUOUS_TLDS.has(b) ? `${a}.${b}` : match));
 
 module.exports = {
 	VIEWBOT_URL_PATTERN,

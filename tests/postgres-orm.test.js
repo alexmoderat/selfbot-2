@@ -145,9 +145,18 @@ describe('Postgres-Modell', { skip: url ? false : 'TEST_POSTGRES_URL fehlt' }, (
 	});
 
 	test('Filter: Pfade, $in, Regex, $not, $or, $ne, $type', async () => {
-		assert.deepEqual((await Item.find({ 'data.administrator': true })).map((i) => i._id), [2]);
-		assert.deepEqual((await Item.find({ _id: { $in: [1, 3, 99] } }).sort({ _id: 1 })).map((i) => i._id), [1, 3]);
-		assert.deepEqual((await Item.find({ name: /^AL/i })).map((i) => i._id), [1]);
+		assert.deepEqual(
+			(await Item.find({ 'data.administrator': true })).map((i) => i._id),
+			[2],
+		);
+		assert.deepEqual(
+			(await Item.find({ _id: { $in: [1, 3, 99] } }).sort({ _id: 1 })).map((i) => i._id),
+			[1, 3],
+		);
+		assert.deepEqual(
+			(await Item.find({ name: /^AL/i })).map((i) => i._id),
+			[1],
+		);
 		assert.equal((await Item.find({ name: { $not: /^a/ } })).length, 2);
 		assert.equal((await Item.find({ $or: [{ name: 'alpha' }, { count: 5 }] })).length, 3);
 		assert.equal((await Item.find({ count: { $ne: 5 } })).length, 1);
@@ -215,24 +224,18 @@ describe('Postgres-Modell', { skip: url ? false : 'TEST_POSTGRES_URL fehlt' }, (
 			{ userId: 2, period: '2025-02', seconds: 20, label: 'abc' },
 			{ userId: 2, period: '2026-01', seconds: 5, label: 'xyz' },
 		]);
-		const years = await Plain.aggregate([
-			{ $match: { userId: 2 } },
-			{ $group: { _id: { $substrBytes: ['$period', 0, 4] }, total: { $sum: '$seconds' } } },
-			{ $sort: { _id: 1 } },
-		]);
-		assert.deepEqual(years.map((i) => ({ ...i })), [
-			{ _id: '2025', total: 30 },
-			{ _id: '2026', total: 5 },
-		]);
+		const years = await Plain.aggregate([{ $match: { userId: 2 } }, { $group: { _id: { $substrBytes: ['$period', 0, 4] }, total: { $sum: '$seconds' } } }, { $sort: { _id: 1 } }]);
+		assert.deepEqual(
+			years.map((i) => ({ ...i })),
+			[
+				{ _id: '2025', total: 30 },
+				{ _id: '2026', total: 5 },
+			],
+		);
 		const [sum] = await Plain.aggregate([{ $match: { userId: 2 } }, { $group: { _id: null, total: { $sum: '$seconds' } } }]);
 		assert.equal(sum.total, 35);
 		assert.deepEqual(await Plain.aggregate([{ $match: { userId: 999 } }, { $group: { _id: null, total: { $sum: '$seconds' } } }]), []);
-		const byLabel = await Plain.aggregate([
-			{ $match: { userId: 2 } },
-			{ $group: { _id: { label: { $toLower: '$label' } }, Uses: { $sum: 1 } } },
-			{ $sort: { Uses: -1 } },
-			{ $limit: 1 },
-		]);
+		const byLabel = await Plain.aggregate([{ $match: { userId: 2 } }, { $group: { _id: { label: { $toLower: '$label' } }, Uses: { $sum: 1 } } }, { $sort: { Uses: -1 } }, { $limit: 1 }]);
 		assert.deepEqual(byLabel[0]._id, { label: 'abc' });
 		assert.equal(byLabel[0].Uses, 2);
 		const stats = await Plain.aggregate([
@@ -254,7 +257,10 @@ describe('Postgres-Modell', { skip: url ? false : 'TEST_POSTGRES_URL fehlt' }, (
 			],
 			{ ordered: false },
 		);
-		assert.deepEqual((await Item.find({ legacyId: { $type: 'number' } }).sort({ legacyId: 1 })).map((i) => i.name), ['l1', 'l2']);
+		assert.deepEqual(
+			(await Item.find({ legacyId: { $type: 'number' } }).sort({ legacyId: 1 })).map((i) => i.name),
+			['l1', 'l2'],
+		);
 		await Plain.bulkWrite(
 			[
 				{ updateOne: { filter: { userId: 3, period: 'b' }, update: { $inc: { seconds: 1 } }, upsert: true } },

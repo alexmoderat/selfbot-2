@@ -5,7 +5,20 @@ const { isGeneratedName, isEmoteOnly, isShoutoutText, isYoungAccount, isEmoteWav
 const known = new Set(['DogeFace', 'Skull']);
 
 test('isGeneratedName: Namen der Welle ja, normale/kurze nein', () => {
-	for (const n of ['legal_rodina', 'horizontalrosie94', 'carleneaesthetic', 'ranasupporting', 'drunk_cassandry', 'prepared_caryl16', 'doubtful_dolli', 'recent_megan', 'supremenanci14', 'aggregate_felicdad44', 'plannedaudre', 'juicy_dawn']) {
+	for (const n of [
+		'legal_rodina',
+		'horizontalrosie94',
+		'carleneaesthetic',
+		'ranasupporting',
+		'drunk_cassandry',
+		'prepared_caryl16',
+		'doubtful_dolli',
+		'recent_megan',
+		'supremenanci14',
+		'aggregate_felicdad44',
+		'plannedaudre',
+		'juicy_dawn',
+	]) {
 		assert.equal(isGeneratedName(n), true, n);
 	}
 	for (const n of ['itsylime_', 'chick3n80y_', '8buh', 'zenisthegoat12x_', 'Xx__Dark', 'reksua']) {

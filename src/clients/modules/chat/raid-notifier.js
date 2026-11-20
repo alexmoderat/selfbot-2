@@ -25,8 +25,7 @@ const RAID_TEMPLATE_COMMANDS = { ping: '!raidping', reminder: '!raidreminder' };
 const DEFAULT_RAID_MESSAGE = '{users} ⚡ Raid is happening! Type +join to join! {seconds} seconds! ⚡';
 const DEFAULT_RAID_REMINDER = DEFAULT_RAID_MESSAGE;
 
-const formatRaidText = (template, users, seconds) =>
-	template.replaceAll(/\{users\}/gi, users.map((u) => `@${u}`).join(' ')).replaceAll(/\{seconds\}/gi, String(seconds));
+const formatRaidText = (template, users, seconds) => template.replaceAll(/\{users\}/gi, users.map((u) => `@${u}`).join(' ')).replaceAll(/\{seconds\}/gi, String(seconds));
 
 const raidPingMessages = (users, template, seconds = REMINDER_LEAD_S) => {
 	const messages = [];
@@ -151,7 +150,11 @@ const setEnabled = async (channel, want) => {
 const updateItems = async (channel, change) => {
 	const config = await getConfig(channel);
 	const items = change(config.items.slice()).map(normalizeItem);
-	return saveConfig(channel, items.some((i) => i.on), items);
+	return saveConfig(
+		channel,
+		items.some((i) => i.on),
+		items,
+	);
 };
 
 const pingChannel = async (channel, users, item) => {
@@ -285,4 +288,23 @@ module.exports = defineChatModule({
 	},
 });
 
-Object.assign(module.exports, { sendTest, testSchedule, bumpUses, runRaid, MIN_LEAD_S, MAX_LEAD_S, MAX_ITEMS, clampLead, getConfig, setEnabled, updateItems, newItem, defaultText, RAID_TEMPLATE_COMMANDS, DEFAULT_RAID_MESSAGE, DEFAULT_RAID_REMINDER, formatRaidText, raidPingMessages });
+Object.assign(module.exports, {
+	sendTest,
+	testSchedule,
+	bumpUses,
+	runRaid,
+	MIN_LEAD_S,
+	MAX_LEAD_S,
+	MAX_ITEMS,
+	clampLead,
+	getConfig,
+	setEnabled,
+	updateItems,
+	newItem,
+	defaultText,
+	RAID_TEMPLATE_COMMANDS,
+	DEFAULT_RAID_MESSAGE,
+	DEFAULT_RAID_REMINDER,
+	formatRaidText,
+	raidPingMessages,
+});

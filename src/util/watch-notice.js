@@ -9,8 +9,7 @@ const GAP = 30 * 60_000;
 const MAX_PER_MINUTE = 10;
 const MAX_KEYS = 5000;
 
-const watchNoticeText = (login, reason, channel, message) =>
-	`👀 @${login} (watched${reason ? `: ${clip(reason, 60)}` : ''}) in #${channel}: "${clip(redactDomains(message), 120)}"`;
+const watchNoticeText = (login, reason, channel, message) => `👀 @${login} (watched${reason ? `: ${clip(reason, 60)}` : ''}) in #${channel}: "${clip(redactDomains(message), 120)}"`;
 
 const createWatchNotifier = (deps) => {
 	const now = deps.now ?? Date.now;

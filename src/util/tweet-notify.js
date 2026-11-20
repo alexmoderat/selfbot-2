@@ -45,15 +45,14 @@ const cleanTimes = (input) => {
 	return Number.isNaN(n) ? 1 : Math.min(MAX_TIMES, Math.max(1, n));
 };
 
-const cleanMessage = (input) => String(input ?? '').replaceAll(/\s+/g, ' ').trim().slice(0, MAX_MESSAGE);
+const cleanMessage = (input) =>
+	String(input ?? '')
+		.replaceAll(/\s+/g, ' ')
+		.trim()
+		.slice(0, MAX_MESSAGE);
 
 /** Neue Tweets gegenueber dem gemerkten Stand (null = Erstlauf, nichts melden), aelteste zuerst */
-const freshTweets = (tweets, seen, now = Date.now()) =>
-	seen
-		? tweets
-				.filter((i) => !seen.has(i.id) && isStandalone(i) && now - Date.parse(i.createdAt) < MAX_AGE_MS)
-				.reverse()
-		: [];
+const freshTweets = (tweets, seen, now = Date.now()) => (seen ? tweets.filter((i) => !seen.has(i.id) && isStandalone(i) && now - Date.parse(i.createdAt) < MAX_AGE_MS).reverse() : []);
 
 const checkAccount = async (account) => {
 	const tweets = await fetchTweetsOf(account);

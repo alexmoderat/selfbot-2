@@ -90,10 +90,7 @@ const recentChatters = async (channelName, minutes) => {
 		return { chatters: [], messages: 0 };
 	}
 	const since = new Date(Date.now() - Math.trunc(minutes) * 60_000);
-	const rows = await bot.DB.ChatLine.aggregate([
-		{ $match: { channel: channel.id, posted: { $gt: since } } },
-		{ $group: { _id: '$userId', count: { $sum: 1 } } },
-	]);
+	const rows = await bot.DB.ChatLine.aggregate([{ $match: { channel: channel.id, posted: { $gt: since } } }, { $group: { _id: '$userId', count: { $sum: 1 } } }]);
 	const users = await bot.DB.User.find({ twitchId: { $in: rows.map((i) => i._id) } }, { name: 1, twitchId: 1 }).lean();
 	const names = new Map(users.map((i) => [i.twitchId, i.name]));
 	const chatters = rows.map((i) => ({ username: names.get(i._id) ?? i._id, userId: i._id, count: Number(i.count) }));
@@ -105,8 +102,7 @@ const userPair = async (user, channel) => {
 		u: userResultByLogin(login: ${JSON.stringify(user)}) { __typename ... on User { id login displayName } }
 		c: userResultByLogin(login: ${JSON.stringify(channel)}) { __typename ... on User { id login displayName } }
 	}`);
-	const pick = (value) =>
-		value?.__typename === 'User' && value.id ? { id: value.id, login: value.login ?? '', displayName: value.displayName ?? '' } : null;
+	const pick = (value) => (value?.__typename === 'User' && value.id ? { id: value.id, login: value.login ?? '', displayName: value.displayName ?? '' } : null);
 	return { u: pick(data?.u ?? null), c: pick(data?.c ?? null) };
 };
 

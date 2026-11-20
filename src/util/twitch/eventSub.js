@@ -24,10 +24,7 @@ const subscriptions = new Map(); // twitchId -> Map(type -> subscriptionId)
 const seenMessages = new Set();
 
 /** Gehoert der Channel ins EventSub? (Mod-Rechte noetig, eigener Channel immer) */
-const wantsChannel = (channel) =>
-	Boolean(channel?.twitchId) &&
-	isServed(channel.name) &&
-	(channel.mode === 'Moderator' || (channel.twitchId === bot.Twitch.selfId && channel.mode !== 'Inactive'));
+const wantsChannel = (channel) => Boolean(channel?.twitchId) && isServed(channel.name) && (channel.mode === 'Moderator' || (channel.twitchId === bot.Twitch.selfId && channel.mode !== 'Inactive'));
 
 const subscriptionCount = () => [...subscriptions.values()].reduce((sum, types) => sum + types.size, 0);
 

@@ -268,10 +268,7 @@ const checkLimits = async (userFrom, userTo, schedule, type = 'Reminder') => {
 		const dayStart = startOfUtcDay(schedule);
 		const dayEnd = new Date(dayStart.valueOf() + 86_400_000);
 		const sameDay = { schedule: { $gte: dayStart, $lt: dayEnd }, type: { $ne: 'Deferred' } };
-		const [scheduledIncoming, scheduledOutgoing] = await Promise.all([
-			bot.DB.Reminder.countDocuments({ ...sameDay, userTo }),
-			bot.DB.Reminder.countDocuments({ ...sameDay, userFrom }),
-		]);
+		const [scheduledIncoming, scheduledOutgoing] = await Promise.all([bot.DB.Reminder.countDocuments({ ...sameDay, userTo }), bot.DB.Reminder.countDocuments({ ...sameDay, userFrom })]);
 		if (scheduledIncoming >= maxIncomingScheduledReminders) return fail('scheduled-incoming');
 		if (scheduledOutgoing >= maxOutgoingScheduledReminders) return fail('scheduled-outgoing');
 	}
@@ -340,10 +337,7 @@ const checkActive = async (targetUser, channel, displayName = targetUser.name) =
 	const excluded = Filter.getReminderPreventions({ channel });
 	const now = Date.now();
 	const reminders = list.filter(
-		(i) =>
-			!i.deactivated &&
-			((i.type === 'Deferred' && i.schedule && i.schedule.valueOf() <= now) || (i.type !== 'Deferred' && !i.schedule)) &&
-			!excluded.includes(i.userFrom),
+		(i) => !i.deactivated && ((i.type === 'Deferred' && i.schedule && i.schedule.valueOf() <= now) || (i.type !== 'Deferred' && !i.schedule)) && !excluded.includes(i.userFrom),
 	);
 	if (reminders.length === 0) {
 		return;
@@ -410,10 +404,7 @@ const checkActive = async (targetUser, channel, displayName = targetUser.name) =
 		for (const privateReminder of privateReply) {
 			await bot.Twitch.whisper(targetUser, `Private reminder: ${privateReminder}`);
 		}
-		await bot.Channels.send(
-			channel,
-			`Hey ${userMention} - I just private messaged you ${privateReply.length} private reminder(s) - make sure to check them out!`,
-		);
+		await bot.Channels.send(channel, `Hey ${userMention} - I just private messaged you ${privateReply.length} private reminder(s) - make sure to check them out!`);
 	}
 
 	await Promise.all(reminders.map((reminder) => deactivate(reminder, true, false)));

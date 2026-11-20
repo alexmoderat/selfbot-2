@@ -55,7 +55,11 @@ const runEventWatch = async () => {
 	const active = activeWindows(windows);
 	const stored = await bot.Redis.getJSON(STATE_KEY).catch(() => null);
 	const before = Array.isArray(stored) ? new Set(stored) : null;
-	await bot.Redis.setJSON(STATE_KEY, active.map((i) => i.key), STATE_TTL);
+	await bot.Redis.setJSON(
+		STATE_KEY,
+		active.map((i) => i.key),
+		STATE_TTL,
+	);
 	if (!before) {
 		console.log(`[event-watch] Erstlauf, ${active.length} aktive Fenster gemerkt`);
 		return 0;
@@ -83,10 +87,7 @@ const runEventWatch = async () => {
 	).catch((e) => console.warn(`[event-watch] Verlauf: ${e?.message ?? e}`));
 
 	const targets = await enabledChannels();
-	const texts =
-		fresh.length <= MAX_SEPARATE
-			? fresh.map(formatWindow)
-			: [`${fresh.length} global Twitch badges now available: ${fresh.map((i) => i.title).join(', ')} (${BADGES_URL})`];
+	const texts = fresh.length <= MAX_SEPARATE ? fresh.map(formatWindow) : [`${fresh.length} global Twitch badges now available: ${fresh.map((i) => i.title).join(', ')} (${BADGES_URL})`];
 	console.log(`[event-watch] ${fresh.map((i) => i.title).join(', ')} -> ${targets.length} Channel(s)`);
 	// Tweet-Notify-Abonnenten (eigener Text, Anzahl) bekommen die Meldung wie einen Tweet; in deren Channels entfaellt der Badge-Alert-Text
 	const subscribers = await tweetSubscribers().catch((e) => {

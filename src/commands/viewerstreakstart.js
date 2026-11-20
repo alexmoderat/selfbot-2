@@ -11,8 +11,7 @@ module.exports = {
 	name: 'viewerstreakstart',
 	aliases: ['vss'],
 	cooldown: 3000,
-	description:
-		"Shows about when a viewer's Watch streak started in this channel, estimated from their last shared streak and the stream days, and their first shared streak if known.",
+	description: "Shows about when a viewer's Watch streak started in this channel, estimated from their last shared streak and the stream days, and their first shared streak if known.",
 	usage: 'viewerstreakstart [user]',
 	flags: ['no-prefix'],
 	execute: async (client, msg) => {

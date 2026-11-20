@@ -6,8 +6,7 @@ module.exports = {
 	name: 'resumeafk',
 	aliases: ['rafk', 'cafk', 'continueafk'],
 	cooldown: 60_000,
-	description:
-		'Resumes your AFK status, if used shortly after coming back from an AFK. The time period is global, not just in the channel you came back from AFK in.',
+	description: 'Resumes your AFK status, if used shortly after coming back from an AFK. The time period is global, not just in the channel you came back from AFK in.',
 	usage: 'resumeafk',
 	flags: ['mention', 'pipe'],
 	execute: async (client, msg) => {

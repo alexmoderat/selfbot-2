@@ -337,16 +337,12 @@ const main = async () => {
 	});
 
 	const wanted = (table) =>
-		only.length === 0 ||
-		only.includes(table) ||
-		(only.includes('core') && TABLES.some((i) => i.table === table)) ||
-		(only.includes('data') && DB.dataSpecs.some((i) => i.table === table));
+		only.length === 0 || only.includes(table) || (only.includes('core') && TABLES.some((i) => i.table === table)) || (only.includes('data') && DB.dataSpecs.some((i) => i.table === table));
 
 	try {
 		const results = [];
 		const skipped = [];
-		const record = (table, result, start) =>
-			results.push({ Tabelle: table, Zeilen: result.rows, Dokumente: result.docs, Sekunden: ((Date.now() - start) / 1000).toFixed(1) });
+		const record = (table, result, start) => results.push({ Tabelle: table, Zeilen: result.rows, Dokumente: result.docs, Sekunden: ((Date.now() - start) / 1000).toFixed(1) });
 
 		for (const definition of TABLES) {
 			if (!wanted(definition.table)) {
@@ -364,10 +360,7 @@ const main = async () => {
 				continue;
 			}
 			// Tabellen neuer Features gibt es in MariaDB nicht: ueberspringen und vor allem nicht per --fresh leeren
-			const [exists] = await dataConn.query(
-				"SELECT COUNT(*) AS c FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'selfbot_data' AND TABLE_NAME = ?",
-				[spec.table],
-			);
+			const [exists] = await dataConn.query("SELECT COUNT(*) AS c FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'selfbot_data' AND TABLE_NAME = ?", [spec.table]);
 			if (Number(exists.c) === 0) {
 				skipped.push(spec.table);
 				continue;

@@ -274,10 +274,7 @@ router.get(
 			const [total, mine, [utility]] = await Promise.all([
 				bot.DB.CommandExecution.countDocuments({ command: name }),
 				self ? bot.DB.CommandExecution.countDocuments({ command: name, userId: self.id }) : 0,
-				sbv2.query(`SELECT COUNT(*) AS Total, COALESCE(SUM(username = ?), 0) AS Mine FROM ${UTILITY_TABLE} WHERE command IN (?)`, [
-					login,
-					utilityNamesFor(name),
-				]),
+				sbv2.query(`SELECT COUNT(*) AS Total, COALESCE(SUM(username = ?), 0) AS Mine FROM ${UTILITY_TABLE} WHERE command IN (?)`, [login, utilityNamesFor(name)]),
 			]);
 			res.json({
 				total: total + Number(utility?.Total ?? 0),
@@ -292,10 +289,7 @@ router.get(
 			usesByUser({ channelId: channel.id, command }),
 			custom
 				? Promise.resolve([])
-				: sbv2.query(`SELECT username AS Name, COUNT(*) AS Uses FROM ${UTILITY_TABLE} WHERE channel = ? AND command IN (?) GROUP BY username`, [
-						channel.name,
-						utilityNamesFor(name),
-					]),
+				: sbv2.query(`SELECT username AS Name, COUNT(*) AS Uses FROM ${UTILITY_TABLE} WHERE channel = ? AND command IN (?) GROUP BY username`, [channel.name, utilityNamesFor(name)]),
 		]);
 		const merged = new Map();
 		for (const row of [...rows, ...utility]) {
@@ -333,9 +327,7 @@ router.get(
 				{ $match: { command: { $not: /^custom:/ }, invocation: { $ne: null } } },
 				{ $group: { _id: { command: '$command', invocation: { $toLower: '$invocation' } }, Uses: { $sum: 1 } } },
 			]).then((rows) => rows.map((i) => ({ Command: i._id.command, Invocation: i._id.invocation, Uses: i.Uses }))),
-			sbv2.query(
-				`SELECT command AS Command, invocation AS Invocation, COUNT(*) AS Uses FROM ${UTILITY_TABLE} WHERE invocation IS NOT NULL GROUP BY command, invocation`,
-			),
+			sbv2.query(`SELECT command AS Command, invocation AS Invocation, COUNT(*) AS Uses FROM ${UTILITY_TABLE} WHERE invocation IS NOT NULL GROUP BY command, invocation`),
 		]);
 		const invocations = new Map();
 		for (const row of [...ownInv, ...utilityInv.map((i) => ({ ...i, Command: ownName(i.Command) }))]) {

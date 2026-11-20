@@ -37,9 +37,7 @@ module.exports = defineChatModule({
 			if (!context.channel || !payload?.raid) {
 				return;
 			} else if (payload.type === 'raid_go_v2') {
-				console.log(
-					`[stream-status] Raid: #${context.channel.name} -> ${payload.raid.target_login ?? '?'} (${payload.raid.viewer_count ?? '?'} Viewer)`,
-				);
+				console.log(`[stream-status] Raid: #${context.channel.name} -> ${payload.raid.target_login ?? '?'} (${payload.raid.viewer_count ?? '?'} Viewer)`);
 			} else if (payload.type === 'raid_cancel_v2') {
 				console.log(`[stream-status] Raid abgebrochen: #${context.channel.name} -> ${payload.raid.target_login ?? '?'}`);
 			}

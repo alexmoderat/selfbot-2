@@ -20,10 +20,7 @@ test('Alle anderen User bekommen nichts angehaengt', () => {
 
 test('!csi/!sic/!sci bleiben auch bei ninou2 ohne Befehl', () => {
 	for (const alias of ['csi', 'sic', 'sci']) {
-		assert.equal(
-			withTrigger('the current stream infos are : /setgame A /settitle B', msg(alias, 'streaminfoschange')),
-			'the current stream infos are : /setgame A /settitle B',
-		);
+		assert.equal(withTrigger('the current stream infos are : /setgame A /settitle B', msg(alias, 'streaminfoschange')), 'the current stream infos are : /setgame A /settitle B');
 	}
 });
 

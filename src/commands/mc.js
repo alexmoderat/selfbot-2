@@ -64,9 +64,7 @@ module.exports = {
 			timeZone: 'UTC',
 		});
 		return {
-			text:
-				`@${display}, ${entry.displayName ?? user} is a ${label} of #${channel}. ` +
-				`Granted ${formatDuration(Date.now() - granted.getTime())} ago. (${dateStr} UTC)`,
+			text: `@${display}, ${entry.displayName ?? user} is a ${label} of #${channel}. ` + `Granted ${formatDuration(Date.now() - granted.getTime())} ago. (${dateStr} UTC)`,
 		};
 	},
 };

@@ -163,9 +163,7 @@ const fetchChattersGql = async (channel) => {
 		return null;
 	}
 
-	const names = [...chatters.viewers, ...chatters.vips, ...chatters.moderators, ...chatters.broadcasters, ...chatters.staff]
-		.map((i) => i.login)
-		.slice(0, CHATTERS_CAP);
+	const names = [...chatters.viewers, ...chatters.vips, ...chatters.moderators, ...chatters.broadcasters, ...chatters.staff].map((i) => i.login).slice(0, CHATTERS_CAP);
 
 	return { total: chatters.count ?? names.length, names, users: [], forbidden: false };
 };

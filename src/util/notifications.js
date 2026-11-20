@@ -67,10 +67,7 @@ const gamesPlayedText = (startedMs, startGame, changes, now = Date.now()) => {
 		return null;
 	}
 
-	const segments = [
-		{ game: startGame ?? 'no category', startMs: startedMs },
-		...changes.map((i) => ({ game: i.game ?? 'no category', startMs: i.changedMs })),
-	];
+	const segments = [{ game: startGame ?? 'no category', startMs: startedMs }, ...changes.map((i) => ({ game: i.game ?? 'no category', startMs: i.changedMs }))];
 	const totals = new Map();
 	segments.forEach((segment, i) => {
 		const end = i + 1 < segments.length ? segments[i + 1].startMs : now;
@@ -97,9 +94,7 @@ const formatStreamingPart = (info) => (info.gameName ? `Streaming (${info.gameNa
 // Streamer mit @ wie bei der Live-Meldung (ninou2, 10.11.2026: "the offline message @ people too")
 const formatOfflineText = (login, gamesPart, lastGame, durationMs) => {
 	const durationPart = durationMs !== null ? ` ⏱️They streamed for ${formatNotifyDuration(durationMs)} ⏱️` : '';
-	return gamesPart
-		? `@${login} is now offline! games played: ${gamesPart}.${durationPart}`
-		: `@${login} is now offline!${lastGame ? ` Last game played: [${lastGame}].` : ''}${durationPart}`;
+	return gamesPart ? `@${login} is now offline! games played: ${gamesPart}.${durationPart}` : `@${login} is now offline!${lastGame ? ` Last game played: [${lastGame}].` : ''}${durationPart}`;
 };
 
 // Leerzeichen in den Anfuehrungszeichen, damit Emotes am Titelrand erkannt werden; Streamer mit @.

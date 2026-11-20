@@ -38,7 +38,10 @@ module.exports = {
 			const [lead, editor] = await Promise.all([getChannelsWithRole('lead_mod').catch(() => null), getEditableChannels().catch(() => null)]);
 			const own = (i) => i && i.userId === String(twitch.selfId);
 			const parts = [];
-			for (const [label, info] of [['Lead Mod', lead], ['Editor', editor]]) {
+			for (const [label, info] of [
+				['Lead Mod', lead],
+				['Editor', editor],
+			]) {
 				if (own(info)) {
 					const listUrl = info.logins.length > 0 ? await uploadList(`${self} — ${label.toLowerCase()} channels`, sortedLogins(info.logins)) : null;
 					parts.push(`${label} in ${info.logins.length}${info.hasNextPage ? '+' : ''}${listUrl ? `: ${listUrl}` : ''}`);

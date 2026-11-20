@@ -29,10 +29,7 @@ module.exports = {
 						return;
 					}
 
-					await bot.DB.MessageMetaUserAlias.updateOne(
-						{ userAlias: userData.id, channel: channelData.id },
-						{ $set: { firstMessageText: message.text, firstMessagePosted: message.posted } },
-					);
+					await bot.DB.MessageMetaUserAlias.updateOne({ userAlias: userData.id, channel: channelData.id }, { $set: { firstMessageText: message.text, firstMessagePosted: message.posted } });
 				}),
 			);
 		}

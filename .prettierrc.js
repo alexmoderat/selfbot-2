@@ -1,7 +1,7 @@
 // Wie DontAddThisBot: Tabs, einfache Anfuehrungszeichen, breite Zeilen
 module.exports = {
 	endOfLine: 'lf',
-	printWidth: 160,
+	printWidth: 200,
 	semi: true,
 	singleQuote: true,
 	tabWidth: 4,

@@ -30,10 +30,7 @@ const countChannels = async (rule, key, userId) => {
 
 /** Sichtung speichern - ausser dieselbe Nachricht kam binnen 5 s schon (Shared-Chat-Duplikat, CatQuery-Vorgabe) */
 const recordSighting = async (key, userId, channelName) => {
-	const [row] = await sbv2.query(
-		'SELECT seen_at AS Seen_At FROM chat_data.first_message_sightings WHERE normalized_text = ? AND user_id = ? ORDER BY seen_at DESC LIMIT 1',
-		[key, userId],
-	);
+	const [row] = await sbv2.query('SELECT seen_at AS Seen_At FROM chat_data.first_message_sightings WHERE normalized_text = ? AND user_id = ? ORDER BY seen_at DESC LIMIT 1', [key, userId]);
 	const last = row?.Seen_At ?? null;
 
 	if (last && Date.now() - Number(last.valueOf()) < MIN_GAP) {

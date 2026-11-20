@@ -77,17 +77,13 @@ const punishFakeLive = async (platform, channel, userId, userName, match) => {
 		publicReason: label,
 		status: 'FAKE_LIVE',
 	});
-	console.warn(
-		`[follow-protection] ${ok ? 'Gebannt' : 'Ban fehlgeschlagen'} (Fake-Live-Treffer mit #${match.channel}, Distanz ${match.distance}): ${userName} in #${channel.name}`,
-	);
+	console.warn(`[follow-protection] ${ok ? 'Gebannt' : 'Ban fehlgeschlagen'} (Fake-Live-Treffer mit #${match.channel}, Distanz ${match.distance}): ${userName} in #${channel.name}`);
 
 	if (!process.env.TWITCH_WEB_TOKEN) {
 		return;
 	}
 
-	const comment =
-		`Automated detection: identical video content to a live stream in #${match.channel} ` +
-		`(perceptual hash distance ${match.distance}/64), declared under a mismatched category.`;
+	const comment = `Automated detection: identical video content to a live stream in #${match.channel} ` + `(perceptual hash distance ${match.distance}/64), declared under a mismatched category.`;
 	const error = await reportFakeLive(userId, comment).catch((e) => (e instanceof Error ? e.message : String(e)));
 	console.log(`[follow-protection] Twitch-Meldung fuer ${userId}: ${error ? `fehlgeschlagen (${error})` : 'gesendet'}`);
 };

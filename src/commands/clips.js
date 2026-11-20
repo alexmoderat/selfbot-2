@@ -25,9 +25,7 @@ module.exports = {
 
 		const top = list.reduce((a, b) => (b.view_count > a.view_count ? b : a));
 		return {
-			text:
-				`@${display}, top clip for #${channel}: "${top.title}" by ${top.creator_name} ` +
-				`— ${top.view_count.toLocaleString('en-US')} views — ${top.url}`,
+			text: `@${display}, top clip for #${channel}: "${top.title}" by ${top.creator_name} ` + `— ${top.view_count.toLocaleString('en-US')} views — ${top.url}`,
 		};
 	},
 };

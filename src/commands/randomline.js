@@ -41,8 +41,7 @@ module.exports = {
 	name: 'randomline',
 	aliases: ['rl', 'rq'],
 	cooldown: 15000,
-	description:
-		'Fetches a random line from the current channel. If a user is specified, fetches a random line from that user only. "rq" only chooses from your own lines.',
+	description: 'Fetches a random line from the current channel. If a user is specified, fetches a random line from that user only. "rq" only chooses from your own lines.',
 	usage: 'randomline [user] [textOnly:true] [userID:id]',
 	flags: ['block', 'external-input', 'opt-out', 'pipe'],
 	params: [

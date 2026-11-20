@@ -209,10 +209,7 @@ const convertImports = (code, sourceDir, targetFile) => {
 				.map((i) => i.replace(/\s+as\s+/, ': '));
 			return cleaned.length === 0 ? '' : `const { ${cleaned.join(', ')} } = require('${relativeRequire(spec)}');`;
 		})
-		.replace(
-			/^import\s+(\w+)\s+from\s+["']([^"']+)["'](?:\s+with\s*\{[^}]*\})?;?/gm,
-			(_m, name, spec) => `const ${name} = require('${relativeRequire(spec)}');`,
-		)
+		.replace(/^import\s+(\w+)\s+from\s+["']([^"']+)["'](?:\s+with\s*\{[^}]*\})?;?/gm, (_m, name, spec) => `const ${name} = require('${relativeRequire(spec)}');`)
 		.replace(/^import\s+["']([^"']+)["'];?/gm, (_m, spec) => `require('${relativeRequire(spec)}');`);
 };
 
@@ -318,10 +315,7 @@ const main = () => {
 	code = convertExports(code);
 	if (/commands\/[^/]+\/+index\.ts$/.test(source)) {
 		code = code.replace(/^const \{ declare \} = require\([^)]*\);\n/m, '');
-		code = code.replace(
-			/^const \{ declare, isResultFailure \} = require\([^)]*\);\n/m,
-			"const { isResultFailure } = require('../clients/modules/commands.js');\n",
-		);
+		code = code.replace(/^const \{ declare, isResultFailure \} = require\([^)]*\);\n/m, "const { isResultFailure } = require('../clients/modules/commands.js');\n");
 		code = convertCommand(code);
 	}
 	for (const [regex, replacement] of API_RENAMES) {

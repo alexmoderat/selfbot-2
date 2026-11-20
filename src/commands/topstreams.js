@@ -6,8 +6,7 @@ const { twitchStreamSchema } = require('../util/schemas.js');
 module.exports = {
 	name: 'topstreams',
 	cooldown: 30000,
-	description:
-		'Checks the top 10 streams on Twitch - if you add a game, will look for the top 10 streams playing that game. The game must be provided verbatim.',
+	description: 'Checks the top 10 streams on Twitch - if you add a game, will look for the top 10 streams playing that game. The game must be provided verbatim.',
 	usage: 'topstreams [game]',
 	flags: ['mention', 'pipe'],
 	execute: async (client, msg) => {

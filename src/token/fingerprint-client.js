@@ -45,11 +45,7 @@ const gqlPostWithFingerprint = async (body, clientId) => {
 	}
 
 	const headers = [['authority', 'gql.twitch.tv'], ['content-type', 'application/json'], ['client-id', clientId], ...CHROME_HEADERS];
-	const result = await addon.request(
-		{ method: 'POST', body: JSON.stringify(body), host: 'gql.twitch.tv', uri: 'https://gql.twitch.tv/gql', headers },
-		'',
-		'',
-	);
+	const result = await addon.request({ method: 'POST', body: JSON.stringify(body), host: 'gql.twitch.tv', uri: 'https://gql.twitch.tv/gql', headers }, '', '');
 	if (result.status < 200 || result.status >= 300) {
 		throw new Error(`fingerprint-client: HTTP ${result.status}`);
 	}

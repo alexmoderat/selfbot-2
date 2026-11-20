@@ -78,14 +78,10 @@ const main = async () => {
 			summary.read += result.read;
 			summary.inserted += result.inserted;
 			if (result.read > 0) {
-				console.log(
-					`[${index + 1}/${tables.length}] ${table}: ${result.inserted}/${result.read} neu (ab ID ${result.fromId}, ${((Date.now() - tableStart) / 1000).toFixed(1)} s)`,
-				);
+				console.log(`[${index + 1}/${tables.length}] ${table}: ${result.inserted}/${result.read} neu (ab ID ${result.fromId}, ${((Date.now() - tableStart) / 1000).toFixed(1)} s)`);
 			}
 		}
-		console.log(
-			`Fertig in ${((Date.now() - started) / 60_000).toFixed(1)} min: ${summary.tables} Tabellen, ${summary.inserted} Zeilen neu (${summary.read} gelesen)`,
-		);
+		console.log(`Fertig in ${((Date.now() - started) / 60_000).toFixed(1)} min: ${summary.tables} Tabellen, ${summary.inserted} Zeilen neu (${summary.read} gelesen)`);
 		if (summary.skipped.length > 0) {
 			console.log(`Ohne Channel-Eintrag uebersprungen (${summary.skipped.length}): ${summary.skipped.join(', ')}`);
 		}

@@ -52,9 +52,7 @@ module.exports = {
 			return { text: `@${display}, no channels opted in — a channel's mods need to run crossbanoptin on first.` };
 		}
 
-		await msg.send(
-			`@${display}, banning ${target} (${userId}) in ${channels.length} channel(s) — this'll take about ${Math.ceil((channels.length * BAN_DELAY) / 60_000)} min.`,
-		);
+		await msg.send(`@${display}, banning ${target} (${userId}) in ${channels.length} channel(s) — this'll take about ${Math.ceil((channels.length * BAN_DELAY) / 60_000)} min.`);
 
 		let banned = 0;
 		let failed = 0;
