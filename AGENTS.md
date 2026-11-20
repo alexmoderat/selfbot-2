@@ -20,10 +20,10 @@ kommen aus selfbot; Aufbau, IRC-Anbindung und Stil von DontAddThisBot. Bauplan: 
   `msg.args`, `msg.params`, `msg.invocation`, `msg.prefix`, `msg.sender` (User), `msg.channelData` (Channel),
   `msg.displayName`. Rueckgabe: `text` (Antwort), `reply: true` (als Twitch-Reply), `success`, `cooldown`, `whisper`.
   Neue Commands werden automatisch geladen (kein Index).
-- `src/modules/<name>.js` — Chat-Module `{ name, description, scope, initialize, handlers: { message(context, runtime), ... } }`
+- `src/clients/modules/chat/<name>.js` — Chat-Module `{ name, description, scope, initialize, handlers: { message(context, runtime), ... } }`
   wie im alten selfbot; Events: message, online, offline, usernotice, clearchat, clearmsg, channelState und die
   PubSub-Namen (raw, modAction, automodQueue, lowTrust, ...).
-- `src/crons/<name>.js` — `defineCron({ name, expression, description, code })`, geladen von
+- `src/clients/modules/crons/<name>.js` — `defineCron({ name, expression, description, code })`, geladen von
   `src/clients/modules/timers.js` (node-cron wie DontAddThisBot, Ausdruck mit Sekunden-Feld).
 - `src/util/twitch/pubSub.js` — altes Twitch-PubSub wie DontAddThisBot (50 Themen je Verbindung, Mod-Themen mit
   `TWITCH_WEB_TOKEN`); `hermes-client.js` als Ausweg, Auswahl per `config.json` `"pubsub": "legacy" | "hermes"`.
@@ -31,15 +31,18 @@ kommen aus selfbot; Aufbau, IRC-Anbindung und Stil von DontAddThisBot. Bauplan: 
   (Event `follow` fuer die Chat-Module) in allen Moderator-Channels; hoechstens 300 Abos je WebSocket.
 - `src/clients/startup.js` — nach dem IRC-Connect: PubSub-Abos, Notify-Streamer, CatQuery-Firehose, Join-Poller,
   Chat-Logger.
-- `src/services/` — Channels, Users, Filter, Banphrase, AFK, Reminder, Datenschalter (`data-properties.js`: jede neue
-  Channel-/User-Eigenschaft dort mit Typ deklarieren), Log.
-- `src/api/` — Web wie DontAddThisBots api/: `index.js` (Express: Dashboard, OAuth, Status-/Statistikseiten, /v1,
-  /docs), `routes-*.js`, `public/` (HTML), `internal.js` (interne API). Ports aus `config.json` `web.port`,
+- `src/util/` (neben `util/twitch/`) — die frueheren Services: Channels, Users, Filter, Banphrase, AFK, Reminder,
+  Datenschalter (`data-properties.js`: jede neue Channel-/User-Eigenschaft dort mit Typ deklarieren), Log.
+- `src/api/` — Web wie DontAddThisBots api/: `server.js` (Express, laedt `routes/GET|POST|PUT|PATCH|DELETE/*.js`
+  automatisch: Dashboard, OAuth, Status-/Statistikseiten, /v1, /docs), gemeinsame Helfer je Bereich in `auth.js`,
+  `dashboard.js`, `public.js`, `v1.js`, `github.js`, `context.js`, `public/` (HTML), `internal.js` (interne API). Ports aus `config.json` `web.port`,
   `web.compatPort` (alter sb-v2-Port 3000) und `api.port`; im Parallelbetrieb 11202/11200, compatPort aus.
-- `src/database/` — `db.js` (mongoose, `nextId()` fuer numerische IDs), `models/`, `redis.js` (`getJSON`/`setJSON`).
+- `src/database/` — `postgres.js` (`bot.SQL`, pg-Pool wie DontAddThisBot), `db.js` (`bot.DB.<Model>` mit `nextId()` fuer
+  numerische IDs), `orm/` (uebersetzt Mongo-Stil-Abfragen - find, updateOne mit `$set`/`$inc`/Pipeline, aggregate - in SQL,
+  `translate.js` hat nur den benutzten Teil und wirft sonst), `models/` (Schemas, eine Tabelle je Modell), `redis.js`.
 - `src/token/` — `http.js` (fetch-Wrapper), `helix.js` (Tokens, Helix).
 - `src/misc/` — `utility.js` (Ersatz fuer supi-core Utils), `logger.js`, `regex.js`, `long-timeout.js`, `haste.js`.
-- `scripts/migrate-mariadb.js` — MariaDB -> MongoDB, wiederholbar (`yarn migrate [Tabelle ...]`).
+- `scripts/migrate-mariadb.js` — MariaDB -> Postgres, wiederholbar (`yarn migrate [Tabelle ...]`).
 - `tests/` — `node:test`, `*.test.js`.
 
 ## Befehle
@@ -53,13 +56,13 @@ Der alte selfbot laeuft weiter als `selfbot` auf demselben Twitch-Konto. Damit n
 `parallelMode: true` (keine AFK-Rueckkehr, keine Reminder-Ansagen, kein Chat-Logger, kein Firehose, kein Farbwechsel).
 `onlyChannels` begrenzt auch `bot.Channels.getJoinable()`, PubSub-Abos und Modul-Ereignisse, damit Crons und Module
 nirgends sonst eingreifen. Gesperrt bis zum Umschalten: Module `discord-mirror` (Discord doppelt), Crons `disk-watch`,
-`smartbox-watch` (Warnungen doppelt). Eigene Ports (11201), Redis-DB 10, Mongo-DB `selfbot_next`. MariaDB bleibt bis
-zum Umschalten die Quelle der Daten; eine erneute Migration ueberschreibt Mongo.
+`smartbox-watch` (Warnungen doppelt). Eigene Ports (11201), Redis-DB 10, Postgres-DB `selfbot_next` (Rolle `selfbot_next`, Zugang in `config.json` `postgres`). MariaDB bleibt bis
+zum Umschalten die Quelle der Daten; eine erneute Migration ueberschreibt Postgres.
 
 Umschalten: `bash scripts/cutover.sh` (zeigt den Plan), `--go` (Sicherungen nach `/root/backups/cutover-next`, beide
 Bots stoppen, `migrate --fresh` + `migrate:chatlines` + `migrate:check`, `scripts/cutover-config.js`, pm2-Name
 `selfbot`), `--rollback` (alter selfbot wieder an, dieser Bot zurueck in den Parallelbetrieb). Redis-DB 10 und
-Mongo-DB `selfbot_next` bleiben auch danach, nginx muss nicht angepasst werden.
+Postgres-DB `selfbot_next` bleiben auch danach, nginx muss nicht angepasst werden.
 
 PubSub (altes PubSub: 60 Verbindungen x 50 Topics): Mod-Topics nur in Channels mit Mode `Moderator`, Hype-Train,
 Predictions und Kanalpunkte werden nicht abonniert.
@@ -80,9 +83,10 @@ autojoin-bot, die es laufend schreiben. Es bleibt in MariaDB; Zugriff nur ueber 
 ## Konventionen
 - Plain JavaScript (CommonJS), Node 24, kein Build. Prettier wie DontAddThisBot (Tabs, einfache Anfuehrungszeichen).
 - Chat-Antworten Englisch wie bisher, Kommentare und Logs Deutsch.
-- MongoDB 8.2 im Docker-Container `selfbot-mongo` (127.0.0.1:27017, WiredTiger-Cache 1 GB). Achtung: Kernel 7.0.0 hat
-  einen bekannten Fehler mit MongoDB (SERVER-121912, behoben ab 7.0.14), 8.2 startet nur, weil die Pruefung fehlt.
-  Taegliches Backup: `/root/backups/mongo-backup.sh` (Cron 04:30, 7 Tage).
+- Postgres 18 (Systemdienst, 127.0.0.1:5432). Das Schema legt `bot.DB.connect()` selbst an (`CREATE TABLE IF NOT EXISTS`,
+  fehlende Spalten per `ALTER TABLE`). Tests gegen eine echte Datenbank: `TEST_POSTGRES_URL=postgres://… yarn test`.
+  Ein taegliches Backup per `pg_dump` ist noch einzurichten (der Mongo-Container `selfbot-mongo` und sein Backup
+  `/root/backups/mongo-backup.sh` gelten nur noch fuer den Stand vor der Umstellung).
 - Abfragen nur als Objekte (kein `$where`, keine zusammengesetzten Strings). Numerische `_id` wie in MariaDB.
 - Unsichtbare Zeichen in Regexes und Strings immer als `\u…`-Escape schreiben.
 - Alle Server binden an `127.0.0.1`.

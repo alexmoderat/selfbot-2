@@ -66,7 +66,7 @@ router.get(
 		const dbLatency = async () => {
 			const start = Date.now();
 			try {
-				await bot.DB.mongoose.connection.db.admin().ping();
+				await bot.SQL.query('SELECT 1');
 				return Date.now() - start;
 			} catch {
 				return null;
@@ -131,11 +131,10 @@ router.get(
 				blacklisted++;
 			}
 		}
-		// Laufzeit der Datenbank (bisher MariaDB "Uptime", jetzt MongoDB serverStatus)
+		// Laufzeit der Datenbank (bisher MariaDB "Uptime", jetzt Postgres seit dem Start des Servers)
 		const uptime = (
-			await bot.DB.mongoose.connection.db
-				.admin()
-				.serverStatus()
+			await bot.SQL.query('SELECT EXTRACT(EPOCH FROM now() - pg_postmaster_start_time()) AS uptime')
+				.then((result) => result.rows[0])
 				.catch(() => null)
 		)?.uptime;
 

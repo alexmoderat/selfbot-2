@@ -1,5 +1,5 @@
 // selfbot-next - alexmoderat's Twitch-Bot, aufgebaut wie DontAddThisBot:
-// IRC ueber dank-twitch-irc, MongoDB, globales "bot"-Objekt, src/commands/*.js
+// IRC ueber dank-twitch-irc, Postgres, globales "bot"-Objekt, src/commands/*.js
 
 const { getConfig } = require('./config.js');
 const { Logger, LogLevel } = require('./misc/logger.js');
@@ -9,6 +9,7 @@ const config = getConfig();
 global.bot = {
 	Config: config,
 	DB: require('./database/db.js'),
+	SQL: require('./database/postgres.js'),
 	Redis: require('./database/redis.js').create(config.redis),
 	Utils: require('./misc/utility.js'),
 	Logger,
@@ -38,7 +39,7 @@ bot.Commands = commands;
 
 const start = async () => {
 	console.time('[main] Start');
-	await bot.DB.connect(config.mongo.uri);
+	await bot.DB.connect(config.postgres);
 
 	const counts = {
 		channels: await bot.Channels.load(),

@@ -9,8 +9,12 @@
 	],
 	"disableAltPrefix": true,
 	"parallelMode": true,
-	"mongo": {
-		"uri": "mongodb://127.0.0.1:27017/selfbot_next"
+	"postgres": {
+		"host": "127.0.0.1",
+		"port": 5432,
+		"user": "selfbot_next",
+		"password": "",
+		"database": "selfbot_next"
 	},
 	"redis": {
 		"host": "127.0.0.1",

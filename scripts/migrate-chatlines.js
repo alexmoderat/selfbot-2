@@ -1,4 +1,4 @@
-// Chat-Logs aus MariaDB (selfbot_chat_line, eine Tabelle je Channel) nach MongoDB (chatLines).
+// Chat-Logs aus MariaDB (selfbot_chat_line, eine Tabelle je Channel) nach Postgres (chatLines).
 // Fortsetzbar: je Channel geht es nach der hoechsten schon uebernommenen legacyId weiter; Dubletten verhindert der
 // eindeutige Index { channel, legacyId }. Ein zweiter Lauf uebernimmt nur, was seitdem dazukam (Delta beim Umschalten).
 //
@@ -55,7 +55,7 @@ const main = async () => {
 	const config = getConfig();
 	const only = process.argv.slice(2).map((i) => i.toLowerCase());
 	const { MARIA_USER, MARIA_PASSWORD, MARIA_HOST } = process.env;
-	await DB.connect(config.mongo.uri);
+	await DB.connect(config.postgres);
 	const conn = await mariadb.createConnection({ host: MARIA_HOST, user: MARIA_USER, password: MARIA_PASSWORD, bigIntAsNumber: true });
 
 	try {
