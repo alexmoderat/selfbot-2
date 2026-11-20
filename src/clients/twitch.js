@@ -10,6 +10,7 @@ const { CLEARCHAT } = require('./events/CLEARCHAT.js');
 const { NOTICE } = require('./events/NOTICE.js');
 const { PRIVMSG } = require('./events/PRIVMSG.js');
 const { USERNOTICE } = require('./events/USERNOTICE.js');
+const { USERSTATE } = require('./events/USERSTATE.js');
 const { main, isServed } = require('./JoinChannels.js');
 
 // Wie DontAddThisBots clients/twitch.js: alle Event-Handler registrieren, dann die Channels joinen.
@@ -17,7 +18,7 @@ const { main, isServed } = require('./JoinChannels.js');
 // (send(message, channel), joinChannel, selfId, ...), damit portierte Services und Module gleich bleiben.
 
 const Twitch = async function () {
-	for (const execute of [JOIN, PART, WHISPER, CLEARCHAT, NOTICE, PRIVMSG, USERNOTICE, main]) {
+	for (const execute of [JOIN, PART, WHISPER, CLEARCHAT, NOTICE, PRIVMSG, USERNOTICE, USERSTATE, main]) {
 		await execute();
 	}
 };
