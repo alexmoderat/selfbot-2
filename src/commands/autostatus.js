@@ -1,4 +1,4 @@
-const { formatDuration, parseDurationText } = require('../misc/duration.js');
+const { formatDuration, parseDurationText } = require('../misc/humanizeDuration.js');
 
 /**
  * Periodischer Status-Post (Cron autostatus) alle 8 h fuer diesen Channel an/aus, aus sb-v2. "delay <dauer>" verschiebt

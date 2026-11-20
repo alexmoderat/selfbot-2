@@ -1,5 +1,5 @@
 const { randArray, wrapString } = require('../misc/utility.js');
-const { definitions } = require('../services/afk.js');
+const { definitions } = require('../util/afk.js');
 
 const { invocations, specialSuffixes } = definitions;
 const STATUS_LENGTH_CHARACTER_LIMIT = 2000;

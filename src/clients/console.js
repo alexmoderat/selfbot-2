@@ -1,7 +1,7 @@
 const { createServer } = require('node:net');
 const { Logger } = require('../misc/logger.js');
 const { handler } = require('./modules/handler.js');
-const Users = require('../services/users.js');
+const Users = require('../util/users.js');
 
 // Lokale Debug-Konsole (bisher platforms/net.ts): per TCP verbinden, bekannten Usernamen eingeben, dann Commands
 // wie im Chat tippen. Lauscht NUR auf 127.0.0.1. Kein Cooldown (debug), Antworten kommen in die Konsole.

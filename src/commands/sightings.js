@@ -1,8 +1,8 @@
 const sbv2 = require('../database/sbv2.js');
 const { got } = require('../token/got.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { uploadToHaste } = require('../misc/haste.js');
-const { formatReport, summarize } = require('../misc/sightings.js');
+const { uploadToHaste } = require('../token/haste.js');
+const { formatReport, summarize } = require('../util/sightings.js');
 
 /**
  * Sichtungen aus chat_data.first_message_sightings (Network-Bot-Radar, gemeinsam mit sb-v2 und autojoin-bot): in wie vielen Channels ein Account zuerst geschrieben

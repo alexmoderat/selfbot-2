@@ -27,8 +27,8 @@ const targetOf = (relative) => {
 		[/^classes\/chat-module$/, 'src/clients/modules/chat-modules'],
 		[/^classes\/cron$/, 'src/clients/modules/timers'],
 		// Hilfsdateien eines Commands (Unterordner); der Loader laedt nur src/commands/*.js
-		[/^commands\/([^/]+)\/(?!index$)(.+)$/, 'src/misc/commands/$1/$2'],
-		[/^utils\/(.+)$/, 'src/misc/$1'],
+		[/^commands\/([^/]+)\/(?!index$)(.+)$/, 'src/util/commands/$1/$2'],
+		[/^utils\/(.+)$/, 'src/util/$1'],
 		[/^singletons\/(.+)$/, 'src/services/$1'],
 		[/^platforms\/twitch-utils$/, 'src/util/twitch/twitch-utils'],
 		[/^platforms\/hermes-client$/, 'src/util/twitch/hermes-client'],
@@ -151,10 +151,10 @@ const API_RENAMES = [
 
 /** Importe aus supi-core auf die uebernommenen Klassen bzw. Ersatzfunktionen */
 const SUPI_CORE_IMPORTS = {
-	SupiDate: ['src/misc/date', 'default'],
-	SupiError: ['src/misc/error', 'SupiError'],
-	GenericRequestError: ['src/misc/error', 'GenericRequestError'],
-	isGenericRequestError: ['src/misc/error', 'isGenericRequestError'],
+	SupiDate: ['src/util/date', 'default'],
+	SupiError: ['src/util/error', 'SupiError'],
+	GenericRequestError: ['src/util/error', 'GenericRequestError'],
+	isGenericRequestError: ['src/util/error', 'isGenericRequestError'],
 	isGotRequestError: ['src/token/http', 'isHttpError'],
 };
 
@@ -209,10 +209,7 @@ const convertImports = (code, sourceDir, targetFile) => {
 				.map((i) => i.replace(/\s+as\s+/, ': '));
 			return cleaned.length === 0 ? '' : `const { ${cleaned.join(', ')} } = require('${relativeRequire(spec)}');`;
 		})
-		.replace(
-			/^import\s+(\w+)\s+from\s+["']([^"']+)["'](?:\s+with\s*\{[^}]*\})?;?/gm,
-			(_m, name, spec) => `const ${name} = require('${relativeRequire(spec)}');`,
-		)
+		.replace(/^import\s+(\w+)\s+from\s+["']([^"']+)["'](?:\s+with\s*\{[^}]*\})?;?/gm, (_m, name, spec) => `const ${name} = require('${relativeRequire(spec)}');`)
 		.replace(/^import\s+["']([^"']+)["'];?/gm, (_m, spec) => `require('${relativeRequire(spec)}');`);
 };
 
@@ -318,10 +315,7 @@ const main = () => {
 	code = convertExports(code);
 	if (/commands\/[^/]+\/+index\.ts$/.test(source)) {
 		code = code.replace(/^const \{ declare \} = require\([^)]*\);\n/m, '');
-		code = code.replace(
-			/^const \{ declare, isResultFailure \} = require\([^)]*\);\n/m,
-			"const { isResultFailure } = require('../clients/modules/commands.js');\n",
-		);
+		code = code.replace(/^const \{ declare, isResultFailure \} = require\([^)]*\);\n/m, "const { isResultFailure } = require('../clients/modules/commands.js');\n");
 		code = convertCommand(code);
 	}
 	for (const [regex, replacement] of API_RENAMES) {

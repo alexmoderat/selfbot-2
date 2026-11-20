@@ -1,5 +1,5 @@
-const { listOrLink } = require('../misc/list-reply.js');
-const { getKnownNames } = require('../misc/catquery-api.js');
+const { listOrLink } = require('../util/list-reply.js');
+const { getKnownNames } = require('../token/catquery-api.js');
 
 /** Fruehere Usernamen eines Accounts ueber CatQuery - nuetzlich gegen Ban-Evasion per Namensaenderung (aus sb-v2) */
 module.exports = {

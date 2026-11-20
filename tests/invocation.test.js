@@ -1,12 +1,6 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const {
-	checkConfirmation,
-	isAltPrefixOwnedElsewhere,
-	isMissingRequiredArgument,
-	parseInvocation,
-	prefixProblem,
-} = require('../src/clients/modules/invocation.js');
+const { checkConfirmation, isAltPrefixOwnedElsewhere, isMissingRequiredArgument, parseInvocation, prefixProblem } = require('../src/clients/modules/invocation.js');
 const { formatParams } = require('../src/clients/modules/parameters.js');
 
 const noPrefix = new Set(['8ball', 'vod']);

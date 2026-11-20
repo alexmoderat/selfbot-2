@@ -1,12 +1,11 @@
-const { baseUrl } = require('../misc/user-tokens.js');
+const { baseUrl } = require('../token/user-tokens.js');
 
 /**
  * Link zum Dashboard (ninou2, 27.10.2026: "should be command : !botwebsite !bw" - dort Commands mit Beschreibung
  * sehen und Custom Commands verwalten, "just like the fossa custom command menu").
  */
 // Direkt aufs Dashboard: ohne Sitzung fuehrt es zum Login, mit Sitzung gleich hinein (ninou2: "wrong link")
-const formatBotWebsite = (url) =>
-	`bot website: ${url}/dashboard (log in with Twitch) - all commands with descriptions, manage custom commands, banphrases and notifications.`;
+const formatBotWebsite = (url) => `bot website: ${url}/dashboard (log in with Twitch) - all commands with descriptions, manage custom commands, banphrases and notifications.`;
 
 module.exports = {
 	name: 'botwebsite',

@@ -1,6 +1,6 @@
-const { uploadToOwnHaste } = require('../misc/haste.js');
-const { resolveStreamer, watchStreamer, watchTitle } = require('../services/notifications.js');
-const { cleanTimes } = require('../services/tweet-notify.js');
+const { uploadToOwnHaste } = require('../token/haste.js');
+const { resolveStreamer, watchStreamer, watchTitle } = require('../util/notifications.js');
+const { cleanTimes } = require('../util/tweet-notify.js');
 
 /**
  * Benachrichtigungen einrichten, aus sb-v2:
@@ -77,10 +77,7 @@ module.exports = {
 			if (sub === 'live') {
 				const result = await bot.DB.NotifyLive.deleteMany({ channel: channel.id, streamerLogin: target });
 				return {
-					text:
-						result.deletedCount > 0
-							? `@${display}, Live notification for ${target} removed.`
-							: `@${display}, ${target} was not on the live notify list.`,
+					text: result.deletedCount > 0 ? `@${display}, Live notification for ${target} removed.` : `@${display}, ${target} was not on the live notify list.`,
 				};
 			}
 
@@ -119,11 +116,7 @@ module.exports = {
 			return { text: `@${display}, ✅ Live notification for ${target} added.${extra}` };
 		}
 
-		await bot.DB.NotifyBan.updateOne(
-			{ channel: channel.id, login: target },
-			{ $set: { message: customMessage, notified: null }, $setOnInsert: { added: new Date() } },
-			{ upsert: true },
-		);
+		await bot.DB.NotifyBan.updateOne({ channel: channel.id, login: target }, { $set: { message: customMessage, notified: null }, $setOnInsert: { added: new Date() } }, { upsert: true });
 		console.log(`[notify] ban ${target} in #${channel.name}`);
 		return { text: `@${display}, ✅ Watching ${target} for Twitch bans.${extra}` };
 	},

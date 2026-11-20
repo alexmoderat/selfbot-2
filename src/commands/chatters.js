@@ -1,6 +1,6 @@
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { uploadList } = require('../misc/haste.js');
-const { CHATTERS_CAP, fetchChatters, fetchChattersGql } = require('../misc/twitch-lists.js');
+const { uploadList } = require('../token/haste.js');
+const { CHATTERS_CAP, fetchChatters, fetchChattersGql } = require('../token/twitch-lists.js');
 
 /** Chatter-Liste eines Channels (sb-v2): Helix, wo der Bot moddet, sonst SmartBox-GQL */
 module.exports = {

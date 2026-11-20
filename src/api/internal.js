@@ -1,8 +1,8 @@
 const { commands } = require('../clients/modules/commands.js');
 const { createServer } = require('node:http');
-const { pubsub } = require('../services/pubsub.js');
-const { getRecent } = require('../services/event-feed.js');
-const { getRecentActions } = require('../services/moderation.js');
+const { pubsub } = require('../util/pubsub.js');
+const { getRecent } = require('../util/event-feed.js');
+const { getRecentActions } = require('../util/moderation.js');
 
 // Interne API wie Supibots api/index.ts - nur 127.0.0.1, fuer Website/Statusseite (Block 9).
 

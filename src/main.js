@@ -1,5 +1,5 @@
 // selfbot-next - alexmoderat's Twitch-Bot, aufgebaut wie DontAddThisBot:
-// IRC ueber dank-twitch-irc, MongoDB, globales "bot"-Objekt, src/commands/*.js
+// IRC ueber dank-twitch-irc, Postgres, globales "bot"-Objekt, src/commands/*.js
 
 const { getConfig } = require('./config.js');
 const { Logger, LogLevel } = require('./misc/logger.js');
@@ -9,8 +9,9 @@ const config = getConfig();
 global.bot = {
 	Config: config,
 	DB: require('./database/db.js'),
+	SQL: require('./database/postgres.js'),
 	Redis: require('./database/redis.js').create(config.redis),
-	Utils: require('./misc/utility.js'),
+	Utils: require('./misc'),
 	Logger,
 	/** Twitch-IDs der gerade live gemeldeten Channels */
 	Live: new Set(),
@@ -25,20 +26,20 @@ const { getTimers } = require('./clients/modules/timers.js');
 
 bot.Client = client;
 bot.Twitch = platform;
-bot.Channels = require('./services/channels.js');
-bot.Users = require('./services/users.js');
-bot.Filter = require('./services/filter.js');
-bot.Banphrase = require('./services/banphrase.js');
-bot.AFK = require('./services/afk.js');
-bot.Reminders = require('./services/reminders.js');
+bot.Channels = require('./util/channels.js');
+bot.Users = require('./util/users.js');
+bot.Filter = require('./util/filter.js');
+bot.Banphrase = require('./util/banphrase.js');
+bot.AFK = require('./util/afk.js');
+bot.Reminders = require('./util/reminders.js');
 // Custom Commands der Channels (!discord usw.), der Handler fragt sie, wenn kein eingebauter Command passt
-bot.CustomCommands = require('./services/custom-commands.js');
+bot.CustomCommands = require('./util/custom-commands.js');
 bot.ChatModules = ChatModules;
 bot.Commands = commands;
 
 const start = async () => {
 	console.time('[main] Start');
-	await bot.DB.connect(config.mongo.uri);
+	await bot.DB.connect(config.postgres);
 
 	const counts = {
 		channels: await bot.Channels.load(),
@@ -55,7 +56,7 @@ const start = async () => {
 
 	// Web (Dashboard, OAuth, Status-/Statistikseiten, /v1) und interne API - Ports aus config.json, nur 127.0.0.1
 	if (config.web?.port) {
-		require('./api/index.js').startWebServer(config.web.port);
+		require('./api/server.js').startWebServer(config.web.port);
 	}
 	if (config.api?.port) {
 		bot.API = require('./api/internal.js')(config.api.port);

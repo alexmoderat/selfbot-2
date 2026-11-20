@@ -1,17 +1,17 @@
-const { Schema, model, models } = require('mongoose');
+const sql = require('../postgres.js');
+const { Mixed } = require('../orm/schema.js');
+const { createModel } = require('../orm/model.js');
 
 // Kern-Collections (bisher selfbot_core). Numerische _id wie in MariaDB, damit Verweise bei der Migration
-// erhalten bleiben; neue IDs kommen aus der Collection "counters" (nextId). Felder in camelCase.
+// erhalten bleiben; neue IDs kommen aus der Tabelle "counters" (nextId). Spalten wie die Felder in camelCase.
+
+const registry = new Map();
 
 const define = (name, definition, options = {}, indexes = []) => {
-	if (models[name]) {
-		return models[name];
+	if (!registry.has(name)) {
+		registry.set(name, createModel({ name, collection: options.collection, definition, indexes, sql }));
 	}
-	const schema = new Schema(definition, { versionKey: false, minimize: false, ...options });
-	for (const [fields, indexOptions] of indexes) {
-		schema.index(fields, indexOptions);
-	}
-	return model(name, schema);
+	return registry.get(name);
 };
 
 const Counter = define('Counter', { _id: String, seq: { type: Number, default: 0 } }, { collection: 'counters' });
@@ -29,7 +29,7 @@ const Channel = define(
 		logging: { type: [String], default: ['Lines', 'Meta'] },
 		added: { type: Date, default: Date.now },
 		/** Datenschalter (bisher Channel_Data), siehe services/data-properties.js */
-		data: { type: Schema.Types.Mixed, default: {} },
+		data: { type: Mixed, default: {} },
 	},
 	{ collection: 'channels' },
 	[
@@ -46,7 +46,7 @@ const User = define(
 		twitchId: { type: String, default: null },
 		startedUsing: { type: Date, default: Date.now },
 		/** Datenschalter (bisher User_Alias_Data) */
-		data: { type: Schema.Types.Mixed, default: {} },
+		data: { type: Mixed, default: {} },
 	},
 	{ collection: 'users' },
 	[
@@ -87,8 +87,8 @@ const ErrorLog = define(
 		origin: { type: String, default: null },
 		message: { type: String, default: null },
 		stack: { type: String, default: null },
-		context: { type: Schema.Types.Mixed, default: null },
-		arguments: { type: Schema.Types.Mixed, default: null },
+		context: { type: Mixed, default: null },
+		arguments: { type: Mixed, default: null },
 		timestamp: { type: Date, default: Date.now },
 	},
 	{ collection: 'errors' },
@@ -104,20 +104,7 @@ const Filter = define(
 		invocation: { type: String, default: null },
 		type: {
 			type: String,
-			enum: [
-				'Blacklist',
-				'Whitelist',
-				'Opt-out',
-				'Block',
-				'Unping',
-				'Unmention',
-				'Cooldown',
-				'Flags',
-				'Offline-only',
-				'Online-only',
-				'Arguments',
-				'Reminder-prevention',
-			],
+			enum: ['Blacklist', 'Whitelist', 'Opt-out', 'Block', 'Unping', 'Unmention', 'Cooldown', 'Flags', 'Offline-only', 'Online-only', 'Arguments', 'Reminder-prevention'],
 			default: 'Blacklist',
 		},
 		blockedUser: { type: Number, default: null },
@@ -194,7 +181,7 @@ const ChannelChatModule = define(
 	{
 		channelId: { type: Number, required: true },
 		module: { type: String, required: true },
-		args: { type: Schema.Types.Mixed, default: null },
+		args: { type: Mixed, default: null },
 	},
 	{ collection: 'channelChatModules' },
 	[[{ channelId: 1, module: 1 }, { unique: true }]],

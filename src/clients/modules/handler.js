@@ -3,17 +3,17 @@ const { Logger } = require('../../misc/logger.js');
 const { replaceLinks, round, sqlDateTime } = require('../../misc/utility.js');
 const { isHttpError } = require('../../token/http.js');
 const { trimMessage } = require('../../util/twitch/utils.js');
-const { withTrigger } = require('../../misc/trigger-suffix.js');
+const { withTrigger } = require('../../util/trigger-suffix.js');
 const { getCommand, permissionOf } = require('./commands.js');
 const { CooldownManager } = require('./cooldown.js');
 const { parseParametersFromArguments, formatParams } = require('./parameters.js');
 const { ALT_PREFIX, parseInvocation, checkConfirmation, isMissingRequiredArgument, isAltPrefixOwnedElsewhere } = require('./invocation.js');
 const { effectiveLevel, isLevelAllowed } = require('./levels.js');
-const { getUtilityInvocations } = require('../../misc/command-listing.js');
-const Filter = require('../../services/filter.js');
-const Banphrase = require('../../services/banphrase.js');
-const Users = require('../../services/users.js');
-const { logCommandExecution, logError } = require('../../services/log.js');
+const { getUtilityInvocations } = require('../../util/command-listing.js');
+const Filter = require('../../util/filter.js');
+const Banphrase = require('../../util/banphrase.js');
+const Users = require('../../util/users.js');
+const { logCommandExecution, logError } = require('../../util/log.js');
 
 // Wie DontAddThisBots handler.js: Prefix erkennen, Command suchen, pruefen, ausfuehren, antworten.
 // Ablauf und Antworten wie bisher (Supibots Command.checkAndExecute + sb-v2-Router):

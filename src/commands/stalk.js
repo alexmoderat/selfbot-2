@@ -1,6 +1,6 @@
 const { got } = require('../token/got.js');
 
-const { ivrUserDataSchema } = require('../misc/schemas.js');
+const { ivrUserDataSchema } = require('../util/schemas.js');
 
 // Supibots commands/stalk (ninou2, 07.11.2026: "for command like staking ... use the same command as spBot").
 // Supibots Banphrase-Pruefung der Teilantworten gibt es hier nicht (Block 2), daher eine einfache Antwort.

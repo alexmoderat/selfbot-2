@@ -1,5 +1,5 @@
-const { ago, formatDuration } = require('../misc/duration.js');
-const { getChatRestrictedReasons, getUserProfile, isUsernameAvailable } = require('../misc/twitch-gql.js');
+const { ago, formatDuration } = require('../misc/humanizeDuration.js');
+const { getChatRestrictedReasons, getUserProfile, isUsernameAvailable } = require('../token/gql.js');
 
 /**
  * Account-Infos zu einem User, aus sb-v2: user/u ausfuehrlich, whois/lookup kompakt.
@@ -23,10 +23,7 @@ const BAN_TYPES = { TOS_INDEFINITE: 'indefinite', TOS_TEMPORARY: 'temporary', DM
 
 const bannedLine = (u) => {
 	const type = BAN_TYPES[u.banReason ?? ''] ?? String(u.banReason ?? 'unknown').toLowerCase();
-	return (
-		`@${u.displayName || u.login}, banType: ${type} · id: ${u.id} · login: ${u.login}` +
-		` · last live: ${ago(u.lastBroadcast?.startedAt ?? '')} ago · created: ${ago(u.createdAt ?? '')} ago`
-	);
+	return `@${u.displayName || u.login}, banType: ${type} · id: ${u.id} · login: ${u.login}` + ` · last live: ${ago(u.lastBroadcast?.startedAt ?? '')} ago · created: ${ago(u.createdAt ?? '')} ago`;
 };
 
 const detailed = (u) => {
@@ -54,10 +51,7 @@ const detailed = (u) => {
 const compact = (u, caller) => {
 	const bio = (u.bio ?? '').trim().replace(/\s+/g, ' ') || 'none';
 	const lastLive = u.lastBroadcast?.startedAt ? ` · last live: ${ago(u.lastBroadcast.startedAt)} ago` : '';
-	return (
-		`@${caller}, id: ${u.id} · login: ${u.login} · roles: ${rolesOf(u, 'none').toLowerCase()}` +
-		` · bio: ${bio}${lastLive} · created: ${ago(u.createdAt ?? '')} ago`
-	);
+	return `@${caller}, id: ${u.id} · login: ${u.login} · roles: ${rolesOf(u, 'none').toLowerCase()}` + ` · bio: ${bio}${lastLive} · created: ${ago(u.createdAt ?? '')} ago`;
 };
 
 // alexmoderat, 30.10.2026: bei "not found" dazu, ob der Name frei ist (wie PotatBotat, aber ueber Twitchs eigene
@@ -103,9 +97,7 @@ module.exports = {
 
 		const reasons = await getChatRestrictedReasons(login);
 		return {
-			text: reasons?.includes('CHANNEL_HAS_CONSEQUENCE')
-				? `⚠️ @${u.displayName || u.login} · Chat is currently disabled in their channel · ${base}`
-				: base,
+			text: reasons?.includes('CHANNEL_HAS_CONSEQUENCE') ? `⚠️ @${u.displayName || u.login} · Chat is currently disabled in their channel · ${base}` : base,
 		};
 	},
 };

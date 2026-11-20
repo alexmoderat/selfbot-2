@@ -8,8 +8,7 @@ module.exports = {
 	name: 'crossbanoptin',
 	aliases: ['cbopt'],
 	cooldown: 3000,
-	description:
-		'Opts a channel in/out of !crossban (network-wide bans get applied there too). Owner: target another channel with "channel:name" or a second word.',
+	description: 'Opts a channel in/out of !crossban (network-wide bans get applied there too). Owner: target another channel with "channel:name" or a second word.',
 	usage: 'crossbanoptin <on|off> [channel:name]',
 	flags: ['mod'],
 	params: [{ name: 'channel', type: 'string' }],

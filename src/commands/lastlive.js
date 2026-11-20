@@ -1,14 +1,5 @@
-const { streamData } = require('../services/stream-tracking.js');
-const {
-	MIN_STREAM_SECONDS,
-	countDaysInYear,
-	daysAgoWithDate,
-	daysInYear,
-	fmtDate,
-	fmtDateTimeUtc,
-	fmtLengthShort,
-	fmtStreamSpanUtc,
-} = require('../misc/streamer-streak.js');
+const { streamData } = require('../util/stream-tracking.js');
+const { MIN_STREAM_SECONDS, countDaysInYear, daysAgoWithDate, daysInYear, fmtDate, fmtDateTimeUtc, fmtLengthShort, fmtStreamSpanUtc } = require('../util/streamer-streak.js');
 
 /**
  * Wann ein Channel zuletzt live war, aus sb-v2 (ninou2, 02.10.2026, Alias "ll" - lastline hat dafuer "llog").
@@ -55,9 +46,7 @@ const describeLive = async (channel, userId, startedAt) => {
 
 	const startDay = new Date(startMs).toISOString().slice(0, 10);
 	const previousDay = days.filter((i) => i < startDay).at(-1);
-	return previousDay
-		? `${head}, Last live before this current stream was on ${fmtDate(previousDay)} (${daysAgoWithDate(previousDay, today)})${streamed}`
-		: `${head}${streamed}`;
+	return previousDay ? `${head}, Last live before this current stream was on ${fmtDate(previousDay)} (${daysAgoWithDate(previousDay, today)})${streamed}` : `${head}${streamed}`;
 };
 
 module.exports = {

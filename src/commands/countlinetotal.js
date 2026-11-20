@@ -1,4 +1,4 @@
-const SupiDate = require('../misc/date.js');
+const SupiDate = require('../util/date.js');
 
 // Supibots commands/countlinetotal: Summe der AUTO_INCREMENT-Werte aller Log-Tabellen, Rate ueber einen Redis-Stand
 

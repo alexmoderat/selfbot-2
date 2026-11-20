@@ -1,6 +1,6 @@
 const { getPermissions } = require('../clients/modules/handler.js');
-const { listOrLink } = require('../misc/list-reply.js');
-const phrases = require('../services/moderation-phrases.js');
+const { listOrLink } = require('../util/list-reply.js');
+const phrases = require('../util/moderation-phrases.js');
 
 /**
  * Presets sind wiederverwendbare Phrasensammlungen, die man je Channel aktivieren kann (z. B. "sellerbot"), aus sb-v2.

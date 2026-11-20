@@ -1,0 +1,81 @@
+{
+	"selfName": "alexmoderat",
+	"selfId": "1153381727",
+	"prefix": "sbn",
+	"messageLimit": 500,
+	"dedupeWindow": 600000,
+	"onlyChannels": [
+		"testaccountalexmoderat"
+	],
+	"disableAltPrefix": true,
+	"parallelMode": true,
+	"postgres": {
+		"host": "127.0.0.1",
+		"port": 5432,
+		"user": "selfbot_next",
+		"password": "",
+		"database": "selfbot_next"
+	},
+	"redis": {
+		"host": "127.0.0.1",
+		"port": 6379,
+		"db": 10
+	},
+	"console": {
+		"port": 11201
+	},
+	"responses": {
+		"commandErrorResponse": "An error occured while executing the command!",
+		"defaultBanphrase": "[Banphrased]"
+	},
+	"values": {
+		"pendingCommandTimeout": 300000,
+		"commandDetailUrlPrefix": null,
+		"legacyRepoPath": "/root/twitch-bot",
+		"otherBotCommandsDir": "/root/twitch-bot/src/commands",
+		"massPingBanphraseThreshold": 10,
+		"modLogChannel": null,
+		"utilityChannels": [
+			"ninou2",
+			"testaccountalexmoderat",
+			"im_row1"
+		],
+		"maxIncomingActiveReminders": 10,
+		"maxOutgoingActiveReminders": 10,
+		"maxIncomingScheduledReminders": 5,
+		"maxOutgoingScheduledReminders": 5
+	},
+	"modules": {
+		"commands": {
+			"disableAll": false,
+			"blacklist": [],
+			"whitelist": []
+		},
+		"modules": {
+			"disableAll": false,
+			"blacklist": [
+				"join-check",
+				"discord-mirror"
+			],
+			"whitelist": []
+		},
+		"crons": {
+			"disableAll": false,
+			"blacklist": [
+				"auto-join",
+				"justlog-sync",
+				"disk-watch",
+				"smartbox-watch"
+			],
+			"whitelist": []
+		}
+	},
+	"pubsub": "legacy",
+	"web": {
+		"port": 11202,
+		"compatPort": null
+	},
+	"api": {
+		"port": 11200
+	}
+}

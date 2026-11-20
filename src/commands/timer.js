@@ -1,6 +1,6 @@
-const timers = require('../services/timers.js');
-const { uploadList } = require('../misc/haste.js');
-const { MAX_MESSAGE_LENGTH, MAX_TIMERS_PER_CHANNEL, parseTimerInterval, timerMode, formatInterval } = require('../misc/timers.js');
+const timers = require('../util/timers.js');
+const { uploadList } = require('../token/haste.js');
+const { MAX_MESSAGE_LENGTH, MAX_TIMERS_PER_CHANNEL, parseTimerInterval, timerMode, formatInterval } = require('../util/timer-rules.js');
 
 /**
  * Wiederkehrende Nachrichten pro Channel (alexmoderat, 31.10.2026: "ja wir sollten mal timer adden"; Anlass ninou2:
@@ -84,10 +84,7 @@ module.exports = {
 
 			const link = await uploadList(
 				`Timers in #${channel.name}`,
-				all.map(
-					(i) =>
-						`#${i.ID} every ${formatInterval(i.Interval_Seconds)} (${modeText(i)}${i.Enabled ? '' : ', off'}): ${i.Message}`,
-				),
+				all.map((i) => `#${i.ID} every ${formatInterval(i.Interval_Seconds)} (${modeText(i)}${i.Enabled ? '' : ', off'}): ${i.Message}`),
 			);
 			return { text: `@${display}, ${all.length} timers in #${channel.name}: ${link}` };
 		}

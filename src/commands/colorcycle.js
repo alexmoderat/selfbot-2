@@ -1,4 +1,4 @@
-const colorCycler = require('../services/color-cycler.js');
+const colorCycler = require('../util/color-cycler.js');
 
 /** Account-weiter Schalter: wechselt bei jeder gesendeten Bot-Nachricht die Chat-Namensfarbe (aus sb-v2) */
 module.exports = {

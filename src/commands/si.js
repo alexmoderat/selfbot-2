@@ -1,12 +1,11 @@
-const { getStreamInfo } = require('../misc/stream-info.js');
+const { getStreamInfo } = require('../util/stream-info.js');
 
 /** Stream-Infos, aus sb-v2; "uptime" als Kurzfassung (ninou2, 03.10.2026 probierte !uptime) */
 module.exports = {
 	name: 'si',
 	aliases: ['streaminfo', 'uptime'],
 	cooldown: 3000,
-	description:
-		'Stream info: viewers, category, uptime, bitrate/FPS/resolution, clips (24h). Offline: how long and last category. Defaults to the current channel; "uptime" gives a short answer.',
+	description: 'Stream info: viewers, category, uptime, bitrate/FPS/resolution, clips (24h). Offline: how long and last category. Defaults to the current channel; "uptime" gives a short answer.',
 	usage: 'si [username]',
 	flags: ['mod'],
 	execute: async (client, msg) => {

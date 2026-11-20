@@ -1,7 +1,7 @@
-const { streamData } = require('../services/stream-tracking.js');
-const { MONTHS, parseMonthYear } = require('../misc/stream-hours.js');
-const { fmtDate } = require('../misc/streamer-streak.js');
-const { packLines, replyInChunks } = require('../misc/tracking-format.js');
+const { streamData } = require('../util/stream-tracking.js');
+const { MONTHS, parseMonthYear } = require('../util/stream-hours.js');
+const { fmtDate } = require('../util/streamer-streak.js');
+const { packLines, replyInChunks } = require('../util/tracking-format.js');
 
 /**
  * Wie viele Tage ein Channel gestreamt hat, aus sb-v2 (ninou2, 15.10.2026: "monthly and yearly and total"). Ohne

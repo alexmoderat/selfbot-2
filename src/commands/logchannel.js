@@ -1,5 +1,5 @@
-const { listOrLink } = require('../misc/list-reply.js');
-const { addExtra, callAdmin, currentChannels, getExtras, readAdminKey, removeExtra, resolveIds } = require('../misc/justlog.js');
+const { listOrLink } = require('../util/list-reply.js');
+const { addExtra, callAdmin, currentChannels, getExtras, readAdminKey, removeExtra, resolveIds } = require('../token/justlog.js');
 
 /**
  * Channels im oeffentlichen Chat-Logger (justlog) verwalten, aus sb-v2. Die Bot-Channels pflegt der Cron justlog-sync;
@@ -58,9 +58,7 @@ module.exports = {
 			const wasExtra = await removeExtra(channel);
 			if (!match) {
 				return {
-					text: wasExtra
-						? `@${display}, ${channel} removed from the list (the logger was not tracking it anyway).`
-						: `@${display}, ${channel} is not being logged.`,
+					text: wasExtra ? `@${display}, ${channel} removed from the list (the logger was not tracking it anyway).` : `@${display}, ${channel} is not being logged.`,
 				};
 			}
 

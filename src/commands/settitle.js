@@ -1,5 +1,5 @@
-const { describeFailure, updateBroadcastSettings } = require('../misc/broadcast-settings.js');
-const { fetchChannelInfo } = require('../misc/twitch-info.js');
+const { describeFailure, updateBroadcastSettings } = require('../util/broadcast-settings.js');
+const { fetchChannelInfo } = require('../token/twitch-info.js');
 
 /** Stream-Titel des aktuellen Channels setzen, ohne Argument anzeigen (ninou2, 17.09.2026), aus sb-v2 */
 module.exports = {

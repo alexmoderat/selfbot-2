@@ -1,4 +1,4 @@
-const { answerNthBotBan } = require('../services/moderation.js');
+const { answerNthBotBan } = require('../util/moderation.js');
 
 /**
  * Datum des N-ten Bot-Banns, im Channel oder ueber alle Channels (ninou2, 28.10.2026: "switch it to !whenBotBans !wbb",

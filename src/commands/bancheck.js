@@ -1,5 +1,5 @@
-const phrases = require('../services/moderation-phrases.js');
-const { deobfuscate } = require('../misc/text-analysis.js');
+const phrases = require('../util/moderation-phrases.js');
+const { deobfuscate } = require('../util/text-analysis.js');
 
 /**
  * Wuerde die Nachricht dort per Banphrase getroffen? (aus sb-v2, Antworten von Supibots bancheck uebernommen).

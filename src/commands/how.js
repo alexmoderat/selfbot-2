@@ -1,5 +1,5 @@
 const { getCommand } = require('../clients/modules/commands.js');
-const { formatUsage } = require('../misc/command-listing.js');
+const { formatUsage } = require('../util/command-listing.js');
 
 /**
  * Erklaert einen Command direkt im Chat: Name, Aliase, Beschreibung und Aufruf (aus sb-v2).

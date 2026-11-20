@@ -1,5 +1,5 @@
 const { got } = require('../../token/got.js');
-const { SupiError } = require('../../misc/error.js');
+const { SupiError } = require('../error.js');
 const { getAppToken, getUserToken, invalidateUserToken, invalidateAppToken, storeBotRefreshToken } = require('../../token/helix.js');
 
 // Helix-Abfragen, die viele Commands brauchen (bisher platforms/twitch-utils.ts, ohne den EventSub-Teil)

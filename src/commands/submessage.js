@@ -1,4 +1,4 @@
-const { DEFAULT_GIFT_MESSAGE, DEFAULT_SUB_MESSAGE } = require('../modules/sub-announce.js');
+const { DEFAULT_GIFT_MESSAGE, DEFAULT_SUB_MESSAGE } = require('../clients/modules/chat/sub-announce.js');
 
 /**
  * Sub-Ansage im Chat verwalten (Modul sub-announce), opt-in je Channel, aus sb-v2. "set gift": {user} = Gifter,

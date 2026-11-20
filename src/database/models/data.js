@@ -1,11 +1,13 @@
-const { Schema, model, models } = require('mongoose');
 const specs = require('./data-specs.js');
+const sql = require('../postgres.js');
+const { Mixed } = require('../orm/schema.js');
+const { createModel } = require('../orm/model.js');
 
 // Models der Feature-Collections aus data-specs.js: bot.DB.WatchStreak, bot.DB.NotifyLive, ...
 
-const TYPES = { String, Number, Boolean, Date, Mixed: Schema.Types.Mixed };
+const TYPES = { String, Number, Boolean, Date, Mixed };
 
-const buildSchema = (spec) => {
+const buildDefinition = (spec) => {
 	const definition = {};
 	for (const [field, info] of Object.entries(spec.fields)) {
 		const entry = { type: TYPES[info.type] };
@@ -13,7 +15,7 @@ const buildSchema = (spec) => {
 			entry.enum = [...info.enum, null];
 		}
 		if (info.default === 'now') {
-			entry.default = Date.now;
+			entry.default = () => new Date();
 		} else if (info.default !== undefined) {
 			entry.default = info.default;
 		} else if (!info.required && field !== '_id') {
@@ -24,20 +26,23 @@ const buildSchema = (spec) => {
 	if (!spec.counter) {
 		delete definition._id;
 	}
+	return definition;
+};
 
-	const schema = new Schema(definition, { collection: spec.collection, versionKey: false, minimize: false });
+const buildIndexes = (spec) => {
+	const indexes = [];
 	if (!spec.counter && spec.key.length > 0) {
-		schema.index(Object.fromEntries(spec.key.map((field) => [field, 1])), { unique: true });
+		indexes.push([Object.fromEntries(spec.key.map((field) => [field, 1])), { unique: true }]);
 	}
 	for (const index of spec.indexes) {
-		schema.index(Object.fromEntries(index.fields.map((field) => [field, 1])), { unique: index.unique });
+		indexes.push([Object.fromEntries(index.fields.map((field) => [field, 1])), { unique: index.unique }]);
 	}
-	return schema;
+	return indexes;
 };
 
 const dataModels = {};
 for (const spec of specs) {
-	dataModels[spec.model] = models[spec.model] ?? model(spec.model, buildSchema(spec));
+	dataModels[spec.model] = createModel({ name: spec.model, collection: spec.collection, definition: buildDefinition(spec), indexes: buildIndexes(spec), sql });
 }
 
 /*
@@ -166,7 +171,7 @@ const counterOf = (modelName) => specs.find((i) => i.model === modelName)?.count
  * arbeiten mit Datensaetzen in der alten Form (row.Cooldown, row.Mod_Only, ID) - die Services liefern sie weiter so.
  */
 
-/** MongoDB-Dokument -> Datensatz mit Spaltennamen ({ ID, Channel, Mod_Only, ... }) */
+/** Zeile aus Postgres -> Datensatz mit Spaltennamen ({ ID, Channel, Mod_Only, ... }) */
 const toRow = (modelName, doc) => {
 	if (!doc) {
 		return null;

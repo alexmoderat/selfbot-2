@@ -1,5 +1,5 @@
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { fetchClips } = require('../misc/twitch-info.js');
+const { fetchClips } = require('../token/twitch-info.js');
 
 /** Meistgesehener der letzten Clips eines Channels ueber Helix "Get Clips", aus sb-v2 (alexmoderat, 29.09.2026) */
 module.exports = {
@@ -25,9 +25,7 @@ module.exports = {
 
 		const top = list.reduce((a, b) => (b.view_count > a.view_count ? b : a));
 		return {
-			text:
-				`@${display}, top clip for #${channel}: "${top.title}" by ${top.creator_name} ` +
-				`— ${top.view_count.toLocaleString('en-US')} views — ${top.url}`,
+			text: `@${display}, top clip for #${channel}: "${top.title}" by ${top.creator_name} ` + `— ${top.view_count.toLocaleString('en-US')} views — ${top.url}`,
 		};
 	},
 };

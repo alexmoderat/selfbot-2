@@ -1,9 +1,9 @@
 const { isHttpError: isGotRequestError } = require('../token/http.js');
 const { isResultFailure } = require('../clients/modules/commands.js');
-const { getWeatherLocation } = require('../misc/commands/weather/location.js');
-const { weatherProviders } = require('../misc/commands/weather/providers/index.js');
-const { formatWeatherReport } = require('../misc/commands/weather/formatting.js');
-const { getDefaultProvider, isValidWeatherProviderName } = require('../misc/commands/weather/providers/weather-template.js');
+const { getWeatherLocation } = require('../util/commands/weather/location.js');
+const { weatherProviders } = require('../util/commands/weather/providers/index.js');
+const { formatWeatherReport } = require('../util/commands/weather/formatting.js');
+const { getDefaultProvider, isValidWeatherProviderName } = require('../util/commands/weather/providers/weather-template.js');
 
 const ALLOWED_FORMAT_TYPES = ['cloudCover', 'humidity', 'icon', 'place', 'precipitation', 'pressure', 'sun', 'temperature', 'windGusts', 'windSpeed'];
 // Unwetterwarnungen und OWM-Vorhersagen brauchen OpenWeatherMaps "One Call 3.0/4.0"-Abo;

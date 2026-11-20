@@ -1,6 +1,6 @@
-const { streamData } = require('../services/stream-tracking.js');
-const { uploadToOwnHaste } = require('../misc/haste.js');
-const { formatStreamExport, hasExportData } = require('../misc/stream-export.js');
+const { streamData } = require('../util/stream-tracking.js');
+const { uploadToOwnHaste } = require('../token/haste.js');
+const { formatStreamExport, hasExportData } = require('../util/stream-export.js');
 
 /**
  * Alle gespeicherten Stream-Daten eines Channels als Text-Link (ninou2, 03.11.2026: "!gt xqc", dann "it should be !gd", "not !gt"; "it give
@@ -11,8 +11,7 @@ module.exports = {
 	name: 'getdata',
 	aliases: ['gd'],
 	cooldown: 30000,
-	description:
-		"Gives a link to a text file with everything stored about a channel's streams: days, hours, streaks and categories. Defaults to the current channel.",
+	description: "Gives a link to a text file with everything stored about a channel's streams: days, hours, streaks and categories. Defaults to the current channel.",
 	usage: 'getdata [channel]',
 	execute: async (client, msg) => {
 		const [channelRaw] = msg.args;
@@ -35,9 +34,7 @@ module.exports = {
 		}
 
 		const sortedYears = years.toSorted((a, b) => a.year - b.year);
-		const months = (
-			await Promise.all(sortedYears.map(async ({ year }) => (await streamData.getMonthlyBreakdown(userId, year)).map((i) => ({ year, ...i }))))
-		).flat();
+		const months = (await Promise.all(sortedYears.map(async ({ year }) => (await streamData.getMonthlyBreakdown(userId, year)).map((i) => ({ year, ...i }))))).flat();
 		const categoryYears = await Promise.all(
 			categoryYearList.map(async (year) => ({
 				year,

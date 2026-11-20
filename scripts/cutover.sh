@@ -5,7 +5,7 @@
 #   bash scripts/cutover.sh --go        fuehrt aus
 #   bash scripts/cutover.sh --rollback  zurueck: neuen Bot wieder in den Parallelbetrieb, alten selfbot starten
 #
-# nginx bleibt unveraendert (auth.alexmoderat.eu zeigt schon auf 11102 bzw. 3000). Redis bleibt auf DB 10 und Mongo
+# nginx bleibt unveraendert (auth.alexmoderat.eu zeigt schon auf 11102 bzw. 3000). Redis bleibt auf DB 10 und Postgres
 # auf selfbot_next, damit der alte Bot beim Rollback seinen Stand (Redis-DB 9, MariaDB) unberuehrt vorfindet.
 set -euo pipefail
 
@@ -36,7 +36,7 @@ if [[ "$MODE" == "--rollback" ]]; then
 	run "pm2 start $NEXT/ecosystem.config.js"
 	run "pm2 save"
 	echo "Fertig: alter selfbot laeuft wieder (Prefix sb), selfbot-next im Parallelbetrieb (Prefix sbn, nur Testchannel)."
-	echo "Was der neue Bot in der Zwischenzeit geschrieben hat, liegt nur in MongoDB, nicht in MariaDB."
+	echo "Was der neue Bot in der Zwischenzeit geschrieben hat, liegt nur in Postgres, nicht in MariaDB."
 	exit 0
 fi
 
@@ -49,7 +49,7 @@ echo "== 1. Sicherungen nach $BACKUP_DIR"
 run "mkdir -p $BACKUP_DIR"
 run "cp $NEXT/config.json $BACKUP_DIR/config.json"
 run "cp $NEXT/ecosystem.config.js $BACKUP_DIR/ecosystem.config.js"
-run "docker exec selfbot-mongo mongodump --quiet --archive --gzip --db selfbot_next > $BACKUP_DIR/selfbot_next.archive.gz"
+run "sudo -u postgres pg_dump selfbot_next | gzip > $BACKUP_DIR/selfbot_next.sql.gz"
 
 echo "== 2. Beide Bots stoppen (MariaDB einfrieren, Twitch-Account und Firehose-Platz frei)"
 run "pm2 stop selfbot selfbot-next"

@@ -1,4 +1,4 @@
-const { randomInt } = require('../misc/command-utils.js');
+const { randomInt } = require('../util/command-utils.js');
 
 module.exports = {
 	name: 'percent',

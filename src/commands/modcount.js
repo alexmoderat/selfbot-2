@@ -1,7 +1,7 @@
 const { fetchModeratedChannels } = require('../util/twitch/twitch-utils.js');
-const { uploadList } = require('../misc/haste.js');
-const { fetchUserRoleList } = require('../misc/roles-tv.js');
-const { getChannelsWithRole, getEditableChannels } = require('../misc/twitch-gql.js');
+const { uploadList } = require('../token/haste.js');
+const { fetchUserRoleList } = require('../token/roles-tv.js');
+const { getChannelsWithRole, getEditableChannels } = require('../token/gql.js');
 
 /**
  * In wie vielen Channels ein User Mod ist, aus sb-v2: fuer den Bot selbst ueber Helix moderation/channels, fuer alle
@@ -38,7 +38,10 @@ module.exports = {
 			const [lead, editor] = await Promise.all([getChannelsWithRole('lead_mod').catch(() => null), getEditableChannels().catch(() => null)]);
 			const own = (i) => i && i.userId === String(twitch.selfId);
 			const parts = [];
-			for (const [label, info] of [['Lead Mod', lead], ['Editor', editor]]) {
+			for (const [label, info] of [
+				['Lead Mod', lead],
+				['Editor', editor],
+			]) {
 				if (own(info)) {
 					const listUrl = info.logins.length > 0 ? await uploadList(`${self} — ${label.toLowerCase()} channels`, sortedLogins(info.logins)) : null;
 					parts.push(`${label} in ${info.logins.length}${info.hasNextPage ? '+' : ''}${listUrl ? `: ${listUrl}` : ''}`);

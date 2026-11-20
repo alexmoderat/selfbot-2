@@ -1,6 +1,6 @@
-const triggers = require('../services/trigger-commands.js');
-const { uuidPrefix } = require('../services/moderation-phrases.js');
-const { uploadToHaste } = require('../misc/haste.js');
+const triggers = require('../util/trigger-commands.js');
+const { uuidPrefix } = require('../util/moderation-phrases.js');
+const { uploadToHaste } = require('../token/haste.js');
 
 /**
  * Trigger-Commands verwalten, aus sb-v2s triggercommands (Ausfuehrung: Chat-Modul trigger-commands).
@@ -29,8 +29,7 @@ module.exports = {
 	name: 'addcmd',
 	aliases: ['rmcmd', 'removecmd', 'listcmd'],
 	cooldown: 3000,
-	description:
-		'Manage trigger commands: trigger:word/phrase (no regex needed, exact:true for a full-message match) or trigger:/pattern/flags for advanced regex.',
+	description: 'Manage trigger commands: trigger:word/phrase (no regex needed, exact:true for a full-message match) or trigger:/pattern/flags for advanced regex.',
 	usage: 'addcmd trigger:word|/pattern/ <reply> [exact:true] [cooldown:5] [modonly:true] [whitelist:id1,id2] [global:true] [text:true] [channel:name] | rmcmd <id> [channel:name] | listcmd [channel:name]',
 	flags: ['mod'],
 	params: [

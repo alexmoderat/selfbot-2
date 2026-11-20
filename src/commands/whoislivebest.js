@@ -1,6 +1,6 @@
-const { getRecord } = require('../services/channel-stats.js');
-const { uploadToOwnHaste } = require('../misc/haste.js');
-const { formatListPage } = require('../misc/list-reply.js');
+const { getRecord } = require('../util/channel-stats.js');
+const { uploadToOwnHaste } = require('../token/haste.js');
+const { formatListPage } = require('../util/list-reply.js');
 
 /**
  * Rekord an gleichzeitig live Channels (Cron live-record) mit Datum und Channels (ninou2, 18.11.2026: "a create a command

@@ -16,7 +16,7 @@ global.bot = {
 	Twitch: { selfName: 'bot' },
 };
 
-const raid = require('../src/modules/raid-notifier.js');
+const raid = require('../src/clients/modules/chat/raid-notifier.js');
 
 const reset = () => {
 	store.clear();
@@ -74,7 +74,10 @@ test('Standardtext enthaelt immer die eingestellte Zeit am Ende', () => {
 test('runRaid: 120-s-Eintrag sofort, x2 postet zweimal, ausgeschaltete und spaetere nicht', async () => {
 	reset();
 	await raid.setEnabled(channel, true);
-	await raid.updateItems(channel, (items) => [{ ...items[0], times: 2 }, { ...raid.newItem(2, 20), on: false }]);
+	await raid.updateItems(channel, (items) => [
+		{ ...items[0], times: 2 },
+		{ ...raid.newItem(2, 20), on: false },
+	]);
 	// Eintrag 2 ist aus; da Eintrag 1 an ist, bleibt Raid Notify an
 	const batches = await raid.runRaid(new Map([['c1', ['alice', 'bob']]]), 120);
 	assert.equal(batches, 1);
@@ -136,7 +139,7 @@ test('Probelauf: nur der Testende wird erwaehnt, Zaehler bleibt, 30 s Sperre', a
 });
 
 test('Raid Notify: negative Zeit postet so viele Sekunden nach dem Start (ninou2, 19.11.2026: "-1 = 121s, -3 = 123s")', async () => {
-	const raid = require('../src/modules/raid-notifier.js');
+	const raid = require('../src/clients/modules/chat/raid-notifier.js');
 	const delays = [];
 	const realTimeout = global.setTimeout;
 	global.setTimeout = (fn, ms) => {
@@ -148,7 +151,14 @@ test('Raid Notify: negative Zeit postet so viele Sekunden nach dem Start (ninou2
 	global.bot = {
 		Channels: {
 			get: () => channel,
-			getData: () => ({ enabled: true, items: [{ id: 1, on: true, seconds: -3, text: null, times: 1 }, { id: 2, on: true, seconds: 0, text: null, times: 1 }], uses: {} }),
+			getData: () => ({
+				enabled: true,
+				items: [
+					{ id: 1, on: true, seconds: -3, text: null, times: 1 },
+					{ id: 2, on: true, seconds: 0, text: null, times: 1 },
+				],
+				uses: {},
+			}),
 			setData: async () => {},
 			send: async () => {},
 		},
@@ -159,11 +169,14 @@ test('Raid Notify: negative Zeit postet so viele Sekunden nach dem Start (ninou2
 		global.setTimeout = realTimeout;
 		global.bot = savedBot;
 	}
-	assert.deepEqual(delays.sort((a, b) => a - b), [120_000, 123_000]);
+	assert.deepEqual(
+		delays.sort((a, b) => a - b),
+		[120_000, 123_000],
+	);
 });
 
 test('Raid-Ergebnis: nur in Live-Channels mit Raid Notify, in denen DDDB es nicht selbst gepostet hat (ninou2, 20.11.2026)', async () => {
-	const raid = require('../src/modules/raid-notifier.js');
+	const raid = require('../src/clients/modules/chat/raid-notifier.js');
 	const savedBot = global.bot;
 	const channels = {
 		1: { id: 1, name: 'live_on', mode: 'Write', live: true, on: true },

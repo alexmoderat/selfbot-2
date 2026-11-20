@@ -1,5 +1,5 @@
 const { getCommand } = require('../clients/modules/commands.js');
-const Filter = require('../services/filter.js');
+const Filter = require('../util/filter.js');
 
 // Supibots commands/optout (mit parseGenericFilterOptions/handleGenericFilter aus Supibots utils/command-utils.ts):
 // niemand kann den Command mit dir als Ziel ausfuehren. Ersetzt sb-v2s "lastseen optout" allgemein fuer alle
@@ -8,8 +8,7 @@ module.exports = {
 	name: 'optout',
 	aliases: ['unoptout'],
 	cooldown: 5000,
-	description:
-		'Makes it so you cannot be the target of a command - the command will not be executed at all. For detailed usage, please check the extended help.',
+	description: 'Makes it so you cannot be the target of a command - the command will not be executed at all. For detailed usage, please check the extended help.',
 	usage: 'optout <command|all> [channel:name] | unoptout <command|all> | optout id:<ID>',
 	flags: ['mention', 'skip-banphrase'],
 	params: [
@@ -73,12 +72,7 @@ module.exports = {
 
 			filter =
 				Filter.getLocals('Opt-out', { user: msg.sender, command: data.command, invocation: data.invocation, includeInactive: true }).find(
-					(i) =>
-						i.User_Alias === msg.sender.id &&
-						i.Channel === data.channel &&
-						i.Platform === data.platform &&
-						i.Command === data.command &&
-						i.Invocation === data.invocation,
+					(i) => i.User_Alias === msg.sender.id && i.Channel === data.channel && i.Platform === data.platform && i.Command === data.command && i.Invocation === data.invocation,
 				) ?? null;
 		}
 

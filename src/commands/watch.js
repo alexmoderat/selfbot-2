@@ -1,5 +1,5 @@
-const { listOrLink } = require('../misc/list-reply.js');
-const { addWatchChannel, listWatchChannels, removeWatchChannel } = require('../services/watch-channels.js');
+const { listOrLink } = require('../util/list-reply.js');
+const { addWatchChannel, listWatchChannels, removeWatchChannel } = require('../util/watch-channels.js');
 
 /**
  * Watch-Channels: Channels, die der Bot ohne Mod-Status mitliest (Mode "Read"), aus sb-v2.

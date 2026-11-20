@@ -1,7 +1,7 @@
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { getWatchStreak } = require('../services/channel-stats.js');
-const { streamData } = require('../services/stream-tracking.js');
-const { formatStreakStart } = require('../misc/tracking-format.js');
+const { getWatchStreak } = require('../util/channel-stats.js');
+const { streamData } = require('../util/stream-tracking.js');
+const { formatStreakStart } = require('../util/tracking-format.js');
 
 /**
  * Wann der Watch-Streak eines Zuschauers begann, geschaetzt aus dem letzten geteilten Wert und den Streamtagen, dazu die erste
@@ -11,8 +11,7 @@ module.exports = {
 	name: 'viewerstreakstart',
 	aliases: ['vss'],
 	cooldown: 3000,
-	description:
-		"Shows about when a viewer's Watch streak started in this channel, estimated from their last shared streak and the stream days, and their first shared streak if known.",
+	description: "Shows about when a viewer's Watch streak started in this channel, estimated from their last shared streak and the stream days, and their first shared streak if known.",
 	usage: 'viewerstreakstart [user]',
 	flags: ['no-prefix'],
 	execute: async (client, msg) => {

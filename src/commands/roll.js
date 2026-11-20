@@ -1,13 +1,12 @@
 const { randomBytes } = require('node:crypto');
 const { roll: diceRoll } = require('@jprochazk/roll-dice');
-const { randomInt } = require('../misc/command-utils.js');
+const { randomInt } = require('../util/command-utils.js');
 
 module.exports = {
 	name: 'roll',
 	aliases: ['dice'],
 	cooldown: 5000,
-	description:
-		'Rolls a random number. If nothing is specified, rolls 1-100. You can specify min and max values, or some expression using standard dice notation.',
+	description: 'Rolls a random number. If nothing is specified, rolls 1-100. You can specify min and max values, or some expression using standard dice notation.',
 	usage: 'roll [min max | NdM] [textOnly:true]',
 	flags: ['mention', 'pipe', 'skip-banphrase'],
 	params: [{ name: 'textOnly', type: 'boolean' }],

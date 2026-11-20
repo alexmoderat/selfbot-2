@@ -1,7 +1,7 @@
-const SupiDate = require('../misc/date.js');
+const SupiDate = require('../util/date.js');
 const { isResultFailure } = require('../clients/modules/commands.js');
-const { fetchGeoLocationData, fetchTimeData, formatTimezoneOffset } = require('../misc/command-utils.js');
-const { detectCountryTime, detectTimezone } = require('../misc/timezones.js');
+const { fetchGeoLocationData, fetchTimeData, formatTimezoneOffset } = require('../util/command-utils.js');
+const { detectCountryTime, detectTimezone } = require('../util/timezones.js');
 
 // Aus Supibots commands/time, Ort und Zeitzone ueber die Open-Meteo-Helfer statt Google
 const zoneReply = (zone) => {

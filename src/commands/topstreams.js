@@ -1,13 +1,12 @@
 const { got } = require('../token/got.js');
-const { getTwitchGameID } = require('../misc/command-utils.js');
-const { twitchStreamSchema } = require('../misc/schemas.js');
+const { getTwitchGameID } = require('../util/command-utils.js');
+const { twitchStreamSchema } = require('../util/schemas.js');
 
 // Supibots commands/topstreams (Block 7: Supibot-Version)
 module.exports = {
 	name: 'topstreams',
 	cooldown: 30000,
-	description:
-		'Checks the top 10 streams on Twitch - if you add a game, will look for the top 10 streams playing that game. The game must be provided verbatim.',
+	description: 'Checks the top 10 streams on Twitch - if you add a game, will look for the top 10 streams playing that game. The game must be provided verbatim.',
 	usage: 'topstreams [game]',
 	flags: ['mention', 'pipe'],
 	execute: async (client, msg) => {

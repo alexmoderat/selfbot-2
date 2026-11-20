@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { withTrigger } = require('../src/misc/trigger-suffix.js');
+const { withTrigger } = require('../src/util/trigger-suffix.js');
 
 const NINOU2 = 4293;
 const msg = (invocation, commandName, id = NINOU2, prefix = '!') => ({ invocation, commandName, prefix, sender: { id } });
@@ -20,10 +20,7 @@ test('Alle anderen User bekommen nichts angehaengt', () => {
 
 test('!csi/!sic/!sci bleiben auch bei ninou2 ohne Befehl', () => {
 	for (const alias of ['csi', 'sic', 'sci']) {
-		assert.equal(
-			withTrigger('the current stream infos are : /setgame A /settitle B', msg(alias, 'streaminfoschange')),
-			'the current stream infos are : /setgame A /settitle B',
-		);
+		assert.equal(withTrigger('the current stream infos are : /setgame A /settitle B', msg(alias, 'streaminfoschange')), 'the current stream infos are : /setgame A /settitle B');
 	}
 });
 

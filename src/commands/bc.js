@@ -1,6 +1,6 @@
 const { got } = require('../token/got.js');
-const { formatDuration } = require('../misc/duration.js');
-const { gqlAuth, getUserInfo } = require('../misc/twitch-gql.js');
+const { formatDuration } = require('../misc/humanizeDuration.js');
+const { gqlAuth, getUserInfo } = require('../token/gql.js');
 
 const BAN_STATUS_HASH = '319f2a9a3ac7ddecd7925944416c14b818b65676ab69da604460b68938d22bea';
 

@@ -1,5 +1,5 @@
-const { listOrLink } = require('../misc/list-reply.js');
-const { getChannelRoles } = require('../misc/roles-tv.js');
+const { listOrLink } = require('../util/list-reply.js');
+const { getChannelRoles } = require('../token/roles-tv.js');
 
 /**
  * Mod- oder VIP-Liste eines Channels, aus sb-v2. Ohne eigene Rollen-Sammlung immer live von roles.tv

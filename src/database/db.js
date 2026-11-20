@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
 const { Logger } = require('../misc/logger.js');
+const sql = require('./postgres.js');
 const coreModels = require('./models/index.js');
 const { dataModels, dataSpecs, counterOf, toRow, fromRow } = require('./models/data.js');
 
@@ -7,31 +7,39 @@ const { createRowFactory } = require('./row.js');
 
 const models = { ...coreModels, ...dataModels };
 
-// MongoDB wie bei DontAddThisBot (bot.DB.<Model>), Verbindung aus config.json
+// Postgres wie bei DontAddThisBot (bot.SQL = pg-Pool); bot.DB.<Model> bedient die Tabellen weiter wie die frueheren
+// Mongoose-Modelle (find/findOne/updateOne/aggregate/...), uebersetzt in SQL (orm/).
 
-mongoose.set('strictQuery', true);
+let expireTimer = null;
 
-const connect = async (uri) => {
-	mongoose.connection.on('connected', () => Logger.info('[db] Mit MongoDB verbunden'));
-	mongoose.connection.on('disconnected', () => Logger.warn('[db] Verbindung zu MongoDB getrennt'));
-	mongoose.connection.on('error', (e) => Logger.error('[db] MongoDB-Fehler', e));
-
-	await mongoose.connect(uri, { serverSelectionTimeoutMS: 10_000 });
+const connect = async (config) => {
+	sql.open(config);
+	await sql.query('SELECT 1');
 	await Promise.all(Object.values(models).map((model) => model.init()));
+	Logger.info('[db] Mit Postgres verbunden');
+
+	// Ersatz fuer die TTL-Indizes von MongoDB (JoinerMessage, JoinerBan): stuendlich alte Zeilen loeschen
+	const expire = () => Promise.all(Object.values(models).map((model) => model.expire())).catch((e) => Logger.warn('[db] Aufraeumen fehlgeschlagen', e.message));
+	void expire();
+	expireTimer = setInterval(expire, 60 * 60_000);
+	expireTimer.unref();
 };
 
-/** Naechste numerische ID fuer eine Collection (wie AUTO_INCREMENT), atomar ueber "counters" */
+/** Naechste numerische ID fuer eine Tabelle (wie AUTO_INCREMENT), atomar ueber "counters" */
 const nextId = async (name) => {
-	const counter = await models.Counter.findOneAndUpdate({ _id: name }, { $inc: { seq: 1 } }, { upsert: true, new: true }).lean();
-	return counter.seq;
+	const { rows } = await sql.query('INSERT INTO "counters" ("_id", "seq") VALUES ($1, 1) ON CONFLICT ("_id") DO UPDATE SET "seq" = "counters"."seq" + 1 RETURNING "seq"', [name]);
+	return rows[0].seq;
 };
 
 /** Zaehler mindestens auf value setzen (nach der Migration: hoechste uebernommene ID) */
 const ensureCounterAtLeast = async (name, value) => {
-	await models.Counter.updateOne({ _id: name }, { $max: { seq: value } }, { upsert: true });
+	await sql.query('INSERT INTO "counters" ("_id", "seq") VALUES ($1, $2) ON CONFLICT ("_id") DO UPDATE SET "seq" = GREATEST("counters"."seq", EXCLUDED."seq")', [name, value]);
 };
 
-const disconnect = () => mongoose.disconnect();
+const disconnect = async () => {
+	clearInterval(expireTimer);
+	await sql.end();
+};
 
 /** Dokument mit naechster numerischer ID anlegen (Collections mit Zaehler, z. B. ModerationBanLog) */
 const createWithId = async (modelName, data) => {
@@ -45,4 +53,4 @@ const createWithId = async (modelName, data) => {
 /** Ersatz fuer core.Query.getRow: bot.DB.getRow('Suggestion') */
 const getRow = createRowFactory({ models, toRow, fromRow, counterOf, nextId });
 
-module.exports = { ...models, connect, disconnect, nextId, ensureCounterAtLeast, createWithId, getRow, dataSpecs, toRow, fromRow, counterOf, mongoose };
+module.exports = { ...models, connect, disconnect, nextId, ensureCounterAtLeast, createWithId, getRow, dataSpecs, toRow, fromRow, counterOf };

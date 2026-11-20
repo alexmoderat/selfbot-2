@@ -1,5 +1,5 @@
 const { isResultFailure } = require('../clients/modules/commands.js');
-const { detectTimezone } = require('../misc/timezones.js');
+const { detectTimezone } = require('../util/timezones.js');
 
 /**
  * Eigene Zeitzone speichern, damit !time ohne Eingabe funktioniert (ninou2, 03.11.2026: "!UserTimeZoneSet !uts",
@@ -12,8 +12,7 @@ module.exports = {
 	name: 'usertimezoneset',
 	aliases: ['uts'],
 	cooldown: 3000,
-	description:
-		'Saves your timezone, so that the time command works without adding anything. "set UTC+1" or "set CET" saves it, "unset" removes it, nothing shows the current one.',
+	description: 'Saves your timezone, so that the time command works without adding anything. "set UTC+1" or "set CET" saves it, "unset" removes it, nothing shows the current one.',
 	usage: 'usertimezoneset [set <timezone> | unset]',
 	flags: ['mention'],
 	execute: async (client, msg) => {

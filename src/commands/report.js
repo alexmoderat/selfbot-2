@@ -1,5 +1,5 @@
 const { randomBytes } = require('node:crypto');
-const { gqlAuth, getUserInfo } = require('../misc/twitch-gql.js');
+const { gqlAuth, getUserInfo } = require('../token/gql.js');
 
 // Meldegruende aus sb-v2 (src/services/twitch-api.ts reportTwitchUser)
 const REPORT_REASON_ALIASES = {

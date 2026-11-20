@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { parseGqlBadges } = require('../src/misc/twitch-badges-gql.js');
+const { parseGqlBadges } = require('../src/token/twitch-badges-gql.js');
 
 test('parseGqlBadges: Schluessel set_id:version, Channel-Badges ausgelassen', () => {
 	const list = parseGqlBadges({
@@ -11,7 +11,10 @@ test('parseGqlBadges: Schluessel set_id:version, Channel-Badges ausgelassen', ()
 			],
 		},
 	});
-	assert.deepEqual(list.map((i) => i.key), ['jordan-x-space-jam:1']);
+	assert.deepEqual(
+		list.map((i) => i.key),
+		['jordan-x-space-jam:1'],
+	);
 	assert.equal(list[0].title, 'Jordan x Space Jam');
 });
 

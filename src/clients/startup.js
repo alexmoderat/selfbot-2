@@ -1,13 +1,13 @@
 const { Logger } = require('../misc/logger.js');
 const { isServed } = require('./JoinChannels.js');
-const { pubsub } = require('../services/pubsub.js');
-const { subscribeAll: subscribeNotifications } = require('../services/notifications.js');
-const firehose = require('../services/catquery-firehose.js');
-const joinPoller = require('../services/join-poller.js');
-const { chatLogger } = require('../services/chat-logger.js');
+const { pubsub } = require('../util/pubsub.js');
+const { subscribeAll: subscribeNotifications } = require('../util/notifications.js');
+const firehose = require('../util/catquery-firehose.js');
+const joinPoller = require('../util/join-poller.js');
+const { chatLogger } = require('../util/chat-logger.js');
 const eventSub = require('../util/twitch/eventSub.js');
-const joiner = require('../services/random-joiner.js');
-const { recordWatchStreak } = require('../services/channel-stats.js');
+const joiner = require('../util/random-joiner.js');
+const { recordWatchStreak } = require('../util/channel-stats.js');
 
 // Alles, was nach dem IRC-Connect hochfaehrt (bisher TwitchPlatform.connect im alten selfbot, transport "irc"):
 // PubSub-Abos, EventSub (Follows), Notify-Streamer, CatQuery-Firehose, Join-Poller und Chat-Logger.
@@ -63,9 +63,7 @@ const startFirehose = () => {
 			if (!notice.roomId || !userId || !login || !notice.channel || !Number.isFinite(value)) {
 				return;
 			}
-			void recordWatchStreak({ channelId: notice.roomId, channel: notice.channel, userId, login, value }).catch((e) =>
-				Logger.warn('[watch-streak] Speichern fehlgeschlagen', e),
-			);
+			void recordWatchStreak({ channelId: notice.roomId, channel: notice.channel, userId, login, value }).catch((e) => Logger.warn('[watch-streak] Speichern fehlgeschlagen', e));
 		},
 	);
 };

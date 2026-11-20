@@ -1,6 +1,6 @@
-const { listOrLink } = require('../misc/list-reply.js');
+const { listOrLink } = require('../util/list-reply.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const watchAlerts = require('../services/watch-alerts.js');
+const watchAlerts = require('../util/watch-alerts.js');
 
 /**
  * Globale Beobachtungsliste, aus sb-v2: jede Nachricht des Accounts in einem der Bot-Channels wird im Mod-Log

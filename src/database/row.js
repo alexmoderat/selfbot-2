@@ -1,4 +1,4 @@
-// Ersatz fuer supi-cores Row (core.Query.getRow) auf MongoDB, gleiche Bedienung:
+// Ersatz fuer supi-cores Row (core.Query.getRow) auf Postgres, gleiche Bedienung:
 //   const row = await bot.DB.getRow('Suggestion');
 //   await row.load(id, true);            // oder row.load({ User_Alias: 5, Channel: 3 }, true)
 //   if (row.loaded) { row.setValues({ Status: 'Done' }); await row.save({ skipLoad: true }); }

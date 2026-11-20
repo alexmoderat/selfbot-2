@@ -1502,18 +1502,7 @@ module.exports = [
 			status: {
 				column: 'Status',
 				type: 'String',
-				enum: [
-					'Approved',
-					'Blocked',
-					'Completed',
-					'Moved to Github',
-					'Denied',
-					'Dismissed',
-					'Dismissed by author',
-					'Duplicate',
-					'Outsourced',
-					'Quarantined',
-				],
+				enum: ['Approved', 'Blocked', 'Completed', 'Moved to Github', 'Denied', 'Dismissed', 'Dismissed by author', 'Duplicate', 'Outsourced', 'Quarantined'],
 				default: null,
 			},
 			priority: {

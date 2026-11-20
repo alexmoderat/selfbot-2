@@ -39,10 +39,7 @@ module.exports = {
 		if (!metadata) {
 			return {
 				success: false,
-				text:
-					targetUser === msg.sender
-						? "I haven't processed your messages yet! Try again in a couple of minutes."
-						: `That user has not said anything in ${channelArticle} channel!`,
+				text: targetUser === msg.sender ? "I haven't processed your messages yet! Try again in a couple of minutes." : `That user has not said anything in ${channelArticle} channel!`,
 			};
 		}
 
@@ -59,10 +56,7 @@ module.exports = {
 				return { success: false, text: `That user has no first line data available in ${channelArticle} channel!` };
 			}
 
-			await bot.DB.MessageMetaUserAlias.updateOne(
-				{ userAlias: targetUser.id, channel: targetChannel.id },
-				{ $set: { firstMessagePosted: lineData.Posted, firstMessageText: lineData.Text } },
-			);
+			await bot.DB.MessageMetaUserAlias.updateOne({ userAlias: targetUser.id, channel: targetChannel.id }, { $set: { firstMessagePosted: lineData.Posted, firstMessageText: lineData.Text } });
 
 			posted = lineData.Posted;
 			text = lineData.Text;

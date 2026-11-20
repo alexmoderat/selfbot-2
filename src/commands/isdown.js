@@ -1,6 +1,6 @@
 const { got } = require('../token/got.js');
 const z = require('zod');
-const SupiDate = require('../misc/date.js');
+const SupiDate = require('../util/date.js');
 const { domainToASCII } = require('node:url');
 
 const cachingSites = ['shouldiblamecach.ing', 'shouldiblamecaching.com'];

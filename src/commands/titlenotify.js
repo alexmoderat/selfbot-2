@@ -1,6 +1,6 @@
-const { listOrLink } = require('../misc/list-reply.js');
-const { resolveStreamer, watchTitle } = require('../services/notifications.js');
-const { MAX_MESSAGE, MAX_TIMES, cleanMessage, cleanTimes, homeChannel } = require('../services/tweet-notify.js');
+const { listOrLink } = require('../util/list-reply.js');
+const { resolveStreamer, watchTitle } = require('../util/notifications.js');
+const { MAX_MESSAGE, MAX_TIMES, cleanMessage, cleanTimes, homeChannel } = require('../util/tweet-notify.js');
 
 /**
  * Alarm auf Titelwechsel eines Streamers, aus sb-v2 - Vorwarnung, die meisten setzen den Titel kurz vor dem
@@ -58,10 +58,7 @@ module.exports = {
 
 			const result = await bot.DB.TitleNotifyOptout.deleteOne({ streamerId: id });
 			return {
-				text:
-					result.deletedCount > 0
-						? `@${display}, you're opted back in — others can subscribe to your title changes again.`
-						: `@${display}, you weren't opted out.`,
+				text: result.deletedCount > 0 ? `@${display}, you're opted back in — others can subscribe to your title changes again.` : `@${display}, you weren't opted out.`,
 			};
 		}
 

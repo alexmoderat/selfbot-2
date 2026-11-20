@@ -1,5 +1,5 @@
-const { listOrLink } = require('../misc/list-reply.js');
-const { addWatchChannel, listWatchChannels, removeWatchChannel } = require('../services/watch-channels.js');
+const { listOrLink } = require('../util/list-reply.js');
+const { addWatchChannel, listWatchChannels, removeWatchChannel } = require('../util/watch-channels.js');
 
 /**
  * Alte Aufrufe addwatch / removewatch / listwatch aus sb-v2. Dort schrieben sie in data/watch-channels.json, die seit
@@ -17,17 +17,13 @@ module.exports = {
 		const [arg1, arg2] = msg.args;
 		const display = msg.displayName;
 		// Aufruf ueber Alias bestimmt die Aktion; ueber den Hauptnamen kommt sie als Argument
-		const action =
-			msg.invocation === 'watchban' ? arg1?.toLowerCase() : msg.invocation === 'addwatch' ? 'add' : msg.invocation === 'removewatch' ? 'remove' : 'list';
+		const action = msg.invocation === 'watchban' ? arg1?.toLowerCase() : msg.invocation === 'addwatch' ? 'add' : msg.invocation === 'removewatch' ? 'remove' : 'list';
 		const target = (msg.invocation === 'watchban' ? arg2 : arg1)?.toLowerCase().replace(/^[@#]+/, '');
 
 		if (action === 'list') {
 			const list = listWatchChannels().map((i) => i.Name);
 			return {
-				text:
-					list.length === 0
-						? `@${display} The watch list is empty.`
-						: `@${display} Watch list (${list.length}): ${await listOrLink(list, 'Watch list')}`,
+				text: list.length === 0 ? `@${display} The watch list is empty.` : `@${display} Watch list (${list.length}): ${await listOrLink(list, 'Watch list')}`,
 			};
 		} else if (action !== 'add' && action !== 'remove') {
 			return { text: `@${display} Usage: addwatch <channel> | removewatch <channel> | listwatch` };
@@ -39,10 +35,7 @@ module.exports = {
 			const result = await addWatchChannel(target);
 			if (!result.ok) {
 				return {
-					text:
-						result.reason === 'notfound'
-							? `@${display} Channel ${target} not found.`
-							: `@${display} ${target} is already active (mode ${result.channel?.mode ?? '?'}).`,
+					text: result.reason === 'notfound' ? `@${display} Channel ${target} not found.` : `@${display} ${target} is already active (mode ${result.channel?.mode ?? '?'}).`,
 				};
 			}
 
@@ -50,9 +43,7 @@ module.exports = {
 		}
 
 		return {
-			text: (await removeWatchChannel(target))
-				? `@${display} ✅ ${target} removed from the watch list.`
-				: `@${display} ${target} is not on the watch list.`,
+			text: (await removeWatchChannel(target)) ? `@${display} ✅ ${target} removed from the watch list.` : `@${display} ${target} is not on the watch list.`,
 		};
 	},
 };

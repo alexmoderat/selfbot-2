@@ -1,10 +1,10 @@
 const { existsSync, readFileSync } = require('node:fs');
 const path = require('node:path');
 
-// config.json (lokal, git-ignoriert) hat Vorrang, sonst die Vorlage config.example.json
+// config.json (lokal, git-ignoriert) hat Vorrang, sonst die Vorlage example.config.json
 const ROOT = path.join(__dirname, '..');
 
-const REQUIRED = ['selfName', 'selfId', 'prefix', 'messageLimit', 'dedupeWindow', 'mongo', 'redis', 'console', 'responses', 'values', 'modules'];
+const REQUIRED = ['selfName', 'selfId', 'prefix', 'messageLimit', 'dedupeWindow', 'postgres', 'redis', 'console', 'responses', 'values', 'modules'];
 
 const validate = (config) => {
 	const missing = REQUIRED.filter((key) => config[key] === undefined);
@@ -33,7 +33,7 @@ exports.getConfig = () => {
 	}
 
 	const local = path.join(ROOT, 'config.json');
-	const file = existsSync(local) ? local : path.join(ROOT, 'config.example.json');
+	const file = existsSync(local) ? local : path.join(ROOT, 'example.config.json');
 	config = validate(JSON.parse(readFileSync(file, 'utf8')));
 	return config;
 };

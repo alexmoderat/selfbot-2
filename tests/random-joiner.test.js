@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { computeSlots, pickCandidates, selectRotation } = require('../src/services/random-joiner.js');
+const { computeSlots, pickCandidates, selectRotation } = require('../src/util/random-joiner.js');
 
 test('Plaetze bleiben unter dem Join-Limit von 100 inkl. Nicht-Mod-IRC-Channels', () => {
 	assert.equal(computeSlots(75, 18), 75);

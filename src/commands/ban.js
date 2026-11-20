@@ -1,6 +1,6 @@
 const { getCommand } = require('../clients/modules/commands.js');
-const { SupiError } = require('../misc/error.js');
-const Filter = require('../services/filter.js');
+const { SupiError } = require('../util/error.js');
+const Filter = require('../util/filter.js');
 const { isArgumentsData } = Filter;
 
 // Supibots commands/ban - ersetzt sb-v2s disablecmd/enablecmd/listdisabled (alexmoderat, 23.10.2026: "Supibot ban/Filter").
@@ -236,8 +236,7 @@ module.exports = {
 					const items = [...existing.Data];
 					for (let i = 0; i < items.length; i++) {
 						const item = items[i];
-						const condition =
-							msg.params.all === true ? Boolean(item.range && item.range[0] === 0 && item.range[1] === Infinity) : item.index === index;
+						const condition = msg.params.all === true ? Boolean(item.range && item.range[0] === 0 && item.range[1] === Infinity) : item.index === index;
 
 						if (condition && item.string === string) {
 							items.splice(i, 1);

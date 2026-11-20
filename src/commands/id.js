@@ -1,4 +1,4 @@
-const SupiDate = require('../misc/date.js');
+const SupiDate = require('../util/date.js');
 
 // Supibots USER_ID_BREAKPOINT (User aus Logs vor Supibots Start) entfaellt hier: die Datenbank ist neu
 module.exports = {

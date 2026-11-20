@@ -1,5 +1,5 @@
 const { getPermissions } = require('../clients/modules/handler.js');
-const { subcommands } = require('../misc/commands/set/subcommands/index.js');
+const { subcommands } = require('../util/commands/set/subcommands/index.js');
 
 module.exports = {
 	name: 'set',

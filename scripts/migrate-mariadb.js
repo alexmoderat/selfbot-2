@@ -1,4 +1,4 @@
-// Migration MariaDB (selfbot_core) -> MongoDB. Wiederholbar: jede Zeile wird per Upsert ueber ihre ID geschrieben,
+// Migration MariaDB (selfbot_core) -> Postgres. Wiederholbar: jede Zeile wird per Upsert ueber ihre ID geschrieben,
 // ein zweiter Lauf aktualisiert nur. Am Ende werden Zeilen und Dokumente je Tabelle verglichen.
 //
 //   yarn migrate                 alle Tabellen (selfbot_core und selfbot_data)
@@ -317,7 +317,7 @@ const copyTable = async (conn, { table, model, map, key = '_id', counter }) => {
 const main = async () => {
 	const config = getConfig();
 	// --fresh: Ziel-Collection vor dem Kopieren leeren - fuer den letzten Abgleich beim Umschalten, damit auch in
-	// MariaDB Geloeschtes (erledigte Reminder, entfernte Notify-Eintraege, ...) aus MongoDB verschwindet
+	// MariaDB Geloeschtes (erledigte Reminder, entfernte Notify-Eintraege, ...) aus Postgres verschwindet
 	const fresh = process.argv.includes('--fresh');
 	const only = process.argv.slice(2).filter((i) => i !== '--fresh');
 	const { MARIA_USER, MARIA_PASSWORD, MARIA_HOST } = process.env;
@@ -325,7 +325,7 @@ const main = async () => {
 		throw new Error('MARIA_USER, MARIA_PASSWORD und MARIA_HOST fehlen in .env');
 	}
 
-	await DB.connect(config.mongo.uri);
+	await DB.connect(config.postgres);
 	const conn = await mariadb.createConnection({ host: MARIA_HOST, user: MARIA_USER, password: MARIA_PASSWORD, dateStrings: false, bigIntAsNumber: true });
 	// Eigene Verbindung fuer selfbot_data: BIGINT als BigInt, damit 64-Bit-Hashes nicht ungenau werden
 	const dataConn = await mariadb.createConnection({
@@ -337,15 +337,12 @@ const main = async () => {
 	});
 
 	const wanted = (table) =>
-		only.length === 0 ||
-		only.includes(table) ||
-		(only.includes('core') && TABLES.some((i) => i.table === table)) ||
-		(only.includes('data') && DB.dataSpecs.some((i) => i.table === table));
+		only.length === 0 || only.includes(table) || (only.includes('core') && TABLES.some((i) => i.table === table)) || (only.includes('data') && DB.dataSpecs.some((i) => i.table === table));
 
 	try {
 		const results = [];
-		const record = (table, result, start) =>
-			results.push({ Tabelle: table, Zeilen: result.rows, Dokumente: result.docs, Sekunden: ((Date.now() - start) / 1000).toFixed(1) });
+		const skipped = [];
+		const record = (table, result, start) => results.push({ Tabelle: table, Zeilen: result.rows, Dokumente: result.docs, Sekunden: ((Date.now() - start) / 1000).toFixed(1) });
 
 		for (const definition of TABLES) {
 			if (!wanted(definition.table)) {
@@ -362,6 +359,12 @@ const main = async () => {
 			if (!wanted(spec.table)) {
 				continue;
 			}
+			// Tabellen neuer Features gibt es in MariaDB nicht: ueberspringen und vor allem nicht per --fresh leeren
+			const [exists] = await dataConn.query("SELECT COUNT(*) AS c FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'selfbot_data' AND TABLE_NAME = ?", [spec.table]);
+			if (Number(exists.c) === 0) {
+				skipped.push(spec.table);
+				continue;
+			}
 			const start = Date.now();
 			if (fresh) {
 				await DB[spec.model].deleteMany({});
@@ -369,6 +372,9 @@ const main = async () => {
 			record(spec.table, await copyDataTable(dataConn, spec), start);
 		}
 		console.table(results);
+		if (skipped.length > 0) {
+			console.log(`Nur in Postgres (keine MariaDB-Tabelle, unveraendert): ${skipped.join(', ')}`);
+		}
 	} finally {
 		await dataConn.end();
 		await conn.end();

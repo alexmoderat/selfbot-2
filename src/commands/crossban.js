@@ -1,7 +1,7 @@
 const { setTimeout: sleep } = require('node:timers/promises');
-const { banUser, resolveTarget } = require('../services/moderation.js');
+const { banUser, resolveTarget } = require('../util/moderation.js');
 const { fetchModeratedChannels, fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { formatAutoBanReason } = require('../misc/ban-reason.js');
+const { formatAutoBanReason } = require('../util/ban-reason.js');
 
 const BAN_DELAY = 650; // gleiches Tempo wie massban, der Ratelimit-Bucket ist token-gebunden
 
@@ -52,9 +52,7 @@ module.exports = {
 			return { text: `@${display}, no channels opted in — a channel's mods need to run crossbanoptin on first.` };
 		}
 
-		await msg.send(
-			`@${display}, banning ${target} (${userId}) in ${channels.length} channel(s) — this'll take about ${Math.ceil((channels.length * BAN_DELAY) / 60_000)} min.`,
-		);
+		await msg.send(`@${display}, banning ${target} (${userId}) in ${channels.length} channel(s) — this'll take about ${Math.ceil((channels.length * BAN_DELAY) / 60_000)} min.`);
 
 		let banned = 0;
 		let failed = 0;

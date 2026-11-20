@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { isWeirdName, isGeneratedBotName, isViewbotPhrase, shouldBanPhraseHit } = require('../src/misc/phrase-ban-gate.js');
+const { isWeirdName, isGeneratedBotName, isViewbotPhrase, shouldBanPhraseHit } = require('../src/util/phrase-ban-gate.js');
 
 test('isWeirdName: generierte Spam-Namen ja, kurze normale nein', () => {
 	for (const name of ['needymanagementc0ph', 'curvedbutleruzzbn6q1hc', 'ghostshaman3767', 'oliver_edd', 'weebconnect', 'luckychateauqjy032']) {

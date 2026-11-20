@@ -1,6 +1,6 @@
 const { got } = require('../token/got.js');
-const SupiDate = require('../misc/date.js');
-const { ivrUserDataSchema } = require('../misc/schemas.js');
+const SupiDate = require('../util/date.js');
+const { ivrUserDataSchema } = require('../util/schemas.js');
 
 // Supibots commands/accountage (Block 7: Supibot-Version, sb-v2s war fast identisch)
 module.exports = {

@@ -1,4 +1,4 @@
-// Abgleich MariaDB gegen MongoDB nach einer Migration: exakte Zeilenzahl je Tabelle gegen Dokumente je Collection,
+// Abgleich MariaDB gegen Postgres nach einer Migration: exakte Zeilenzahl je Tabelle gegen Dokumente je Collection,
 // Chat-Logs je Channel (Anzahl und hoechste ID). Gibt Abweichungen aus, Exit-Code 1 bei Abweichung.
 //
 //   yarn migrate:check
@@ -23,7 +23,7 @@ const CORE = {
 const main = async () => {
 	const config = getConfig();
 	const { MARIA_USER, MARIA_PASSWORD, MARIA_HOST } = process.env;
-	await DB.connect(config.mongo.uri);
+	await DB.connect(config.postgres);
 	const conn = await mariadb.createConnection({ host: MARIA_HOST, user: MARIA_USER, password: MARIA_PASSWORD, bigIntAsNumber: true });
 	const problems = [];
 	const count = async (sql) => Number((await conn.query(sql))[0].c);
@@ -39,6 +39,11 @@ const main = async () => {
 		if (executions !== migrated) problems.push(`selfbot_core.Command_Execution: ${executions} Zeilen, ${migrated} uebernommen`);
 
 		for (const spec of DB.dataSpecs) {
+			// Tabellen neuer Features gibt es nur in Postgres
+			const [known] = await conn.query("SELECT COUNT(*) AS c FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'selfbot_data' AND TABLE_NAME = ?", [spec.table]);
+			if (Number(known.c) === 0) {
+				continue;
+			}
 			const rows = await count(`SELECT COUNT(*) AS c FROM selfbot_data.\`${spec.table}\``);
 			const docs = await DB[spec.model].countDocuments();
 			if (rows !== docs) problems.push(`selfbot_data.${spec.table}: ${rows} Zeilen, ${docs} Dokumente`);
@@ -46,16 +51,9 @@ const main = async () => {
 
 		const channels = new Map((await DB.Channel.find({}, { name: 1 }).lean()).map((i) => [i.name.toLowerCase(), i._id]));
 		const perChannel = new Map(
-			(
-				await DB.ChatLine.aggregate([
-					{ $match: { legacyId: { $type: 'number' } } },
-					{ $group: { _id: '$channel', count: { $sum: 1 }, max: { $max: '$legacyId' } } },
-				])
-			).map((i) => [i._id, i]),
+			(await DB.ChatLine.aggregate([{ $match: { legacyId: { $type: 'number' } } }, { $group: { _id: '$channel', count: { $sum: 1 }, max: { $max: '$legacyId' } } }])).map((i) => [i._id, i]),
 		);
-		const tables = (await conn.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'selfbot_chat_line'")).map(
-			(i) => i.name,
-		);
+		const tables = (await conn.query("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'selfbot_chat_line'")).map((i) => i.name);
 		let totalRows = 0;
 		let totalDocs = 0;
 		for (const table of tables) {

@@ -1,4 +1,4 @@
-const { isProtected, joinByLogin, partChannel } = require('../services/channel-manager.js');
+const { isProtected, joinByLogin, partChannel } = require('../util/channel-manager.js');
 
 /**
  * Channel betreten oder verlassen, aus sb-v2. part merkt sich den Grund "manual", damit auto-join den Channel nicht

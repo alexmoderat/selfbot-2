@@ -36,16 +36,6 @@ module.exports = {
 	dynamicDescription: function (prefix) {
 		const list = EIGHT_BALL_RESPONSES.map((i) => `<li>${i}</li>`).join('');
 
-		return [
-			'Consult the 8-ball for your inquiry!',
-			'',
-
-			`<code>${prefix}8ball Is this command cool?</code>`,
-			'(random 8-ball response)',
-			'',
-
-			'List of responses:',
-			`<ul>${list}</ul>`,
-		];
+		return ['Consult the 8-ball for your inquiry!', '', `<code>${prefix}8ball Is this command cool?</code>`, '(random 8-ball response)', '', 'List of responses:', `<ul>${list}</ul>`];
 	},
 };
