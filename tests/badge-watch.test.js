@@ -257,3 +257,21 @@ test('event-watch: Tweet-Notify-Abonnenten bekommen eigenen Text und Anzahl, Bad
 	assert.equal(sent.length, 2);
 	assert.ok(sent.every((t) => t.startsWith('@ninou2 — @StreamDatabase: Twitch global badge now available: Gallica') && t.endsWith(' NEU') && !t.includes('ALT')));
 });
+
+test('Raid Notify: Test laeuft in echter Zeit wie ein Raid mit 120 s Countdown (ninou2, 20.11.2026)', () => {
+	const { testSchedule } = require('../src/modules/raid-notifier.js');
+	const items = [
+		{ id: 3, on: true, seconds: -4, times: 1 },
+		{ id: 1, on: true, seconds: 120, times: 3 },
+		{ id: 2, on: true, seconds: 20, times: 3 },
+		{ id: 4, on: false, seconds: 60, times: 1 },
+	];
+	assert.deepEqual(
+		testSchedule(items).map((s) => [s.item.id, s.delayMs]),
+		[
+			[1, 0],
+			[2, 100_000],
+			[3, 124_000],
+		],
+	);
+});

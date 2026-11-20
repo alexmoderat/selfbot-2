@@ -208,10 +208,22 @@ const lastTest = new Map();
 const TEST_COOLDOWN_MS = 30_000;
 const TEST_GAP_MS = 1_200;
 
+// Der Test tut so, als kaeme gerade eine Raid-Ankuendigung mit 120 s Countdown
+const TEST_RAID_DURATION_S = MAX_LEAD_S;
+
+/** Wann (ms nach dem Klick) jede Benachrichtigung im Test kommt: wie bei einem echten Raid "Dauer minus ihre Sekunden" */
+const testSchedule = (items, duration = TEST_RAID_DURATION_S) =>
+	items
+		.filter((i) => i.on)
+		.sort((a, b) => b.seconds - a.seconds)
+		.map((item) => ({ item, delayMs: Math.max(0, duration - item.seconds) * 1000 }));
+
 /**
  * Probelauf aus dem Dashboard (ninou2, 14.11.2026: "is there a way to send a raid notification as a test"): alle eingeschalteten
- * Benachrichtigungen einmal sofort in den eigenen Channel, nur der Testende wird erwaehnt (nicht die !subraid-Liste), Anzahl (x2-x5)
- * wie eingestellt, ohne den Zaehler zu erhoehen. Mindestens 30 s Pause je Channel, Abstand zwischen den Nachrichten.
+ * Benachrichtigungen in den eigenen Channel, nur der Testende wird erwaehnt (nicht die !subraid-Liste), Anzahl (x2-x5) wie
+ * eingestellt, ohne den Zaehler zu erhoehen. Seit 20.11.2026 in echter Zeit wie ein Raid mit 120 s Countdown (ninou2: "can the
+ * send test button give real time waiting", "and not spamm all messages in a row") - so laesst sich z. B. +4 nach dem Start
+ * pruefen. Waehrend ein Test laeuft und 30 s danach kein neuer Test.
  */
 const sendTest = async (channel, username) => {
 	const wait = (lastTest.get(channel.id) ?? 0) + TEST_COOLDOWN_MS - Date.now();
@@ -219,23 +231,31 @@ const sendTest = async (channel, username) => {
 		return { error: `Please wait ${Math.ceil(wait / 1000)}s before the next test.` };
 	}
 	const config = await getConfig(channel);
-	const items = config.items.filter((i) => i.on).sort((a, b) => b.seconds - a.seconds);
-	if (items.length === 0) {
+	const schedule = testSchedule(config.items);
+	if (schedule.length === 0) {
 		return { error: 'No active raid notification to test.' };
 	}
-	lastTest.set(channel.id, Date.now());
-	let sent = 0;
-	for (const item of items) {
+	const lastDelay = Math.max(...schedule.map((s) => s.delayMs));
+	// Sperre bis zum Ende des Tests (+30 s), nicht ab dem Klick
+	lastTest.set(channel.id, Date.now() + lastDelay);
+
+	const sendItem = async (item) => {
 		const [text] = raidPingMessages([username], item.text ?? defaultText(item.seconds), item.seconds);
 		for (let i = 0; i < item.times; i++) {
-			if (sent > 0) {
+			if (i > 0) {
 				await new Promise((resolve) => setTimeout(resolve, TEST_GAP_MS));
 			}
 			await bot.Channels.send(channel, text).catch(() => {});
-			sent++;
 		}
+	};
+	let sent = 0;
+	for (const { item, delayMs } of schedule) {
+		sent += item.times;
+		setTimeout(() => {
+			void sendItem(item).catch((e) => console.warn('[raid-notifier] Test', e?.message ?? e));
+		}, delayMs);
 	}
-	return { sent };
+	return { sent, durationS: Math.round(lastDelay / 1000), raidStartS: TEST_RAID_DURATION_S };
 };
 
 module.exports = defineChatModule({
@@ -265,4 +285,4 @@ module.exports = defineChatModule({
 	},
 });
 
-Object.assign(module.exports, { sendTest, bumpUses, runRaid, MIN_LEAD_S, MAX_LEAD_S, MAX_ITEMS, clampLead, getConfig, setEnabled, updateItems, newItem, defaultText, RAID_TEMPLATE_COMMANDS, DEFAULT_RAID_MESSAGE, DEFAULT_RAID_REMINDER, formatRaidText, raidPingMessages });
+Object.assign(module.exports, { sendTest, testSchedule, bumpUses, runRaid, MIN_LEAD_S, MAX_LEAD_S, MAX_ITEMS, clampLead, getConfig, setEnabled, updateItems, newItem, defaultText, RAID_TEMPLATE_COMMANDS, DEFAULT_RAID_MESSAGE, DEFAULT_RAID_REMINDER, formatRaidText, raidPingMessages });

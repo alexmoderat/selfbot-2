@@ -125,7 +125,8 @@ test('Probelauf: nur der Testende wird erwaehnt, Zaehler bleibt, 30 s Sperre', a
 	const testChannel = { id: 'c-test', name: 'tester', mode: 'Write' };
 	await raid.setEnabled(testChannel, true);
 	const first = await raid.sendTest(testChannel, 'ninou2');
-	assert.deepEqual(first, { sent: 1 });
+	assert.deepEqual(first, { sent: 1, durationS: 0, raidStartS: 120 });
+	await new Promise((resolve) => setTimeout(resolve, 20)); // 120-s-Eintrag geht sofort (Verzoegerung 0) raus
 	assert.match(sent[0], /^@ninou2 ⚡ Raid is happening!.*120 seconds! ⚡$/);
 	assert.doesNotMatch(sent[0], /alice|bob/);
 	assert.deepEqual((await raid.getConfig(testChannel)).uses, {});

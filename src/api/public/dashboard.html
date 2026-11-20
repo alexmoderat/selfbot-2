@@ -612,6 +612,11 @@
        das Feld bleibt genau an der Stelle von "1x", Haken und Kreuz erscheinen links daneben ueber der Message-Spalte */
     .msg-cell:has(.times-pop) { position: relative; }
     .times-edit { width: 100%; }
+    .raid-time-edit { display: flex; align-items: stretch; gap: 3px; }
+    .raid-time-edit input { flex: 1; min-width: 0; }
+    .time-steps { display: flex; flex-direction: column; }
+    .time-steps button { background: #2e2e2e; color: #fff; border: 1px solid #1f7fb3; border-radius: 4px; font-size: 9px; line-height: 1; padding: 1px 5px; cursor: pointer; flex: 1; }
+    .time-steps button:hover { background: #1f7fb3; }
     .times-edit input { width: 100%; box-sizing: border-box; padding: 4px 6px; font-size: 15px; border: 1px solid #1f7fb3; border-radius: 6px; }
     .times-pop { align-items: center; background: #1a1a1a; border-radius: 8px; box-shadow: 0 0 0 1px #282828; display: flex; gap: 6px; margin-right: 6px; padding: 3px; position: absolute; right: 100%; top: 50%; transform: translateY(-50%); z-index: 5; }
     .times-pop button { border: none; border-radius: 6px; color: #ffffff; cursor: pointer; font-size: 15px; font-weight: 700; height: 30px; line-height: 1; padding: 0; width: 32px; }
@@ -1277,7 +1282,7 @@
 
       <div id="raidList"></div>
       <div style="margin-top:10px"><button type="button" class="btn btn-primary" id="raidAddButton" style="font-size:12px;padding:5px 11px" onclick="addRaidItem()">+ Add notification</button>
-        <button type="button" class="btn btn-cancel" id="raidTestButton" style="font-size:12px;padding:5px 11px;margin-left:6px" title="Posts every active notification once in your chat, mentioning only you" onclick="sendRaidTest(this)">Send test</button></div>
+        <button type="button" class="btn btn-cancel" id="raidTestButton" style="font-size:12px;padding:5px 11px;margin-left:6px" title="Plays a fake raid in real time: every active notification is posted in your chat when it would be in a real raid (the fake raid starts 120s after you click), mentioning only you" onclick="sendRaidTest(this)">Send test</button></div>
 
       <div class="section-title" style="margin:18px 0 8px">Subscribers <span class="count-pill" id="countRaidSubs">0</span></div>
       <div id="raidSubs"></div>
@@ -3237,7 +3242,7 @@
       const result = await apiFetch('api/raidnotify/test', { method: 'POST', body: '{}' });
       setTimeout(() => { button.disabled = false; }, 3000);
       if (result === null) return;
-      showToast(`Test sent (${result.sent} message${result.sent === 1 ? '' : 's'}, only you are mentioned).`, 'success');
+      showToast(`Test started: ${result.sent} message${result.sent === 1 ? '' : 's'} in real time, the fake raid starts in ${result.raidStartS}s (only you are mentioned).`, 'success');
     }
 
     async function addRaidItem() {
@@ -3293,10 +3298,27 @@
       cell.innerHTML = isText
         ? '<span class="msg-edit"><input type="text" maxlength="400"><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button><span class="def-wrap"><button type="button" class="msg-def" title="Use the default message">Default</button></span></span>'
         : field === 'seconds'
-          ? '<span class="times-edit"><input type="text" inputmode="numeric" maxlength="4"></span><span class="times-pop"><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button></span>'
+          ? '<span class="times-edit raid-time-edit"><input type="text" inputmode="numeric" maxlength="4"><span class="time-steps"><button type="button" class="time-up" title="Earlier (1s more before the start)">▲</button><button type="button" class="time-down" title="Later (1s closer to / after the start)">▼</button></span></span><span class="times-pop"><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button></span>'
           : '<span class="times-edit"><input type="number"></span><span class="times-pop"><button type="button" class="msg-yes" title="Save">✓</button><button type="button" class="msg-no" title="Cancel">✕</button></span>';
       const input = cell.querySelector('input');
-      if (field === 'seconds') { input.value = raidTimeLabel(item.seconds); input.title = `${r.maxSeconds} to 0 = before the start, +1 to +${-r.minSeconds} = after the start`; }
+      if (field === 'seconds') {
+        input.value = raidTimeLabel(item.seconds);
+        input.title = `${r.maxSeconds} to 0 = before the start, +1 to +${-r.minSeconds} = after the start`;
+        // Pfeile wie beim alten Zahlenfeld (ninou2, 20.11.2026: "the arrows are gone, to up or down the time"):
+        // hoch = 1 s frueher, runter = 1 s spaeter; auch per Pfeiltaste
+        const step = (delta) => {
+          const cur = parseRaidTime(input.value);
+          const next = Math.min(r.maxSeconds, Math.max(r.minSeconds, (Number.isNaN(cur) ? item.seconds : cur) + delta));
+          input.value = raidTimeLabel(next);
+          input.focus();
+        };
+        cell.querySelector('.time-up').addEventListener('click', (e) => { e.stopPropagation(); step(1); });
+        cell.querySelector('.time-down').addEventListener('click', (e) => { e.stopPropagation(); step(-1); });
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowUp') { e.preventDefault(); step(1); }
+          else if (e.key === 'ArrowDown') { e.preventDefault(); step(-1); }
+        });
+      }
       else if (field === 'times') { input.min = 1; input.max = 5; input.value = item.times; }
       else input.value = item.text;
       input.focus();
