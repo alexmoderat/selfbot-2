@@ -11,7 +11,7 @@
 	"scripts": {
 		"start": "node --env-file=.env --enable-experimental-regexp-engine src/main.js",
 		"dev": "node --env-file=.env --enable-experimental-regexp-engine --watch src/main.js",
-		"test": "node --enable-experimental-regexp-engine --test-reporter=spec --test \"tests/**/*.test.js\"",
+		"test": "node --require ./tests/setup.js --enable-experimental-regexp-engine --test-reporter=spec --test \"tests/**/*.test.js\"",
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
 		"prepare": "husky",

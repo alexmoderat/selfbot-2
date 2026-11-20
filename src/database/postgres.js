@@ -5,7 +5,7 @@ const { Logger, LogLevel } = require('../misc/logger');
 
 const sql = new Pool({
 	...postgres,
-	database: 'dontaddthisbot',
+	database: postgres.dontDatabase ?? 'dontaddthisbot', // selfbot: Name der Dont-Tabellen-DB aus config.json (postgres.dontDatabase)
 });
 
 sql.connect(async function () {
