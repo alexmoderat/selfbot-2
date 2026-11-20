@@ -1,7 +1,7 @@
 const { setTimeout: sleep } = require('node:timers/promises');
 const { defineCron } = require('../timers.js');
 const { addWatchtime, isKnownBot } = require('../../../util/channel-stats.js');
-const { fetchChatters } = require('../../../misc/twitch-lists.js');
+const { fetchChatters } = require('../../../token/twitch-lists.js');
 
 /**
  * Schreibt allen Chattern alle 5 Minuten Watchtime gut (live) bzw. Offline-Chat-Zeit (offline), aus sb-v2.

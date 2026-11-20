@@ -1,4 +1,4 @@
-const { listOrLink } = require('../misc/list-reply.js');
+const { listOrLink } = require('../util/list-reply.js');
 const { addToWatchlist, getWatchlist, removeFromWatchlist } = require('../util/watchlist.js');
 
 /**

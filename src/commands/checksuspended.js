@@ -1,7 +1,7 @@
-const { listOrLink } = require('../misc/list-reply.js');
+const { listOrLink } = require('../util/list-reply.js');
 
 const { listSuspended, reactivateChannel } = require('../util/channel-suspension.js');
-const { getBanStatusBatch } = require('../misc/twitch-gql.js');
+const { getBanStatusBatch } = require('../token/gql.js');
 
 /**
  * Prueft die wegen Sperre verlassenen Channels von Hand nach, aus sb-v2: ein GQL-Batch, und wer wieder aktiv ist,

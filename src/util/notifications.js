@@ -1,7 +1,7 @@
 const { got } = require('../token/got.js');
 
 const { fetchTwitchUser } = require('./twitch/twitch-utils.js');
-const { fmtLengthShort } = require('../misc/streamer-streak.js');
+const { fmtLengthShort } = require('./streamer-streak.js');
 const { pubsub } = require('./pubsub.js');
 const { cleanTimes } = require('./tweet-notify.js');
 

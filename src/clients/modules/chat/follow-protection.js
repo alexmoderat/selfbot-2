@@ -6,11 +6,11 @@ const { fetchTwitchUser } = require('../../../util/twitch/twitch-utils.js');
 const { enqueueWatch, findHashMatch, recordHash } = require('../../../util/fake-live.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
 const { addToWatchlist } = require('../../../util/watchlist.js');
-const { formatAutoBanReason } = require('../../../misc/ban-reason.js');
-const { getMonitoredStatus } = require('../../../misc/catquery-api.js');
-const { FAKE_LIVE_MAX_DISTANCE, dHashFromBuffer } = require('../../../misc/image-hash.js');
-const { fetchStreamThumbnailUrl } = require('../../../misc/twitch-lists.js');
-const { reportFakeLive } = require('../../../misc/twitch-gql.js');
+const { formatAutoBanReason } = require('../../../util/ban-reason.js');
+const { getMonitoredStatus } = require('../../../token/catquery-api.js');
+const { FAKE_LIVE_MAX_DISTANCE, dHashFromBuffer } = require('../../../util/image-hash.js');
+const { fetchStreamThumbnailUrl } = require('../../../token/twitch-lists.js');
+const { reportFakeLive } = require('../../../token/gql.js');
 
 /**
  * Follow-Bot-Schutz bei neuen Followern (EventSub channel.follow), aus sb-v2s singletons/follow-announce.ts.

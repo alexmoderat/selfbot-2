@@ -1,4 +1,4 @@
-const SupiDate = require('../misc/date.js');
+const SupiDate = require('../util/date.js');
 
 const RESUME_AFK_THRESHOLD_SEC = 120;
 

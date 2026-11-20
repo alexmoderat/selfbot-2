@@ -1,5 +1,5 @@
-const { fetchTwitchUser } = require('../../../util/twitch/twitch-utils.js');
-const { banUser, resolveTarget, restrictUser, unbanUser } = require('../../../util/moderation.js');
+const { fetchTwitchUser } = require('../../twitch/twitch-utils.js');
+const { banUser, resolveTarget, restrictUser, unbanUser } = require('../../moderation.js');
 
 // Moderations-Kuerzel fuer den eval (alexmoderat, 05.11.2026: "dieser bot hat ueberall kuerzer" - dort
 // sb.svc.twitch.gql.manageChatRestriction({ channelID, targetID, treatment })). Hier mit Logins statt IDs:

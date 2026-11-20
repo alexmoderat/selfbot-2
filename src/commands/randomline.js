@@ -1,6 +1,6 @@
-const { randomInt } = require('../misc/command-utils.js');
-const { fetchUserTwitchId } = require('../misc/commands/randomline/twitch-id.js');
-const Rustlog = require('../misc/commands/randomline/rustlog.js');
+const { randomInt } = require('../util/command-utils.js');
+const { fetchUserTwitchId } = require('../util/commands/randomline/twitch-id.js');
+const Rustlog = require('../util/commands/randomline/rustlog.js');
 
 // Supibots commands/randomline: aus dem eigenen Zeilen-Log (chatLines), fuer Channels ohne Zeilen-Log
 // ueber Rustlog-kompatible Dienste (eigener justlog, dann IVR). "rq" waehlt nur aus den eigenen Zeilen.

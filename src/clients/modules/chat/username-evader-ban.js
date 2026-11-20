@@ -2,8 +2,8 @@ const { defineChatModule } = require('../chat-modules.js');
 
 const { fetchTwitchUser } = require('../../../util/twitch/twitch-utils.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
-const { formatAutoBanReason } = require('../../../misc/ban-reason.js');
-const { USERNAME_EVADER_PATTERNS, findEvaderPattern } = require('../../../misc/username-evader.js');
+const { formatAutoBanReason } = require('../../../util/ban-reason.js');
+const { USERNAME_EVADER_PATTERNS, findEvaderPattern } = require('../../../util/username-evader.js');
 
 /**
  * Bannt User, deren Username ein bekanntes Ban-Evader-Muster enthaelt (utils/username-evader.ts), aus sb-v2.

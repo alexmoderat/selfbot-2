@@ -2,8 +2,8 @@ const { defineChatModule } = require('../chat-modules.js');
 const phrases = require('../../../util/moderation-phrases.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
 const { applyTreatment, isBanEvader, isSuspicious, markEvader } = require('../../../util/low-trust-state.js');
-const { formatBanphraseReason, localizeViewbotReason } = require('../../../misc/ban-reason.js');
-const { PROMO_PHRASE_PATTERNS, deobfuscateLoose, getFollowFarmReason, getSuspiciousLinkReason } = require('../../../misc/text-analysis.js');
+const { formatBanphraseReason, localizeViewbotReason } = require('../../../util/ban-reason.js');
+const { PROMO_PHRASE_PATTERNS, deobfuscateLoose, getFollowFarmReason, getSuspiciousLinkReason } = require('../../../util/text-analysis.js');
 
 /**
  * Nachrichten von Usern, die Twitch als verdaechtig markiert hat (PubSub low-trust-users), aus sb-v2:

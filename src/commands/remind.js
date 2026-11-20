@@ -1,5 +1,5 @@
-const SupiDate = require('../misc/date.js');
-const { fetchTimeData, formatTimezoneOffset, parseChrono } = require('../misc/command-utils.js');
+const SupiDate = require('../util/date.js');
+const { fetchTimeData, formatTimezoneOffset, parseChrono } = require('../util/command-utils.js');
 
 // SQL DATETIME limit - 9999-12-31 23:59:59.999
 const MAXIMUM_SQL_TIMESTAMP = 253_402_297_199_999;

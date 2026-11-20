@@ -1,8 +1,8 @@
 const { defineChatModule } = require('../chat-modules.js');
 const { autoBan, sayModLog, targetFromChannel } = require('../../../util/moderation.js');
 const { isSuppressed, suppressChannel } = require('../../../util/raid-suppression.js');
-const { formatAutoBanReason } = require('../../../misc/ban-reason.js');
-const { isTrustedSender, rolesFromBadges } = require('../../../misc/text-analysis.js');
+const { formatAutoBanReason } = require('../../../util/ban-reason.js');
+const { isTrustedSender, rolesFromBadges } = require('../../../util/text-analysis.js');
 
 /**
  * Bannt bei einem ploetzlichen Schub Erstnachrichten, unabhaengig vom Text, aus sb-v2 (alexmoderat, 22.09.2026,

@@ -1,6 +1,6 @@
 const { defineCron } = require('../timers.js');
 const { got } = require('../../../token/got.js');
-const { formatGithubEvent } = require('../../../misc/github-events.js');
+const { formatGithubEvent } = require('../../../util/github-events.js');
 const { sendAlert } = require('../../../util/moderation.js');
 
 /**

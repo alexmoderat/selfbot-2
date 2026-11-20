@@ -1,7 +1,7 @@
 const { got } = require('../token/got.js');
 const { escapeRegExp } = require('../misc/utility.js');
 const { getConfig } = require('../config.js');
-const { isAutomatedBanReason } = require('../misc/ban-reason.js');
+const { isAutomatedBanReason } = require('./ban-reason.js');
 const { fetchTwitchUser } = require('./twitch/twitch-utils.js');
 
 // Moderations-Kern aus sb-v2: banUser() (src/services/twitch-api.ts) mit dem Pro-Channel-Schalter

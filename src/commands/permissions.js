@@ -1,6 +1,6 @@
 const { getCommand } = require('../clients/modules/commands.js');
 const { getPermissions } = require('../clients/modules/handler.js');
-const { uploadList } = require('../misc/haste.js');
+const { uploadList } = require('../token/haste.js');
 const { applyLevel, describeLevel, effectiveLevel, parseLevel } = require('../clients/modules/levels.js');
 
 /**

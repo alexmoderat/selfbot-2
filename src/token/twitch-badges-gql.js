@@ -1,4 +1,4 @@
-const { got } = require('../token/got.js');
+const { got } = require('./got.js');
 
 /**
  * Globale Twitch-Badges direkt aus Twitch-GQL (Abfrage wie in Tackling/Twitch-Badge-Bot; alexmoderat, 15.11.2026: "zur Sicherheit

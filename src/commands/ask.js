@@ -1,5 +1,5 @@
 const { got } = require('../token/got.js');
-const conversations = require('../misc/ask-conversations.js');
+const conversations = require('../util/ask-conversations.js');
 
 /**
  * Frage an eine KI, wie Supibots $gpt (ninou2, 19.11.2026: "was thinking about an !ask command just like the GPT one from

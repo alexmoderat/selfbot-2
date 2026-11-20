@@ -1,6 +1,6 @@
 const triggers = require('../util/trigger-commands.js');
 const { uuidPrefix } = require('../util/moderation-phrases.js');
-const { uploadToHaste } = require('../misc/haste.js');
+const { uploadToHaste } = require('../token/haste.js');
 
 /**
  * Trigger-Commands verwalten, aus sb-v2s triggercommands (Ausfuehrung: Chat-Modul trigger-commands).

@@ -1,4 +1,4 @@
-const SupiDate = require('../misc/date.js');
+const SupiDate = require('../util/date.js');
 const sbv2 = require('../database/sbv2.js');
 
 /**

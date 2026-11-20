@@ -1,5 +1,5 @@
-const { fetchChatters } = require('../misc/twitch-lists.js');
-const { USERNAME_EVADER_PATTERNS } = require('../misc/username-evader.js');
+const { fetchChatters } = require('../token/twitch-lists.js');
+const { USERNAME_EVADER_PATTERNS } = require('./username-evader.js');
 
 // Ersatz fuer IRC-JOIN ("userJoin"), aus sb-v2s v2/singletons/join-poller.ts: Twitch liefert Viewer-Joins
 // nur ueber IRC - die Chatterliste (Helix chat/chatters) ist der naechste Ersatz. Alle paar Sekunden abfragen,

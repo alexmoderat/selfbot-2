@@ -1,5 +1,5 @@
 const { streamData } = require('../util/stream-tracking.js');
-const { fmtDate, tiesNote, yearlyBreakdown } = require('../misc/streamer-streak.js');
+const { fmtDate, tiesNote, yearlyBreakdown } = require('../util/streamer-streak.js');
 
 /**
  * X/365 fuer jedes Jahr mit Daten samt laengstem Streak, aus sb-v2 (ninou2, 29.09.2026). Kein "so far" - "when its in

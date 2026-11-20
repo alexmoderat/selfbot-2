@@ -1,4 +1,4 @@
-const { gqlAuth } = require('./twitch-gql.js');
+const { gqlAuth } = require('../token/gql.js');
 
 /**
  * Seit wann jemand in einem Channel Mod/VIP ist: GQL liefert das nur in der Mod-/VIP-Liste des Channels (edge.grantedAt)

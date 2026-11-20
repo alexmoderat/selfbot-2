@@ -1,7 +1,7 @@
 const { fetchModeratedChannels } = require('../util/twitch/twitch-utils.js');
-const { uploadList } = require('../misc/haste.js');
-const { fetchUserRoleList } = require('../misc/roles-tv.js');
-const { getChannelsWithRole, getEditableChannels } = require('../misc/twitch-gql.js');
+const { uploadList } = require('../token/haste.js');
+const { fetchUserRoleList } = require('../token/roles-tv.js');
+const { getChannelsWithRole, getEditableChannels } = require('../token/gql.js');
 
 /**
  * In wie vielen Channels ein User Mod ist, aus sb-v2: fuer den Bot selbst ueber Helix moderation/channels, fuer alle

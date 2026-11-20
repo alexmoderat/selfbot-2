@@ -1,7 +1,7 @@
 const { got } = require('../../../token/got.js');
 const { defineChatModule } = require('../chat-modules.js');
-const { describeFailure, searchGameId, updateBroadcastSettings } = require('../../../misc/broadcast-settings.js');
-const { rolesFromBadges } = require('../../../misc/text-analysis.js');
+const { describeFailure, searchGameId, updateBroadcastSettings } = require('../../../util/broadcast-settings.js');
+const { rolesFromBadges } = require('../../../util/text-analysis.js');
 
 /**
  * Gegenstueck zu !sic: fuegt ein Mod/der Broadcaster die gespeicherte !sic-Antwort wieder in den Chat ein, setzt der

@@ -1,7 +1,7 @@
 const { defineCron } = require('../timers.js');
 const { punishFakeLive, hashLiveThumbnail } = require('../chat/follow-protection.js');
 const { findHashMatch, listPendingWatches, recordHash, removeExpiredWatches, removeWatch } = require('../../../util/fake-live.js');
-const { FAKE_LIVE_MAX_DISTANCE } = require('../../../misc/image-hash.js');
+const { FAKE_LIVE_MAX_DISTANCE } = require('../../../util/image-hash.js');
 
 /**
  * Tastet neue Live-Follower, bei denen der Sofort-Check in follow-protection keinen Thumbnail-Hash-Treffer fand, bis

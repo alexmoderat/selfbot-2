@@ -1,4 +1,4 @@
-const { accountAgeDays } = require('./twitch-lists.js');
+const { accountAgeDays } = require('../token/twitch-lists.js');
 
 /**
  * Banphrase-Treffer bannen nur noch, wenn der Account einen komischen Namen hat UND juenger als 7 Tage ist; sonst keine

@@ -1,5 +1,5 @@
 const { got } = require('../token/got.js');
-const { resolveLanguage } = require('../misc/languages.js');
+const { resolveLanguage } = require('../util/languages.js');
 
 /**
  * Uebersetzen, aus sb-v2 (Block 7: sb-v2-Version). Google wie Supibot ueber client=dict-chrome-ex mit Chrome-User-Agent

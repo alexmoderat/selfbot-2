@@ -1,8 +1,8 @@
 const { commands } = require('../clients/modules/commands.js');
 const { getConfig } = require('../config.js');
 const { invocationPrefix, loadOtherBotCommands } = require('./command-listing.js');
-const { uploadToOwnHaste } = require('./haste.js');
-const { baseUrl } = require('./user-tokens.js');
+const { uploadToOwnHaste } = require('../token/haste.js');
+const { baseUrl } = require('../token/user-tokens.js');
 
 // Command-Katalog fuer die oeffentliche Seite /commands und den Cron bot-promo (bisher in commands/botcommands.js;
 // der Command selbst ist entfernt, alexmoderat, 11.11.2026: kaum genutzt).

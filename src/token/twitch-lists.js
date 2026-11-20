@@ -1,6 +1,6 @@
-const { got } = require('../token/got.js');
+const { got } = require('./got.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { gqlSmartbox } = require('./twitch-gql.js');
+const { gqlSmartbox } = require('./gql.js');
 
 // Chatter-, Follower- und Account-Abfragen ueber Helix, aus sb-v2s v2/utils/twitch-lists.ts.
 // /chat/chatters braucht moderator:read:chatters (nur wo der Bot moddet, sonst 403);

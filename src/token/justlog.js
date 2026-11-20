@@ -1,4 +1,4 @@
-const { got } = require('../token/got.js');
+const { got } = require('./got.js');
 const { readFileSync } = require('node:fs');
 
 // Zugriff auf den eigenen Chat-Logger justlog (127.0.0.1:8025, Admin-API), aus sb-v2s v2/utils/justlog.ts.

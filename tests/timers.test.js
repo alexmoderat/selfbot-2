@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { isTimerDue, parseTimerInterval, timerMode, formatInterval, withGroupLastSent } = require('../src/misc/timers.js');
+const { isTimerDue, parseTimerInterval, timerMode, formatInterval, withGroupLastSent } = require('../src/util/timer-rules.js');
 
 const base = { Enabled: true, Online_Only: false, Offline_Only: false, Interval_Seconds: 3610, Last_Sent: null };
 const now = Date.parse('2026-11-19T20:00:00Z');

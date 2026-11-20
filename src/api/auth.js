@@ -21,13 +21,13 @@ const {
 	helixAsUser,
 	saveToken,
 	validateToken,
-} = require('../misc/user-tokens.js');
+} = require('../token/user-tokens.js');
 
 const { isResultFailure } = require('../clients/modules/commands.js');
 
-const { fetchGeoLocationData, toUserLocation } = require('../misc/command-utils.js');
+const { fetchGeoLocationData, toUserLocation } = require('../util/command-utils.js');
 
-const { detectTimezone } = require('../misc/timezones.js');
+const { detectTimezone } = require('../util/timezones.js');
 
 const { checkRunLimits } = require('./command-runner.js');
 

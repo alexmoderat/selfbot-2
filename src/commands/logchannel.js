@@ -1,5 +1,5 @@
-const { listOrLink } = require('../misc/list-reply.js');
-const { addExtra, callAdmin, currentChannels, getExtras, readAdminKey, removeExtra, resolveIds } = require('../misc/justlog.js');
+const { listOrLink } = require('../util/list-reply.js');
+const { addExtra, callAdmin, currentChannels, getExtras, readAdminKey, removeExtra, resolveIds } = require('../token/justlog.js');
 
 /**
  * Channels im oeffentlichen Chat-Logger (justlog) verwalten, aus sb-v2. Die Bot-Channels pflegt der Cron justlog-sync;

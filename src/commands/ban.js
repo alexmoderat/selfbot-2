@@ -1,5 +1,5 @@
 const { getCommand } = require('../clients/modules/commands.js');
-const { SupiError } = require('../misc/error.js');
+const { SupiError } = require('../util/error.js');
 const Filter = require('../util/filter.js');
 const { isArgumentsData } = Filter;
 

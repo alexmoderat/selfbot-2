@@ -1,6 +1,6 @@
 const { defineChatModule } = require('../chat-modules.js');
 const triggers = require('../../../util/trigger-commands.js');
-const { rolesFromBadges } = require('../../../misc/text-analysis.js');
+const { rolesFromBadges } = require('../../../util/text-analysis.js');
 
 /**
  * Fuehrt Trigger-Commands aus, aus sb-v2: Reihenfolge Muster, Whitelist, mod_only, online/offline, Cooldown;

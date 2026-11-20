@@ -1,8 +1,8 @@
 const { got } = require('../token/got.js');
 
 const { fetchTwitchUser } = require('./twitch/twitch-utils.js');
-const { uploadList } = require('../misc/haste.js');
-const { getLastBroadcastStart, getRecentVods, getVodGameMoments } = require('../misc/twitch-gql.js');
+const { uploadList } = require('../token/haste.js');
+const { getLastBroadcastStart, getRecentVods, getVodGameMoments } = require('../token/gql.js');
 
 // Datenschicht der Stream-Statistiken, aus sb-v2s streamer-streak-maria, stream-hours-maria und
 // streak-extra-channels-maria. Schluessel ist ueberall die User-ID, nicht der Login (alexmoderat, 29.09.2026: "if a user

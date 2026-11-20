@@ -1,4 +1,4 @@
-const { got } = require('../token/got.js');
+const { got } = require('./got.js');
 const { randomBytes } = require('node:crypto');
 
 /**

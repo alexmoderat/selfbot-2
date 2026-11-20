@@ -1,4 +1,4 @@
-const { MODERATOR_BADGES } = require('../misc/text-analysis.js');
+const { MODERATOR_BADGES } = require('../util/text-analysis.js');
 const { banUser, targetFromChannel } = require('../util/moderation.js');
 
 module.exports = {

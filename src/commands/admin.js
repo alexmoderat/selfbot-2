@@ -1,4 +1,4 @@
-const { listOrLink } = require('../misc/list-reply.js');
+const { listOrLink } = require('../util/list-reply.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 
 /**

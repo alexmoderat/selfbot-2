@@ -1,5 +1,5 @@
 const { isResultFailure } = require('../clients/modules/commands.js');
-const { detectTimezone } = require('../misc/timezones.js');
+const { detectTimezone } = require('../util/timezones.js');
 
 /**
  * Eigene Zeitzone speichern, damit !time ohne Eingabe funktioniert (ninou2, 03.11.2026: "!UserTimeZoneSet !uts",

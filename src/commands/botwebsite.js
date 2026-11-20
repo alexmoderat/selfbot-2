@@ -1,4 +1,4 @@
-const { baseUrl } = require('../misc/user-tokens.js');
+const { baseUrl } = require('../token/user-tokens.js');
 
 /**
  * Link zum Dashboard (ninou2, 27.10.2026: "should be command : !botwebsite !bw" - dort Commands mit Beschreibung

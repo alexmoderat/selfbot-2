@@ -1,4 +1,4 @@
-const { getUserInfo } = require('../misc/twitch-gql.js');
+const { getUserInfo } = require('../token/gql.js');
 
 const REASONS = {
 	TOS_INDEFINITE: 'ToS Indefinite',

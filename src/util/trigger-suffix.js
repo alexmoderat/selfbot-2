@@ -1,4 +1,4 @@
-const { trimMessage } = require('../util/twitch/utils.js');
+const { trimMessage } = require('./twitch/utils.js');
 
 /**
  * Ausloesenden Befehl in Klammern ans Ende der Antwort haengen, z. B. '... this year] [!ll]' - nur fuer ninou2, wenn sie

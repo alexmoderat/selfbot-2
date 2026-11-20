@@ -1,10 +1,10 @@
 const { defineChatModule } = require('../chat-modules.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
-const { formatAutoBanReason } = require('../../../misc/ban-reason.js');
-const { isTrustedSender, rolesFromBadges } = require('../../../misc/text-analysis.js');
-const { accountAgeDays } = require('../../../misc/twitch-lists.js');
-const { getActiveEmoteSetId, getEmotesInSet, getGlobalEmotes } = require('../../../misc/seventv.js');
-const { isEmoteOnly, isGeneratedName, isShoutoutText, isYoungAccount } = require('../../../misc/emote-wave.js');
+const { formatAutoBanReason } = require('../../../util/ban-reason.js');
+const { isTrustedSender, rolesFromBadges } = require('../../../util/text-analysis.js');
+const { accountAgeDays } = require('../../../token/twitch-lists.js');
+const { getActiveEmoteSetId, getEmotesInSet, getGlobalEmotes } = require('../../../token/seventv.js');
+const { isEmoteOnly, isGeneratedName, isShoutoutText, isYoungAccount } = require('../../../util/emote-wave.js');
 
 /**
  * Bannt Accounts der Emote-Spam-Welle in Channels mit dem Schalter emoteWaveBan (alexmoderat, 15.11.2026: kickster1010, von

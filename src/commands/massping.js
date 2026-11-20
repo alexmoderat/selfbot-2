@@ -1,7 +1,7 @@
 const { setTimeout: sleep } = require('node:timers/promises');
-const { listOrLink } = require('../misc/list-reply.js');
+const { listOrLink } = require('../util/list-reply.js');
 const Filter = require('../util/filter.js');
-const { fetchChatters } = require('../misc/twitch-lists.js');
+const { fetchChatters } = require('../token/twitch-lists.js');
 
 /**
  * Pingt alle aktuell im Chat Anwesenden, optional mit Ankuendigung, aus sb-v2 (alexmoderat, 22.09.2026). Bewusst nur

@@ -7,7 +7,7 @@ const { Logger, LogLevel } = require('../misc/logger.js');
 const { PUBLIC_DIR } = require('./context.js');
 const { createOpenApiSpec } = require('./openapi.js');
 const { cleanExpiredSessions } = require('./sessions.js');
-const { baseUrl } = require('../misc/user-tokens.js');
+const { baseUrl } = require('../token/user-tokens.js');
 
 /**
  * Web-Server wie DontAddThisBots api/server.js: jede Datei in routes/<METHODE>/ exportiert einen express.Router und wird

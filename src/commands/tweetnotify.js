@@ -1,4 +1,4 @@
-const { listOrLink } = require('../misc/list-reply.js');
+const { listOrLink } = require('../util/list-reply.js');
 const { HANDLE, MAX_MESSAGE, MAX_TIMES, cleanHandle, cleanMessage, cleanTimes, accountExists, homeChannel } = require('../util/tweet-notify.js');
 
 /**

@@ -1,9 +1,9 @@
 const { defineChatModule } = require('../chat-modules.js');
 const { fetchTwitchUser } = require('../../../util/twitch/twitch-utils.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
-const { formatAutoBanReason } = require('../../../misc/ban-reason.js');
-const { gqlPublic } = require('../../../misc/twitch-gql.js');
-const { getUniqueDomains, isAllowlistedDomain } = require('../../../misc/text-analysis.js');
+const { formatAutoBanReason } = require('../../../util/ban-reason.js');
+const { gqlPublic } = require('../../../token/gql.js');
+const { getUniqueDomains, isAllowlistedDomain } = require('../../../util/text-analysis.js');
 
 /**
  * Prueft betretende User auf Werbe-Accounts (Bio + angepinnte Nachricht) und bannt sie, aus sb-v2.

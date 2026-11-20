@@ -1,6 +1,6 @@
 const { commands } = require('../commands.js');
 const { defineCron } = require('../timers.js');
-const { buildCommandsUrl } = require('../../../misc/command-catalog.js');
+const { buildCommandsUrl } = require('../../../util/command-catalog.js');
 
 /**
  * Postet alle 6 h (4x am Tag) eine Werbe-Nachricht mit Link zur Command-Liste in Channels mit !botpromo on, aus sb-v2

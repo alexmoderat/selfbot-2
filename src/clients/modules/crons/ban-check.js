@@ -3,7 +3,7 @@ const { defineCron } = require('../timers.js');
 const { fetchTwitchUser } = require('../../../util/twitch/twitch-utils.js');
 const { listSuspended, reactivateChannel, suspendChannel } = require('../../../util/channel-suspension.js');
 const { recordModAction } = require('../../../util/moderation.js');
-const { getBanStatusBatch } = require('../../../misc/twitch-gql.js');
+const { getBanStatusBatch } = require('../../../token/gql.js');
 
 /**
  * Erkennt Twitch-seitige Sperren der Channels, in denen der Bot ist, aus sb-v2s crons/ban-check. Polling, weil Twitch

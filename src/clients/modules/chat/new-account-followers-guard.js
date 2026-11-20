@@ -1,7 +1,7 @@
 const { defineChatModule } = require('../chat-modules.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
-const { formatAutoBanReason } = require('../../../misc/ban-reason.js');
-const { accountAgeDays, fetchFollowerCount } = require('../../../misc/twitch-lists.js');
+const { formatAutoBanReason } = require('../../../util/ban-reason.js');
+const { accountAgeDays, fetchFollowerCount } = require('../../../token/twitch-lists.js');
 
 /**
  * Bannt frische Accounts mit auffaellig vielen Followern beim Betreten des Chats, aus sb-v2 (alexmoderat, 22.09.2026:

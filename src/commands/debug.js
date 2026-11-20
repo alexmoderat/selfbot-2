@@ -3,8 +3,8 @@ const { getPermissions } = require('../clients/modules/handler.js');
 const { Script, createContext } = require('node:vm');
 const crypto = require('node:crypto');
 
-const gql = require('../misc/twitch-gql.js');
-const { idOf, modShortcuts } = require('../misc/commands/debug/mod-shortcuts.js');
+const gql = require('../token/gql.js');
+const { idOf, modShortcuts } = require('../util/commands/debug/mod-shortcuts.js');
 const { getModerationStats } = require('../clients/modules/chat/banphrase-filter.js');
 
 // Supibots commands/debug (alexmoderat, 23.10.2026: "Supibot debug + Schwaerzen"). Aus sb-v2s eval dazu:

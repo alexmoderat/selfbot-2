@@ -1,5 +1,5 @@
 const { getCommand, commands, toListed } = require('../clients/modules/commands.js');
-const { formatUsage } = require('../misc/command-listing.js');
+const { formatUsage } = require('../util/command-listing.js');
 
 // Command-Liste und Einzelhilfe wie sb-v2s commands (alexmoderat, 24.10.2026: "Wie die alte sb-v2-Seite"). Die Liste
 // ist dieselbe Seite wie bei botcommands (/commands).

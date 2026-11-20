@@ -17,7 +17,7 @@ require.cache[gotPath] = {
 };
 const ask = require('../src/commands/ask.js');
 const askc = require('../src/commands/askcontinue.js');
-const conversations = require('../src/misc/ask-conversations.js');
+const conversations = require('../src/util/ask-conversations.js');
 
 const msg = (text, id = '1') => ({ displayName: 'ninou2', invocation: 'askc', args: text.split(' '), sender: { id } });
 const contentsTexts = () => lastRequest.json.contents.map((i) => `${i.role}:${i.parts[0].text}`);

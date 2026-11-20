@@ -1,4 +1,4 @@
-const { getStreamInfo } = require('../misc/stream-info.js');
+const { getStreamInfo } = require('../util/stream-info.js');
 
 /** Stream-Infos, aus sb-v2; "uptime" als Kurzfassung (ninou2, 03.10.2026 probierte !uptime) */
 module.exports = {

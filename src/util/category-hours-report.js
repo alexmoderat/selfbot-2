@@ -1,4 +1,4 @@
-const { streamData } = require('../util/stream-tracking.js');
+const { streamData } = require('./stream-tracking.js');
 const { formatCategoryBreakdown, formatCategoryParts } = require('./category-hours.js');
 const { MONTHS, parseMonthYear } = require('./stream-hours.js');
 const { fmtDate } = require('./streamer-streak.js');

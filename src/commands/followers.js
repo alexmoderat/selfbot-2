@@ -1,5 +1,5 @@
-const { uploadList } = require('../misc/haste.js');
-const { FOLLOWERS_CAP, fetchFollowers } = require('../misc/twitch-lists.js');
+const { uploadList } = require('../token/haste.js');
+const { FOLLOWERS_CAP, fetchFollowers } = require('../token/twitch-lists.js');
 
 /** Follower eines Accounts (sb-v2): Zahl immer, Login-Liste nur, wo der Bot moddet */
 module.exports = {

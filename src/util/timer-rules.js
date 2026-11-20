@@ -1,4 +1,4 @@
-const { parseDurationText } = require('./duration.js');
+const { parseDurationText } = require('../misc/humanizeDuration.js');
 
 /**
  * Reine Timer-Logik (alexmoderat, 31.10.2026: "ja wir sollten mal timer adden", Anlass ninou2: Promo-Text

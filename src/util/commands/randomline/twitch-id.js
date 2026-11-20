@@ -1,4 +1,4 @@
-const { fetchTwitchUser } = require('../../../util/twitch/twitch-utils.js');
+const { fetchTwitchUser } = require('../../twitch/twitch-utils.js');
 
 /** Twitch-ID zu einem Login: bekannter User zuerst, sonst Helix */
 const fetchUserTwitchId = async (login) => {

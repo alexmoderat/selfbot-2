@@ -1,5 +1,5 @@
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { fetchChannelInfo } = require('../misc/twitch-info.js');
+const { fetchChannelInfo } = require('../token/twitch-info.js');
 
 /** Titel und Kategorie eines beliebigen Channels, nur zum Anzeigen (sb-v2, ninou2, 06.10.2026: "make check a streamer title") */
 module.exports = {

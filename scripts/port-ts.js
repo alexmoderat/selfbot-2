@@ -27,8 +27,8 @@ const targetOf = (relative) => {
 		[/^classes\/chat-module$/, 'src/clients/modules/chat-modules'],
 		[/^classes\/cron$/, 'src/clients/modules/timers'],
 		// Hilfsdateien eines Commands (Unterordner); der Loader laedt nur src/commands/*.js
-		[/^commands\/([^/]+)\/(?!index$)(.+)$/, 'src/misc/commands/$1/$2'],
-		[/^utils\/(.+)$/, 'src/misc/$1'],
+		[/^commands\/([^/]+)\/(?!index$)(.+)$/, 'src/util/commands/$1/$2'],
+		[/^utils\/(.+)$/, 'src/util/$1'],
 		[/^singletons\/(.+)$/, 'src/services/$1'],
 		[/^platforms\/twitch-utils$/, 'src/util/twitch/twitch-utils'],
 		[/^platforms\/hermes-client$/, 'src/util/twitch/hermes-client'],
@@ -151,10 +151,10 @@ const API_RENAMES = [
 
 /** Importe aus supi-core auf die uebernommenen Klassen bzw. Ersatzfunktionen */
 const SUPI_CORE_IMPORTS = {
-	SupiDate: ['src/misc/date', 'default'],
-	SupiError: ['src/misc/error', 'SupiError'],
-	GenericRequestError: ['src/misc/error', 'GenericRequestError'],
-	isGenericRequestError: ['src/misc/error', 'isGenericRequestError'],
+	SupiDate: ['src/util/date', 'default'],
+	SupiError: ['src/util/error', 'SupiError'],
+	GenericRequestError: ['src/util/error', 'GenericRequestError'],
+	isGenericRequestError: ['src/util/error', 'isGenericRequestError'],
 	isGotRequestError: ['src/token/http', 'isHttpError'],
 };
 

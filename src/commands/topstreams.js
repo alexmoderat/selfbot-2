@@ -1,6 +1,6 @@
 const { got } = require('../token/got.js');
-const { getTwitchGameID } = require('../misc/command-utils.js');
-const { twitchStreamSchema } = require('../misc/schemas.js');
+const { getTwitchGameID } = require('../util/command-utils.js');
+const { twitchStreamSchema } = require('../util/schemas.js');
 
 // Supibots commands/topstreams (Block 7: Supibot-Version)
 module.exports = {

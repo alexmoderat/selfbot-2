@@ -1,7 +1,7 @@
 const { defineChatModule } = require('../chat-modules.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
-const { formatAutoBanReason } = require('../../../misc/ban-reason.js');
-const { isTrustedSender, rolesFromBadges } = require('../../../misc/text-analysis.js');
+const { formatAutoBanReason } = require('../../../util/ban-reason.js');
+const { isTrustedSender, rolesFromBadges } = require('../../../util/text-analysis.js');
 
 /**
  * ASCII-Art-Spam (Block-/Box-Drawing-/Braille-Zeichen als "Bild"), aus sb-v2. alexmoderat, 18.09.2026: "Kannst du im

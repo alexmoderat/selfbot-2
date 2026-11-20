@@ -1,6 +1,6 @@
 const { defineCron } = require('../timers.js');
-const { fetchWindows, activeWindows, BADGES_URL } = require('../../../misc/streamdatabase.js');
-const { wasAnnounced, markAnnounced, recordRecent } = require('../../../misc/badge-history.js');
+const { fetchWindows, activeWindows, BADGES_URL } = require('../../../token/streamdatabase.js');
+const { wasAnnounced, markAnnounced, recordRecent } = require('../../../util/badge-history.js');
 const { enabledChannels } = require('./badge-watch.js');
 const { cleanTimes } = require('../../../util/tweet-notify.js');
 

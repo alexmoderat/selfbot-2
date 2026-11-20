@@ -1,5 +1,5 @@
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { fetchClips } = require('../misc/twitch-info.js');
+const { fetchClips } = require('../token/twitch-info.js');
 
 /** Meistgesehener der letzten Clips eines Channels ueber Helix "Get Clips", aus sb-v2 (alexmoderat, 29.09.2026) */
 module.exports = {

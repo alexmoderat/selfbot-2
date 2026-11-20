@@ -1,6 +1,6 @@
 const { streamData } = require('../util/stream-tracking.js');
-const { uploadToOwnHaste } = require('../misc/haste.js');
-const { formatStreamExport, hasExportData } = require('../misc/stream-export.js');
+const { uploadToOwnHaste } = require('../token/haste.js');
+const { formatStreamExport, hasExportData } = require('../util/stream-export.js');
 
 /**
  * Alle gespeicherten Stream-Daten eines Channels als Text-Link (ninou2, 03.11.2026: "!gt xqc", dann "it should be !gd", "not !gt"; "it give

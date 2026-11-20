@@ -1,5 +1,5 @@
-const { ago, formatDuration } = require('../misc/duration.js');
-const { getChatRestrictedReasons, getUserProfile, isUsernameAvailable } = require('../misc/twitch-gql.js');
+const { ago, formatDuration } = require('../misc/humanizeDuration.js');
+const { getChatRestrictedReasons, getUserProfile, isUsernameAvailable } = require('../token/gql.js');
 
 /**
  * Account-Infos zu einem User, aus sb-v2: user/u ausfuehrlich, whois/lookup kompakt.

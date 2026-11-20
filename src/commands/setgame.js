@@ -1,4 +1,4 @@
-const { describeFailure, searchGameId, updateBroadcastSettings } = require('../misc/broadcast-settings.js');
+const { describeFailure, searchGameId, updateBroadcastSettings } = require('../util/broadcast-settings.js');
 const { findGame } = require('../clients/modules/chat/stream-infos-restore.js');
 
 // Eingefuegte !csi2-Zeile: "!setgame X !settitle Y" setzt beides (ninou2, 13.11.2026)

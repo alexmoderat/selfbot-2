@@ -1,4 +1,4 @@
-const { got } = require('../token/got.js');
+const { got } = require('./got.js');
 
 // Helix-Abfragen fuer Block 7 (Clips, Emotes, Channel-Infos, VODs), aus sb-v2s src/services/twitch-api.ts
 

@@ -1,7 +1,7 @@
 const { got } = require('../token/got.js');
-const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { GQL_PUBLIC_CLIENT_ID, getLastBroadcastStart } = require('./twitch-gql.js');
-const { fetchArchiveVideos, fetchChannelInfo, fetchClips } = require('./twitch-info.js');
+const { fetchTwitchUser } = require('./twitch/twitch-utils.js');
+const { GQL_PUBLIC_CLIENT_ID, getLastBroadcastStart } = require('../token/gql.js');
+const { fetchArchiveVideos, fetchChannelInfo, fetchClips } = require('../token/twitch-info.js');
 
 // Stream-Infos fuer si/streaminfo/uptime, aus sb-v2s v2/utils/stream-info.ts
 

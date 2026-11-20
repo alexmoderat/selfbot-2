@@ -1,5 +1,5 @@
-const SupiDate = require('../misc/date.js');
-const unsetSuggestionSubcommand = require('../misc/commands/set/subcommands/suggestion.js');
+const SupiDate = require('../util/date.js');
+const unsetSuggestionSubcommand = require('../util/commands/set/subcommands/suggestion.js');
 
 // Wie Supibots suggest. Nicht uebernommen: das automatische Abo fuer Status-Benachrichtigungen
 // (Supibots subscribe-System fehlt hier) und der Link zur Vorschlagsliste (Website kommt mit Block 9).

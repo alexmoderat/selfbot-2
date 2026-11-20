@@ -1,6 +1,6 @@
 const { streamData } = require('../util/stream-tracking.js');
-const { formatMonthlyBreakdown } = require('../misc/stream-hours.js');
-const { fmtDate } = require('../misc/streamer-streak.js');
+const { formatMonthlyBreakdown } = require('../util/stream-hours.js');
+const { fmtDate } = require('../util/streamer-streak.js');
 
 /**
  * Live-Stunden pro Jahr fuer jedes Jahr mit Daten, oder mit "2026monthly"/nackter Jahreszahl Monat fuer Monat, aus sb-v2

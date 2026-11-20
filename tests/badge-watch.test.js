@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 global.bot = global.bot ?? {};
-const { parseBadges, parseEmotes, parseEvents } = require('../src/misc/streamdatabase.js');
+const { parseBadges, parseEmotes, parseEvents } = require('../src/token/streamdatabase.js');
 const { newBadges, formatBadge, formatEmote } = require('../src/clients/modules/crons/badge-watch.js');
 
 const page = (list) =>
@@ -111,7 +111,7 @@ test('!badgeinfo: Anzahl 1-5, Badges und Emotes gemischt, neueste zuerst', () =>
 test('badge-history: neueste zuerst, nach KEEP abgeschnitten', async () => {
 	const store = new Map();
 	global.bot.Redis = { getJSON: async (k) => store.get(k) ?? null, setJSON: async (k, v) => store.set(k, v) };
-	const { recordRecent, getRecent, KEEP } = require('../src/misc/badge-history.js');
+	const { recordRecent, getRecent, KEEP } = require('../src/util/badge-history.js');
 	await recordRecent('badge', [{ title: 'A' }, { title: 'B' }], '2026-11-13T10:00:00.000Z');
 	await recordRecent('badge', [{ title: 'C' }], '2026-11-13T11:00:00.000Z');
 	assert.deepEqual((await getRecent('badge', 5)).map((i) => i.title), ['C', 'B', 'A']);
@@ -122,7 +122,7 @@ test('badge-history: neueste zuerst, nach KEEP abgeschnitten', async () => {
 });
 
 test('Tweets: parseTweets (ohne angehefteten und t.co-Links) und parseGlobalTweet', () => {
-	const { parseTweets, parseGlobalTweet } = require('../src/misc/streamdatabase.js');
+	const { parseTweets, parseGlobalTweet } = require('../src/token/streamdatabase.js');
 	const body = {
 		data: {
 			timeline: [
@@ -143,7 +143,7 @@ test('Tweets: parseTweets (ohne angehefteten und t.co-Links) und parseGlobalTwee
 test('badge-history: wasAnnounced/markAnnounced', async () => {
 	const store = new Map();
 	global.bot.Redis = { getJSON: async (k) => store.get(k) ?? null, setJSON: async (k, v) => store.set(k, v) };
-	const { wasAnnounced, markAnnounced } = require('../src/misc/badge-history.js');
+	const { wasAnnounced, markAnnounced } = require('../src/util/badge-history.js');
 	assert.equal(await wasAnnounced('added:badge:x'), false);
 	await markAnnounced('added:badge:x');
 	assert.equal(await wasAnnounced('added:badge:x'), true);
@@ -160,7 +160,7 @@ test('!badgeinfo: Verfuegbarkeits-Tweet mit Link', () => {
 });
 
 test('Zeitfenster: [AVAILABLE!] solange offen, [ENDED!] danach', () => {
-	const { parseEventEnd, eventStatus } = require('../src/misc/streamdatabase.js');
+	const { parseEventEnd, eventStatus } = require('../src/token/streamdatabase.js');
 	const text = 'Twitch global badge now available: Jordan Objective - Watch 15 minutes. The event ends November 13, 2026 at 21:59. (UTC) Good luck!';
 	assert.equal(parseEventEnd(text), Date.parse('2026-11-13T21:59:00Z'));
 	assert.equal(eventStatus(text, Date.parse('2026-11-13T21:00:00Z')), '[AVAILABLE!]');
@@ -176,7 +176,7 @@ test('!badgeinfo: Tweet mit Status hinter dem Text', () => {
 });
 
 test('Zeitfenster aus den Aktionen: parseWindows und activeWindows', () => {
-	const { parseWindows, activeWindows } = require('../src/misc/streamdatabase.js');
+	const { parseWindows, activeWindows } = require('../src/token/streamdatabase.js');
 	const json = {
 		data: [
 			{
@@ -205,7 +205,7 @@ test('Zeitfenster aus den Aktionen: parseWindows und activeWindows', () => {
 	assert.equal(activeWindows(windows, Date.parse('2026-11-15T16:00:00Z')).length, 0);
 	const { formatWindow } = require('../src/clients/modules/crons/event-watch.js');
 	assert.equal(formatWindow(windows[0]), 'Twitch global badge now available: K/DA Fan [watch 30 min] The event ends November 15, 2026 at 15:59. (UTC)');
-	const { eventStatus } = require('../src/misc/streamdatabase.js');
+	const { eventStatus } = require('../src/token/streamdatabase.js');
 	assert.equal(eventStatus(formatWindow(windows[0]), Date.parse('2026-11-14T00:00:00Z')), '[AVAILABLE!]');
 });
 
@@ -229,7 +229,7 @@ test('event-watch: Tweet-Notify-Abonnenten bekommen eigenen Text und Anzahl, Bad
 	const sent = [];
 	const channel = { id: 70, name: 'ninou2', Platform: 'twitch', mode: 'Write' };
 	const redis = { store: new Map() };
-	const windows = require('../src/misc/streamdatabase.js');
+	const windows = require('../src/token/streamdatabase.js');
 	const origFetch = windows.fetchWindows;
 	const origActive = windows.activeWindows;
 	let active = [];

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { getHiddenDomains, getMessageDomains } = require('../src/misc/text-analysis.js');
+const { getHiddenDomains, getMessageDomains } = require('../src/util/text-analysis.js');
 const { matchDomains } = require('../src/util/spam-domains.js');
 
 // Vorfall #pearsbott, 10.11.2026 und 02.11.2026

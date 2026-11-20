@@ -8,7 +8,7 @@ const {
 	fmtDateTimeUtc,
 	fmtLengthShort,
 	fmtStreamSpanUtc,
-} = require('../misc/streamer-streak.js');
+} = require('../util/streamer-streak.js');
 
 /**
  * Wann ein Channel zuletzt live war, aus sb-v2 (ninou2, 02.10.2026, Alias "ll" - lastline hat dafuer "llog").

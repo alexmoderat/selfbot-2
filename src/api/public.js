@@ -26,17 +26,17 @@ const { recentChat } = require('../clients/modules/chat/chat-console-log.js');
 
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 
-const { fetchChannelRoleList, fetchUserRoleList } = require('../misc/roles-tv.js');
+const { fetchChannelRoleList, fetchUserRoleList } = require('../token/roles-tv.js');
 
-const { getValidToken, helixAsUser } = require('../misc/user-tokens.js');
+const { getValidToken, helixAsUser } = require('../token/user-tokens.js');
 
-const { buildEntries } = require('../misc/command-catalog.js');
+const { buildEntries } = require('../util/command-catalog.js');
 
 const { PUBLIC_RUN_COMMANDS, runPublicCommand } = require('./command-runner.js');
 
-const { uploadToOwnHaste } = require('../misc/haste.js');
+const { uploadToOwnHaste } = require('../token/haste.js');
 
-const { formatSupibotOnly, loadSupibotCommands, supibotOnly } = require('../misc/supibot-only.js');
+const { formatSupibotOnly, loadSupibotCommands, supibotOnly } = require('../util/supibot-only.js');
 
 /**
  * Oeffentliche Status-/Statistik-Endpunkte aus sb-v2s auth-server.ts fuer status.html, stats.html, stream-stats.html,

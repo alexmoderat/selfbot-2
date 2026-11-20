@@ -1,5 +1,5 @@
 const path = require('node:path');
-const { baseUrl } = require('../misc/user-tokens.js');
+const { baseUrl } = require('../token/user-tokens.js');
 
 // Die Seiten in public/ liegen hinter nginx unter WEB_BASE_URL (Testphase: https://auth.alexmoderat.eu/selfbot,
 // Prefix wird abgeschnitten) und verwenden deshalb relative Pfade.

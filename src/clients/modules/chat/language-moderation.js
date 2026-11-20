@@ -2,8 +2,8 @@ const { got } = require('../../../token/got.js');
 const { defineChatModule } = require('../chat-modules.js');
 const phrases = require('../../../util/moderation-phrases.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
-const { formatAutoBanReason } = require('../../../misc/ban-reason.js');
-const { deobfuscate, isTrustedSender, rolesFromBadges } = require('../../../misc/text-analysis.js');
+const { formatAutoBanReason } = require('../../../util/ban-reason.js');
+const { deobfuscate, isTrustedSender, rolesFromBadges } = require('../../../util/text-analysis.js');
 
 /**
  * Uebersetzt Nachrichten in nicht-lateinischer Schrift ins Englische und prueft sie gegen die bestehenden Banphrases,

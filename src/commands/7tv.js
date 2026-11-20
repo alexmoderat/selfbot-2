@@ -1,5 +1,5 @@
 const { getPermissions } = require('../clients/modules/handler.js');
-const SupiDate = require('../misc/date.js');
+const SupiDate = require('../util/date.js');
 const {
 	addEmote,
 	checkSevenTvAvailable,
@@ -17,7 +17,7 @@ const {
 	SEVEN_TV_DEFAULT_LIMIT,
 	sevenTvEmoteIdRegex,
 	syncLocalDataToApi,
-} = require('../misc/seventv.js');
+} = require('../token/seventv.js');
 
 /**
  * Supibots 7tv: rotierende Liste von 7TV-Emotes, ueber dem Limit faellt das aelteste wieder raus (ninou2, 26.10.2026:

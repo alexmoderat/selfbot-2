@@ -1,6 +1,6 @@
 const { got } = require('../token/got.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { twitchChannelSchema } = require('../misc/schemas.js');
+const { twitchChannelSchema } = require('../util/schemas.js');
 
 // Supibots commands/shoutout (Block 8: Supibot-Version, alexmoderat 24.10.2026)
 module.exports = {

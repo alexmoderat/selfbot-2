@@ -1,5 +1,5 @@
 // OpenAPI-Spec der oeffentlichen Endpunkte fuer /docs, aus sb-v2s src/services/openapi-spec.ts
-const { baseUrl } = require('../misc/user-tokens.js');
+const { baseUrl } = require('../token/user-tokens.js');
 
 /**
  * OpenAPI-Spec nur für die öffentlichen (auth-freien) JSON-Endpoints —

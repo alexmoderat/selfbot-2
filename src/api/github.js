@@ -2,7 +2,7 @@ const crypto = require('node:crypto');
 
 const express = require('express');
 
-const { formatGithubEvent } = require('../misc/github-events.js');
+const { formatGithubEvent } = require('../util/github-events.js');
 
 const { sendAlert } = require('../util/moderation.js');
 

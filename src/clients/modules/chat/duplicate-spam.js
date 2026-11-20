@@ -1,8 +1,8 @@
 const { defineChatModule } = require('../chat-modules.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
 const { isSuppressed, suppressChannel } = require('../../../util/raid-suppression.js');
-const { formatAutoBanReason } = require('../../../misc/ban-reason.js');
-const { rolesFromBadges } = require('../../../misc/text-analysis.js');
+const { formatAutoBanReason } = require('../../../util/ban-reason.js');
+const { rolesFromBadges } = require('../../../util/text-analysis.js');
 
 /**
  * Koordinierte Spam-Angriffe, aus sb-v2: mehrere frische Accounts posten binnen kurzer Zeit denselben Text als

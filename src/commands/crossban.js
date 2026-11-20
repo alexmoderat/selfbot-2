@@ -1,7 +1,7 @@
 const { setTimeout: sleep } = require('node:timers/promises');
 const { banUser, resolveTarget } = require('../util/moderation.js');
 const { fetchModeratedChannels, fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { formatAutoBanReason } = require('../misc/ban-reason.js');
+const { formatAutoBanReason } = require('../util/ban-reason.js');
 
 const BAN_DELAY = 650; // gleiches Tempo wie massban, der Ratelimit-Bucket ist token-gebunden
 

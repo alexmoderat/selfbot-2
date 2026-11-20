@@ -1,7 +1,7 @@
 const { defineCron } = require('../timers.js');
 const { getCurrentCategory } = require('../../../util/channel-stats.js');
 const { streamData } = require('../../../util/stream-tracking.js');
-const { MIN_STREAM_SECONDS } = require('../../../misc/streamer-streak.js');
+const { MIN_STREAM_SECONDS } = require('../../../util/streamer-streak.js');
 
 /**
  * Zeichnet alle 5 Minuten auf, welche Channels live sind, aus sb-v2s crons/streamer-streak (ninou2, 29.09.2026:

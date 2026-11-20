@@ -1,7 +1,7 @@
 const { defineChatModule } = require('../chat-modules.js');
 const { getModLogChannel, sayModLog } = require('../../../util/moderation.js');
 const watchAlerts = require('../../../util/watch-alerts.js');
-const { createWatchNotifier } = require('../../../misc/watch-notice.js');
+const { createWatchNotifier } = require('../../../util/watch-notice.js');
 
 /**
  * Meldet jede Nachricht eines beobachteten Accounts (globale Liste, !watchalert) im Mod-Log - kein Ban, aus sb-v2.

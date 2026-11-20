@@ -1,6 +1,6 @@
 const { got } = require('../token/got.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
-const { authLink, forceRefreshToken, getToken, getValidToken, helixAsUser } = require('../misc/user-tokens.js');
+const { authLink, forceRefreshToken, getToken, getValidToken, helixAsUser } = require('../token/user-tokens.js');
 
 /**
  * Wie lange ein User einem Channel folgt, aus sb-v2. channels/followers mit user_id braucht nur Mod-Rechte des Bots

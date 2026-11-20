@@ -1,8 +1,8 @@
 const { streamData } = require('../util/stream-tracking.js');
-const { formatCategoryBreakdown, formatCategoryParts } = require('../misc/category-hours.js');
-const { MONTHS, parseMonthYear } = require('../misc/stream-hours.js');
-const { fmtDate } = require('../misc/streamer-streak.js');
-const { replyInChunks } = require('../misc/tracking-format.js');
+const { formatCategoryBreakdown, formatCategoryParts } = require('../util/category-hours.js');
+const { MONTHS, parseMonthYear } = require('../util/stream-hours.js');
+const { fmtDate } = require('../util/streamer-streak.js');
+const { replyInChunks } = require('../util/tracking-format.js');
 
 /**
  * Wie !hoursstreamed, aber nach Kategorie, aus sb-v2 (ninou2, 13.-23.10.2026). Ohne Argument: laufendes Jahr. Jahr,

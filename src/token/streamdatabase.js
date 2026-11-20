@@ -1,4 +1,4 @@
-const { got } = require('../token/got.js');
+const { got } = require('./got.js');
 
 /**
  * Globale Twitch-Badges von streamdatabase.com (ninou2, 13.11.2026: "whenever a new badge/emote get added, post about

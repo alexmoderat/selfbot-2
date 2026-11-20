@@ -1,5 +1,5 @@
-const { formatDuration } = require('../misc/duration.js');
-const { checkRole } = require('../misc/roles-tv.js');
+const { formatDuration } = require('../misc/humanizeDuration.js');
+const { checkRole } = require('../token/roles-tv.js');
 
 /** Seit wann jemand Mod (mc) oder VIP (vc) eines Channels ist, aus sb-v2s modcheck (roles.tv, GQL fuer fehlendes grantedAt) */
 

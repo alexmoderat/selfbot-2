@@ -1,6 +1,6 @@
-const { got } = require('../token/got.js');
+const { got } = require('./got.js');
 const z = require('zod');
-const { SupiError } = require('./error.js');
+const { SupiError } = require('../util/error.js');
 
 // 7TV-API fuer den 7tv-Command, aus Supibots commands/7tv/subcommands/index.ts (v4-GQL). Abweichung: Supibot nimmt die
 // 7TV-User-ID als Set-ID - das stimmt nur bei manchen Konten (ninou2 ja, alexmoderat nicht, 26.10.2026), hier das aktive Set.

@@ -1,7 +1,7 @@
 const { defineCron } = require('../timers.js');
-const { recordRecent, wasAnnounced, markAnnounced } = require('../../../misc/badge-history.js');
-const { fetchGlobalBadges, fetchGlobalEmotes, fetchBadgeEvents, BADGES_URL, EMOTES_URL } = require('../../../misc/streamdatabase.js');
-const { fetchGqlBadges } = require('../../../misc/twitch-badges-gql.js');
+const { recordRecent, wasAnnounced, markAnnounced } = require('../../../util/badge-history.js');
+const { fetchGlobalBadges, fetchGlobalEmotes, fetchBadgeEvents, BADGES_URL, EMOTES_URL } = require('../../../token/streamdatabase.js');
+const { fetchGqlBadges } = require('../../../token/twitch-badges-gql.js');
 
 /**
  * Meldet neue globale Twitch-Badges und Emotes in den Channels, die es im Dashboard eingeschaltet haben (ninou2, 13.11.2026:

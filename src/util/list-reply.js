@@ -1,4 +1,4 @@
-const { uploadToOwnHaste } = require('./haste.js');
+const { uploadToOwnHaste } = require('../token/haste.js');
 
 /**
  * Listen nicht ueber den Chat ausschuetten: bis LIST_INLINE_MAX Eintraege inline, sonst ein Link auf

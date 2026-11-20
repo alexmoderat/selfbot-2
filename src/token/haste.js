@@ -1,4 +1,4 @@
-const { request } = require('../token/http.js');
+const { request } = require('./http.js');
 
 // Haste-Uploads wie sb-v2: eigener Server zuerst, clipzy als Rueckfall
 

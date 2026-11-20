@@ -1,6 +1,6 @@
 const { got } = require('../token/got.js');
-const { gqlSmartbox } = require('./twitch-gql.js');
-const { forceRefreshToken, getValidToken, helixAsUser } = require('./user-tokens.js');
+const { gqlSmartbox } = require('../token/gql.js');
+const { forceRefreshToken, getValidToken, helixAsUser } = require('../token/user-tokens.js');
 
 /**
  * Titel/Kategorie eines Channels aendern, aus sb-v2s v2/utils/broadcast-settings.ts.

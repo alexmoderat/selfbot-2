@@ -1,7 +1,7 @@
-const { topListHint } = require('../misc/tracking-format.js');
+const { topListHint } = require('../util/tracking-format.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 const { getWatchStreak } = require('../util/channel-stats.js');
-const { formatSharedDate, formatShortDate } = require('../misc/tracking-format.js');
+const { formatSharedDate, formatShortDate } = require('../util/tracking-format.js');
 
 /** Letzter bekannter Watch-Streak eines Zuschauers in diesem Channel, aus sb-v2 (ninou2 schreibt "!vs", 06.10.2026) */
 module.exports = {

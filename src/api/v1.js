@@ -10,17 +10,17 @@ const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 
 const { pubsub } = require('../util/pubsub.js');
 
-const { getBanStatusBatch, getChatRestrictedReasons, getUserProfile, gqlPublic } = require('../misc/twitch-gql.js');
+const { getBanStatusBatch, getChatRestrictedReasons, getUserProfile, gqlPublic } = require('../token/gql.js');
 
-const { getKnownNames, getMonitoredStatus } = require('../misc/catquery-api.js');
+const { getKnownNames, getMonitoredStatus } = require('../token/catquery-api.js');
 
-const { splitKind, summarize } = require('../misc/sightings.js');
+const { splitKind, summarize } = require('../util/sightings.js');
 
-const { findLiveChatters } = require('../misc/live-chatters.js');
+const { findLiveChatters } = require('../util/live-chatters.js');
 
-const { fetchChatters } = require('../misc/twitch-lists.js');
+const { fetchChatters } = require('../token/twitch-lists.js');
 
-const { getToken, getValidToken, helixAsUser } = require('../misc/user-tokens.js');
+const { getToken, getValidToken, helixAsUser } = require('../token/user-tokens.js');
 
 const { chatLogs } = require('./public.js');
 

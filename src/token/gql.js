@@ -1,5 +1,5 @@
-const { got } = require('../token/got.js');
-const { SupiError } = require('./error.js');
+const { got } = require('./got.js');
+const { SupiError } = require('../util/error.js');
 const { gqlPostWithFingerprint } = require('./fingerprint-client.js');
 
 // Twitch-GQL wie in sb-v2 (src/services/twitch-api.ts): oeffentlich ohne Login (gqlPublic) und mit dem

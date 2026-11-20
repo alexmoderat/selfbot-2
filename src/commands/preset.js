@@ -1,5 +1,5 @@
 const { getPermissions } = require('../clients/modules/handler.js');
-const { listOrLink } = require('../misc/list-reply.js');
+const { listOrLink } = require('../util/list-reply.js');
 const phrases = require('../util/moderation-phrases.js');
 
 /**

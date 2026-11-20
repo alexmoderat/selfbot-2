@@ -2,7 +2,7 @@ const { got } = require('../token/got.js');
 const { randomInt: cryptoRandomInt } = require('node:crypto');
 const { parse: chronoParse } = require('chrono-node');
 const { SupiError } = require('./error.js');
-const { uploadToOwnHaste } = require('./haste.js');
+const { uploadToOwnHaste } = require('../token/haste.js');
 
 // Wie Supibots utils/command-utils.ts
 /** Unsichtbares Zeichen, das in Namen eingefuegt einen Twitch-Ping verhindert */

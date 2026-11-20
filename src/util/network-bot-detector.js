@@ -1,10 +1,10 @@
 const sbv2 = require('../database/sbv2.js');
 
 const { autoBan, targetFromChannel } = require('./moderation.js');
-const { formatAutoBanReason } = require('../misc/ban-reason.js');
-const { deobfuscate, getUniqueDomains, isAllowlistedDomain, isTrustedSender, rolesFromBadges } = require('../misc/text-analysis.js');
-const { accountAgeDays } = require('../misc/twitch-lists.js');
-const { COMBINE_CATEGORIES, COMBINE_WINDOW, MIN_GAP, NEW_ACCOUNT_MAX_AGE, WINDOW, collapseUnambiguousTlds } = require('../misc/network-bot-rules.js');
+const { formatAutoBanReason } = require('./ban-reason.js');
+const { deobfuscate, getUniqueDomains, isAllowlistedDomain, isTrustedSender, rolesFromBadges } = require('./text-analysis.js');
+const { accountAgeDays } = require('../token/twitch-lists.js');
+const { COMBINE_CATEGORIES, COMBINE_WINDOW, MIN_GAP, NEW_ACCOUNT_MAX_AGE, WINDOW, collapseUnambiguousTlds } = require('./network-bot-rules.js');
 
 // Gemeinsame Ausfuehrung der CatQuery-Muster-Module, aus sb-v2s v2/utils/network-bot-detector.ts. Jede Regel hat
 // einen eigenen Namensraum in Normalized_Text ("fm::", "vb::", ...), damit sich die Kategorien nicht gegenseitig

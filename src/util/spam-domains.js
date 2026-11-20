@@ -1,4 +1,4 @@
-const { getMessageDomains } = require('../misc/text-analysis.js');
+const { getMessageDomains } = require('./text-analysis.js');
 
 /**
  * Spam-Domains aus versteckten Links (alexmoderat, 10.11.2026: "glaube wir muessen mal n eigenes System dafuer bauen

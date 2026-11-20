@@ -1,6 +1,6 @@
 const { defineChatModule } = require('../chat-modules.js');
 const { runNetworkBotCheck } = require('../../../util/network-bot-detector.js');
-const { getRule } = require('../../../misc/network-bot-rules.js');
+const { getRule } = require('../../../util/network-bot-rules.js');
 
 // CatQuery-Muster "dc" aus sb-v2 - Schwellen und Begruendungen in utils/network-bot-rules.ts
 const RULE = getRule('dc');

@@ -1,4 +1,4 @@
-const { listOrLink } = require('../misc/list-reply.js');
+const { listOrLink } = require('../util/list-reply.js');
 
 /**
  * Supibots commands/subscribe mit dem Ereignis "Channel live" (event-types/channel-live.ts): Whisper, wenn ein Channel

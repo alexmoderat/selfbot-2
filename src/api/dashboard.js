@@ -28,13 +28,13 @@ const { applyLevel, effectiveLevel, parseLevel } = require('../clients/modules/l
 
 const { setAutobanSwitch } = require('../util/autoban-log.js');
 
-const { BANPHRASE_REASONS, validateBanphraseReason } = require('../misc/ban-reason.js');
+const { BANPHRASE_REASONS, validateBanphraseReason } = require('../util/ban-reason.js');
 
 const { isAdminLogin, requireAdmin, requireSession } = require('./sessions.js');
 
 const { getConfig } = require('../config.js');
 
-const { loadOtherBotCommands } = require('../misc/command-listing.js');
+const { loadOtherBotCommands } = require('../util/command-listing.js');
 
 /**
  * Dashboard-API aus sb-v2s auth-server.ts (/api/me, /api/admin/*, /api/banphrases, /api/commands, /api/settings/*,

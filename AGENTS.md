@@ -40,8 +40,11 @@ kommen aus selfbot; Aufbau, IRC-Anbindung und Stil von DontAddThisBot. Bauplan: 
 - `src/database/` — `postgres.js` (`bot.SQL`, pg-Pool wie DontAddThisBot), `db.js` (`bot.DB.<Model>` mit `nextId()` fuer
   numerische IDs), `orm/` (uebersetzt Mongo-Stil-Abfragen - find, updateOne mit `$set`/`$inc`/Pipeline, aggregate - in SQL,
   `translate.js` hat nur den benutzten Teil und wirft sonst), `models/` (Schemas, eine Tabelle je Modell), `redis.js`.
-- `src/token/` — `http.js` (fetch-Wrapper), `helix.js` (Tokens, Helix).
-- `src/misc/` — `utility.js` (Ersatz fuer supi-core Utils), `logger.js`, `regex.js`, `long-timeout.js`, `haste.js`.
+- `src/token/` — Clients externer Dienste wie bei DontAddThisBot: `helix.js`, `gql.js` (Twitch-GQL), `seventv.js`,
+  `http.js`/`got.js` (HTTP), `user-tokens.js`, `justlog.js`, `haste.js`, `catquery-api.js`, ...
+- `src/misc/` — nur noch wie bei DontAddThisBot: `utility.js` (Ersatz fuer supi-core Utils, `bot.Utils` ueber `index.js`),
+  `logger.js`, `regex.js`, `humanizeDuration.js`. Alle anderen Hilfen (Command-Helfer in `util/commands/`, Datum,
+  Zeitzonen, Auswertungen, ...) liegen in `src/util/`.
 - `scripts/migrate-mariadb.js` — MariaDB -> Postgres, wiederholbar (`yarn migrate [Tabelle ...]`).
 - `tests/` — `node:test`, `*.test.js`.
 

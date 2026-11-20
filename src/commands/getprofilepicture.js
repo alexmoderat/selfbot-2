@@ -1,5 +1,5 @@
 const { got } = require('../token/got.js');
-const { ivrUserDataSchema } = require('../misc/schemas.js');
+const { ivrUserDataSchema } = require('../util/schemas.js');
 
 // Supibots commands/getprofilepicture (Block 7: Supibot-Version)
 module.exports = {

@@ -1,6 +1,6 @@
-const { getRecent } = require('../misc/badge-history.js');
-const { fmtLengthShort } = require('../misc/streamer-streak.js');
-const { eventStatus } = require('../misc/streamdatabase.js');
+const { getRecent } = require('../util/badge-history.js');
+const { fmtLengthShort } = require('../util/streamer-streak.js');
+const { eventStatus } = require('../token/streamdatabase.js');
 
 /**
  * Die zuletzt gemeldeten globalen Twitch-Badges und -Emotes noch einmal ausgeben (ninou2, 13.11.2026: "command should be

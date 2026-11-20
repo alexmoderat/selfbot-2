@@ -2,10 +2,10 @@ const { got } = require('../../../token/got.js');
 const { defineChatModule } = require('../chat-modules.js');
 const phrases = require('../../../util/moderation-phrases.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
-const { formatAutoBanReason, formatBanphraseReason, localizeViewbotReason } = require('../../../misc/ban-reason.js');
-const { deobfuscate, getLinkSpamReason } = require('../../../misc/text-analysis.js');
-const { accountAgeDays } = require('../../../misc/twitch-lists.js');
-const { mayBanPhraseHit } = require('../../../misc/phrase-ban-gate.js');
+const { formatAutoBanReason, formatBanphraseReason, localizeViewbotReason } = require('../../../util/ban-reason.js');
+const { deobfuscate, getLinkSpamReason } = require('../../../util/text-analysis.js');
+const { accountAgeDays } = require('../../../token/twitch-lists.js');
+const { mayBanPhraseHit } = require('../../../util/phrase-ban-gate.js');
 
 /**
  * Nachrichten, die Twitchs AutoMod zurueckhaelt (PubSub automod-queue), aus sb-v2. Diese Nachrichten laufen NICHT

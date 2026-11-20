@@ -1,5 +1,5 @@
 const { isKnownBot } = require('./channel-stats.js');
-const { fetchChannelRoleList } = require('../misc/roles-tv.js');
+const { fetchChannelRoleList } = require('../token/roles-tv.js');
 
 /**
  * "In wie vielen unserer Channels ist wer Mod" (ninou2, 19.08.2026), aus sb-v2s singletons/mod-leaderboard.ts.

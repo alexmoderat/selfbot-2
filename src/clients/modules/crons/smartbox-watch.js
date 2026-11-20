@@ -1,6 +1,6 @@
 const { defineCron } = require('../timers.js');
 const { sendAlert } = require('../../../util/moderation.js');
-const { gqlSmartbox } = require('../../../misc/twitch-gql.js');
+const { gqlSmartbox } = require('../../../token/gql.js');
 
 /**
  * Meldet per Discord, sobald der SmartBox-GQL-Zugang nicht mehr geht, aus sb-v2 (alexmoderat, 02.10.2026: "Bin gespannt

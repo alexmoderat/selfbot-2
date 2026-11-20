@@ -1,5 +1,5 @@
-const { uploadToOwnHaste } = require('../misc/haste.js');
-const { formatCountryList, formatTimezoneList } = require('../misc/timezones.js');
+const { uploadToOwnHaste } = require('../token/haste.js');
+const { formatCountryList, formatTimezoneList } = require('../util/timezones.js');
 
 /** Alle Zeitzonen-Abkuerzungen fuer !time und !uts als Link (ninou2, 03.11.2026: "a new command that show [the] zone names", "!timelist", "add by countries too") */
 module.exports = {

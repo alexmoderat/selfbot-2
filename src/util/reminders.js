@@ -1,7 +1,7 @@
 const { getConfig } = require('../config.js');
 const { timeDelta, splitByCondition, partitionString, tag } = require('../misc/utility.js');
-const { LongTimeout } = require('../misc/long-timeout.js');
-const { uploadToOwnHaste } = require('../misc/haste.js');
+const { LongTimeout } = require('./long-timeout.js');
+const { uploadToOwnHaste } = require('../token/haste.js');
 const { Logger } = require('../misc/logger.js');
 const Filter = require('./filter.js');
 const Users = require('./users.js');

@@ -1,5 +1,5 @@
 const { streamData } = require('../util/stream-tracking.js');
-const { computeStreak, countDaysInYear, daysInYear, fmtDate, tiesNote, topStreaks, yearlyBreakdown } = require('../misc/streamer-streak.js');
+const { computeStreak, countDaysInYear, daysInYear, fmtDate, tiesNote, topStreaks, yearlyBreakdown } = require('../util/streamer-streak.js');
 
 /**
  * Aufeinanderfolgende Streaming-Tage, aus sb-v2. Ohne Zahl/Wort nur das laufende Jahr (mit "current Streak" und

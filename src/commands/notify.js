@@ -1,4 +1,4 @@
-const { uploadToOwnHaste } = require('../misc/haste.js');
+const { uploadToOwnHaste } = require('../token/haste.js');
 const { resolveStreamer, watchStreamer, watchTitle } = require('../util/notifications.js');
 const { cleanTimes } = require('../util/tweet-notify.js');
 

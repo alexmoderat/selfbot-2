@@ -1,4 +1,4 @@
-const { uploadList } = require('../misc/haste.js');
+const { uploadList } = require('../token/haste.js');
 const { getTop, refresh } = require('../util/mod-leaderboard.js');
 
 /**

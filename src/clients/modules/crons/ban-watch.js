@@ -1,6 +1,6 @@
 const { defineCron } = require('../timers.js');
 const { announceBan } = require('../../../util/notifications.js');
-const { getBanStatusBatch } = require('../../../misc/twitch-gql.js');
+const { getBanStatusBatch } = require('../../../token/gql.js');
 
 /**
  * Prueft die per "notify ban" beobachteten Accounts auf Twitch-Sperren, aus sb-v2 (jetzt alle 5 s statt 10 s; alexmoderat, 15.11.2026, nachdem PotatBotat einen Ban 7 s nach der Kontoaenderung meldete, ganze Liste im Batch).

@@ -1,6 +1,6 @@
 const phrases = require('../util/moderation-phrases.js');
-const { uploadToHaste } = require('../misc/haste.js');
-const { validateBanphraseReason } = require('../misc/ban-reason.js');
+const { uploadToHaste } = require('../token/haste.js');
+const { validateBanphraseReason } = require('../util/ban-reason.js');
 
 /** Grund-Pflicht nur fuer neue Phrasen - ein erneutes addbp auf eine vorhandene aendert nur die angegebenen Felder */
 const reasonError = (list, phrase, name) => (list.some((i) => i.Phrase === phrase) ? null : validateBanphraseReason(name, phrase));

@@ -1,10 +1,10 @@
 const { defineChatModule } = require('../chat-modules.js');
 const { autoBan, getModLogChannel, sayModLog, targetFromChannel } = require('../../../util/moderation.js');
-const { formatAutoBanReason } = require('../../../misc/ban-reason.js');
-const { getMonitoredStatus } = require('../../../misc/catquery-api.js');
-const { createBanLimiter, monitoredBanLabel, shouldBanMonitored } = require('../../../misc/monitored-ban.js');
-const { createNotifier } = require('../../../misc/monitored-notice.js');
-const { isTrustedSender, rolesFromBadges } = require('../../../misc/text-analysis.js');
+const { formatAutoBanReason } = require('../../../util/ban-reason.js');
+const { getMonitoredStatus } = require('../../../token/catquery-api.js');
+const { createBanLimiter, monitoredBanLabel, shouldBanMonitored } = require('../../../util/monitored-ban.js');
+const { createNotifier } = require('../../../util/monitored-notice.js');
+const { isTrustedSender, rolesFromBadges } = require('../../../util/text-analysis.js');
 
 /**
  * Erstnachricht eines bei CatQuery ueberwachten Accounts, aus sb-v2:

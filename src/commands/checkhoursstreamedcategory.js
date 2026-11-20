@@ -1,8 +1,8 @@
-const { categoryHoursReport } = require('../misc/category-hours-report.js');
+const { categoryHoursReport } = require('../util/category-hours-report.js');
 const { streamData } = require('../util/stream-tracking.js');
-const { formatCategoryDuration, matchCategories } = require('../misc/category-hours.js');
-const { MONTHS, parseMonthYear, isPeriodWord } = require('../misc/stream-hours.js');
-const { packLines, replyInChunks } = require('../misc/tracking-format.js');
+const { formatCategoryDuration, matchCategories } = require('../util/category-hours.js');
+const { MONTHS, parseMonthYear, isPeriodWord } = require('../util/stream-hours.js');
+const { packLines, replyInChunks } = require('../util/tracking-format.js');
 
 /**
  * Stunden eines Channels in einer bestimmten Kategorie (ninou2, 01.11.2026: "!CheckHoursStreamedCategory !chsc",

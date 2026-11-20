@@ -1,5 +1,5 @@
 const { defineCron } = require('../timers.js');
-const { callAdmin, configuredChannelIds, readAdminKey, resolveIds } = require('../../../misc/justlog.js');
+const { callAdmin, configuredChannelIds, readAdminKey, resolveIds } = require('../../../token/justlog.js');
 
 /**
  * Fuegt neue Bot-Channels automatisch zu justlog hinzu (nie entfernen), aus sb-v2s crons/justlog-sync, alle 6 h.

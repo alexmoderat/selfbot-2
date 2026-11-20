@@ -1,4 +1,4 @@
-const { got } = require('../token/got.js');
+const { got } = require('./got.js');
 // Client fuer die oeffentlichen (auth-freien) Endpoints von CatQuery (https://docs.catquery.com/api/), aus sb-v2s
 // src/services/catquery-api.ts. Drittanbieter - alle Fehler werden abgefangen und als null/leer zurueckgegeben.
 

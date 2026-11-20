@@ -2,10 +2,10 @@ const { defineChatModule } = require('../chat-modules.js');
 const phrases = require('../../../util/moderation-phrases.js');
 const { isBanEvader, isSuspicious } = require('../../../util/low-trust-state.js');
 const { announceAutobanCount, announceBan, banUser, targetFromChannel } = require('../../../util/moderation.js');
-const { deobfuscate, getHiddenDomains, getLinkSpamReason, isTrustedSender, rolesFromBadges } = require('../../../misc/text-analysis.js');
+const { deobfuscate, getHiddenDomains, getLinkSpamReason, isTrustedSender, rolesFromBadges } = require('../../../util/text-analysis.js');
 const spamDomains = require('../../../util/spam-domains.js');
-const { formatBanphraseReason, localizeViewbotReason } = require('../../../misc/ban-reason.js');
-const { mayBanPhraseHit } = require('../../../misc/phrase-ban-gate.js');
+const { formatBanphraseReason, localizeViewbotReason } = require('../../../util/ban-reason.js');
+const { mayBanPhraseHit } = require('../../../util/phrase-ban-gate.js');
 
 /**
  * Kern der Moderation aus sb-v2: prueft jede Nachricht gegen Banphrases und Link-Spam.

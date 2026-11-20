@@ -11,7 +11,7 @@ global.bot = {
 	DB: require('./database/db.js'),
 	SQL: require('./database/postgres.js'),
 	Redis: require('./database/redis.js').create(config.redis),
-	Utils: require('./misc/utility.js'),
+	Utils: require('./misc'),
 	Logger,
 	/** Twitch-IDs der gerade live gemeldeten Channels */
 	Live: new Set(),

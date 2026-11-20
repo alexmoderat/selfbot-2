@@ -1,5 +1,5 @@
-const { fetchTweetsOf } = require('../misc/streamdatabase.js');
-const { fmtLengthShort } = require('../misc/streamer-streak.js');
+const { fetchTweetsOf } = require('../token/streamdatabase.js');
+const { fmtLengthShort } = require('./streamer-streak.js');
 
 /**
  * Tweet-Alarme (ninou2, 13.11.2026: "a twitter command, just like the title and live notifications ... track tweets by

@@ -1,7 +1,7 @@
 const { commands } = require('../commands.js');
 const { defineCron } = require('../timers.js');
 const timers = require('../../../util/timers.js');
-const { isTimerDue, withGroupLastSent } = require('../../../misc/timers.js');
+const { isTimerDue, withGroupLastSent } = require('../../../util/timer-rules.js');
 
 /**
  * Sendet faellige Timer (commands/timer, alexmoderat 31.10.2026). Tickt jede Minute; Live-Status nur fuer Channels

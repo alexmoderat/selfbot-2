@@ -1,7 +1,7 @@
 const { got } = require('../token/got.js');
 
-const { uploadToOwnHaste } = require('../misc/haste.js');
-const { formatListPage } = require('../misc/list-reply.js');
+const { uploadToOwnHaste } = require('../token/haste.js');
+const { formatListPage } = require('../util/list-reply.js');
 
 /**
  * Welche der eigenen Channels gerade live sind, mit Laufzeit in vollen Stunden (ninou2, 07.11.2026: "make it a command",

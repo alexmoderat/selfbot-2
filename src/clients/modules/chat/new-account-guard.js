@@ -1,8 +1,8 @@
 const { defineChatModule } = require('../chat-modules.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
-const { formatAutoBanReason } = require('../../../misc/ban-reason.js');
-const { rolesFromBadges } = require('../../../misc/text-analysis.js');
-const { accountAgeDays } = require('../../../misc/twitch-lists.js');
+const { formatAutoBanReason } = require('../../../util/ban-reason.js');
+const { rolesFromBadges } = require('../../../util/text-analysis.js');
+const { accountAgeDays } = require('../../../token/twitch-lists.js');
 
 /**
  * Bannt frische Accounts bei ihrer ersten Nachricht, unabhaengig von AutoMod, aus sb-v2 (nach dem Perma-Ban eines

@@ -1,5 +1,5 @@
 const { randomUUID } = require('node:crypto');
-const { SupiError } = require('../misc/error.js');
+const { SupiError } = require('./error.js');
 
 // Moderations-Banphrases (Chatter, die eine Phrase schreiben, werden gebannt/getimeoutet) aus sb-v2
 // (v2/singletons/banphrases.ts + banphrases-maria.ts + Presets). Eine Tabelle Moderation_Phrase mit drei Ebenen:

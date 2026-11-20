@@ -1,5 +1,5 @@
-const { got } = require('../token/got.js');
-const { fetchRoleGrant } = require('./mod-since.js');
+const { got } = require('./got.js');
+const { fetchRoleGrant } = require('../util/mod-since.js');
 
 /**
  * roles.tv-API (https://roles.tv/api) fuer Mod-/VIP-Listen, aus sb-v2s v2/utils/roles-tv.ts.
