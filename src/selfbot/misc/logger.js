@@ -3,11 +3,11 @@ const { Logger: DontLogger, LogLevel } = require('../../misc/logger.js');
 
 // Logging wie bei DontAddThisBot: alles laeuft ueber Donts winston-Logger (src/misc/logger.js), gleiches Format
 // "[Zeit] Emoji LEVEL Text", gleiche Dateien (.logs/combined.log, .logs/error.log). Dieser Baum ruft ihn mit mehreren
-// Argumenten auf (Text, Fehler, Objekte); die werden zu einem Text zusammengefuegt. LOG_LEVEL (Standard info) blendet
-// debug/silly aus, sonst waere das Log bei 250 Channels kaum lesbar.
+// Argumenten auf (Text, Fehler, Objekte); die werden zu einem Text zusammengefuegt. Standard wie bei Dont: alles (silly).
+// LOG_LEVEL=info|warn|error blendet die geschwaetzigen Stufen aus.
 
 const ORDER = { error: 0, warn: 1, info: 2, debug: 3, silly: 4 };
-const threshold = ORDER[process.env.LOG_LEVEL ?? 'info'] ?? ORDER.info;
+const threshold = ORDER[process.env.LOG_LEVEL ?? 'silly'] ?? ORDER.silly;
 
 const toText = (value) => {
 	if (typeof value === 'string') {
