@@ -45,7 +45,8 @@ Nur Repo-Rahmen: `.github/`, `.husky/`, `README.md`, `imgs/`, `trash/`, `scripts
   `7tvsa` (egvault.7tv.io gibt es nicht mehr), `stats` (api.kattah.me gibt es nicht mehr), `7tvemotes` (schickt hunderte Zeilen in den Chat),
   `7tv`, `add`, `remove`, `set` (Namen belegt durch unsere Commands, sonst antworten beide). `7tvaliasv4` (`rename`) und `7tvyoinkv4` (`yoink`) sind an: Donts `handler.js` prueft den 7TV-Editor-Zugang
   fuer die ID aus `config.dont.stvUserId` (unser Konto `01HXECQC500001CJ47EJYYXTGD`, Standard bei Dont `629d77a20e60c6d53da64e38`). Die Antwort
-  "Please grant @DontAddThisBot ..." bleibt Donts Text.
+  "Please grant @DontAddThisBot ..." bleibt Donts Text. Die Channel-Editoren (wer `rename`/`yoink` nutzen darf) pflegt die Dashboard-Seite
+  "Editors" (`src/selfbot/util/channel-editors.js`, Routen `/api/editors`); gespeichert wird in `bot.DB.channels`, dieselbe Liste liest Donts Handler.
 - Dont-Commands zu toten Diensten beenden unter Node 24 sonst den Prozess (got 11, 'error' ohne Abnehmer); `src/selfbot/util/crash-guard.js` loggt
   solche HTTP-Fehler nur.
 - Lint: `eslint.config.js` schaltet fuer Donts Dateien einige Regeln ab (Donts eigene Konfiguration hatte `no-unused-vars` aus).

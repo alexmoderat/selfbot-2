@@ -2385,6 +2385,10 @@
 						<span class="nav-icon">🐦</span> Tweet Notify
 						<span class="nav-badge" id="navTweetCount">0</span>
 					</button>
+					<button class="nav-item" onclick="showPage('editors')">
+						<span class="nav-icon">🧑‍🎨</span> Editors
+						<span class="nav-badge" id="navEditorCount">0</span>
+					</button>
 					<button class="nav-item" id="navRaidNotify" style="display: none" onclick="showPage('raidnotify')">
 						<span class="nav-icon">⚔️</span> Raid Notify
 						<span class="nav-badge" id="navRaidCount">0</span>
@@ -2806,6 +2810,32 @@
 				<div id="tweetList"></div>
 			</div>
 
+			<!-- ═══ Editors ═══ -->
+			<div class="page page-hidden" id="page-editors">
+				<div class="section-header">
+					<div class="section-title">Editors <span class="count-pill" id="countEditors">0</span></div>
+				</div>
+				<p class="section-desc">
+					Editors may use the 7TV emote commands (<code style="background: #1f7fb322; color: #3a9bd0; padding: 1px 6px; border-radius: 4px; font-size: 14px">rename</code>,
+					<code style="background: #1f7fb322; color: #3a9bd0; padding: 1px 6px; border-radius: 4px; font-size: 14px">yoink</code>) in <strong>your</strong> channel, besides you.
+					The bot also needs 7TV editor access to your 7TV account.
+				</p>
+
+				<form class="add-card" id="addEditorForm">
+					<div class="add-card-row">
+						<div class="field">
+							<label>Twitch username</label>
+							<input type="text" id="editorName" placeholder="username" required maxlength="26" />
+						</div>
+						<div style="display: flex; align-items: flex-end">
+							<button type="submit" class="btn btn-primary">+ Add</button>
+						</div>
+					</div>
+				</form>
+
+				<div id="editorList"></div>
+			</div>
+
 			<!-- ═══ Raid Notify ═══ -->
 			<div class="page page-hidden" id="page-raidnotify">
 				<div class="section-header">
@@ -3073,6 +3103,7 @@
 				notify: [],
 				titlenotify: [],
 				tweetnotify: [],
+				editors: [],
 				banwatch: [],
 				adminChannels: [],
 				adminPhrases: [],
@@ -3151,6 +3182,7 @@
 				titlenotify: 'Title Notify',
 				raidnotify: 'Raid Notify',
 				tweetnotify: 'Tweet Notify',
+				editors: 'Editors',
 				join: 'Join my channel',
 				use: 'Use Commands',
 				reminders: 'My reminders',
@@ -3231,6 +3263,7 @@
 						titlenotify: loadTitleNotify,
 						raidnotify: loadRaidNotify,
 						tweetnotify: loadTweetNotify,
+						editors: loadEditors,
 						banwatch: loadBanwatch,
 						admin: loadAdminChannels,
 						blacklist: loadBlacklist,
@@ -4972,6 +5005,65 @@
 				document.getElementById('tweetMessage').value = '';
 				document.getElementById('tweetTimes').value = '1';
 				showToast('Tweet alert added!', 'success');
+			});
+
+			// ── Editors ────────────────────────────────────────────────────────────────
+			async function loadEditors() {
+				loading('editorList');
+				const result = await apiFetch('api/editors');
+				if (result === null) {
+					loadError('editorList');
+					return;
+				}
+				data.editors = result;
+				renderEditors();
+			}
+
+			function renderEditors() {
+				const n = data.editors.length;
+				document.getElementById('countEditors').textContent = n;
+				document.getElementById('navEditorCount').textContent = n;
+				const el = document.getElementById('editorList');
+				if (!n) {
+					el.innerHTML = buildEmpty('No editors yet.');
+					return;
+				}
+				el.innerHTML = `
+        <div class="data-table">
+          <div class="data-table-head"><div>User</div><div>Added</div><div></div></div>
+          ${data.editors
+				.map(
+					(item) => `
+            <div class="data-row">
+              <div class="cell-mono">@${esc(item.username)}</div>
+              <div class="cell-muted" title="added">${addedDate(item.grantedAt)}</div>
+              <div class="cell-actions">
+                <button class="btn btn-danger" onclick="deleteEditor('${esc(item.username)}')">Delete</button>
+              </div>
+            </div>`,
+				)
+				.join('')}
+        </div>`;
+			}
+
+			async function deleteEditor(username) {
+				const result = await apiFetch(`api/editors/${encodeURIComponent(username)}`, { method: 'DELETE' });
+				if (result === null) return;
+				data.editors = result;
+				renderEditors();
+				showToast('Editor removed.', 'success');
+			}
+
+			document.getElementById('addEditorForm').addEventListener('submit', async (e) => {
+				e.preventDefault();
+				const username = document.getElementById('editorName').value.trim();
+				if (!username) return;
+				const result = await apiFetch('api/editors', { method: 'POST', body: JSON.stringify({ username }) });
+				if (result === null) return;
+				data.editors = result;
+				renderEditors();
+				document.getElementById('editorName').value = '';
+				showToast('Editor added!', 'success');
 			});
 
 			// ── Raid Notify ────────────────────────────────────────────────────────────
