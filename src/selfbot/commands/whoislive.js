@@ -23,6 +23,9 @@ const formatLiveList = (streams, now = Date.now()) =>
 /** ninou2, 07.11.2026: "make it like this : @alexmoderat [34h] // @pearsbott [17h] //", "might [be] cleaner" */
 const SEPARATOR = ' // ';
 
+/** ninou2, 21.11.2026: "to add the total combine views the channels" -> "--- TOTAL Viewers : [167]" */
+const totalViewers = (streams) => ` --- TOTAL Viewers : [${streams.reduce((sum, i) => sum + (i.viewers ?? 0), 0)}]`;
+
 const liveHead = (count) => (count === 1 ? '1 channel with the bot is live! :' : `${count} channels with the bot are live! :`);
 
 const fetchLiveStreams = async (ids) => {
@@ -36,7 +39,7 @@ const fetchLiveStreams = async (ids) => {
 			throw new Error(`Helix streams: ${response.statusCode}`);
 		}
 		for (const stream of response.body.data ?? []) {
-			result.push({ login: stream.user_login, startedAt: stream.started_at });
+			result.push({ login: stream.user_login, startedAt: stream.started_at, viewers: stream.viewer_count ?? 0 });
 		}
 	}
 
@@ -56,24 +59,26 @@ module.exports = {
 			.map((i) => i.twitchId)
 			.filter((i) => Boolean(i));
 
-		const items = formatLiveList(await fetchLiveStreams(ids));
+		const streams = await fetchLiveStreams(ids);
+		const items = formatLiveList(streams);
 		if (items.length === 0) {
 			return { text: `@${display}, nobody is live right now.` };
 		}
 
 		// ninou2, 07.11.2026: "12 channels with the bot are live! :"
 		const head = `@${display}, ${liveHead(items.length)} `;
-		const inline = head + items.join(SEPARATOR);
+		const total = totalViewers(streams);
+		const inline = head + items.join(SEPARATOR) + total;
 		if (inline.length <= MESSAGE_LIMIT) {
 			return { text: inline };
 		}
 
 		try {
-			return { text: head + (await uploadToOwnHaste(formatListPage('Live channels', items))) };
+			return { text: head + (await uploadToOwnHaste(formatListPage('Live channels', items))) + total };
 		} catch {
 			return { text: `${inline.slice(0, MESSAGE_LIMIT - 1)}…` };
 		}
 	},
 };
 
-Object.assign(module.exports, { formatLiveList, SEPARATOR, liveHead });
+Object.assign(module.exports, { formatLiveList, SEPARATOR, liveHead, totalViewers });
