@@ -49,14 +49,14 @@ class LegacyPubSubClient extends EventEmitter {
 		const ws = new RWS(PUBSUB_URL, [], { WebSocket: WS, startClosed: true });
 		this.#ws = ws;
 
-		ws.addEventListener('error', (e) => Logger.log(LogLevel.DEBUG, `[pubsub ${this.#id}] Fehler`, e.message ?? e));
+		ws.addEventListener('error', (e) => Logger.log(LogLevel.ERROR, e.message ?? e));
 		ws.addEventListener('close', () => {
 			this.#confirmed.clear();
 			this.emit('disconnect', true);
-			Logger.log(LogLevel.WARN, `[pubsub ${this.#id}] PubSub Disconnected`);
+			Logger.log(LogLevel.WARN, `[${this.#id}] PubSub Disconnected`);
 		});
 		ws.addEventListener('open', () => {
-			Logger.log(LogLevel.DEBUG, `[pubsub ${this.#id}] PubSub Connected`);
+			Logger.log(LogLevel.DEBUG, `[${this.#id}] PubSub Connected`);
 			for (const topic of this.#topics.keys()) {
 				this.#sendListen(topic);
 			}
@@ -149,7 +149,7 @@ class LegacyPubSubClient extends EventEmitter {
 				return;
 			}
 			case 'RECONNECT':
-				Logger.log(LogLevel.WARN, `[pubsub ${this.#id}] PubSub server sent a reconnect message. Restarting the socket`);
+				Logger.log(LogLevel.WARN, `[${this.#id}] PubSub server sent a reconnect message. Restarting the socket`);
 				this.#ws.reconnect();
 				return;
 			default:

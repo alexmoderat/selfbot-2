@@ -99,7 +99,6 @@ class PubSub {
 		const client = new Client();
 		const slot = { client, topics: new Set() };
 		this.#slots.push(slot);
-		const index = this.#slots.length;
 
 		client.onMessage((topic, message) => this.#dispatch(topic, message));
 		client.onListenError((topic, error, userInitiated) => {
@@ -109,9 +108,9 @@ class PubSub {
 				return;
 			}
 
-			Logger.warn(`[pubsub] Listen-Fehler (${topic}): ${error.message}`);
+			const [sub, channel] = topic.split('.');
+			Logger.error(`Error occurred while subscribing to topic ${sub} for channel ${bot.Channels.getByTwitchId(channel)?.name ?? channel}: ${error.message}`);
 		});
-		client.onConnect(() => Logger.info(`[pubsub] Verbindung ${index} bereit (${TRANSPORT})`));
 		client.connect();
 		return slot;
 	}

@@ -22,7 +22,7 @@ const startPubSub = () => {
 		pubsub.subscribeChannel(channel);
 	}
 	pubsub.subscribeSelf();
-	Logger.info(`[pubsub] ${channels.length} Channel(s) abonniert`);
+	Logger.debug(`PubSub: ${channels.length} streamers`);
 
 	// notify live / titlenotify: beobachtete Streamer (auch nicht gejointe) - crons/notify-resync holt Neue nach
 	void subscribeNotifications()
