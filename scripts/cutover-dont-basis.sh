@@ -65,7 +65,7 @@ const env=fs.readFileSync('$NEXT/.env','utf8').match(/^API_7TV_TOKEN=(.*)\$/m);
 c.twitch={username:c.selfName,rateLimits:'default',stv_token:env?env[1]:'',...c.twitch};
 c.backend={port:11303,origin:'http://localhost',client_id:'',client_secret:'',callback_url:'',...c.backend};
 c.token={key:require('crypto').randomBytes(32).toString('hex'),...c.token};
-c.dont={api:false,pubsub:false,kattahCookie:false,bannedChannels:false,stvSocket:false,stvUserId:'01HXECQC500001CJ47EJYYXTGD',commands:{disableAll:false,whitelist:['7tvaddeditor','7tvpfp','7tvaliasv4','7tvyoinkv4'],blacklist:[]},...c.dont};
+c.dont={api:false,pubsub:false,kattahCookie:false,bannedChannels:false,stvSocket:false,stvUserId:'01HXECQC500001CJ47EJYYXTGD',editorsUrl:'https://auth.alexmoderat.eu/dashboard',commands:{disableAll:false,whitelist:['7tvpfp','7tvaliasv4','7tvyoinkv4'],blacklist:[]},...c.dont};
 fs.writeFileSync(p,JSON.stringify(c,null,1)+'\n');
 \""
 

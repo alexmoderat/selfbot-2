@@ -27,7 +27,7 @@ const validate = (config) => {
 };
 
 /** Schalter fuer Donts eigene Teile (docs/dont-konzept.md); alles aus, bis config.json "dont" etwas freigibt */
-const DONT_DEFAULTS = { api: false, pubsub: false, kattahCookie: false, bannedChannels: false, stvSocket: false, stvUserId: null };
+const DONT_DEFAULTS = { api: false, pubsub: false, kattahCookie: false, bannedChannels: false, stvSocket: false, stvUserId: null, editorsUrl: null };
 
 const withDontDefaults = (value) => ({
 	...value,

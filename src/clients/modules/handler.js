@@ -228,7 +228,7 @@ module.exports = {
 							}
 
 							msg.send(
-								`Only channel editors can use this command. Ask the broadcaster nicely to add you as an editor :) https://poros.lol/dashboard/${msg.channel.login}/channel/editors`,
+								`Only channel editors can use this command. Ask the broadcaster nicely to add you as an editor :) ${(bot.Config.dont.editorsUrl ?? 'https://poros.lol/dashboard/{channel}/channel/editors').replace('{channel}', msg.channel.login)}`, // selfbot: Link aus config.dont.editorsUrl
 							);
 							return;
 						}

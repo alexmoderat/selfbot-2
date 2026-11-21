@@ -41,7 +41,7 @@ Nur Repo-Rahmen: `.github/`, `.husky/`, `README.md`, `imgs/`, `trash/`, `scripts
   `Unhandled rejection ... 'roles'` im Log beim Start, die Tabellen werden vorher angelegt. Nicht behoben, damit die Datei Dont bleibt.
 - Donts API (`dont.api`) laeuft unter Express 5 (alle Routen laden, `/api/bot/info`, `/api/bot/commands` antworten);
   `/api/bot/channels` liefert 500, solange Donts Redis-Cache `channelsEndpoint` leer ist.
-- 7TV ist an: freigegeben sind `7tvpfp` und `7tvaddeditor` (`dont.commands.whitelist`). Nicht freigegeben, mit Grund:
+- 7TV ist an: freigegeben sind `7tvpfp`, `7tvaliasv4` und `7tvyoinkv4` (`dont.commands.whitelist`). Nicht freigegeben, mit Grund: `7tvaddeditor` (antwortet nur "deprecated, use poros.lol"; Editoren pflegte Donts Website),
   `7tvsa` (egvault.7tv.io gibt es nicht mehr), `stats` (api.kattah.me gibt es nicht mehr), `7tvemotes` (schickt hunderte Zeilen in den Chat),
   `7tv`, `add`, `remove`, `set` (Namen belegt durch unsere Commands, sonst antworten beide). `7tvaliasv4` (`rename`) und `7tvyoinkv4` (`yoink`) sind an: Donts `handler.js` prueft den 7TV-Editor-Zugang
   fuer die ID aus `config.dont.stvUserId` (unser Konto `01HXECQC500001CJ47EJYYXTGD`, Standard bei Dont `629d77a20e60c6d53da64e38`). Die Antwort
