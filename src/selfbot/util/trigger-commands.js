@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { randomUUID } = require('node:crypto');
 
 // Trigger-Commands (Collection triggerCommand), aus sb-v2s singletons/trigger-commands.ts: Muster, die beim Auftreten
@@ -21,7 +22,7 @@ const getForChannel = async (channel) => {
 		cache.set(channel.id, { rows, at: Date.now() });
 		return rows;
 	} catch (e) {
-		console.warn(`[trigger-commands] #${channel.name} nicht ladbar`, e);
+		Logger.warn(`[trigger-commands] #${channel.name} nicht ladbar`, e);
 		return cached?.rows ?? [];
 	}
 };

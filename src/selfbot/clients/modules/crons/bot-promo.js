@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { commands } = require('../commands.js');
 const { defineCron } = require('../timers.js');
 const { buildCommandsUrl } = require('../../../util/command-catalog.js');
@@ -39,7 +40,7 @@ module.exports = defineCron({
 
 		const message = promoText(await buildCommandsUrl());
 		for (const channel of due) {
-			await bot.Channels.send(channel, message).catch((e) => console.warn(`[bot-promo] #${channel.name}`, e));
+			await bot.Channels.send(channel, message).catch((e) => Logger.warn(`[bot-promo] #${channel.name}`, e));
 			await bot.Channels.setData(channel, 'botpromoNext', now + POST_INTERVAL);
 		}
 	},

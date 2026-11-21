@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { readdir, stat, statfs } = require('node:fs/promises');
 const { defineCron } = require('../timers.js');
 const { sendAlert } = require('../../../util/moderation.js');
@@ -59,7 +60,7 @@ module.exports = defineCron({
 
 		if (level === 'ok') {
 			if (lastLevel !== 'ok') {
-				console.log(`[disk-watch] wieder entspannt: ${free.toFixed(1)} GB frei`);
+				Logger.info(`[disk-watch] wieder entspannt: ${free.toFixed(1)} GB frei`);
 				await sendAlert(`✅ Platte wieder entspannt: **${free.toFixed(1)} GB** frei (${usedPercent}% belegt)`);
 			}
 
@@ -83,7 +84,7 @@ module.exports = defineCron({
 			`${free.toFixed(1)} GB frei von ${total.toFixed(0)} GB (${usedPercent}% belegt)\n` +
 			`justlog-Logs: ${formatSize(logs)} · /var/log: ${formatSize(varLog)}`;
 
-		console.warn(`[disk-watch] ${level}: ${free.toFixed(1)} GB frei (${usedPercent}% belegt), justlog ${formatSize(logs)}, /var/log ${formatSize(varLog)}`);
+		Logger.warn(`[disk-watch] ${level}: ${free.toFixed(1)} GB frei (${usedPercent}% belegt), justlog ${formatSize(logs)}, /var/log ${formatSize(varLog)}`);
 		await sendAlert(text);
 	},
 });

@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('./got.js');
 const { SupiError } = require('../util/error.js');
 const { gqlPostWithFingerprint } = require('./fingerprint-client.js');
@@ -144,7 +145,7 @@ const getBanStatusBatch = async (logins) => {
 			const viaChrome = await gqlPostWithFingerprint(body, GQL_PUBLIC_CLIENT_ID);
 			const chromeAnswers = Array.isArray(viaChrome) ? viaChrome : [];
 			if (groups.every((_group, index) => chromeAnswers[index]?.data)) {
-				console.warn('[twitch-gql] getBanStatusBatch: Standard-Request blockiert, Chrome-Fingerprint-Fallback erfolgreich');
+				Logger.warn('[twitch-gql] getBanStatusBatch: Standard-Request blockiert, Chrome-Fingerprint-Fallback erfolgreich');
 				answers = chromeAnswers;
 				failed = -1;
 			}
@@ -293,7 +294,7 @@ const getUserProfile = async (username) => {
 			}
 		}`);
 	} catch (e) {
-		console.warn('[twitch-gql] getUserProfile fehlgeschlagen', e);
+		Logger.warn('[twitch-gql] getUserProfile fehlgeschlagen', e);
 		return null;
 	}
 

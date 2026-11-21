@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { getMessageDomains } = require('./text-analysis.js');
 
 /**
@@ -20,7 +21,7 @@ const loadData = async () => {
 const initialize = async () => {
 	await loadData();
 	reloadTimer ??= setInterval(() => {
-		loadData().catch((e) => console.warn('[spam-domains] Neuladen fehlgeschlagen', e));
+		loadData().catch((e) => Logger.warn('[spam-domains] Neuladen fehlgeschlagen', e));
 	}, RELOAD_INTERVAL);
 	reloadTimer.unref();
 };

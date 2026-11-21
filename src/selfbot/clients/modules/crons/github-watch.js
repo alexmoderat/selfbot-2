@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
 const { got } = require('../../../token/got.js');
 const { formatGithubEvent } = require('../../../util/github-events.js');
@@ -71,7 +72,7 @@ module.exports = defineCron({
 			if (!response || response.statusCode === 304) {
 				continue;
 			} else if (!response.ok) {
-				console.warn(`[github-watch] ${repo}: HTTP ${response.statusCode}`);
+				Logger.warn(`[github-watch] ${repo}: HTTP ${response.statusCode}`);
 				continue;
 			}
 
@@ -79,7 +80,7 @@ module.exports = defineCron({
 			const fresh = newEvents(events, s.lastId);
 			state.set(repo, { lastId: latestId(events, s.lastId ?? '0'), etag: response.headers?.etag ?? null });
 			for (const text of fresh.map(formatApiEvent).filter(Boolean).slice(-MAX_MESSAGES_PER_RUN)) {
-				await sendAlert(text).catch((e) => console.warn(`[github-watch] senden: ${e?.message}`));
+				await sendAlert(text).catch((e) => Logger.warn(`[github-watch] senden: ${e?.message}`));
 			}
 		}
 	},

@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { got } = require('../../../token/got.js');
 
 const { defineChatModule } = require('../chat-modules.js');
@@ -41,7 +42,7 @@ const checkFollowBot = async (channel, userId, login) => {
 		publicReason: 'Follow-bot account',
 		status: 'FOLLOW_BOT',
 	});
-	console.warn(`[follow-protection] ${ok ? 'Gebannt' : 'Ban fehlgeschlagen'}: ${login} in #${channel.name}`);
+	Logger.warn(`[follow-protection] ${ok ? 'Gebannt' : 'Ban fehlgeschlagen'}: ${login} in #${channel.name}`);
 };
 
 const checkCatqueryMonitored = async (channel, login) => {
@@ -51,7 +52,7 @@ const checkCatqueryMonitored = async (channel, login) => {
 	}
 
 	await addToWatchlist(channel, login, `CatQuery: ${status.reason || 'flagged as monitored'}`, 'CatQuery-Check').catch(() => {});
-	console.warn(`[follow-protection] ${login} in #${channel.name} von CatQuery geflaggt (${status.reason}) - auf die Watchlist`);
+	Logger.warn(`[follow-protection] ${login} in #${channel.name} von CatQuery geflaggt (${status.reason}) - auf die Watchlist`);
 };
 
 /** Thumbnail holen und hashen; null, wenn nicht live oder nicht lesbar */
@@ -77,7 +78,7 @@ const punishFakeLive = async (platform, channel, userId, userName, match) => {
 		publicReason: label,
 		status: 'FAKE_LIVE',
 	});
-	console.warn(`[follow-protection] ${ok ? 'Gebannt' : 'Ban fehlgeschlagen'} (Fake-Live-Treffer mit #${match.channel}, Distanz ${match.distance}): ${userName} in #${channel.name}`);
+	Logger.warn(`[follow-protection] ${ok ? 'Gebannt' : 'Ban fehlgeschlagen'} (Fake-Live-Treffer mit #${match.channel}, Distanz ${match.distance}): ${userName} in #${channel.name}`);
 
 	if (!process.env.TWITCH_WEB_TOKEN) {
 		return;
@@ -85,7 +86,7 @@ const punishFakeLive = async (platform, channel, userId, userName, match) => {
 
 	const comment = `Automated detection: identical video content to a live stream in #${match.channel} ` + `(perceptual hash distance ${match.distance}/64), declared under a mismatched category.`;
 	const error = await reportFakeLive(userId, comment).catch((e) => (e instanceof Error ? e.message : String(e)));
-	console.log(`[follow-protection] Twitch-Meldung fuer ${userId}: ${error ? `fehlgeschlagen (${error})` : 'gesendet'}`);
+	Logger.info(`[follow-protection] Twitch-Meldung fuer ${userId}: ${error ? `fehlgeschlagen (${error})` : 'gesendet'}`);
 };
 
 const checkFakeLiveStream = async (platform, channel, userId, userName) => {
@@ -95,9 +96,9 @@ const checkFakeLiveStream = async (platform, channel, userId, userName) => {
 	}
 
 	const match = await findHashMatch(channel.name, hash, FAKE_LIVE_MAX_DISTANCE).catch(() => null);
-	await recordHash(channel.name, userId, hash).catch((e) => console.warn('[follow-protection] Hash-Eintrag fehlgeschlagen', e));
+	await recordHash(channel.name, userId, hash).catch((e) => Logger.warn('[follow-protection] Hash-Eintrag fehlgeschlagen', e));
 	if (!match) {
-		await enqueueWatch(channel.name, userId).catch((e) => console.warn('[follow-protection] Warteliste fehlgeschlagen', e));
+		await enqueueWatch(channel.name, userId).catch((e) => Logger.warn('[follow-protection] Warteliste fehlgeschlagen', e));
 		return;
 	}
 

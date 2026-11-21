@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { fetchChatters } = require('../token/twitch-lists.js');
 const { USERNAME_EVADER_PATTERNS } = require('./username-evader.js');
 
@@ -29,7 +30,7 @@ const pollChannel = async (platform, channel) => {
 	if (result.forbidden) {
 		if (!forbidden.has(channel.id)) {
 			forbidden.add(channel.id);
-			console.warn(`[join-poller] #${channel.name}: Chatterliste nicht erlaubt (403) - keine userJoin-Ereignisse`);
+			Logger.warn(`[join-poller] #${channel.name}: Chatterliste nicht erlaubt (403) - keine userJoin-Ereignisse`);
 		}
 		return;
 	}
@@ -49,7 +50,7 @@ const pollChannel = async (platform, channel) => {
 		}
 
 		if (process.env.JOIN_LOG === '1') {
-			console.log(`[join-poller] userJoin #${channel.name}: ${login}`);
+			Logger.info(`[join-poller] userJoin #${channel.name}: ${login}`);
 		}
 
 		bot.ChatModules.dispatch('userJoin', { platform, channel, userName: login });
@@ -63,7 +64,7 @@ const tick = async (platform) => {
 			continue;
 		}
 
-		await pollChannel(platform, channel).catch((e) => console.warn(`[join-poller] #${channel.name}`, e));
+		await pollChannel(platform, channel).catch((e) => Logger.warn(`[join-poller] #${channel.name}`, e));
 	}
 };
 
@@ -75,7 +76,7 @@ const start = (platform) => {
 
 	timer = setInterval(() => void tick(platform), POLL_INTERVAL);
 	timer.unref();
-	console.log(`[join-poller] aktiv (alle ${POLL_INTERVAL / 1000} s, Channels mit Username-Mustern + newAccountFollowersGuard)`);
+	Logger.info(`[join-poller] aktiv (alle ${POLL_INTERVAL / 1000} s, Channels mit Username-Mustern + newAccountFollowersGuard)`);
 };
 
 const stop = () => {

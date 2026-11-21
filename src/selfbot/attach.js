@@ -41,7 +41,7 @@ bot.Commands = commands;
 
 /** Eigene Dienste starten; wird von Donts main.js aufgerufen und liefert das Ready-Promise (bot.Ready) */
 const start = async () => {
-	console.time('[main] Start');
+	const startedAt = Date.now();
 	await bot.DB.connect(config.postgres);
 
 	const counts = {
@@ -86,7 +86,7 @@ const start = async () => {
 	await refreshLive();
 	setInterval(refreshLive, 2 * 60_000).unref();
 
-	console.timeEnd('[main] Start');
+	Logger.info(`[main] Start: ${Date.now() - startedAt}ms`);
 	Logger.info(
 		`Bereit - ${commands.size} Commands, ${counts.modules} Module, ${counts.channels} Channel(s), ${counts.filters} Filter, ${counts.reminders} Reminder, Prefix '${config.prefix}'${config.parallelMode ? ' (Parallelbetrieb)' : ''}`,
 	);

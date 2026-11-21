@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
 const { fetchWindows, activeWindows, BADGES_URL } = require('../../../token/streamdatabase.js');
 const { wasAnnounced, markAnnounced, recordRecent } = require('../../../util/badge-history.js');
@@ -61,7 +62,7 @@ const runEventWatch = async () => {
 		STATE_TTL,
 	);
 	if (!before) {
-		console.log(`[event-watch] Erstlauf, ${active.length} aktive Fenster gemerkt`);
+		Logger.info(`[event-watch] Erstlauf, ${active.length} aktive Fenster gemerkt`);
 		return 0;
 	}
 
@@ -71,7 +72,7 @@ const runEventWatch = async () => {
 	for (const window of active.filter((i) => !before.has(i.key))) {
 		const marker = `avail:badge:${window.title.toLowerCase()}:${today}`;
 		if (await wasAnnounced(marker).catch(() => false)) {
-			console.log(`[event-watch] ${window.title}: schon gemeldet`);
+			Logger.info(`[event-watch] ${window.title}: schon gemeldet`);
 			continue;
 		}
 		await markAnnounced(marker).catch(() => {});
@@ -84,14 +85,14 @@ const runEventWatch = async () => {
 	await recordRecent(
 		'tweet',
 		fresh.map((i) => ({ title: formatWindow(i), link: BADGES_URL })),
-	).catch((e) => console.warn(`[event-watch] Verlauf: ${e?.message ?? e}`));
+	).catch((e) => Logger.warn(`[event-watch] Verlauf: ${e?.message ?? e}`));
 
 	const targets = await enabledChannels();
 	const texts = fresh.length <= MAX_SEPARATE ? fresh.map(formatWindow) : [`${fresh.length} global Twitch badges now available: ${fresh.map((i) => i.title).join(', ')} (${BADGES_URL})`];
-	console.log(`[event-watch] ${fresh.map((i) => i.title).join(', ')} -> ${targets.length} Channel(s)`);
+	Logger.info(`[event-watch] ${fresh.map((i) => i.title).join(', ')} -> ${targets.length} Channel(s)`);
 	// Tweet-Notify-Abonnenten (eigener Text, Anzahl) bekommen die Meldung wie einen Tweet; in deren Channels entfaellt der Badge-Alert-Text
 	const subscribers = await tweetSubscribers().catch((e) => {
-		console.warn(`[event-watch] Tweet-Notify-Abonnenten: ${e?.message ?? e}`);
+		Logger.warn(`[event-watch] Tweet-Notify-Abonnenten: ${e?.message ?? e}`);
 		return [];
 	});
 	const handled = new Set(subscribers.map((i) => i.channel.id));
@@ -120,7 +121,7 @@ module.exports = defineCron({
 	expression: '1 * * * * *',
 	description: 'Announces when a time window for a global Twitch badge starts (data from streamdatabase.com events), same toggle as the badge alerts.',
 	code: async function eventWatch() {
-		await runEventWatch().catch((e) => console.warn(`[event-watch] ${e?.message ?? e}`));
+		await runEventWatch().catch((e) => Logger.warn(`[event-watch] ${e?.message ?? e}`));
 	},
 });
 

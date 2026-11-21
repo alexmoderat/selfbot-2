@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { getCommand, commands } = require('../clients/modules/commands.js');
 
 const { Router } = require('express');
@@ -339,7 +340,7 @@ const admins = async () => {
 
 const route = (handler) => (req, res) => {
 	handler(req, res).catch((e) => {
-		console.warn('[web] Dashboard-Fehler', e);
+		Logger.warn('[web] Dashboard-Fehler', e);
 		res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
 	});
 };

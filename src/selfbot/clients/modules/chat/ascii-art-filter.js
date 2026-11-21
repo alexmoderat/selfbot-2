@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
 const { formatAutoBanReason } = require('../../../util/ban-reason.js');
@@ -37,7 +38,7 @@ module.exports = defineChatModule({
 			}
 
 			const reason = formatAutoBanReason('ASCII art spam', platform.selfName);
-			console.warn(`[ascii-art-filter] ${user.name} in #${channel.name}`);
+			Logger.warn(`[ascii-art-filter] ${user.name} in #${channel.name}`);
 			await autoBan(targetFromChannel(channel, user.twitchId, user.name), {
 				reason,
 				publicReason: reason,

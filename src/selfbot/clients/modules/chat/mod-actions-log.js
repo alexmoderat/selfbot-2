@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 const { recordModAction, wasRecentlyRecorded } = require('../../../util/moderation.js');
 
@@ -46,12 +47,12 @@ module.exports = defineChatModule({
 			const modName = data.created_by || '?';
 			const spec = ACTIONS[action];
 			if (!spec) {
-				console.log(`[pubsub] ${action} in ${channelName} by ${modName}`);
+				Logger.info(`[pubsub] ${action} in ${channelName} by ${modName}`);
 				return;
 			}
 
 			const detail = spec.text(args);
-			console.log(`[pubsub] ${action}: ${targetUser} in ${channelName} by ${modName}${detail ? ` ${detail}` : ''}`);
+			Logger.info(`[pubsub] ${action}: ${targetUser} in ${channelName} by ${modName}${detail ? ` ${detail}` : ''}`);
 
 			// Nur echte Sanktionen - und nicht doppelt, wenn der Bot sie selbst ausgeloest hat (steht dann schon im Log)
 			if (!spec.record || wasRecentlyRecorded(targetUser, channelName)) {

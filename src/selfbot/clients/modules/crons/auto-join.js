@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
 
 const { findMissing, joinByLogin, syncModeratorModes } = require('../../../util/channel-manager.js');
@@ -18,12 +19,12 @@ module.exports = defineCron({
 		const missing = await findMissing();
 		if (missing && missing.length > 0) {
 			const batch = missing.slice(0, MAX_PER_CYCLE);
-			console.log(`[auto-join] ${missing.length} fehlend, ${batch.length} in diesem Durchlauf`);
+			Logger.info(`[auto-join] ${missing.length} fehlend, ${batch.length} in diesem Durchlauf`);
 			for (const item of batch) {
-				await joinByLogin(item.login).catch((e) => console.warn(`[auto-join] #${item.login}`, e));
+				await joinByLogin(item.login).catch((e) => Logger.warn(`[auto-join] #${item.login}`, e));
 			}
 		}
 
-		await syncModeratorModes().catch((e) => console.warn('[auto-join] Mod-Abgleich fehlgeschlagen', e));
+		await syncModeratorModes().catch((e) => Logger.warn('[auto-join] Mod-Abgleich fehlgeschlagen', e));
 	},
 });

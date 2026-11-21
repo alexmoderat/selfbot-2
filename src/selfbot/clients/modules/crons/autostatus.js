@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
 
 const { pubsub } = require('../../../util/pubsub.js');
@@ -72,7 +73,7 @@ module.exports = defineCron({
 		// "joined" statt "channels" (sb-v2, 01.09.2026): aktive Channels inkl. des eigenen, nicht die Mod-Channel-Zahl
 		const status = `🤖 uptime: ${formatUptime(now - BOT_START)} | memory: ${memory}MiB | joined: ${channels.length} (${live} live) | irc: ${bot.Client.connections.length} | ps: ${pubsub.status().connections}`;
 		for (const { channel, dueAt } of due) {
-			await bot.Channels.send(channel, status).catch((e) => console.warn(`[autostatus] #${channel.name}`, e));
+			await bot.Channels.send(channel, status).catch((e) => Logger.warn(`[autostatus] #${channel.name}`, e));
 			await bot.Channels.setData(channel, 'autostatusNext', nextDue(now, dueAt, POST_INTERVAL));
 		}
 	},

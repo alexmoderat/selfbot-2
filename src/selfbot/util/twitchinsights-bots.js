@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('../token/got.js');
 // TwitchInsights-Botliste fuer !botcheck/!botban, aus sb-v2s src/services/twitchinsights-bots.js.
 // Alle 6 h neu laden; Redis haelt die letzte Liste ueber Neustarts (sb-v2: data/twitchinsights-bots.json).
@@ -18,13 +19,13 @@ const refresh = async () => {
 	const list = response?.ok && Array.isArray(response.body.bots) ? response.body.bots.map((i) => String(i[0] ?? '').toLowerCase()).filter(Boolean) : null;
 
 	if (!list) {
-		console.warn(`[twitchinsights] Botliste nicht ladbar (${response?.statusCode ?? '?'})`);
+		Logger.warn(`[twitchinsights] Botliste nicht ladbar (${response?.statusCode ?? '?'})`);
 		return;
 	}
 
 	bots = new Set(list);
 	await bot.Cache.setJSON(CACHE_KEY, list);
-	console.log(`[twitchinsights] Botliste: ${list.length} Eintraege`);
+	Logger.info(`[twitchinsights] Botliste: ${list.length} Eintraege`);
 };
 
 /** Liste laden (Redis sofort, frisch im Hintergrund) und den 6-h-Takt starten */

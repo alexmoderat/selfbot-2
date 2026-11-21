@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
 const { isSuppressed, suppressChannel } = require('../../../util/raid-suppression.js');
@@ -56,7 +57,7 @@ module.exports = defineChatModule({
 			}
 
 			channelMap.delete(norm); // verhindert doppeltes Ausloesen im gleichen Fenster
-			console.warn(`[duplicate-spam] Spam-Muster in #${channel.name}: "${message}" von ${entries.length} Usern`);
+			Logger.warn(`[duplicate-spam] Spam-Muster in #${channel.name}: "${message}" von ${entries.length} Usern`);
 
 			const reason = formatAutoBanReason(PUBLIC_REASON, platform.selfName);
 			for (const entry of entries) {

@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { commands } = require('../commands.js');
 const { defineCron } = require('../timers.js');
 const timers = require('../../../util/timers.js');
@@ -65,7 +66,7 @@ module.exports = defineCron({
 			// setzen, damit ein zweiter Timer derselben Gruppe im selben Durchlauf nicht ebenfalls sendet
 			await timers.markSent(timer);
 			timer.Last_Sent = now;
-			await bot.Channels.send(channel, timer.Message).catch((e) => console.warn(`[timers] #${channel.name} #${timer.ID}`, e));
+			await bot.Channels.send(channel, timer.Message).catch((e) => Logger.warn(`[timers] #${channel.name} #${timer.ID}`, e));
 		}
 	},
 });

@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
 const { checkAccount, cleanTimes, formatTweetAlert } = require('../../../util/tweet-notify.js');
 
@@ -10,7 +11,7 @@ const PAUSE_MS = 1500;
 const sendTo = async (channelId, text) => {
 	const channel = bot.Channels.get(channelId);
 	if (channel && channel.mode !== 'Inactive') {
-		await bot.Channels.send(channel, text).catch((e) => console.warn(`[tweet-notify] #${channel.name}`, e));
+		await bot.Channels.send(channel, text).catch((e) => Logger.warn(`[tweet-notify] #${channel.name}`, e));
 	}
 };
 
@@ -34,7 +35,7 @@ const announce = async (account, tweet) => {
 			await sendTo(channel, formatTweetAlert(users, account, tweet, message));
 		}
 	}
-	console.log(`[tweet-notify] @${account}: ${tweet.id} -> ${groups.size} Meldung(en)`);
+	Logger.info(`[tweet-notify] @${account}: ${tweet.id} -> ${groups.size} Meldung(en)`);
 };
 
 const runTweetNotify = async () => {
@@ -44,17 +45,17 @@ const runTweetNotify = async () => {
 		try {
 			const { fresh, firstRun } = await checkAccount(account);
 			if (firstRun) {
-				console.log(`[tweet-notify] @${account}: Erstlauf, Stand gemerkt`);
+				Logger.info(`[tweet-notify] @${account}: Erstlauf, Stand gemerkt`);
 			}
 			for (const tweet of fresh.slice(-3)) {
 				await announce(account, tweet);
 				sent++;
 			}
 		} catch (e) {
-			console.warn(`[tweet-notify] @${account}: ${e?.message ?? e}`);
+			Logger.warn(`[tweet-notify] @${account}: ${e?.message ?? e}`);
 			// Faellt supinics API aus (HTTP 5xx), den Rest dieses Laufs nicht auch noch anfragen
 			if (/HTTP 5\d\d/.test(String(e?.message))) {
-				console.warn('[tweet-notify] API nicht erreichbar, Rest dieses Laufs uebersprungen');
+				Logger.warn('[tweet-notify] API nicht erreichbar, Rest dieses Laufs uebersprungen');
 				break;
 			}
 		}
@@ -69,7 +70,7 @@ module.exports = defineCron({
 	expression: '15 */2 * * * *',
 	description: 'Pings subscribers with the link when a tracked X/Twitter account posts a new tweet.',
 	code: async function tweetNotify() {
-		await runTweetNotify().catch((e) => console.warn(`[tweet-notify] ${e?.message ?? e}`));
+		await runTweetNotify().catch((e) => Logger.warn(`[tweet-notify] ${e?.message ?? e}`));
 	},
 });
 

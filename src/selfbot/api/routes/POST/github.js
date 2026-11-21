@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const express = require('express');
 const { formatGithubEvent, sendAlert, validSignature, isDuplicate } = require('../../github.js');
 
@@ -17,7 +18,7 @@ router.post('/github/webhook', async (req, res) => {
 	}
 	const text = formatGithubEvent(req.get('x-github-event'), req.body);
 	if (text) {
-		await sendAlert(text).catch((e) => console.warn(`[github] senden: ${e?.message}`));
+		await sendAlert(text).catch((e) => Logger.warn(`[github] senden: ${e?.message}`));
 	}
 });
 

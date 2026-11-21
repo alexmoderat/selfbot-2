@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 
 /**
@@ -38,7 +39,7 @@ module.exports = defineChatModule({
 			}
 
 			await bot.Channels.send(channel, text);
-			console.log(`[sub-announce] Ansage (${msgId}) fuer ${name} in #${channel.name}`);
+			Logger.info(`[sub-announce] Ansage (${msgId}) fuer ${name} in #${channel.name}`);
 		},
 	},
 });

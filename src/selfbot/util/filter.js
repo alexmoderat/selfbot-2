@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { TWITCH_ANTIPING_CHARACTER } = require('../misc/regex.js');
 const Users = require('./users.js');
 
@@ -31,7 +32,7 @@ const createFilterData = (type, rawData, id = null) => {
 
 	if (type === 'Arguments') {
 		if (!Array.isArray(data.args)) {
-			console.warn('Invalid Args filter - missing args object', { filter: id });
+			Logger.warn('Invalid Args filter - missing args object', { filter: id });
 			return null;
 		}
 
@@ -42,13 +43,13 @@ const createFilterData = (type, rawData, id = null) => {
 				try {
 					item.regex = Array.isArray(arg.regex) ? new RegExp(arg.regex[0], arg.regex[1] ?? '') : parseStringRegex(arg.regex);
 				} catch (e) {
-					console.warn('Invalid string regex representation', { filter: id, e: e.message });
+					Logger.warn('Invalid string regex representation', { filter: id, e: e.message });
 					continue;
 				}
 			} else if (arg.string) {
 				item.string = arg.string;
 			} else {
-				console.warn('Invalid filter Args item - type', { arg, filter: id });
+				Logger.warn('Invalid filter Args item - type', { arg, filter: id });
 				continue;
 			}
 
@@ -62,7 +63,7 @@ const createFilterData = (type, rawData, id = null) => {
 
 			// Infinity ist erlaubt, es steht fuer den offenen Bereich <x, ..>
 			if (item.range && !item.range.every((i) => Number.isInteger(i) || i === Infinity)) {
-				console.warn('Invalid numbers provided for filter Args range', { arg, filter: id });
+				Logger.warn('Invalid numbers provided for filter Args range', { arg, filter: id });
 				continue;
 			}
 			result.push(item);
@@ -75,7 +76,7 @@ const createFilterData = (type, rawData, id = null) => {
 		} else if (multiplier === undefined && typeof override === 'number') {
 			return { override, respect };
 		}
-		console.warn('Invalid Cooldown filter - incorrect combination of multiplier/override', { multiplier, override });
+		Logger.warn('Invalid Cooldown filter - incorrect combination of multiplier/override', { multiplier, override });
 	}
 
 	return null;

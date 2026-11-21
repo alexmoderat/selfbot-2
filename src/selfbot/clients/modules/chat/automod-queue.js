@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { got } = require('../../../token/got.js');
 const { defineChatModule } = require('../chat-modules.js');
 const phrases = require('../../../util/moderation-phrases.js');
@@ -28,7 +29,7 @@ const denyMessage = async (messageId, selfId) => {
 	}).catch(() => null);
 
 	if (!response?.ok) {
-		console.warn(`[automod-queue] Deny fehlgeschlagen (${response?.statusCode ?? '?'})`);
+		Logger.warn(`[automod-queue] Deny fehlgeschlagen (${response?.statusCode ?? '?'})`);
 	}
 };
 
@@ -55,15 +56,15 @@ module.exports = defineChatModule({
 			// Nur zurueckgehaltene Nachrichten pruefen; genehmigte/abgelehnte nur loggen
 			if (payload.type !== 'automod_caught_message' || status !== 'PENDING') {
 				if (status === 'ALLOWED' || status === 'DENIED') {
-					console.log(`[automod-queue] ${status}: "${text ?? '?'}" von ${login} in #${channel.name}${data.resolver_login ? ` - by ${data.resolver_login}` : ''}`);
+					Logger.info(`[automod-queue] ${status}: "${text ?? '?'}" von ${login} in #${channel.name}${data.resolver_login ? ` - by ${data.resolver_login}` : ''}`);
 				}
 				return;
 			} else if (!text || !userId || !messageId) {
-				console.warn('[automod-queue] Nachricht ohne Text/User/ID - uebersprungen');
+				Logger.warn('[automod-queue] Nachricht ohne Text/User/ID - uebersprungen');
 				return;
 			}
 
-			console.warn(`[automod-queue] Held: "${text}" von ${login} in #${channel.name} (${data.reason_code ?? '?'})`);
+			Logger.warn(`[automod-queue] Held: "${text}" von ${login} in #${channel.name} (${data.reason_code ?? '?'})`);
 			const target = targetFromChannel(channel, userId, login);
 			const punish = async (reason, publicReason, statusTag, duration = null) => {
 				void denyMessage(messageId, platform.selfId);
@@ -76,7 +77,7 @@ module.exports = defineChatModule({
 			if (matched) {
 				phrases.recordHit(matched, channel.id);
 				if (!(await mayBanPhraseHit(login, userId, matched, phrases.getPreset('sellerbot')?.ID ?? null))) {
-					console.warn(
+					Logger.warn(
 						`[automod-queue] Banphrase "${matched.Phrase}" von ${login} in #${channel.name} - kein komischer Name oder aelter als 7 Tage, keine Aktion (Nachricht bleibt in der Queue)`,
 					);
 					return;
@@ -103,7 +104,7 @@ module.exports = defineChatModule({
 
 			// 4. Frischer Account
 			if ((await bot.Channels.getData(channel, 'autobanAgecheckDisabled')) === true) {
-				console.log(`[automod-queue] Alterscheck in #${channel.name} deaktiviert - ${login} durchgelassen`);
+				Logger.info(`[automod-queue] Alterscheck in #${channel.name} deaktiviert - ${login} durchgelassen`);
 				return;
 			}
 
@@ -114,7 +115,7 @@ module.exports = defineChatModule({
 				return;
 			}
 
-			console.log('[automod-queue] Keine Regel getroffen, Nachricht bleibt in der Queue');
+			Logger.info('[automod-queue] Keine Regel getroffen, Nachricht bleibt in der Queue');
 		},
 	},
 });

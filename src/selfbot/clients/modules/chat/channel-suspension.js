@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 
 const { getSuspension, reactivateChannel, suspendChannel } = require('../../../util/channel-suspension.js');
@@ -34,22 +35,22 @@ module.exports = defineChatModule({
 
 			if (msgId === 'msg_channel_suspended') {
 				if (await suspendChannel(channel, 'suspended')) {
-					console.warn(`[channel-suspension] #${channel.name} hat einen Twitch-Ban (${text})`);
+					Logger.warn(`[channel-suspension] #${channel.name} hat einen Twitch-Ban (${text})`);
 				}
 				return;
 			} else if (msgId === 'msg_channel_restricted' || msgId === 'msg_suspended_channel') {
-				console.warn(`[channel-suspension] #${channel.name} ist feature-restricted (${msgId})`);
+				Logger.warn(`[channel-suspension] #${channel.name} ist feature-restricted (${msgId})`);
 				flcChannels.set(channel.id, { type: msgId, detectedAt: new Date().toISOString() });
 				await platform.sendToBroadcaster(`⚠️ FLC-Restriction in ${channel.name}: ${msgId}`, platform.selfId).catch(() => {});
 				return;
 			} else if (msgId === 'msg_banned') {
 				if (await suspendChannel(channel, 'bot_banned')) {
-					console.warn(`[channel-suspension] Bot ist in #${channel.name} gebannt, Channel inaktiv`);
+					Logger.warn(`[channel-suspension] Bot ist in #${channel.name} gebannt, Channel inaktiv`);
 				}
 				return;
 			}
 
-			console.log(`[channel-suspension] #${channel.name}: ${msgId} - "${text}"`);
+			Logger.info(`[channel-suspension] #${channel.name}: ${msgId} - "${text}"`);
 		},
 		modAction: async (context) => {
 			const data = context.payload?.data;
@@ -65,7 +66,7 @@ module.exports = defineChatModule({
 			}
 
 			const channel = bot.Channels.getByTwitchId(String(data.channel_id));
-			console.warn(`[channel-suspension] ${new Date().toISOString()} Eigenes Konto: ${data.action} in #${channel?.name ?? data.channel_id}`);
+			Logger.warn(`[channel-suspension] ${new Date().toISOString()} Eigenes Konto: ${data.action} in #${channel?.name ?? data.channel_id}`);
 			if (!channel) {
 				return;
 			}
@@ -80,7 +81,7 @@ module.exports = defineChatModule({
 				}
 
 				if (await reactivateChannel(channel, bot.Twitch, BOT_BANNED)) {
-					console.log(`[channel-suspension] #${channel.name}: Bot entbannt, wieder aktiv`);
+					Logger.info(`[channel-suspension] #${channel.name}: Bot entbannt, wieder aktiv`);
 				}
 			}
 		},

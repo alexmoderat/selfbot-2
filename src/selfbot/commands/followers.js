@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { uploadList } = require('../token/haste.js');
 const { FOLLOWERS_CAP, fetchFollowers } = require('../token/twitch-lists.js');
 
@@ -19,7 +20,7 @@ module.exports = {
 			res = await fetchFollowers(login);
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
-			console.warn(`[followers] ${login}: ${message}`);
+			Logger.warn(`[followers] ${login}: ${message}`);
 			return { text: `@${display}, ${message}` };
 		}
 

@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
 const { formatAutoBanReason } = require('../../../util/ban-reason.js');
@@ -30,7 +31,7 @@ const knownEmoteNames = async (channel) => {
 			names.add(i.name);
 		}
 	} catch (e) {
-		console.warn(`[emote-wave-ban] 7TV-Emotes von #${channel.name} nicht ladbar: ${e?.message ?? e}`);
+		Logger.warn(`[emote-wave-ban] 7TV-Emotes von #${channel.name} nicht ladbar: ${e?.message ?? e}`);
 	}
 	cache.set(channel.id, { names, at: Date.now() });
 	return names;
@@ -59,7 +60,7 @@ module.exports = defineChatModule({
 				return;
 			}
 
-			console.warn(`[emote-wave-ban] ${user.name} in #${channel.name} (${Math.round(age.ageDays)} Tage): "${message}"`);
+			Logger.warn(`[emote-wave-ban] ${user.name} in #${channel.name} (${Math.round(age.ageDays)} Tage): "${message}"`);
 			await autoBan(targetFromChannel(channel, userId, user.name), {
 				reason: formatAutoBanReason(PUBLIC_REASON, platform.selfName),
 				publicReason: PUBLIC_REASON,

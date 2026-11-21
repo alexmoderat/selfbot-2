@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { setTimeout: sleep } = require('node:timers/promises');
 const { listOrLink } = require('../util/list-reply.js');
 const Filter = require('../util/filter.js');
@@ -138,7 +139,7 @@ module.exports = {
 			await msg.send(chunks[i]);
 		}
 
-		console.log(`[massping] #${channel.name} von ${msg.sender.name}: ${pinged.length} gepingt${names.length > MAX_PINGS ? ` (gedeckelt, ${names.length} da)` : ''}`);
+		Logger.info(`[massping] #${channel.name} von ${msg.sender.name}: ${pinged.length} gepingt${names.length > MAX_PINGS ? ` (gedeckelt, ${names.length} da)` : ''}`);
 		return { text: null };
 	},
 };

@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { randomUUID } = require('node:crypto');
 const { SupiError } = require('./error.js');
 
@@ -156,7 +157,7 @@ const loadData = async () => {
 const initialize = async () => {
 	await loadData();
 	reloadTimer ??= setInterval(() => {
-		loadData().catch((e) => console.warn('[moderation-phrases] Neuladen fehlgeschlagen', e));
+		loadData().catch((e) => Logger.warn('[moderation-phrases] Neuladen fehlgeschlagen', e));
 	}, RELOAD_INTERVAL);
 	reloadTimer.unref();
 };
@@ -208,7 +209,7 @@ let hitsSinceStart = 0;
 const recordHit = (phrase, channelId) => {
 	hitsSinceStart++;
 	bot.DB.createWithId('ModerationPhraseHit', { phrase: phrase.ID, phraseText: phrase.Phrase, channel: channelId, hit: new Date() }).catch((e) =>
-		console.warn('[moderation-phrases] Treffer-Protokoll fehlgeschlagen', e),
+		Logger.warn('[moderation-phrases] Treffer-Protokoll fehlgeschlagen', e),
 	);
 };
 

@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
 const { recordRecent, wasAnnounced, markAnnounced } = require('../../../util/badge-history.js');
 const { fetchGlobalBadges, fetchGlobalEmotes, fetchBadgeEvents, BADGES_URL, EMOTES_URL } = require('../../../token/streamdatabase.js');
@@ -10,7 +11,7 @@ const { fetchGqlBadges } = require('../../../token/twitch-badges-gql.js');
  */
 const SOURCES = [
 	// Badges zuerst direkt von Twitch (GQL), faellt das aus, die StreamDatabase-Seite
-	{ kind: 'badge', stateKey: 'badge-watch:known', fetch: () => fetchGqlBadges().catch((e) => (console.warn(`[badge-watch] GQL: ${e?.message ?? e}, nehme StreamDatabase`), fetchGlobalBadges())) },
+	{ kind: 'badge', stateKey: 'badge-watch:known', fetch: () => fetchGqlBadges().catch((e) => (Logger.warn(`[badge-watch] GQL: ${e?.message ?? e}, nehme StreamDatabase`), fetchGlobalBadges())) },
 	{ kind: 'emote', stateKey: 'badge-watch:known-emotes', fetch: fetchGlobalEmotes },
 ];
 const STATE_TTL = 365 * 864e5;
@@ -87,11 +88,11 @@ const runSource = async (source, getTargets) => {
 		items.map((i) => i.key),
 		STATE_TTL,
 	);
-	console.log(`[badge-watch] ${source.kind}s: ${items.length} bekannt, ${fresh.length} neu${known ? '' : ' (Erstlauf, nur Stand gemerkt)'}`);
+	Logger.info(`[badge-watch] ${source.kind}s: ${items.length} bekannt, ${fresh.length} neu${known ? '' : ' (Erstlauf, nur Stand gemerkt)'}`);
 	if (fresh.length === 0) {
 		return 0;
 	} else if (fresh.length > MAX_PER_RUN) {
-		console.warn(`[badge-watch] ${fresh.length} neue ${source.kind}s auf einmal, uebersprungen (Seite umgebaut?)`);
+		Logger.warn(`[badge-watch] ${fresh.length} neue ${source.kind}s auf einmal, uebersprungen (Seite umgebaut?)`);
 		return 0;
 	}
 
@@ -103,13 +104,13 @@ const runSource = async (source, getTargets) => {
 	await recordRecent(
 		source.kind,
 		fresh.map((i) => ({ title: i.title, description: source.kind === 'badge' ? i.description : '', ...(events.get(i.key) ?? {}) })),
-	).catch((e) => console.warn(`[badge-watch] Verlauf: ${e?.message ?? e}`));
+	).catch((e) => Logger.warn(`[badge-watch] Verlauf: ${e?.message ?? e}`));
 	// Was der Tweet-Cron schon gemeldet hat, nicht noch einmal melden (und umgekehrt)
 	const toSend = [];
 	for (const item of fresh) {
 		const marker = `added:${source.kind}:${item.title.toLowerCase()}`;
 		const already = await wasAnnounced(marker).catch(() => false);
-		console.log(`[badge-watch] Neues ${source.kind}: ${item.key} - ${item.title} -> ${already ? 'schon per Tweet gemeldet' : `${targets.length} Channel(s)`}`);
+		Logger.info(`[badge-watch] Neues ${source.kind}: ${item.key} - ${item.title} -> ${already ? 'schon per Tweet gemeldet' : `${targets.length} Channel(s)`}`);
 		if (!already) {
 			toSend.push(item);
 			await markAnnounced(marker).catch(() => {});
@@ -136,7 +137,7 @@ const runBadgeWatch = async () => {
 	for (const source of SOURCES) {
 		// Eine Quelle darf ausfallen, ohne die andere zu blockieren
 		total += await runSource(source, getTargets).catch((e) => {
-			console.warn(`[badge-watch] ${source.kind}: ${e?.message ?? e}`);
+			Logger.warn(`[badge-watch] ${source.kind}: ${e?.message ?? e}`);
 			return 0;
 		});
 	}
@@ -149,7 +150,7 @@ module.exports = defineCron({
 	expression: '0 */3 * * * *', // alle 3 Minuten (ninou2, 13.11.2026: "is that the minimum time? can it go lower")
 	description: 'Announces new global Twitch badges (Twitch GQL, fallback streamdatabase.com) and emotes (streamdatabase.com) in channels that turned it on.',
 	code: async function badgeWatch() {
-		await runBadgeWatch().catch((e) => console.warn(`[badge-watch] ${e?.message ?? e}`));
+		await runBadgeWatch().catch((e) => Logger.warn(`[badge-watch] ${e?.message ?? e}`));
 	},
 });
 

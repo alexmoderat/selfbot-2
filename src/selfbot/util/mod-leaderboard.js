@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { isKnownBot } = require('./channel-stats.js');
 const { fetchChannelRoleList } = require('../token/roles-tv.js');
 
@@ -83,7 +84,7 @@ const refresh = async (channels, ownLogin) => {
 		let failed = 0;
 		for (const [i, channel] of channels.entries()) {
 			if (i === 0 || (i + 1) % 10 === 0) {
-				console.log(`[mod-leaderboard] (${i + 1}/${channels.length}) ${channel} ...`);
+				Logger.info(`[mod-leaderboard] (${i + 1}/${channels.length}) ${channel} ...`);
 			}
 			try {
 				const mods = await withTimeout(fetchChannelRoleList(channel, 'moderators'), PER_CHANNEL_TIMEOUT_MS * 3);
@@ -92,7 +93,7 @@ const refresh = async (channels, ownLogin) => {
 				}
 			} catch (e) {
 				failed++;
-				console.warn(`[mod-leaderboard] Fehler in ${channel}: ${e instanceof Error ? e.message : String(e)}`);
+				Logger.warn(`[mod-leaderboard] Fehler in ${channel}: ${e instanceof Error ? e.message : String(e)}`);
 			}
 			await new Promise((resolve) => setTimeout(resolve, CHANNEL_DELAY_MS));
 		}
@@ -100,7 +101,7 @@ const refresh = async (channels, ownLogin) => {
 		state = { entries: await rankModerators(modLists, ownLogin.toLowerCase(), isKnownBot), builtAt: Date.now() };
 		loaded = true;
 		await bot.Cache.setJSON(CACHE_KEY, state);
-		console.log(`[mod-leaderboard] Neu aufgebaut - ${state.entries.length} Eintraege, ${failed} Channel(s) uebersprungen`);
+		Logger.info(`[mod-leaderboard] Neu aufgebaut - ${state.entries.length} Eintraege, ${failed} Channel(s) uebersprungen`);
 	} finally {
 		building = false;
 	}

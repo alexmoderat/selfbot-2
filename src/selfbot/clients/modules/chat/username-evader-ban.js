@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 
 const { fetchTwitchUser } = require('../../../util/twitch/twitch-utils.js');
@@ -29,10 +30,10 @@ const handle = async (platform, channel, login, userId) => {
 		return;
 	}
 
-	console.warn(`[username-evader-ban] "${login}" matcht /${pattern.source}/ in #${channel.name}`);
+	Logger.warn(`[username-evader-ban] "${login}" matcht /${pattern.source}/ in #${channel.name}`);
 	const id = userId ?? (await fetchTwitchUser(login).catch(() => null))?.id ?? null;
 	if (!id) {
-		console.warn(`[username-evader-ban] User-ID fuer ${login} nicht gefunden`);
+		Logger.warn(`[username-evader-ban] User-ID fuer ${login} nicht gefunden`);
 		return;
 	}
 

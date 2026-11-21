@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const cron = require('node-cron');
 
 // Chat-Logging wie Supibots singletons/logger.ts (push, updateLastSeen, Takte aus Supibots config-default):
@@ -85,11 +86,11 @@ class ChatLogger {
 			const records = list.splice(0, list.length);
 			if (records.length > WARN_LIMIT) {
 				const channel = bot.Channels.get(channelId);
-				console.warn(`[chat-logger] #${channel?.name ?? channelId} ueber dem Limit: ${records.length}/${WARN_LIMIT} - verworfen`);
+				Logger.warn(`[chat-logger] #${channel?.name ?? channelId} ueber dem Limit: ${records.length}/${WARN_LIMIT} - verworfen`);
 				continue;
 			}
 			// Zeitversetzt, damit nicht alle Channels gleichzeitig schreiben (wie Supibot)
-			setTimeout(() => void bot.DB.ChatLine.insertMany(records, { ordered: false }).catch((e) => console.warn('[chat-logger] Zeilen schreiben fehlgeschlagen', e)), i * 250);
+			setTimeout(() => void bot.DB.ChatLine.insertMany(records, { ordered: false }).catch((e) => Logger.warn('[chat-logger] Zeilen schreiben fehlgeschlagen', e)), i * 250);
 			i++;
 		}
 	}
@@ -124,7 +125,7 @@ class ChatLogger {
 				await bot.DB.MessageMetaUserAlias.bulkWrite(ops, { ordered: false });
 			}
 		} catch (e) {
-			console.warn('[chat-logger] Meta schreiben fehlgeschlagen', e);
+			Logger.warn('[chat-logger] Meta schreiben fehlgeschlagen', e);
 		} finally {
 			this.#metaRunning = false;
 		}

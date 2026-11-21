@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('../token/got.js');
 
 const sbv2 = require('../database/sbv2.js');
@@ -139,7 +140,7 @@ const refreshNetworkStats = () => {
 		})
 		.catch((e) => {
 			cache.network ??= { data: { error: e instanceof Error ? e.message : String(e) }, at: Date.now() };
-			console.warn('[web] network-bot-stats fehlgeschlagen', e);
+			Logger.warn('[web] network-bot-stats fehlgeschlagen', e);
 		})
 		.finally(() => {
 			networkRefreshing = false;
@@ -180,7 +181,7 @@ const cors = (res) => res.header('Access-Control-Allow-Origin', '*');
 
 const route = (handler) => (req, res) => {
 	handler(req, res).catch((e) => {
-		console.warn('[web] Fehler', req.path, e);
+		Logger.warn('[web] Fehler', req.path, e);
 		res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
 	});
 };

@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { randomUUID } = require('node:crypto');
 const { normalize } = require('../clients/modules/commands.js');
 
@@ -24,7 +25,7 @@ const getChannelCommands = async (channel) => {
 		cache.set(channel.id, { rows, at: Date.now() });
 		return rows;
 	} catch (e) {
-		console.warn(`[custom-commands] DB-Fehler fuer #${channel.name}`, e);
+		Logger.warn(`[custom-commands] DB-Fehler fuer #${channel.name}`, e);
 		return cached?.rows ?? new Map();
 	}
 };

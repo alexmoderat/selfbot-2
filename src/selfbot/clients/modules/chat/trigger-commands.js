@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 const triggers = require('../../../util/trigger-commands.js');
 const { rolesFromBadges } = require('../../../util/text-analysis.js');
@@ -70,7 +71,7 @@ module.exports = defineChatModule({
 					continue;
 				}
 
-				console.log(`[trigger-commands] Treffer "${row.Pattern}" von ${user.name} in #${channel.name}`);
+				Logger.info(`[trigger-commands] Treffer "${row.Pattern}" von ${user.name} in #${channel.name}`);
 				const response = formatTriggerResponse(row.Response, user.name, channel.name, message);
 				// Vor dem Senden merken: das Echo der eigenen Nachricht kann eintreffen, bevor send() zurueckkehrt, und
 				// loeste den Trigger sonst ein zweites Mal aus (alexmoderat, 12.11.2026: "hi" in #kickster1010 doppelt)

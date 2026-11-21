@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const WebSocket = require('ws');
 
 // Anonymer Live-Feed von CatQuery (https://docs.catquery.com/firehose/), aus sb-v2s
@@ -33,7 +34,7 @@ const logOwnMention = (raw, json, tags) => {
 	const channel = String(json.channel ?? tags['room-id'] ?? '?').replace('#', '');
 	const sender = String(tags['display-name'] || tags.login || json.user || '?');
 	const text = String(json.text ?? json.message ?? raw).slice(0, MENTION_TEXT_LIMIT);
-	console.log(`[catquery] Erwaehnung ${new Date().toISOString()} #${channel} ${sender}: ${text}`);
+	Logger.info(`[catquery] Erwaehnung ${new Date().toISOString()} #${channel} ${sender}: ${text}`);
 };
 
 const firstFlags = new Map();
@@ -87,7 +88,7 @@ const handleMessage = (raw) => {
 		try {
 			onWatchStreak({ roomId, channel, msgId: 'viewermilestone', tags, text: String(json.text ?? '') });
 		} catch (e) {
-			console.warn('[catquery] Watch-Streak-Fehler', e);
+			Logger.warn('[catquery] Watch-Streak-Fehler', e);
 		}
 	}
 
@@ -109,7 +110,7 @@ const handleMessage = (raw) => {
 			try {
 				onNotice({ roomId, channel, msgId, tags, text: String(json.text ?? '') });
 			} catch (e) {
-				console.warn('[catquery] Usernotice-Fehler', e);
+				Logger.warn('[catquery] Usernotice-Fehler', e);
 			}
 		}
 
@@ -131,10 +132,10 @@ const connect = () => {
 
 	socket.on('open', () => {
 		lastMessageAt = Date.now();
-		console.log('[catquery] Firehose verbunden');
+		Logger.info('[catquery] Firehose verbunden');
 	});
 	socket.on('message', (data) => handleMessage(String(data)));
-	socket.on('error', (e) => console.warn(`[catquery] Firehose-Fehler: ${e.message}`));
+	socket.on('error', (e) => Logger.warn(`[catquery] Firehose-Fehler: ${e.message}`));
 	socket.on('close', (code) => {
 		if (ws === socket) {
 			ws = null;
@@ -143,7 +144,7 @@ const connect = () => {
 			return;
 		}
 
-		console.warn(`[catquery] Firehose getrennt (${code}), neuer Versuch in ${Math.round(backoff / 1000)} s`);
+		Logger.warn(`[catquery] Firehose getrennt (${code}), neuer Versuch in ${Math.round(backoff / 1000)} s`);
 		reconnectTimer = setTimeout(connect, backoff);
 		backoff = Math.min(backoff * 2, BACKOFF_MAX);
 	});
@@ -178,7 +179,7 @@ const start = (ourRoom, noticeHandler, watchStreakHandler) => {
 		// Nur bei OFFENER Verbindung: sonst bricht der Vergleich mit der letzten Nachricht von VOR einem Ausfall jeden
 		// neuen Handshake sofort ab (sb-v2 kam so nach dem CatQuery-Ausfall am 23.10.2026 nie wieder hoch)
 		if (ws?.readyState === WebSocket.OPEN && now - lastMessageAt > STALE) {
-			console.warn('[catquery] Firehose still, verbinde neu');
+			Logger.warn('[catquery] Firehose still, verbinde neu');
 			ws.terminate();
 		}
 	}, 5_000);

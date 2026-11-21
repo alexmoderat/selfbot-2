@@ -3,8 +3,6 @@ const { helix } = require('../token/helix.js');
 const { trimMessage } = require('../util/twitch/utils.js');
 const { Logger, LogLevel } = require('../misc/logger.js');
 
-const { JOIN } = require('./events/JOIN.js');
-const { PART } = require('./events/PART.js');
 const { WHISPER } = require('./events/WHISPER.js');
 const { CLEARCHAT } = require('./events/CLEARCHAT.js');
 const { NOTICE } = require('./events/NOTICE.js');
@@ -18,7 +16,7 @@ const { main, isServed } = require('./JoinChannels.js');
 // (send(message, channel), joinChannel, selfId, ...), damit portierte Services und Module gleich bleiben.
 
 const Twitch = async function () {
-	for (const execute of [JOIN, PART, WHISPER, CLEARCHAT, NOTICE, PRIVMSG, USERNOTICE, USERSTATE, main]) {
+	for (const execute of [WHISPER, CLEARCHAT, NOTICE, PRIVMSG, USERNOTICE, USERSTATE, main]) {
 		await execute();
 	}
 };

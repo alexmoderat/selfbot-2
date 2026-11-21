@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { commands } = require('../clients/modules/commands.js');
 const { createServer } = require('node:http');
 const { pubsub } = require('../util/pubsub.js');
@@ -58,7 +59,7 @@ module.exports = function initializeInternalApi(port) {
 		Promise.resolve(handler(url))
 			.then(respond)
 			.catch((e) => {
-				console.warn('[api] Fehler', e);
+				Logger.warn('[api] Fehler', e);
 				respond({ statusCode: 500, data: null });
 			});
 	});

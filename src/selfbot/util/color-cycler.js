@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('../token/got.js');
 // Farbwechsel des Bot-Kontos bei jeder gesendeten Nachricht, aus sb-v2s singletons/color-cycler.ts. Account-weit
 // (Farbe ist eine User-, keine Channel-Eigenschaft), Zustand in Redis, damit ein Neustart ihn nicht zuruecksetzt.
@@ -47,7 +48,7 @@ const maybeCycle = async (userId) => {
 		});
 
 		if (!response.ok) {
-			console.warn(`[color-cycler] Wechsel fehlgeschlagen (${response.statusCode})`);
+			Logger.warn(`[color-cycler] Wechsel fehlgeschlagen (${response.statusCode})`);
 		}
 	} finally {
 		cycling = false;

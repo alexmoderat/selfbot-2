@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('./got.js');
 const { randomBytes } = require('node:crypto');
 
@@ -142,7 +143,7 @@ const refresh = async (row) => {
 	}).catch(() => null);
 
 	if (!response?.ok) {
-		console.warn(`[user-tokens] Erneuern fehlgeschlagen fuer ${row.login}: ${response?.statusCode ?? 'Netzwerk'}`);
+		Logger.warn(`[user-tokens] Erneuern fehlgeschlagen fuer ${row.login}: ${response?.statusCode ?? 'Netzwerk'}`);
 		return null;
 	}
 

@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('../token/got.js');
 const { formatDuration } = require('../misc/humanizeDuration.js');
 const { gqlAuth, getUserInfo } = require('../token/gql.js');
@@ -63,7 +64,7 @@ module.exports = {
 						}
 					: null;
 			} catch (e) {
-				console.warn('[bc] GQL-Rueckfall fehlgeschlagen', e);
+				Logger.warn('[bc] GQL-Rueckfall fehlgeschlagen', e);
 				return { text: `@${display}, can't check ban status in ${channelInfo.displayName} — not a mod there and the GQL fallback failed.` };
 			}
 		}

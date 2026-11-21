@@ -7,3 +7,4 @@ config.json
 # Rust-Addon: Build-Artefakte (npm run build-linux in native/boring-ssl-client)
 native/*/target/
 native/*/build/
+.logs/

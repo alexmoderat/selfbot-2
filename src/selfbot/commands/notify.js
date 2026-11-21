@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { uploadToOwnHaste } = require('../token/haste.js');
 const { resolveStreamer, watchStreamer, watchTitle } = require('../util/notifications.js');
 const { cleanTimes } = require('../util/tweet-notify.js');
@@ -112,12 +113,12 @@ module.exports = {
 			// Sofort abonnieren, sonst greift es erst mit notify-resync
 			watchStreamer(streamer.id);
 			watchTitle(streamer.id);
-			console.log(`[notify] live ${streamer.login} in #${channel.name}`);
+			Logger.info(`[notify] live ${streamer.login} in #${channel.name}`);
 			return { text: `@${display}, ✅ Live notification for ${target} added.${extra}` };
 		}
 
 		await bot.DB.NotifyBan.updateOne({ channel: channel.id, login: target }, { $set: { message: customMessage, notified: null }, $setOnInsert: { added: new Date() } }, { upsert: true });
-		console.log(`[notify] ban ${target} in #${channel.name}`);
+		Logger.info(`[notify] ban ${target} in #${channel.name}`);
 		return { text: `@${display}, ✅ Watching ${target} for Twitch bans.${extra}` };
 	},
 };

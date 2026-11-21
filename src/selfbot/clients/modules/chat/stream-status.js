@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { got } = require('../../../token/got.js');
 const { defineChatModule } = require('../chat-modules.js');
 const { addStreamGameChange, clearStreamState, getStreamState, setStreamState } = require('../../../util/channel-stats.js');
@@ -24,22 +25,22 @@ module.exports = defineChatModule({
 	handlers: {
 		online: async (context) => {
 			const { channel } = context;
-			console.log(`[stream-status] Stream up: #${channel.name}`);
+			Logger.info(`[stream-status] Stream up: #${channel.name}`);
 			const game = channel.twitchId ? await fetchCurrentGame(channel.twitchId) : null;
-			await setStreamState(channel, game).catch((e) => console.warn('[stream-status]', e));
+			await setStreamState(channel, game).catch((e) => Logger.warn('[stream-status]', e));
 		},
 		offline: async (context) => {
-			console.log(`[stream-status] Stream down: #${context.channel.name}`);
-			await clearStreamState(context.channel).catch((e) => console.warn('[stream-status]', e));
+			Logger.info(`[stream-status] Stream down: #${context.channel.name}`);
+			await clearStreamState(context.channel).catch((e) => Logger.warn('[stream-status]', e));
 		},
 		raid: (context) => {
 			const payload = context.payload;
 			if (!context.channel || !payload?.raid) {
 				return;
 			} else if (payload.type === 'raid_go_v2') {
-				console.log(`[stream-status] Raid: #${context.channel.name} -> ${payload.raid.target_login ?? '?'} (${payload.raid.viewer_count ?? '?'} Viewer)`);
+				Logger.info(`[stream-status] Raid: #${context.channel.name} -> ${payload.raid.target_login ?? '?'} (${payload.raid.viewer_count ?? '?'} Viewer)`);
 			} else if (payload.type === 'raid_cancel_v2') {
-				console.log(`[stream-status] Raid abgebrochen: #${context.channel.name} -> ${payload.raid.target_login ?? '?'}`);
+				Logger.info(`[stream-status] Raid abgebrochen: #${context.channel.name} -> ${payload.raid.target_login ?? '?'}`);
 			}
 		},
 		shieldMode: (context) => {
@@ -50,7 +51,7 @@ module.exports = defineChatModule({
 
 			const active = Boolean(data.is_shield_mode_active);
 			const by = active ? data.shield_mode_last_activated_by?.login : data.shield_mode_last_deactivated_by?.login;
-			console.log(`[stream-status] Shield Mode ${active ? 'AN' : 'AUS'} in #${context.channel.name} (by ${by ?? '?'})`);
+			Logger.info(`[stream-status] Shield Mode ${active ? 'AN' : 'AUS'} in #${context.channel.name} (by ${by ?? '?'})`);
 		},
 		broadcastSettings: async (context) => {
 			const channel = context.channel;
@@ -67,7 +68,7 @@ module.exports = defineChatModule({
 				changes.push(`Kategorie: "${payload.old_game ?? ''}" -> "${payload.game ?? ''}"`);
 			}
 			if (changes.length > 0) {
-				console.log(`[stream-status] #${channel.name} hat Stream-Infos geaendert: ${changes.join(' | ')}`);
+				Logger.info(`[stream-status] #${channel.name} hat Stream-Infos geaendert: ${changes.join(' | ')}`);
 			}
 
 			if (payload.old_game !== payload.game && (await getStreamState(channel).catch(() => null))) {

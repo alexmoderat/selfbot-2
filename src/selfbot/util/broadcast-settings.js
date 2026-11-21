@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('../token/got.js');
 const { gqlSmartbox } = require('../token/gql.js');
 const { forceRefreshToken, getValidToken, helixAsUser } = require('../token/user-tokens.js');
@@ -53,7 +54,7 @@ const updateViaEditor = async (broadcasterId, edit) => {
 	const result = data.updateBroadcastSettings;
 	const ok = Boolean(result && !result.error && result.broadcastSettings);
 	if (!ok) {
-		console.warn(`[broadcast-settings] Editor-Weg fuer ${broadcasterId} abgelehnt: ${JSON.stringify(data)}`);
+		Logger.warn(`[broadcast-settings] Editor-Weg fuer ${broadcasterId} abgelehnt: ${JSON.stringify(data)}`);
 	}
 	return ok;
 };

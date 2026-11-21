@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 
 const customCommands = require('../../../util/custom-commands.js');
@@ -66,7 +67,7 @@ const countPost = async (channel, reminder, text) => {
 			executionTime: null,
 		});
 	} catch (e) {
-		console.warn('[raid-notifier] Zaehlen fehlgeschlagen', e?.message ?? e);
+		Logger.warn('[raid-notifier] Zaehlen fehlgeschlagen', e?.message ?? e);
 	}
 };
 
@@ -170,7 +171,7 @@ const pingChannel = async (channel, users, item) => {
 	// gepostet wird (ninou2, 14.11.2026: "even if a person set it to x5, the 120s noti count as 1 post, and the 20s noti count as 1")
 	if (texts.length > 0) {
 		await countPost(channel, reminder, texts[0]);
-		await bumpUses(channel, item.seconds).catch((e) => console.warn('[raid-notifier] Zaehler', e?.message ?? e));
+		await bumpUses(channel, item.seconds).catch((e) => Logger.warn('[raid-notifier] Zaehler', e?.message ?? e));
 	}
 	return texts.length;
 };
@@ -197,7 +198,7 @@ const runRaid = async (subscribers, duration) => {
 			} else if (duration > 0) {
 				setTimeout(
 					() => {
-						void pingChannel(channel, users, item).catch((e) => console.warn('[raid-notifier] Erinnerung', e));
+						void pingChannel(channel, users, item).catch((e) => Logger.warn('[raid-notifier] Erinnerung', e));
 					},
 					(duration - item.seconds) * 1000,
 				);
@@ -250,8 +251,8 @@ const onResult = (channel, message) => {
 	setTimeout(() => {
 		pendingResult = null;
 		void relayResult(current.text, current.seen)
-			.then((n) => n > 0 && console.log(`[raid-notifier] Ergebnis in ${n} Live-Channel(s) weitergegeben`))
-			.catch((e) => console.warn('[raid-notifier] Ergebnis', e?.message ?? e));
+			.then((n) => n > 0 && Logger.info(`[raid-notifier] Ergebnis in ${n} Live-Channel(s) weitergegeben`))
+			.catch((e) => Logger.warn('[raid-notifier] Ergebnis', e?.message ?? e));
 	}, RESULT_WAIT_MS);
 };
 
@@ -303,7 +304,7 @@ const sendTest = async (channel, username) => {
 	for (const { item, delayMs } of schedule) {
 		sent += item.times;
 		setTimeout(() => {
-			void sendItem(item).catch((e) => console.warn('[raid-notifier] Test', e?.message ?? e));
+			void sendItem(item).catch((e) => Logger.warn('[raid-notifier] Test', e?.message ?? e));
 		}, delayMs);
 	}
 	return { sent, durationS: Math.round(lastDelay / 1000), raidStartS: TEST_RAID_DURATION_S };
@@ -338,7 +339,7 @@ module.exports = defineChatModule({
 
 			const duration = Number(DURATION_PATTERN.exec(message)?.[1] ?? 0);
 			const batches = await runRaid(subscribers, duration);
-			console.log(`[raid-notifier] Raid in #${channel.name} - ${batches} sofortige Nachricht(en), ${subscribers.size} Channel(s)`);
+			Logger.info(`[raid-notifier] Raid in #${channel.name} - ${batches} sofortige Nachricht(en), ${subscribers.size} Channel(s)`);
 		},
 	},
 });

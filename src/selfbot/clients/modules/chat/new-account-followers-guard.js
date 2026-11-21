@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
 const { formatAutoBanReason } = require('../../../util/ban-reason.js');
@@ -52,7 +53,7 @@ module.exports = defineChatModule({
 			}
 
 			const label = `Account younger than ${MIN_AGE_DAYS} days with ${followers} followers`;
-			console.warn(`[new-account-followers-guard] ${userName} in #${channel.name}: ${info.ageDays.toFixed(1)} d, ${followers} Follower`);
+			Logger.warn(`[new-account-followers-guard] ${userName} in #${channel.name}: ${info.ageDays.toFixed(1)} d, ${followers} Follower`);
 			await autoBan(targetFromChannel(channel, info.id, userName), {
 				reason: formatAutoBanReason(label, platform.selfName),
 				publicReason: label,

@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 // Twitch-seitige Sperren von Channels, in denen der Bot ist - gemeinsamer Zustand von channel-suspension (Modul),
 // ban-check (Cron) und checksuspended (Command). sb-v2 partete solche Channels per IRC; hier wird der Channel auf
 // Mode "Inactive" gesetzt (keine Nachrichten, kein PubSub, kein Join-Poller) und der vorherige Mode gemerkt.
@@ -15,8 +16,8 @@ const suspendChannel = async (channel, reason) => {
 
 	await bot.Channels.setData(channel, 'inactive', { reason, since: new Date().toISOString(), previousMode: channel.mode });
 	await bot.Channels.saveProperty(channel, 'Mode', 'Inactive');
-	await bot.Twitch.leaveChannel(channel).catch((e) => console.warn(`[suspension] Abos von #${channel.name} nicht abgebaut`, e));
-	console.warn(`[suspension] #${channel.name} verlassen (${reason})`);
+	await bot.Twitch.leaveChannel(channel).catch((e) => Logger.warn(`[suspension] Abos von #${channel.name} nicht abgebaut`, e));
+	Logger.warn(`[suspension] #${channel.name} verlassen (${reason})`);
 	return true;
 };
 
@@ -33,7 +34,7 @@ const reactivateChannel = async (channel, platform = bot.Twitch, reasons = AUTO_
 	await bot.Channels.saveProperty(channel, 'Mode', suspension.previousMode);
 	await bot.Channels.setData(channel, 'inactive', null);
 	await platform.joinChannel(channel);
-	console.log(`[suspension] #${channel.name} wieder aktiv, Mode ${suspension.previousMode}`);
+	Logger.info(`[suspension] #${channel.name} wieder aktiv, Mode ${suspension.previousMode}`);
 	return true;
 };
 

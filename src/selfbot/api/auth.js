@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { existsSync, writeFileSync } = require('node:fs');
 
 const path = require('node:path');
@@ -64,7 +65,7 @@ const locationRoute = (handler) => async (req, res) => {
 		await handler(user, req, res);
 	} catch (e) {
 		// Nur der Fehlertext: der Suchbegriff eines Orts soll nicht im Log landen
-		console.warn('[web] /api/my fehlgeschlagen:', e instanceof Error ? e.message.slice(0, 200) : 'unbekannt');
+		Logger.warn('[web] /api/my fehlgeschlagen:', e instanceof Error ? e.message.slice(0, 200) : 'unbekannt');
 		res.status(500).json({ error: 'That did not work, try again later.' });
 	}
 };

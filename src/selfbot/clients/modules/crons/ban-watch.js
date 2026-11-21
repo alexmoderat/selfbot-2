@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
 const { announceBan } = require('../../../util/notifications.js');
 const { getBanStatusBatch } = require('../../../token/gql.js');
@@ -38,7 +39,7 @@ module.exports = defineCron({
 					status.set(login, info);
 				}
 			} catch (e) {
-				console.warn('[ban-watch] GQL-Batch fehlgeschlagen', e);
+				Logger.warn('[ban-watch] GQL-Batch fehlgeschlagen', e);
 				return; // kein Teilergebnis auswerten
 			}
 		}
@@ -65,7 +66,7 @@ module.exports = defineCron({
 			const raw = String(info.banReason ?? 'UNKNOWN').toUpperCase();
 			const reason = REASON_TEXT[raw] ?? info.banReason ?? 'unknown';
 			await bot.DB.NotifyBan.updateOne(where, { $set: { notified: new Date() } });
-			await announceBan(channel, row.Login, reason, row.Message).catch((e) => console.warn('[ban-watch]', e));
+			await announceBan(channel, row.Login, reason, row.Message).catch((e) => Logger.warn('[ban-watch]', e));
 		}
 	},
 });

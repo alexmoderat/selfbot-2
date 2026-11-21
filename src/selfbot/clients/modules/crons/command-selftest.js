@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
 const { getCommand, isResultFailure } = require('../commands.js');
 const { sendAlert } = require('../../../util/moderation.js');
@@ -116,9 +117,9 @@ const runSelftest = async (now = Date.now()) => {
 		}
 	}
 
-	console.log(`[command-selftest] ${PROBES.length - failed.length}/${PROBES.length} ok`);
+	Logger.info(`[command-selftest] ${PROBES.length - failed.length}/${PROBES.length} ok`);
 	if (failed.length > 0) {
-		console.warn(`[command-selftest] ${failed.length}/${PROBES.length} fehlgeschlagen: ${failed.join(' | ')}`);
+		Logger.warn(`[command-selftest] ${failed.length}/${PROBES.length} fehlgeschlagen: ${failed.join(' | ')}`);
 	}
 	if (alerts.length > 0) {
 		await sendAlert(`🔴 **Command-Selbsttest**: ${alerts.length} Command(s) kaputt\n${alerts.map((i) => `• ${i}`).join('\n')}`);

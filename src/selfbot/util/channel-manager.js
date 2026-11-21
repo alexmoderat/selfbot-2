@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { fetchModeratedChannels, fetchTwitchUser } = require('./twitch/twitch-utils.js');
 const { getSuspension, suspendChannel } = require('./channel-suspension.js');
 
@@ -114,7 +115,7 @@ const setModerator = async (channel, isMod) => {
 	bot.PubSub?.unsubscribeChannel(channel);
 	bot.PubSub?.subscribeChannel(channel);
 	void bot.EventSub?.syncChannel(channel);
-	console.log(`[channels] #${channel.name}: ${previous} -> ${mode}`);
+	Logger.info(`[channels] #${channel.name}: ${previous} -> ${mode}`);
 	return true;
 };
 
@@ -144,7 +145,7 @@ const syncModeratorModes = async () => {
 	}
 
 	if (changes.length > MAX_MODE_CHANGES) {
-		console.warn(`[channels] ${changes.length} Mod-Wechsel auf einmal - uebersprungen (Helix-Antwort unvollstaendig?)`);
+		Logger.warn(`[channels] ${changes.length} Mod-Wechsel auf einmal - uebersprungen (Helix-Antwort unvollstaendig?)`);
 		return null;
 	}
 

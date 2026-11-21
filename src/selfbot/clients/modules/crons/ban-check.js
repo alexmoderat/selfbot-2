@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
 
 const { fetchTwitchUser } = require('../../../util/twitch/twitch-utils.js');
@@ -39,13 +40,13 @@ const handleMissing = async (channel) => {
 	const user = channel.twitchId ? await fetchTwitchUser(channel.twitchId, { byId: true }).catch(() => null) : null;
 	if (user) {
 		if (user.login !== channel.name) {
-			console.warn(`[ban-check] #${channel.name} heisst jetzt ${user.login} - Name nachgezogen`);
+			Logger.warn(`[ban-check] #${channel.name} heisst jetzt ${user.login} - Name nachgezogen`);
 			await bot.Channels.saveProperty(channel, 'Name', user.login);
 		}
 		return null;
 	}
 
-	console.warn(`[ban-check] #${channel.name} existiert nicht mehr (GQL + Helix bestaetigt), verlasse`);
+	Logger.warn(`[ban-check] #${channel.name} existiert nicht mehr (GQL + Helix bestaetigt), verlasse`);
 	await suspendChannel(channel, 'user_renamed_or_deleted');
 	return null;
 };
@@ -91,7 +92,7 @@ module.exports = defineCron({
 					if (info.banned && !isSuspended) {
 						const raw = String(info.banReason ?? '').toUpperCase();
 						const reason = REASON_MAP[raw] ?? (raw || 'TOS');
-						console.warn(`[ban-check] #${channel.name} gebannt (Twitch-Ban, Grund: ${reason}), verlasse`);
+						Logger.warn(`[ban-check] #${channel.name} gebannt (Twitch-Ban, Grund: ${reason}), verlasse`);
 						recordModAction({
 							type: 'ban',
 							username: channel.name,
@@ -104,15 +105,15 @@ module.exports = defineCron({
 						});
 						await suspendChannel(channel, reason);
 					} else if (!info.banned && isSuspended && (await reactivateChannel(channel, platform))) {
-						console.log(`[ban-check] #${channel.name} wieder aktiv, Auto-Rejoin`);
+						Logger.info(`[ban-check] #${channel.name} wieder aktiv, Auto-Rejoin`);
 					}
 				} catch (e) {
-					console.warn(`[ban-check] Fehler fuer #${channel.name}`, e);
+					Logger.warn(`[ban-check] Fehler fuer #${channel.name}`, e);
 				}
 			}
 
 			if (waiting.length > 0) {
-				console.warn(`[ban-check] ${waiting.length} Channel(s) nicht gefunden, warte auf Bestaetigung: ${waiting.join(', ')}`);
+				Logger.warn(`[ban-check] ${waiting.length} Channel(s) nicht gefunden, warte auf Bestaetigung: ${waiting.join(', ')}`);
 			}
 		}
 	},

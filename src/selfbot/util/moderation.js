@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('../token/got.js');
 const { escapeRegExp } = require('../misc/utility.js');
 const { getConfig } = require('../config.js');
@@ -86,20 +87,20 @@ const unbanUser = async (target) =>
  */
 const banUser = async (target, options) => {
 	if (isAutomatedBanReason(options.reason) && (await isAutobanDisabled(target.channelName))) {
-		console.warn(`[moderation] Auto-Ban unterdrueckt (autoban all: disabled in #${target.channelName}): ${target.userName} - ${options.reason}`);
+		Logger.warn(`[moderation] Auto-Ban unterdrueckt (autoban all: disabled in #${target.channelName}): ${target.userName} - ${options.reason}`);
 		return false;
 	}
 
 	let response = await postBan(target, options);
 	if (response.statusCode === 422) {
-		console.warn(`[moderation] ${target.userName} ist in #${target.channelName} eingeschraenkt - aufheben und erneut versuchen`);
+		Logger.warn(`[moderation] ${target.userName} ist in #${target.channelName} eingeschraenkt - aufheben und erneut versuchen`);
 		if (await unrestrict(target)) {
 			response = await postBan(target, options);
 		}
 	}
 
 	if (!response.ok) {
-		console.warn(`[moderation] Ban fehlgeschlagen [${response.statusCode}]: ${target.userName} in #${target.channelName}`, response.body);
+		Logger.warn(`[moderation] Ban fehlgeschlagen [${response.statusCode}]: ${target.userName} in #${target.channelName}`, response.body);
 		return false;
 	}
 
@@ -194,7 +195,7 @@ const recordModAction = (data) => {
 			automated: Boolean(data.automated),
 			created: new Date(),
 		});
-	})().catch((e) => console.warn('[moderation] Ban-Log fehlgeschlagen', e));
+	})().catch((e) => Logger.warn('[moderation] Ban-Log fehlgeschlagen', e));
 };
 
 /** Wurde die Aktion gerade vom Bot selbst protokolliert? (dann nicht nochmal aus Hermes) */
@@ -341,7 +342,7 @@ const getModLogChannel = () => modLogChannel;
  */
 const sayModLog = async (text) => {
 	if (!modLogChannel) {
-		console.log(`[modlog] ${text}`);
+		Logger.info(`[modlog] ${text}`);
 		return;
 	}
 
@@ -351,7 +352,7 @@ const sayModLog = async (text) => {
 			await getTwitch().sendToBroadcaster(text, modLogBroadcasterId);
 		}
 	} catch (e) {
-		console.warn(`[moderation] Nachricht in #${modLogChannel} fehlgeschlagen`, e);
+		Logger.warn(`[moderation] Nachricht in #${modLogChannel} fehlgeschlagen`, e);
 	}
 };
 
@@ -364,7 +365,7 @@ const sayModLog = async (text) => {
 const sendAlert = async (content) => {
 	const url = process.env.DISCORD_ALERT_WEBHOOK || process.env.DISCORD_MODLOG_WEBHOOK;
 	if (!url) {
-		console.warn(`[alert] ${content}`);
+		Logger.warn(`[alert] ${content}`);
 		return;
 	}
 
@@ -401,7 +402,7 @@ const sendToDiscord = async (content) => {
 	if (response?.statusCode === 429) {
 		discordRateLimited++;
 		if (Date.now() - lastDiscordWarning > 60_000) {
-			console.warn(`[discord] Ratelimit: ${discordRateLimited} Nachricht(en) abgewiesen`);
+			Logger.warn(`[discord] Ratelimit: ${discordRateLimited} Nachricht(en) abgewiesen`);
 			lastDiscordWarning = Date.now();
 			discordRateLimited = 0;
 		}

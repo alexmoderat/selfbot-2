@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('../token/got.js');
 
 const { fetchTwitchUser } = require('./twitch/twitch-utils.js');
@@ -126,7 +127,7 @@ const getEntries = async (streamerId) =>
 const sendTo = async (channelId, text) => {
 	const channel = bot.Channels.get(channelId);
 	if (channel && channel.mode !== 'Inactive') {
-		await bot.Channels.send(channel, text).catch((e) => console.warn(`[notifications] #${channel.name}`, e));
+		await bot.Channels.send(channel, text).catch((e) => Logger.warn(`[notifications] #${channel.name}`, e));
 	}
 };
 
@@ -177,7 +178,7 @@ const announceStreamState = async (streamerId, isOnline) => {
 				await sendTo(entry.Channel, `@${login} is now live!${entry.Message ? ` ${entry.Message}` : ''}`);
 			}
 		}
-		console.log(`[notifications] ${login} live -> ${entries.length} Channel(s)`);
+		Logger.info(`[notifications] ${login} live -> ${entries.length} Channel(s)`);
 
 		void fetchLiveStreamInfo(streamerId)
 			.then(async (info) => {
@@ -211,7 +212,7 @@ const announceStreamState = async (streamerId, isOnline) => {
 	for (const entry of entries) {
 		await sendTo(entry.Channel, text);
 	}
-	console.log(`[notifications] ${login} offline -> ${entries.length} Channel(s)`);
+	Logger.info(`[notifications] ${login} offline -> ${entries.length} Channel(s)`);
 };
 
 /** Kategoriewechsel waehrend eines laufenden notify-live-Streams merken */
@@ -253,7 +254,7 @@ const announceTitleChange = async (streamerId, title, game) => {
 			await sendTo(channel, formatTitleChange(users, rows[0].Streamer_Login, title, game, liveMs, message));
 		}
 	}
-	console.log(`[notifications] Titelwechsel ${rows[0].Streamer_Login} -> ${rows.length} Abonnent(en), ${groups.size} Meldung(en)`);
+	Logger.info(`[notifications] Titelwechsel ${rows[0].Streamer_Login} -> ${rows.length} Abonnent(en), ${groups.size} Meldung(en)`);
 };
 
 /* ---------- ban ---------- */
@@ -261,7 +262,7 @@ const announceTitleChange = async (streamerId, title, game) => {
 const announceBan = async (channel, login, reason, customMessage) => {
 	const base = `${login} has received a Twitch ban. Reason: ${reason}`;
 	await channel.send(customMessage ? `${base} ${customMessage}` : base);
-	console.log(`[notifications] Ban-Notify: ${login} in #${channel.name} (${reason})`);
+	Logger.info(`[notifications] Ban-Notify: ${login} in #${channel.name} (${reason})`);
 };
 
 /** Streamer-Login -> Twitch-User (fuer die Commands) */

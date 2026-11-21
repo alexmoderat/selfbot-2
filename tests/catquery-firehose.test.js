@@ -1,13 +1,14 @@
 const { describe, it, mock, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const { _test } = require('../src/selfbot/util/catquery-firehose.js');
+const { Logger } = require('../src/selfbot/misc/logger.js');
 
 const send = (message) => _test.handleMessage(JSON.stringify(message));
 const chat = (text, tags = {}) => ({ id: 'abc', channel: '#somechannel', text, tags: { 'room-id': '1', 'user-id': '2', 'display-name': 'Someone', ...tags } });
 
 describe('catquery-firehose: Erwaehnungen des eigenen Kontos', () => {
 	const mentions = () => {
-		const log = mock.method(console, 'log', () => {});
+		const log = mock.method(Logger, 'info', () => {});
 		return () => log.mock.calls.map((call) => call.arguments[0]).filter((line) => line.startsWith('[catquery] Erwaehnung'));
 	};
 

@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { listOrLink } = require('../util/list-reply.js');
 const { HANDLE, MAX_MESSAGE, MAX_TIMES, cleanHandle, cleanMessage, cleanTimes, accountExists, homeChannel } = require('../util/tweet-notify.js');
 
@@ -72,7 +73,7 @@ module.exports = {
 		}
 
 		await bot.DB.TweetNotify.updateOne({ channel: home.id, account: first, userAlias: user.id }, { $set: { message, times }, $setOnInsert: { added: new Date() } }, { upsert: true });
-		console.log(`[tweetnotify] ${user.name} -> ${first} (gepostet in #${home.name}, eingegeben in #${channel.name})`);
+		Logger.info(`[tweetnotify] ${user.name} -> ${first} (gepostet in #${home.name}, eingegeben in #${channel.name})`);
 		return {
 			text: `@${display}, ✅ Tweet alert for ${first} set${home.id === channel.id ? '' : ` (posted in #${home.name})`}${times > 1 ? ` (posted ${times}x)` : ''}${message ? ` with your message "${message}"` : ''}. You'll be pinged with the link when they post a new tweet.`,
 		};

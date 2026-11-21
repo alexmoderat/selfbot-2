@@ -53,7 +53,7 @@ const startWebServer = (port) => {
 	loadRoutes(app);
 
 	const server = app.listen(port, '127.0.0.1', () => {
-		console.log(`[web] lauscht auf 127.0.0.1:${port} (${baseUrl() || 'ohne WEB_BASE_URL'})`);
+		Logger.info(`[web] lauscht auf 127.0.0.1:${port} (${baseUrl() || 'ohne WEB_BASE_URL'})`);
 	});
 	// Zusatz-Port nur lokal (config.web.compatPort, bisher WEB_COMPAT_PORT=3000): der 24/7-Stream (badges-stream.sh)
 	// oeffnete sb-v2s http://localhost:3000/stats und haelt diese Adresse bis zum naechsten Stream-Zyklus (24.10.2026).
@@ -61,7 +61,7 @@ const startWebServer = (port) => {
 	const compatPort = bot.Config.web?.compatPort;
 	if (compatPort) {
 		app.listen(Number(compatPort), '127.0.0.1', () => {
-			console.log(`[web] zusaetzlich auf 127.0.0.1:${compatPort} (alter sb-v2-Port)`);
+			Logger.info(`[web] zusaetzlich auf 127.0.0.1:${compatPort} (alter sb-v2-Port)`);
 		});
 	}
 	setInterval(() => void cleanExpiredSessions().catch(() => {}), 15 * 60_000).unref();

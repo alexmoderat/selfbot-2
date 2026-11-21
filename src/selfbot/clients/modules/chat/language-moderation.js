@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { got } = require('../../../token/got.js');
 const { defineChatModule } = require('../chat-modules.js');
 const phrases = require('../../../util/moderation-phrases.js');
@@ -22,7 +23,7 @@ const translateToEnglish = async (text) => {
 		searchParams: { q: text, langpair: 'autodetect|en' },
 		timeout: { request: 5000 },
 	}).catch((e) => {
-		console.warn('[language-moderation] Uebersetzung fehlgeschlagen', e);
+		Logger.warn('[language-moderation] Uebersetzung fehlgeschlagen', e);
 		return null;
 	});
 
@@ -60,7 +61,7 @@ module.exports = defineChatModule({
 			}
 
 			const label = `${matched.Reason || matched.Phrase} (translated)`;
-			console.warn(`[language-moderation] ${user.name} in #${channel.name}: "${message}" -> "${translated}"`);
+			Logger.warn(`[language-moderation] ${user.name} in #${channel.name}: "${message}" -> "${translated}"`);
 			await autoBan(targetFromChannel(channel, userId, user.name), {
 				reason: formatAutoBanReason(label, platform.selfName),
 				publicReason: label,

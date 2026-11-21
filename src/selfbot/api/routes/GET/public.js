@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const express = require('express');
 const {
 	got,
@@ -59,7 +60,7 @@ router.get(
 					cpu: i.monit?.cpu ?? null,
 				}));
 			} catch (e) {
-				console.warn('[web] pm2 jlist fehlgeschlagen', e);
+				Logger.warn('[web] pm2 jlist fehlgeschlagen', e);
 				return null;
 			}
 		};

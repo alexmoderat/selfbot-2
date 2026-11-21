@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('../token/got.js');
 const { getPermissions } = require('../clients/modules/handler.js');
 const { Script, createContext } = require('node:vm');
@@ -98,7 +99,7 @@ module.exports = {
 		try {
 			script = new Script(scriptString);
 		} catch (e) {
-			console.log(e);
+			Logger.info(e);
 			return { success: false, text: scrub(`Parse: ${String(e)}`, secrets) };
 		}
 
@@ -124,7 +125,7 @@ module.exports = {
 
 			return { success: true, text: scrub(String(result), secrets) };
 		} catch (e) {
-			console.log(e);
+			Logger.info(e);
 			return { success: false, text: scrub(`Execute: ${String(e)}`, secrets) };
 		}
 	},

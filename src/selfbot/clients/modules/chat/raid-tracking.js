@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 const { recordRaid } = require('../../../util/channel-stats.js');
 
@@ -15,7 +16,7 @@ module.exports = defineChatModule({
 			}
 
 			const display = String(tags['msg-param-displayName'] || login);
-			await recordRaid(channel, login, display, Number(tags['msg-param-viewerCount'] ?? 0)).catch((e) => console.warn(`[raid-tracking] ${login} in #${channel.name}`, e));
+			await recordRaid(channel, login, display, Number(tags['msg-param-viewerCount'] ?? 0)).catch((e) => Logger.warn(`[raid-tracking] ${login} in #${channel.name}`, e));
 		},
 	},
 });

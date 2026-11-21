@@ -1,3 +1,4 @@
+const { Logger } = require('../../misc/logger.js');
 const WebSocket = require('ws');
 const { EventEmitter } = require('node:events');
 const crypto = require('node:crypto');
@@ -15,7 +16,7 @@ const z = require('zod');
 
 const RAW_LOG_ENABLED = process.env.RAW_HERMES_LOG === '1';
 const log = (message, level = 'info') => {
-	const fn = level === 'error' ? console.error : level === 'warning' ? console.warn : console.log;
+	const fn = level === 'error' ? Logger.error : level === 'warning' ? Logger.warn : Logger.info;
 	fn(message);
 };
 
@@ -187,7 +188,7 @@ class HermesPubSubClient extends EventEmitter {
 	_send(packet) {
 		if (!this._ws || this._ws.readyState !== WebSocket.OPEN) return;
 		const raw = JSON.stringify(packet);
-		if (RAW_LOG_ENABLED) console.log(`[hermes >] ${redact(raw)}`);
+		if (RAW_LOG_ENABLED) Logger.info(`[hermes >] ${redact(raw)}`);
 		this._ws.send(raw);
 	}
 
@@ -241,7 +242,7 @@ class HermesPubSubClient extends EventEmitter {
 	// ── Empfangen ──────────────────────────────────────────────────────────────
 
 	_receive(raw) {
-		if (RAW_LOG_ENABLED) console.log(`[hermes <] ${redact(raw)}`);
+		if (RAW_LOG_ENABLED) Logger.info(`[hermes <] ${redact(raw)}`);
 		let json;
 		try {
 			json = JSON.parse(raw);

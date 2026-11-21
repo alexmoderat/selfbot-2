@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 const phrases = require('../../../util/moderation-phrases.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
@@ -58,13 +59,13 @@ module.exports = defineChatModule({
 			// Statusaenderung
 			if (payload.type === 'low_trust_user_treatment_update') {
 				const updatedBy = ltu.updated_by?.login ?? data.updated_by?.login;
-				console.log(`[low-trust] Status-Update: ${login} in #${channel.name} -> ${status}${updatedBy ? ` (by ${updatedBy})` : ''}`);
+				Logger.info(`[low-trust] Status-Update: ${login} in #${channel.name} -> ${status}${updatedBy ? ` (by ${updatedBy})` : ''}`);
 				if (userId) {
 					applyTreatment(userId, status);
 				}
 				return;
 			} else if (payload.type !== 'low_trust_user_new_message') {
-				console.log(`[low-trust] Unbekannter Typ in #${channel.name}: ${payload.type ?? '?'}`);
+				Logger.info(`[low-trust] Unbekannter Typ in #${channel.name}: ${payload.type ?? '?'}`);
 				return;
 			}
 
@@ -73,17 +74,17 @@ module.exports = defineChatModule({
 			const banEvaluation = ltu.ban_evasion_evaluation ?? 'UNKNOWN';
 			if (banEvaluation === 'LIKELY_EVADER' && userId) {
 				markEvader(userId);
-				console.warn(`[low-trust] LIKELY_EVADER erkannt: ${login}`);
+				Logger.warn(`[low-trust] LIKELY_EVADER erkannt: ${login}`);
 			}
 
-			console.warn(`[low-trust] Nachricht: ${login} in #${channel.name} (${status}, eval:${banEvaluation}): "${messageText}"`);
+			Logger.warn(`[low-trust] Nachricht: ${login} in #${channel.name} (${status}, eval:${banEvaluation}): "${messageText}"`);
 			if (!userId || channel.mode !== 'Moderator') {
 				return;
 			} else if ((await bot.Channels.getData(channel, 'autobanSpamDisabled')) === true) {
-				console.log(`[low-trust] Spam-Autoban in #${channel.name} deaktiviert - skip ${login}`);
+				Logger.info(`[low-trust] Spam-Autoban in #${channel.name} deaktiviert - skip ${login}`);
 				return;
 			} else if (!messageText) {
-				console.warn(`[low-trust] Leerer Text von ${login} - Phrasen-Check uebersprungen`);
+				Logger.warn(`[low-trust] Leerer Text von ${login} - Phrasen-Check uebersprungen`);
 				return;
 			}
 
@@ -125,7 +126,7 @@ module.exports = defineChatModule({
 				return;
 			}
 
-			console.warn(`[low-trust] Link-Spam von ${login} in #${channel.name}: ${linkSpam.domains.join(', ')}`);
+			Logger.warn(`[low-trust] Link-Spam von ${login} in #${channel.name}: ${linkSpam.domains.join(', ')}`);
 			const preset = phrases.getPreset('sellerbot');
 			if (preset) {
 				const learned = promoVariants(messageText, linkSpam.domains);
@@ -142,7 +143,7 @@ module.exports = defineChatModule({
 						.catch(() => {});
 				}
 				if (learned.length > 0) {
-					console.log(`[low-trust] ${learned.length} Promo-Banphrase(n) gelernt: ${learned.join(', ')}`);
+					Logger.info(`[low-trust] ${learned.length} Promo-Banphrase(n) gelernt: ${learned.join(', ')}`);
 				}
 			}
 

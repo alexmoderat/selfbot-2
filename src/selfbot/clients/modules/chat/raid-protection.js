@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 const { autoBan, sayModLog, targetFromChannel } = require('../../../util/moderation.js');
 const { isSuppressed, suppressChannel } = require('../../../util/raid-suppression.js');
@@ -58,12 +59,12 @@ module.exports = defineChatModule({
 
 			// Im Zweifel Probelauf, nicht scharf
 			if ((await bot.Channels.getData(channel, 'raidProtectionDryRun')) !== false) {
-				console.warn(`[raid-protection] PROBELAUF in #${channel.name}: haette ${entries.length} gebannt - ${names.join(', ')}`);
+				Logger.warn(`[raid-protection] PROBELAUF in #${channel.name}: haette ${entries.length} gebannt - ${names.join(', ')}`);
 				await sayModLog(`🧪 DRY RUN — would have banned ${entries.length} in #${channel.name}: ${names.map((i) => `@${i}`).join(' ')}`);
 				return;
 			}
 
-			console.warn(`[raid-protection] Raid-Angriff in #${channel.name}: ${entries.length} Erstnachrichten binnen ${WINDOW / 1000} s`);
+			Logger.warn(`[raid-protection] Raid-Angriff in #${channel.name}: ${entries.length} Erstnachrichten binnen ${WINDOW / 1000} s`);
 			const reason = formatAutoBanReason(PUBLIC_REASON, platform.selfName);
 			for (const entry of entries) {
 				await autoBan(targetFromChannel(channel, entry.userId, entry.userName), {

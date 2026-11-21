@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 const phrases = require('../../../util/moderation-phrases.js');
 const { isBanEvader, isSuspicious } = require('../../../util/low-trust-state.js');
@@ -101,7 +102,7 @@ module.exports = defineChatModule({
 				if (matched.Escalate) {
 					const count = bumpEscalation(`${channel.id}:${userId}:${matched.ID}`);
 					if (count <= 1) {
-						console.log(`[banphrase-filter] ESCALATE (1. Treffer, kein Timeout): ${user.name} in #${channel.name} "${matched.Phrase}"`);
+						Logger.info(`[banphrase-filter] ESCALATE (1. Treffer, kein Timeout): ${user.name} in #${channel.name} "${matched.Phrase}"`);
 						return;
 					}
 
@@ -113,7 +114,7 @@ module.exports = defineChatModule({
 
 				// Nur komischer Name UND juenger als 7 Tage wird gebannt, sonst keine Aktion; Ban-Evader/Verdaechtige immer wie bisher
 				if (!evader && !suspicious && !(await mayBanPhraseHit(user.name, userId, matched, phrases.getPreset('sellerbot')?.ID ?? null))) {
-					console.warn(`[banphrase-filter] "${matched.Phrase}" von ${user.name} in #${channel.name} - kein komischer Name oder aelter als 7 Tage, keine Aktion`);
+					Logger.warn(`[banphrase-filter] "${matched.Phrase}" von ${user.name} in #${channel.name} - kein komischer Name oder aelter als 7 Tage, keine Aktion`);
 					return;
 				}
 
@@ -122,7 +123,7 @@ module.exports = defineChatModule({
 				const ok = await banUser(targetFromChannel(channel, userId, user.name), { reason, duration, status, automated: true });
 
 				if (ok) {
-					console.log(`[banphrase-filter] ${duration ? `TIMEOUT ${duration}s` : 'BAN'} ${user.name} in #${channel.name} [${status}]`);
+					Logger.info(`[banphrase-filter] ${duration ? `TIMEOUT ${duration}s` : 'BAN'} ${user.name} in #${channel.name} [${status}]`);
 					await announceBan(channel.name, user.name, localizedReason, duration ?? null);
 					await announceAutobanCount(channel);
 				}
@@ -155,10 +156,10 @@ module.exports = defineChatModule({
 								sourceUser: user.name,
 								sourceMessage: message,
 							})
-							.catch((e) => console.warn('[banphrase-filter] Spam-Domain speichern fehlgeschlagen', e));
+							.catch((e) => Logger.warn('[banphrase-filter] Spam-Domain speichern fehlgeschlagen', e));
 					}
 
-					console.log(`[banphrase-filter] ${learned ? 'Gelernte Spam-Domain' : 'Versteckter Link'} ${domain} von ${user.name} in #${channel.name}`);
+					Logger.info(`[banphrase-filter] ${learned ? 'Gelernte Spam-Domain' : 'Versteckter Link'} ${domain} von ${user.name} in #${channel.name}`);
 					if (ok) {
 						await announceBan(channel.name, user.name, publicReason, null);
 						await announceAutobanCount(channel);
@@ -173,7 +174,7 @@ module.exports = defineChatModule({
 				return;
 			}
 
-			console.log(`[banphrase-filter] Link-Spam von ${user.name} in #${channel.name}: ${linkSpam.domains.join(', ')}`);
+			Logger.info(`[banphrase-filter] Link-Spam von ${user.name} in #${channel.name}: ${linkSpam.domains.join(', ')}`);
 			lastMessage.delete(bufferKey);
 
 			// "best viewers" -> Domains ins sellerbot-Preset lernen
@@ -184,7 +185,7 @@ module.exports = defineChatModule({
 						const phrase = domain.toLowerCase().trim();
 						if (phrase.length >= 4) {
 							await phrases.addPhrase({ preset: preset.ID }, { phrase, reason: 'seller bot', addedBy: bot.Twitch.selfName });
-							console.log(`[banphrase-filter] Seller-Domain ins Preset gelernt: ${phrase}`);
+							Logger.info(`[banphrase-filter] Seller-Domain ins Preset gelernt: ${phrase}`);
 						}
 					}
 				}

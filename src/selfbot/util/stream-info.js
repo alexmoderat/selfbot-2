@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('../token/got.js');
 const { fetchTwitchUser } = require('./twitch/twitch-utils.js');
 const { GQL_PUBLIC_CLIENT_ID, getLastBroadcastStart } = require('../token/gql.js');
@@ -81,7 +82,7 @@ const fetchHlsQuality = async (login) => {
 
 		return playlist.ok ? parseSourceQuality(String(playlist.body)) : null;
 	} catch (e) {
-		console.warn('[stream-info] HLS-Abruf fehlgeschlagen', e);
+		Logger.warn('[stream-info] HLS-Abruf fehlgeschlagen', e);
 		return null;
 	}
 };

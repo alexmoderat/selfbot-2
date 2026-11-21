@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { getStreamInfo } = require('../util/stream-info.js');
 
 /** Stream-Infos, aus sb-v2; "uptime" als Kurzfassung (ninou2, 03.10.2026 probierte !uptime) */
@@ -21,7 +22,7 @@ module.exports = {
 			info = await getStreamInfo(target);
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
-			console.warn(`[si] ${target}: ${message}`);
+			Logger.warn(`[si] ${target}: ${message}`);
 			return { text: `@${display}, Error fetching stream info: ${message}` };
 		}
 

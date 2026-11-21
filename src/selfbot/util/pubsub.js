@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { HermesPubSubClient } = require('./twitch/hermes-client.js');
 const { LegacyPubSubClient } = require('./twitch/pubSub.js');
 const { getUserToken, invalidateUserToken } = require('./twitch/twitch-utils.js');
@@ -85,7 +86,7 @@ class PubSub {
 						slot.client.listen([...slot.topics], token);
 					}
 				})
-				.catch((e) => console.warn('[pubsub] Token-Auffrischung fehlgeschlagen', e));
+				.catch((e) => Logger.warn('[pubsub] Token-Auffrischung fehlgeschlagen', e));
 		}, TOKEN_REFRESH_INTERVAL).unref();
 	}
 
@@ -108,9 +109,9 @@ class PubSub {
 				return;
 			}
 
-			console.warn(`[pubsub] Listen-Fehler (${topic}): ${error.message}`);
+			Logger.warn(`[pubsub] Listen-Fehler (${topic}): ${error.message}`);
 		});
-		client.onConnect(() => console.log(`[pubsub] Verbindung ${index} bereit (${TRANSPORT})`));
+		client.onConnect(() => Logger.info(`[pubsub] Verbindung ${index} bereit (${TRANSPORT})`));
 		client.connect();
 		return slot;
 	}
@@ -124,7 +125,7 @@ class PubSub {
 		try {
 			// Der Web-Token laesst sich nicht erneuern - abgelehnt heisst: neuen TWITCH_WEB_TOKEN in .env eintragen
 			if (TRANSPORT === 'legacy' && process.env.TWITCH_WEB_TOKEN) {
-				console.warn('[pubsub] TWITCH_WEB_TOKEN abgelehnt (ERR_BADAUTH) - Mod-Themen kommen nicht an');
+				Logger.warn('[pubsub] TWITCH_WEB_TOKEN abgelehnt (ERR_BADAUTH) - Mod-Themen kommen nicht an');
 				return;
 			}
 			await invalidateUserToken();
@@ -133,7 +134,7 @@ class PubSub {
 				slot.client.listen([...slot.topics], token);
 			}
 		} catch (e) {
-			console.warn('[pubsub] Neuanmeldung fehlgeschlagen', e);
+			Logger.warn('[pubsub] Neuanmeldung fehlgeschlagen', e);
 		} finally {
 			this.#reauthenticating = false;
 		}
@@ -219,7 +220,7 @@ class PubSub {
 		const base = { platform, channel, topic, broadcasterId, payload };
 
 		if (LOG_RAW) {
-			console.log(`[pubsub-raw] ${topic}: ${JSON.stringify(payload)}`);
+			Logger.info(`[pubsub-raw] ${topic}: ${JSON.stringify(payload)}`);
 		}
 
 		bot.ChatModules.dispatchPubSub('raw', base);

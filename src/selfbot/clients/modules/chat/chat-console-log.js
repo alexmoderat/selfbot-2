@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 
 /**
@@ -23,9 +24,9 @@ module.exports = defineChatModule({
 			}
 
 			const { channel, user, message, data } = context;
-			console.log(`[Chat] #${channel.name} ${user.name}: ${message}`);
+			Logger.info(`[Chat] #${channel.name} ${user.name}: ${message}`);
 			if (RAW_ENABLED) {
-				console.log(`[ChatRaw] #${channel.name} ${user.name}: ${JSON.stringify(data)}`);
+				Logger.info(`[ChatRaw] #${channel.name} ${user.name}: ${JSON.stringify(data)}`);
 			}
 
 			recent.unshift({ channel: channel.name, user: user.name, message, ts: Date.now() });

@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 
 /**
@@ -39,8 +40,8 @@ module.exports = defineChatModule({
 			setTimeout(
 				() => {
 					void bot.Channels.send(channel, raidThanks(channel.name, displayName, login))
-						.then(() => console.log(`[raid-shoutout] Shoutout fuer ${login} in #${channel.name}`))
-						.catch((e) => console.warn(`[raid-shoutout] #${channel.name}`, e));
+						.then(() => Logger.info(`[raid-shoutout] Shoutout fuer ${login} in #${channel.name}`))
+						.catch((e) => Logger.warn(`[raid-shoutout] #${channel.name}`, e));
 				},
 				DELAY_MIN_MS + Math.random() * (DELAY_MAX_MS - DELAY_MIN_MS),
 			);

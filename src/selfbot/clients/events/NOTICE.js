@@ -1,5 +1,4 @@
 const { client } = require('../../util/twitch/connections.js');
-const { Logger, LogLevel } = require('../../misc/logger.js');
 const ChatModules = require('../modules/chat-modules.js');
 
 // Wie DontAddThisBot: Kanal-Hinweise (gebannt, gesperrt, Nachricht abgelehnt). Die Behandlung selbst
@@ -11,12 +10,6 @@ const NOTICE = async function () {
 	client.on('NOTICE', ({ channelName, messageID, messageText }) => {
 		if (!messageID || !channelName) {
 			return;
-		}
-
-		if (messageID === 'msg_banned') {
-			Logger.log(LogLevel.WARN, `Banned from channel ${channelName}`);
-		} else if (messageID === 'msg_channel_suspended') {
-			Logger.log(LogLevel.WARN, `Suspended channel ${channelName}`);
 		}
 
 		if (STATE_IDS.has(messageID)) {

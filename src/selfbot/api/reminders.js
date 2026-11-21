@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const SupiDate = require('../util/date.js');
 const utilityDb = require('../database/utility.js');
 
@@ -177,7 +178,7 @@ const archiveRemoved = async (sql, values) => {
 	try {
 		await utilityDb.query(sql, values);
 	} catch (e) {
-		console.warn('reminder_history: Archivieren fehlgeschlagen', e);
+		Logger.warn('reminder_history: Archivieren fehlgeschlagen', e);
 	}
 };
 

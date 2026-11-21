@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 const { uploadList } = require('../token/haste.js');
 const { CHATTERS_CAP, fetchChatters, fetchChattersGql } = require('../token/twitch-lists.js');
@@ -28,7 +29,7 @@ module.exports = {
 			}
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
-			console.warn(`[chatters] ${channel}: ${message}`);
+			Logger.warn(`[chatters] ${channel}: ${message}`);
 			return { text: `@${display}, ${message}` };
 		}
 

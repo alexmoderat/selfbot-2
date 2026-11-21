@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('../token/got.js');
 const { setTimeout: sleep } = require('node:timers/promises');
 const { banUser, resolveTarget } = require('../util/moderation.js');
@@ -51,7 +52,7 @@ module.exports = {
 
 		const customReason = reasonWords.join(' ').trim();
 		const reason = formatAutoBanReason(customReason || 'Mass ban', bot.Twitch.selfName);
-		console.warn(`[massban] von ${msg.sender.name} | URL: ${url} | Grund: ${customReason || '—'} | Channels: ${targetChannels.join(', ')}`);
+		Logger.warn(`[massban] von ${msg.sender.name} | URL: ${url} | Grund: ${customReason || '—'} | Channels: ${targetChannels.join(', ')}`);
 
 		// Liste laden
 		const listResponse = await got('Global')({ url: toRawUrl(url), responseType: 'text' }).catch(() => null);
@@ -83,7 +84,7 @@ module.exports = {
 				if (response.ok) {
 					entries.push(...response.body.data.map((u) => ({ id: u.id, login: u.login })));
 				} else {
-					console.warn(`[massban] Lookup-Fehler ${response.statusCode}`);
+					Logger.warn(`[massban] Lookup-Fehler ${response.statusCode}`);
 				}
 
 				await sleep(LOOKUP_DELAY);
@@ -97,7 +98,7 @@ module.exports = {
 			if (probe) {
 				channels.push(name);
 			} else {
-				console.warn(`[massban] Channel ${name} nicht gefunden, uebersprungen`);
+				Logger.warn(`[massban] Channel ${name} nicht gefunden, uebersprungen`);
 			}
 		}
 

@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 const { fetchTwitchUser } = require('../../../util/twitch/twitch-utils.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
@@ -49,7 +50,7 @@ const fetchPinnedText = async (userId) => {
 
 const ban = async (channel, userId, login, reason, publicReason, status) => {
 	if ((await bot.Channels.getData(channel, 'autobanPromoDisabled')) === true) {
-		console.log(`[join-check] Promo-Ban in #${channel.name} aus - ${login} uebersprungen`);
+		Logger.info(`[join-check] Promo-Ban in #${channel.name} aus - ${login} uebersprungen`);
 		return false;
 	}
 
@@ -65,7 +66,7 @@ const check = async (login, channels, selfName) => {
 		if (bio) {
 			bioCache.set(login, bio);
 			if (bio.suspicious) {
-				console.warn(`[join-check] Bio-Spam: ${login} - "${user?.description.slice(0, 100)}"`);
+				Logger.warn(`[join-check] Bio-Spam: ${login} - "${user?.description.slice(0, 100)}"`);
 			}
 		}
 	}
@@ -94,7 +95,7 @@ const check = async (login, channels, selfName) => {
 		return;
 	}
 
-	console.warn(`[join-check] Promo-Pin bei ${login}: "${pinned}"`);
+	Logger.warn(`[join-check] Promo-Pin bei ${login}: "${pinned}"`);
 	for (const channel of channels) {
 		if (!bannedIn.has(channel.id)) {
 			await ban(channel, bio.userId, login, formatAutoBanReason('Promo Account', selfName), 'Promo Account', 'PROMO PIN');
@@ -112,7 +113,7 @@ const drain = async (selfName) => {
 		while (queue.size > 0) {
 			const [login, channels] = queue.entries().next().value;
 			queue.delete(login);
-			await check(login, channels, selfName).catch((e) => console.warn(`[join-check] ${login}`, e));
+			await check(login, channels, selfName).catch((e) => Logger.warn(`[join-check] ${login}`, e));
 			await new Promise((resolve) => setTimeout(resolve, QUEUE_DELAY));
 		}
 	} finally {

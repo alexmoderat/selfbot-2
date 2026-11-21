@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('./got.js');
 const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 const { gqlSmartbox } = require('./gql.js');
@@ -60,7 +61,7 @@ const fetchFollowerCount = async (userId) => {
 /** Alter eines Accounts in Tagen; null, wenn nicht ermittelbar */
 const accountAgeDays = async (identifier, options = {}) => {
 	const user = await fetchTwitchUser(identifier, options).catch((e) => {
-		console.warn(`[twitch-lists] Altersabfrage fehlgeschlagen fuer ${identifier}`, e);
+		Logger.warn(`[twitch-lists] Altersabfrage fehlgeschlagen fuer ${identifier}`, e);
 		return null;
 	});
 

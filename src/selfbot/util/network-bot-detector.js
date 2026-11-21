@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const utility = require('../database/utility.js');
 
 const { autoBan, targetFromChannel } = require('./moderation.js');
@@ -121,7 +122,7 @@ const runNetworkBotCheck = async (context, rule) => {
 		return;
 	}
 
-	console.warn(`[network-bot] ${rule.category}: ${user.name} in #${channel.name} - "${message}" (${channelCount} Channels, Schwelle ${threshold})`);
+	Logger.warn(`[network-bot] ${rule.category}: ${user.name} in #${channel.name} - "${message}" (${channelCount} Channels, Schwelle ${threshold})`);
 	await autoBan(targetFromChannel(channel, userId, user.name), {
 		reason: formatAutoBanReason(rule.reasonLabel, platform.selfName),
 		publicReason: rule.reasonLabel,

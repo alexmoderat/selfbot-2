@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('../token/got.js');
 const conversations = require('../util/ask-conversations.js');
 
@@ -90,7 +91,7 @@ const askGemini = async (question, apiKey, model = DEFAULT_MODEL, history = []) 
 		return { error: 'the AI is busy right now, try again in a bit.' };
 	}
 	if (response.statusCode !== 200) {
-		console.warn(`[ask] Gemini HTTP ${response.statusCode}: ${JSON.stringify(response.body).slice(0, 300)}`);
+		Logger.warn(`[ask] Gemini HTTP ${response.statusCode}: ${JSON.stringify(response.body).slice(0, 300)}`);
 		return { error: `the AI didn't answer (status ${response.statusCode}), try again later.` };
 	}
 	const answer = extractAnswer(response.body);
@@ -130,7 +131,7 @@ const answerQuestion = async (msg, { continueChat }) => {
 		const [first, ...followUps] = splitAnswer(result.answer);
 		return { text: `@${display}, ${first}`, followUps };
 	} catch (e) {
-		console.warn(`[ask] ${e instanceof Error ? e.message : e}`);
+		Logger.warn(`[ask] ${e instanceof Error ? e.message : e}`);
 		return { text: `@${display}, the AI didn't answer, try again later.` };
 	}
 };

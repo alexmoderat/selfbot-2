@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 // Eigener Ersatz fuer Twitchs first-msg-Tag, aus sb-v2s v2/singletons/chatter-registry.ts.
 // EventSub channel.chat.message liefert das Flag nicht (GQL auch nicht) - der echte Wert kommt, wenn
 // moeglich, aus dem CatQuery-Firehose (catquery-firehose.ts); diese Ableitung ist der Rueckfall.
@@ -41,7 +42,7 @@ const firstSeen = async (channelId, userId) => {
 
 		return result.upsertedCount === 1;
 	} catch (e) {
-		console.warn(`[chatter-registry] ${channelId}/${userId}`, e);
+		Logger.warn(`[chatter-registry] ${channelId}/${userId}`, e);
 		return false;
 	}
 };

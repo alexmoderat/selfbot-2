@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 const { autoBan, targetFromChannel } = require('../../../util/moderation.js');
 const { formatAutoBanReason } = require('../../../util/ban-reason.js');
@@ -38,7 +39,7 @@ module.exports = defineChatModule({
 				return;
 			}
 
-			console.warn(`[new-account-guard] Frischer Account (${age.ageDays.toFixed(1)} d) bei erster Nachricht: ${user.name} in #${channel.name}`);
+			Logger.warn(`[new-account-guard] Frischer Account (${age.ageDays.toFixed(1)} d) bei erster Nachricht: ${user.name} in #${channel.name}`);
 			await autoBan(targetFromChannel(channel, userId, user.name), {
 				reason: formatAutoBanReason(PUBLIC_REASON, platform.selfName),
 				publicReason: PUBLIC_REASON,

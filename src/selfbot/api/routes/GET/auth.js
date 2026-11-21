@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const express = require('express');
 const {
 	existsSync,
@@ -213,7 +214,7 @@ router.get('/callback', async (req, res) => {
 		if (pending.type === 'stats_stream') {
 			const file = path.join(__dirname, '..', '..', 'stats-stream-token.json');
 			writeFileSync(file, JSON.stringify({ access_token: token.access_token, refresh_token: token.refresh_token, channel_id: owner.user_id, login }, null, 2));
-			console.log(`[web] Stats-Stream-Token gespeichert fuer ${login}`);
+			Logger.info(`[web] Stats-Stream-Token gespeichert fuer ${login}`);
 			res.send(page('✅ Stats stream authorized!', text(`Account: ${owner.login}`)));
 			return;
 		}
@@ -245,21 +246,21 @@ router.get('/callback', async (req, res) => {
 					url: 'moderation/moderators',
 					searchParams: { broadcaster_id: owner.user_id, user_id: twitch.selfId },
 				}).catch((e) => {
-					console.warn(`[web] Bot konnte in #${login} nicht gemoddet werden`, e);
+					Logger.warn(`[web] Bot konnte in #${login} nicht gemoddet werden`, e);
 					return null;
 				});
 				modded = response?.statusCode === 204 || response?.statusCode === 422;
 				if (response && !modded) {
-					console.warn(`[web] Bot in #${login} nicht gemoddet: Status ${response.statusCode}`);
+					Logger.warn(`[web] Bot in #${login} nicht gemoddet: Status ${response.statusCode}`);
 				}
 			}
 
 			const result = await joinByLogin(login);
-			console.log(`[web] Bot hinzugefuegt: ${login} (${result.status}, modded: ${modded})`);
+			Logger.info(`[web] Bot hinzugefuegt: ${login} (${result.status}, modded: ${modded})`);
 			if (result.status === 'joined' || (result.status === 'already' && modded && result.channel.mode !== 'Moderator')) {
 				// Twitchs Mod-Liste kann nachhinken: dann den Mode selbst setzen und die Mod-Abos nachziehen
 				if (modded && result.channel.mode !== 'Moderator') {
-					await markModerator(result.channel).catch((e) => console.warn(`[web] Abos von #${login} nicht aktualisiert`, e));
+					await markModerator(result.channel).catch((e) => Logger.warn(`[web] Abos von #${login} nicht aktualisiert`, e));
 				}
 
 				// Im Hintergrund, damit die Weiterleitung nicht auf die Wartezeit zwischen den Nachrichten wartet
@@ -271,7 +272,7 @@ router.get('/callback', async (req, res) => {
 						}
 						await bot.Channels.send(channel, message);
 					}
-				})().catch((e) => console.warn(`[web] Beitrittsmeldung in #${login} fehlgeschlagen`, e));
+				})().catch((e) => Logger.warn(`[web] Beitrittsmeldung in #${login} fehlgeschlagen`, e));
 			}
 			const sessionToken = await createSession({ username: owner.login, userId: owner.user_id, channel: login, displayName: owner.login });
 			res.setHeader('Set-Cookie', `${COOKIE}=${sessionToken}; Path=${basePath || '/'}; HttpOnly; Max-Age=${SESSION_TTL / 1000}; SameSite=Lax`);
@@ -282,7 +283,7 @@ router.get('/callback', async (req, res) => {
 		// Der Link gilt nur fuer das genannte Konto - sonst landete fremder Token unter falschem Namen
 		// (alexmoderat, 29.09.2026: commanderroot-Slot enthielt ninou2s Token)
 		if (login !== pending.username) {
-			console.warn(`[web] /auth/${pending.username}: Token von ${login} abgelehnt`);
+			Logger.warn(`[web] /auth/${pending.username}: Token von ${login} abgelehnt`);
 			res.send(page('❌ Wrong account', text(`This link was for ${pending.username}, but you authorized as ${login}. Use the link for your own account instead.`)));
 			return;
 		}
@@ -290,7 +291,7 @@ router.get('/callback', async (req, res) => {
 		await saveToken(login, owner.user_id, token);
 		res.send(page('✅ Authorized!', text('You can now use followage and the other commands that need your authorization.')));
 	} catch (e) {
-		console.warn('[web] OAuth-Callback fehlgeschlagen', e);
+		Logger.warn('[web] OAuth-Callback fehlgeschlagen', e);
 		res.send(page('Error during authorization.'));
 	}
 });
@@ -317,10 +318,10 @@ router.get('/bot-callback', async (req, res) => {
 		}
 
 		await storeBotRefreshToken(token.refresh_token);
-		console.log('[web] Bot-Konto neu autorisiert');
+		Logger.info('[web] Bot-Konto neu autorisiert');
 		res.send(page('✅ Bot authorized!', text('The new token is used from the next request on.')));
 	} catch (e) {
-		console.warn('[web] Bot-Callback fehlgeschlagen', e);
+		Logger.warn('[web] Bot-Callback fehlgeschlagen', e);
 		res.send(page('Error during authorization.'));
 	}
 });

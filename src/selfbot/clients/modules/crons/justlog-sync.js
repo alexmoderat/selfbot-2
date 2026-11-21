@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
 const { callAdmin, configuredChannelIds, readAdminKey, resolveIds } = require('../../../token/justlog.js');
 
@@ -15,7 +16,7 @@ module.exports = defineCron({
 		const key = readAdminKey();
 		const existing = configuredChannelIds();
 		if (!key || !existing) {
-			console.warn('[justlog-sync] justlog-config nicht lesbar');
+			Logger.warn('[justlog-sync] justlog-config nicht lesbar');
 			return;
 		}
 
@@ -30,6 +31,6 @@ module.exports = defineCron({
 		}
 
 		await callAdmin('POST', newIds, key);
-		console.log(`[justlog-sync] ${newIds.length} neue Channel(s) zu justlog hinzugefuegt`);
+		Logger.info(`[justlog-sync] ${newIds.length} neue Channel(s) zu justlog hinzugefuegt`);
 	},
 });

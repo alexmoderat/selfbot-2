@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
 const { updateRecordIfHigher } = require('../../../util/channel-stats.js');
 
@@ -16,7 +17,7 @@ module.exports = defineCron({
 		}
 
 		if (live.length > 0 && (await updateRecordIfHigher('live_channels', live.length, live))) {
-			console.log(`[live-record] Neuer Rekord: ${live.length} live Channels (${live.join(', ')})`);
+			Logger.info(`[live-record] Neuer Rekord: ${live.length} live Channels (${live.join(', ')})`);
 		}
 	},
 });

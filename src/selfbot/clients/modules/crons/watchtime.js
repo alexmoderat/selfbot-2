@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { setTimeout: sleep } = require('node:timers/promises');
 const { defineCron } = require('../timers.js');
 const { addWatchtime, isKnownBot } = require('../../../util/channel-stats.js');
@@ -37,7 +38,7 @@ module.exports = defineCron({
 				const live = (await bot.Channels.isLive(channel)) === true;
 				await addWatchtime(channel, ids, MINUTES_PER_TICK, live);
 			} catch (e) {
-				console.warn(`[watchtime] Fehler in #${channel.name}`, e);
+				Logger.warn(`[watchtime] Fehler in #${channel.name}`, e);
 			}
 
 			await sleep(CHANNEL_DELAY);

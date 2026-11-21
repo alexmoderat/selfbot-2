@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
 const { getCurrentCategory } = require('../../../util/channel-stats.js');
 const { streamData } = require('../../../util/stream-tracking.js');
@@ -52,7 +53,7 @@ module.exports = defineCron({
 		}
 
 		const extra = await streamData.listExtraChannels().catch((e) => {
-			console.warn('[streamer-streak] Extra-Liste nicht ladbar', e);
+			Logger.warn('[streamer-streak] Extra-Liste nicht ladbar', e);
 			return [];
 		});
 		for (const entry of extra) {
@@ -88,7 +89,7 @@ module.exports = defineCron({
 				const category = stream.game ?? (channel ? await getCurrentCategory(channel).catch(() => null) : null) ?? 'no category';
 				await streamData.addCategorySeconds(id, name, category, plan.seconds);
 			} catch (e) {
-				console.warn(`[streamer-streak] Aufzeichnung fehlgeschlagen fuer #${name}`, e);
+				Logger.warn(`[streamer-streak] Aufzeichnung fehlgeschlagen fuer #${name}`, e);
 			}
 		}
 	},

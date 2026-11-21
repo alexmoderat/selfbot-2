@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
 const { punishFakeLive, hashLiveThumbnail } = require('../chat/follow-protection.js');
 const { findHashMatch, listPendingWatches, recordHash, removeExpiredWatches, removeWatch } = require('../../../util/fake-live.js');
@@ -37,7 +38,7 @@ module.exports = defineCron({
 				}
 				await removeWatch(channelName, userId).catch(() => {});
 			} catch (e) {
-				console.warn(`[fake-live-watch] Fehler bei ${userId}/#${channelName}`, e);
+				Logger.warn(`[fake-live-watch] Fehler bei ${userId}/#${channelName}`, e);
 			}
 		}
 	},

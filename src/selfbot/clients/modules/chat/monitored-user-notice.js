@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 const { autoBan, getModLogChannel, sayModLog, targetFromChannel } = require('../../../util/moderation.js');
 const { formatAutoBanReason } = require('../../../util/ban-reason.js');
@@ -46,7 +47,7 @@ module.exports = defineChatModule({
 				});
 
 				if (ok) {
-					console.warn(`[monitored-user-notice] Ban ${user.name} in #${channel.name} - CatQuery: ${status.reason ?? '?'}`);
+					Logger.warn(`[monitored-user-notice] Ban ${user.name} in #${channel.name} - CatQuery: ${status.reason ?? '?'}`);
 					return;
 				}
 			}

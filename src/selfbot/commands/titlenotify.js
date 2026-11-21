@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { listOrLink } = require('../util/list-reply.js');
 const { resolveStreamer, watchTitle } = require('../util/notifications.js');
 const { MAX_MESSAGE, MAX_TIMES, cleanMessage, cleanTimes, homeChannel } = require('../util/tweet-notify.js');
@@ -118,7 +119,7 @@ module.exports = {
 			{ $set: { message, times }, $setOnInsert: { streamerLogin: streamer.login, added: new Date() } },
 			{ upsert: true },
 		);
-		console.log(`[titlenotify] ${user.name} -> ${streamer.login} (gepostet in #${home.name}, eingegeben in #${channel.name})`);
+		Logger.info(`[titlenotify] ${user.name} -> ${streamer.login} (gepostet in #${home.name}, eingegeben in #${channel.name})`);
 		return {
 			text: `@${display}, ✅ Title alert for ${first} set${home.id === channel.id ? '' : ` (posted in #${home.name})`}${times > 1 ? ` (posted ${times}x)` : ''}${message ? ` with your message "${message}"` : ''}. You'll be pinged when they change their title — usually shortly before going live.`,
 		};

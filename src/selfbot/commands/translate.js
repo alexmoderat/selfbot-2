@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('../token/got.js');
 const { resolveLanguage } = require('../util/languages.js');
 
@@ -150,7 +151,7 @@ module.exports = {
 			return { text: `@${display}, [${result.detectedLang} → ${args.targetLang}] ${result.translated}` };
 		} catch (e) {
 			const message = e instanceof Error ? e.message : '';
-			console.warn(`[translate] ${message}`);
+			Logger.warn(`[translate] ${message}`);
 			return { text: `@${display}, Translation failed${message ? ` (${message})` : ''}.` };
 		}
 	},

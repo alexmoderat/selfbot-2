@@ -1,3 +1,4 @@
+const { Logger } = require('../../../misc/logger.js');
 const { defineChatModule } = require('../chat-modules.js');
 const { recordWatchStreak } = require('../../../util/channel-stats.js');
 
@@ -23,7 +24,7 @@ module.exports = defineChatModule({
 				return;
 			}
 
-			await recordWatchStreak({ channelId: channel.twitchId, channel: channel.name, userId, login, value }).catch((e) => console.warn('[watch-streak-record] Speichern fehlgeschlagen', e));
+			await recordWatchStreak({ channelId: channel.twitchId, channel: channel.name, userId, login, value }).catch((e) => Logger.warn('[watch-streak-record] Speichern fehlgeschlagen', e));
 		},
 	},
 });

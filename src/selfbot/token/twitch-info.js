@@ -1,3 +1,4 @@
+const { Logger } = require('../misc/logger.js');
 const { got } = require('./got.js');
 
 // Helix-Abfragen fuer Block 7 (Clips, Emotes, Channel-Infos, VODs), aus sb-v2s src/services/twitch-api.ts
@@ -30,7 +31,7 @@ const createClip = async (broadcasterId, duration = 60, title) => {
 
 	const id = response.ok ? response.body.data?.[0]?.id : undefined;
 	if (!id) {
-		console.warn(`[twitch-info] createClip ${broadcasterId}: ${response.statusCode} ${JSON.stringify(response.body)}`);
+		Logger.warn(`[twitch-info] createClip ${broadcasterId}: ${response.statusCode} ${JSON.stringify(response.body)}`);
 		return { error: 'failed' };
 	}
 
