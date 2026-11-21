@@ -1,7 +1,7 @@
 # Abweichungen von DontAddThisBot
 
 Basis: `kattah7/DontAddThisBot`, Commit `c8d7308` (2023-07-31), ISC-Lizenz, Copyright Kattah. Donts `src/` liegt unter
-`src/` (137 Dateien). **126 davon sind Byte fuer Byte identisch**, 11 weichen ab. Alles Eigene liegt in `src/selfbot/`,
+`src/` (137 Dateien). **125 davon sind Byte fuer Byte identisch**, 12 weichen ab. Alles Eigene liegt in `src/selfbot/`,
 `scripts/`, `tests/` und `docs/` (Konzept: [dont-konzept.md](dont-konzept.md)). Jede Abweichung ist im Code mit `// selfbot:`
 markiert.
 
@@ -24,7 +24,7 @@ diff -rq /tmp/dont/src src --exclude=selfbot
 | `src/util/twitch/utils.js`                                                                                                                                                          | +2 Zeilen            | `PoroNumberOne`: ohne Redis-Schluessel `leaderboardEndpoint` (Poro-Rangliste, wird nur von Donts Website gefuellt) warf jede Antwort einen Fehler. Jetzt leere Rangliste.                                                                               |
 | `src/clients/modules/commands.js`                                                                                                                                                   | 2 Zeilen             | Dont-Commands nur laden, wenn `config.dont.commands` sie freigibt (`src/selfbot/dont-commands.js`). Standard: keine.                                                                                                                                    |
 
-Nicht angefasst, obwohl sie Donts Daten anfassen: `handler.js`, `cooldown.js`, `updateUser.js`, `JoinChannels.js`,
+Nicht angefasst, obwohl sie Donts Daten anfassen: `cooldown.js`, `updateUser.js`, `JoinChannels.js`,
 `twitch.js`, alle Events (`PRIVMSG`, `USERNOTICE`, `CLEARCHAT`, `NOTICE`, `JOIN`, `PART`, `WHISPER`, `USERSTATE`),
 `api/server.js`, `middleWare.js`, `rateLimit.js`, `getAvatar.js`, `handleEditor.js`, alle Routen, `eventSub*.js`,
 `pubSub*.js`, `bannedChannels.js`, `misc/*`, `token/*`, alle 73 Commands bis auf `ping.js`.
@@ -43,8 +43,9 @@ Nur Repo-Rahmen: `.github/`, `.husky/`, `README.md`, `imgs/`, `trash/`, `scripts
   `/api/bot/channels` liefert 500, solange Donts Redis-Cache `channelsEndpoint` leer ist.
 - 7TV ist an: freigegeben sind `7tvpfp` und `7tvaddeditor` (`dont.commands.whitelist`). Nicht freigegeben, mit Grund:
   `7tvsa` (egvault.7tv.io gibt es nicht mehr), `stats` (api.kattah.me gibt es nicht mehr), `7tvemotes` (schickt hunderte Zeilen in den Chat),
-  `7tv`, `add`, `remove`, `set` (Namen belegt durch unsere Commands, sonst antworten beide). `7tvaliasv4` und `7tvyoinkv4` (Flag `stv`)
-  bleiben aus: Donts `handler.js` prueft dafuer den 7TV-Editor-Zugang fuer Donts Konto-ID `629d77a20e60c6d53da64e38`, nicht fuer unseres.
+  `7tv`, `add`, `remove`, `set` (Namen belegt durch unsere Commands, sonst antworten beide). `7tvaliasv4` (`rename`) und `7tvyoinkv4` (`yoink`) sind an: Donts `handler.js` prueft den 7TV-Editor-Zugang
+  fuer die ID aus `config.dont.stvUserId` (unser Konto `01HXECQC500001CJ47EJYYXTGD`, Standard bei Dont `629d77a20e60c6d53da64e38`). Die Antwort
+  "Please grant @DontAddThisBot ..." bleibt Donts Text.
 - Dont-Commands zu toten Diensten beenden unter Node 24 sonst den Prozess (got 11, 'error' ohne Abnehmer); `src/selfbot/util/crash-guard.js` loggt
   solche HTTP-Fehler nur.
 - Lint: `eslint.config.js` schaltet fuer Donts Dateien einige Regeln ab (Donts eigene Konfiguration hatte `no-unused-vars` aus).

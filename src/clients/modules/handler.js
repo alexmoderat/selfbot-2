@@ -213,7 +213,7 @@ module.exports = {
 						}
 
 						const { data } = await GqlUser(stvID);
-						const isBotEditor = data.user.editors.find((x) => x.user.id == '629d77a20e60c6d53da64e38'); // DontAddThisBot's 7tv id
+						const isBotEditor = data.user.editors.find((x) => x.user.id == (bot.Config.dont.stvUserId ?? '629d77a20e60c6d53da64e38')); // DontAddThisBot's 7tv id // selfbot: 7tv-ID unseres Kontos aus config.dont.stvUserId
 						if (!isBotEditor) {
 							msg.send('Please grant @DontAddThisBot 7tv editor permissions.');
 							return;
