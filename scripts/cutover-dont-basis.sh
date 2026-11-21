@@ -61,10 +61,11 @@ run "sudo -u postgres psql -tAc \"select 1 from pg_database where datname='$DONT
 run "node -e \"
 const fs=require('fs');const p='$NEXT/config.json';const c=JSON.parse(fs.readFileSync(p,'utf8'));
 c.postgres.dontDatabase??='$DONT_DB';
-c.twitch={username:c.selfName,rateLimits:'default',...c.twitch};
+const env=fs.readFileSync('$NEXT/.env','utf8').match(/^API_7TV_TOKEN=(.*)\$/m);
+c.twitch={username:c.selfName,rateLimits:'default',stv_token:env?env[1]:'',...c.twitch};
 c.backend={port:11303,origin:'http://localhost',client_id:'',client_secret:'',callback_url:'',...c.backend};
 c.token={key:require('crypto').randomBytes(32).toString('hex'),...c.token};
-c.dont={api:false,pubsub:false,kattahCookie:false,bannedChannels:false,stvSocket:false,commands:{disableAll:true,whitelist:[],blacklist:[]},...c.dont};
+c.dont={api:false,pubsub:false,kattahCookie:false,bannedChannels:false,stvSocket:false,commands:{disableAll:false,whitelist:['7tvaddeditor','7tvpfp'],blacklist:[]},...c.dont};
 fs.writeFileSync(p,JSON.stringify(c,null,1)+'\n');
 \""
 

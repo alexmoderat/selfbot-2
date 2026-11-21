@@ -41,5 +41,10 @@ Nur Repo-Rahmen: `.github/`, `.husky/`, `README.md`, `imgs/`, `trash/`, `scripts
   `Unhandled rejection ... 'roles'` im Log beim Start, die Tabellen werden vorher angelegt. Nicht behoben, damit die Datei Dont bleibt.
 - Donts API (`dont.api`) laeuft unter Express 5 (alle Routen laden, `/api/bot/info`, `/api/bot/commands` antworten);
   `/api/bot/channels` liefert 500, solange Donts Redis-Cache `channelsEndpoint` leer ist.
-- Die Dont-Commands sind standardmaessig aus; der Test gibt nur `level` frei.
+- 7TV ist an: freigegeben sind `7tvpfp` und `7tvaddeditor` (`dont.commands.whitelist`). Nicht freigegeben, mit Grund:
+  `7tvsa` (egvault.7tv.io gibt es nicht mehr), `stats` (api.kattah.me gibt es nicht mehr), `7tvemotes` (schickt hunderte Zeilen in den Chat),
+  `7tv`, `add`, `remove`, `set` (Namen belegt durch unsere Commands, sonst antworten beide). `7tvaliasv4` und `7tvyoinkv4` (Flag `stv`)
+  bleiben aus: Donts `handler.js` prueft dafuer den 7TV-Editor-Zugang fuer Donts Konto-ID `629d77a20e60c6d53da64e38`, nicht fuer unseres.
+- Dont-Commands zu toten Diensten beenden unter Node 24 sonst den Prozess (got 11, 'error' ohne Abnehmer); `src/selfbot/util/crash-guard.js` loggt
+  solche HTTP-Fehler nur.
 - Lint: `eslint.config.js` schaltet fuer Donts Dateien einige Regeln ab (Donts eigene Konfiguration hatte `no-unused-vars` aus).

@@ -92,6 +92,8 @@ const start = async () => {
 	);
 };
 
+require('./util/crash-guard.js').installCrashGuard(Logger);
+
 process.on('unhandledRejection', (reason) => {
 	Logger.warn('Unhandled rejection', reason);
 });

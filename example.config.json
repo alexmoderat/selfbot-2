@@ -70,5 +70,17 @@
 	},
 	"api": {
 		"port": 11200
+	},
+	"dont": {
+		"commands": {
+			"disableAll": false,
+			"whitelist": ["7tvaddeditor", "7tvpfp"],
+			"blacklist": []
+		}
+	},
+	"twitch": {
+		"username": "alexmoderat",
+		"rateLimits": "default",
+		"stv_token": ""
 	}
 }
