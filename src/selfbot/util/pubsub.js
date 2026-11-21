@@ -1,4 +1,5 @@
 const { Logger } = require('../misc/logger.js');
+const { describe: describePubSub } = require('./pubsub-log.js');
 const { HermesPubSubClient } = require('./twitch/hermes-client.js');
 const { LegacyPubSubClient } = require('./twitch/pubSub.js');
 const { getUserToken, invalidateUserToken } = require('./twitch/twitch-utils.js');
@@ -220,6 +221,11 @@ class PubSub {
 
 		if (LOG_RAW) {
 			Logger.info(`[pubsub-raw] ${topic}: ${JSON.stringify(payload)}`);
+		}
+
+		const line = describePubSub(prefix, payload, channel?.name ?? bot.Channels.getByTwitchId(payload?.data?.channel_id)?.name ?? payload?.data?.channel_id ?? null);
+		if (line) {
+			Logger.log(line.level, line.text);
 		}
 
 		bot.ChatModules.dispatchPubSub('raw', base);
