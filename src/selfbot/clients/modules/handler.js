@@ -7,7 +7,7 @@ const { withTrigger } = require('../../util/trigger-suffix.js');
 const { getCommand, permissionOf } = require('./commands.js');
 const { CooldownManager } = require('./cooldown.js');
 const { parseParametersFromArguments, formatParams } = require('./parameters.js');
-const { ALT_PREFIX, parseInvocation, checkConfirmation, isMissingRequiredArgument, isAltPrefixOwnedElsewhere } = require('./invocation.js');
+const { ALT_PREFIX, parseInvocation, checkConfirmation, isMissingRequiredArgument, isAltPrefixOwnedElsewhere, isAltPrefixFullCommand } = require('./invocation.js');
 const { effectiveLevel, isLevelAllowed } = require('./levels.js');
 const { getUtilityInvocations } = require('../../util/command-listing.js');
 const Filter = require('../../util/filter.js');
@@ -281,9 +281,13 @@ const handler = async (msg) => {
 	}
 
 	// utility-bot (sb-v2-Code, Prefix "!") antwortet in seinen Channels selbst auf seine Commands
-	const utilityKnows = (invocation) => getUtilityInvocations(config.values.otherBotCommandsDir).has(invocation);
+	const utilityKnows = (invocation) => getUtilityInvocations(config.values.otherBotCommandsDir, config.values.utilityCommands).has(invocation);
 	if (isAltPrefixOwnedElsewhere(parsed, msg.channelData?.name ?? null, config.values.utilityChannels, utilityKnows)) {
 		return false;
+	}
+	// utility-Channel: "!ll" fuehrt den Command wie "sb ll" aus (Custom Commands des Channels haben Vorrang)
+	if (!custom && getCommand(parsed.invocation) && isAltPrefixFullCommand(parsed, msg.channelData?.name ?? null, config.values.utilityChannels)) {
+		parsed.altOnly = false;
 	}
 	if (parsed.altOnly && !custom) {
 		return false;

@@ -99,11 +99,19 @@ const loadOtherBotCommands = (dir) => {
 };
 
 let utilityInvocations = null;
-/** Namen und Aliase der "!"-Commands des utility-bots (sb-v2-Code), einmal gelesen; vstop (+ vsalltop, vstopall) ist dort utility-only */
-const getUtilityInvocations = (dir) => {
+/**
+ * Namen und Aliase der "!"-Commands, die in den utility-Channels der utility-Bot beantwortet, einmal gelesen.
+ * Mit `explicit` (config values.utilityCommands, Namen und Aliase von utility-next) genau diese Liste; ohne die Commands des alten
+ * utility-bots aus `dir` (sb-v2-Code), dort ist vstop (+ vsalltop, vstopall) utility-only.
+ */
+const getUtilityInvocations = (dir, explicit = null) => {
 	if (!utilityInvocations) {
-		const list = dir ? loadOtherBotCommands(dir) : [];
-		utilityInvocations = new Set(['vstop', 'vsalltop', 'vstopall', ...list.flatMap((i) => [i.Name, ...i.Aliases].map((name) => name.toLowerCase()))]);
+		if (Array.isArray(explicit) && explicit.length > 0) {
+			utilityInvocations = new Set(explicit.map((name) => name.toLowerCase()));
+		} else {
+			const list = dir ? loadOtherBotCommands(dir) : [];
+			utilityInvocations = new Set(['vstop', 'vsalltop', 'vstopall', ...list.flatMap((i) => [i.Name, ...i.Aliases].map((name) => name.toLowerCase()))]);
+		}
 	}
 	return utilityInvocations;
 };

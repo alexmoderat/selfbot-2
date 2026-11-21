@@ -81,4 +81,11 @@ const isMissingRequiredArgument = (usage, args) => args.length === 0 && Boolean(
 const isAltPrefixOwnedElsewhere = (parsed, channelName, utilityChannels, utilityKnows = () => true) =>
 	parsed.usedPrefix === ALT_PREFIX && channelName !== null && utilityChannels.includes(channelName.toLowerCase()) && utilityKnows(parsed.invocation);
 
-module.exports = { ALT_PREFIX, prefixProblem, parseInvocation, DESTRUCTIVE_ARGS, checkConfirmation, isMissingRequiredArgument, isAltPrefixOwnedElsewhere };
+/**
+ * "!" in einem utility-Channel, den der utility-Bot nicht beantwortet: dort gilt "!" wie der normale Prefix fuer alle Commands des Bots
+ * (ninou2 und im_row1 tippen "!ll", "!bw", "!csi" ... wie frueher beim utility-bot), nicht nur fuer no-prefix-Commands.
+ */
+const isAltPrefixFullCommand = (parsed, channelName, utilityChannels) =>
+	parsed.usedPrefix === ALT_PREFIX && parsed.altOnly && channelName !== null && utilityChannels.includes(channelName.toLowerCase());
+
+module.exports = { isAltPrefixFullCommand, ALT_PREFIX, prefixProblem, parseInvocation, DESTRUCTIVE_ARGS, checkConfirmation, isMissingRequiredArgument, isAltPrefixOwnedElsewhere };

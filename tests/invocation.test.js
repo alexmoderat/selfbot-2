@@ -1,6 +1,6 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { checkConfirmation, isAltPrefixOwnedElsewhere, isMissingRequiredArgument, parseInvocation, prefixProblem } = require('../src/selfbot/clients/modules/invocation.js');
+const { checkConfirmation, isAltPrefixOwnedElsewhere, isAltPrefixFullCommand, isMissingRequiredArgument, parseInvocation, prefixProblem } = require('../src/selfbot/clients/modules/invocation.js');
 const { formatParams } = require('../src/selfbot/clients/modules/parameters.js');
 
 const noPrefix = new Set(['8ball', 'vod']);
@@ -138,5 +138,29 @@ describe('prefixProblem', () => {
 describe('Bestaetigungshinweis', () => {
 	it('behaelt Parameter wie channel:', () => {
 		assert.deepEqual(formatParams({ channel: 'ninou2', reason: 'two words', empty: undefined }), ['channel:ninou2', 'reason:"two words"']);
+	});
+});
+
+describe('"!" als vollwertiger Prefix in utility-Channels', () => {
+	const utility = ['ninou2', 'im_row1'];
+	const parse = (text) => parseInvocation(text, 'sb', () => false);
+
+	it('"!ll" in ninou2 laeuft wie "sb ll", anderswo bleibt "!" auf no-prefix-Commands beschraenkt', () => {
+		assert.equal(isAltPrefixFullCommand(parse('!ll'), 'ninou2', utility), true);
+		assert.equal(isAltPrefixFullCommand(parse('!LL xqc'), 'Im_Row1', utility), true);
+		assert.equal(isAltPrefixFullCommand(parse('!ll'), 'alexmoderat', utility), false);
+		assert.equal(isAltPrefixFullCommand(parse('!ll'), null, utility), false);
+	});
+
+	it('"sb ll" und no-prefix-Commands sind nicht betroffen', () => {
+		assert.equal(isAltPrefixFullCommand(parse('sb ll'), 'ninou2', utility), false);
+		assert.equal(
+			isAltPrefixFullCommand(
+				parseInvocation('!title xqc', 'sb', () => true),
+				'ninou2',
+				utility,
+			),
+			false,
+		);
 	});
 });
