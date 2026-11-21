@@ -1,6 +1,6 @@
 const got = require('got');
 const Redis = require('ioredis');
-const redis = new Redis({});
+const redis = new Redis(require('../../../config.json').redis ?? {}); // selfbot: eigene Redis-DB-Nummer aus config.json statt Standard-DB 0
 
 exports.loginByID = async (userID) => {
 	if (!userID) return null;
@@ -113,7 +113,7 @@ exports.channelEmotes = async (channel) => {
 exports.PoroNumberOne = async (userID) => {
 	if (!userID) return null;
 	const redisValue = await redis.get('leaderboardEndpoint');
-	const { leaderboards } = JSON.parse(redisValue);
+	const { leaderboards } = JSON.parse(redisValue) ?? { leaderboards: [] }; // selfbot: ohne Poro-Rangliste (Redis-Schluessel fehlt) kein Fehler
 	const user = leaderboards.slice(0, 10).find((u) => u.id === userID);
 	if (!user) return null;
 	return user;

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Redis = require('ioredis');
-const redis = new Redis({});
+const redis = new Redis(require('../../../../config.json').redis ?? {}); // selfbot: eigene Redis-DB-Nummer aus config.json statt Standard-DB 0
 
 async function returnChannelCount() {
 	const channels = await bot.DB.channels.count({ isChannel: true }).exec();

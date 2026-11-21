@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Redis = require('ioredis');
-const redis = new Redis({});
+const redis = new Redis(require('../../../../config.json').redis ?? {}); // selfbot: eigene Redis-DB-Nummer aus config.json statt Standard-DB 0
 
 async function getLeaderboard() {
 	const topUsers = await bot.DB.poroCount.find().sort({ poroPrestige: -1, poroRank: -1, poroCount: -1 }).exec();

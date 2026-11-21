@@ -35,14 +35,14 @@ braucht weder `handler.js` noch `PRIVMSG.js` einen Einhaengepunkt. Gleiche Comma
 
 ## 3. Datenhaltung: nichts teilt sich einen Namen
 
-| Was                                      | Wo                                                                 |
-| ---------------------------------------- | ------------------------------------------------------------------ |
-| Donts SQL-Tabellen (`users`, `commands`, `channels`, `channel_settings`, `user_commands_settings`, `stv_ids`, `pubsub_events`, `logout_token`, `stv_roles`) | eigene Postgres-DB `dontaddthisbot` (Donts `postgres.js` erzwingt den Namen), eigene Rolle |
-| Unsere Tabellen (`channels`, `users` mit `_id`/`name`/`mode`/`data`, ...) | Postgres `selfbot_next`, ORM `src/selfbot/database/orm/` |
-| `bot.SQL`                                | Donts `pg`-Pool auf `dontaddthisbot` (unser Pool heisst `bot.PG`)    |
-| `bot.DB`                                 | Kompatibilitaetsschicht `src/database/db.js` (Mongoose-Aufrufe wie `bot.DB.users.findOne({id}).exec()`) plus unsere Modelle (`bot.DB.User`, `bot.DB.Reminder`, ...). Gross-/Kleinschreibung trennt die Namen. |
-| `bot.Redis`                              | Donts `redis.js` (`set/get/del`, JSON). Unser Cache heisst `bot.Cache` (`getJSON/setJSON`, Praefix `selfbot-next:`). Beide nutzen die DB-Nummer aus der config. |
-| `bot.Utils`                              | Donts `misc`, erweitert um unsere Helfer (`timeDelta`, `tag`, ...) |
+| Was                                                                                                                                                         | Wo                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Donts SQL-Tabellen (`users`, `commands`, `channels`, `channel_settings`, `user_commands_settings`, `stv_ids`, `pubsub_events`, `logout_token`, `stv_roles`) | eigene Postgres-DB `dontaddthisbot` (Donts `postgres.js` erzwingt den Namen), eigene Rolle                                                                                                                    |
+| Unsere Tabellen (`channels`, `users` mit `_id`/`name`/`mode`/`data`, ...)                                                                                   | Postgres `selfbot_next`, ORM `src/selfbot/database/orm/`                                                                                                                                                      |
+| `bot.SQL`                                                                                                                                                   | Donts `pg`-Pool auf `dontaddthisbot` (unser Pool heisst `bot.PG`)                                                                                                                                             |
+| `bot.DB`                                                                                                                                                    | Kompatibilitaetsschicht `src/database/db.js` (Mongoose-Aufrufe wie `bot.DB.users.findOne({id}).exec()`) plus unsere Modelle (`bot.DB.User`, `bot.DB.Reminder`, ...). Gross-/Kleinschreibung trennt die Namen. |
+| `bot.Redis`                                                                                                                                                 | Donts `redis.js` (`set/get/del`, JSON). Unser Cache heisst `bot.Cache` (`getJSON/setJSON`, Praefix `selfbot-next:`). Beide nutzen die DB-Nummer aus der config.                                               |
+| `bot.Utils`                                                                                                                                                 | Donts `misc`, erweitert um unsere Helfer (`timeDelta`, `tag`, ...)                                                                                                                                            |
 
 ### Kompatibilitaetsschicht fuer `bot.DB` (Mongoose-Ersatz)
 
@@ -65,14 +65,11 @@ neben unserem soll nicht entstehen. Unsere Daten bleiben die Wahrheit.
 
 ## 4. Einhaengepunkte (alle mit `// selfbot:` markiert)
 
-| Datei                        | Zweck                                                                                       |
-| ---------------------------- | ------------------------------------------------------------------------------------------- |
-| `src/main.js`                | unsere Initialisierung (`require('./selfbot')`), Schalter fuer Donts persoenliche Teile (`!cookie` bei kattah, SocketConnection) |
-| `src/util/twitch/connections.js` | Token-Erneuerung des IRC-Passworts statt statischem `twitch.oauth`, `rateLimits` aus config (Bot ist nicht verifiziert) |
-| `src/clients/twitch.js`      | unsere Event-Handler zusaetzlich registrieren                                               |
-| `src/clients/modules/commands.js` | Dont-Commands per Allow-/Blocklist aus der config laden (`dont.commands`)               |
-| `src/database/redis.js`, `modules/timers.js` | DB-Nummer/Verbindung aus der config statt Standard-DB 0                       |
-| `src/api/server.js`          | Port-/Pfad-Anpassung (Routen-Ordner relativ zum Projekt)                                   |
+Die vollstaendige Liste mit Diff-Groesse steht in [dont-abweichungen.md](dont-abweichungen.md). Kurz: `main.js` (ruft
+`src/selfbot/attach.js` auf, Schalter), `util/twitch/connections.js` (Token aus `.env`, Rate-Limits), `database/postgres.js`
+(DB-Name), `database/redis.js` und fuenf weitere Dateien (Redis-DB-Nummer), `clients/modules/commands.js` (Freigabe der
+Dont-Commands), `util/twitch/utils.js` (leere Poro-Rangliste), `database/db.js` (Ersatz, Abschnitt 3). Handler, `PRIVMSG.js`,
+`twitch.js` und alle uebrigen Events bleiben unveraendert; der Token ist fest (`TWITCH_USER_TOKEN`), eine Erneuerung gibt es nicht.
 
 Donts Feature-Gruppen bleiben im Code, sind aber ueber `config.json` > `dont` abschaltbar oder laufen ins Leere
 (Daten leer): Poro-Spiel, 7TV, Discord-Webhooks, Translate, `kattah`-Sonderfaelle, PubSub-/EventSub-Events aus
@@ -91,8 +88,18 @@ Eine `config.json` mit zwei Gruppen von Schluesseln (beide Seiten lesen sie dire
 
 ## 6. Parallelbetrieb und Tests
 
-Eigener Prefix, nur `testaccountalexmoderat`, eigene Ports (11301+), eigene Postgres-Datenbanken, eigene Redis-DB.
-Der alte Bot (`pm2 selfbot`) bleibt unberuehrt. Der Nachweis laeuft ueber `scripts/` plus `tests/`.
+Eigener Prefix (`dnt`), nur `testaccountalexmoderat`, eigene Ports (11300 bis 11303), eigene Postgres-Datenbanken
+(`selfbot_dont`, `selfbot_dont_tables`, Rolle `selfbot_dont`), Redis-DB 15, Crons aus, `JOINER=0` und `CATQUERY_FIREHOSE=0`.
+Der alte Bot (`pm2 selfbot`) bleibt unberuehrt. Nachweis:
+
+- `yarn test` (Unit-Tests, u. a. `tests/dont-compat.test.js`, `tests/dont-commands.test.js`)
+- `node --env-file=<env> scripts/parallel-check.js --log <bot.log>`: ping, level (Donts Handler), afk, AFK-Rueckkehr, remind
+  samt Zustellung, ask, Filter-Ausnahme fuer Admins, Chat-Modul-Ereignis (`CHAT_LOG=1`), Dashboard-Login. Das Bot-Konto
+  schreibt dabei ueber Helix an sich selbst; Twitch liefert diese Nachrichten per IRC zurueck.
+- Filter-Fall fuer Nicht-Admins von Hand: Admin-Flag des Test-Users in der Test-DB entfernen, `ban command:coinflip type:blacklist`
+  vorher anlegen, Bot neu starten: `coinflip` bleibt stumm, `level` meldet Level 1.
+
+Umschalten: `scripts/cutover-dont-basis.sh` (Plan, `--go`, `--rollback`), nicht ausgefuehrt.
 
 ## 7. Offene Entscheidungen fuer alexmoderat
 

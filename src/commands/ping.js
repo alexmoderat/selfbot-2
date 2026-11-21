@@ -1,5 +1,5 @@
 const Redis = require('ioredis');
-const redis = new Redis({});
+const redis = new Redis(require('../../config.json').redis ?? {}); // selfbot: eigene Redis-DB-Nummer aus config.json statt Standard-DB 0
 const humanizeDuration = require('../misc/humanizeDuration');
 
 module.exports = {
