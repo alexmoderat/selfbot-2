@@ -84,3 +84,9 @@ test('Cron live-record speichert die Gesamt-Viewer mit Channels, meiste zuerst',
 		],
 	]);
 });
+
+test('Variablen {arg1}/{args}/{bot_url}', async () => {
+	process.env.WEB_BASE_URL = 'https://bot.example/';
+	assert.equal(await lv.resolveVariables('{arg1}|{arg2}|{args}|{bot_url}/dashboard|{ARG1}', ['@Ninou2', 'x']), 'ninou2|x|@Ninou2 x|https://bot.example/dashboard|ninou2');
+	assert.equal(await lv.resolveVariables('[{arg1}]'), '[]');
+});

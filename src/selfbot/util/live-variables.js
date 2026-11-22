@@ -1,11 +1,14 @@
 const { got } = require('../token/got.js');
 const stats = require('./channel-stats.js');
+const { baseUrl } = require('../token/user-tokens.js');
 
 /**
  * Live- und Rekord-Variablen fuer Custom Commands (alexmoderat, 22.11.2026: "ich moechte aber custom cmd" statt fester
  * Dateien fuer ninou2s !wil, !wilb, !wilbv). Werte werden nur geholt, wenn die Variable im Text vorkommt.
  *
  *   {live_count} {live_list} {live_viewers}            - gerade live (Helix), Liste "@x [2h] // @y [15m]", laengste zuerst
+ *   {arg1} {arg2} {args}                               - Woerter nach dem Command (ohne @/#, klein), leer wenn keine
+ *   {bot_url}                                          - Basis-Link der Bot-Website
  *   {record_count} {record_date} {record_channels}     - Rekord gleichzeitig live Channels (Cron live-record)
  *   {viewers_record} {viewers_record_date} {viewers_record_channels} - Rekord Gesamt-Viewer, Liste "@x [300] // @y [120]"
  */
@@ -65,8 +68,13 @@ const liveStreams = async () =>
 			.filter((i) => Boolean(i)),
 	);
 
-/** Variable -> async Wert; Rekord ohne Eintrag: 0 / "never" / leer */
+/** Variable -> async Wert (bekommt die Argumente des Aufrufs); Rekord ohne Eintrag: 0 / "never" / leer */
+const argOf = (args, i) => (args[i] ?? '').replace(/^[@#]+/, '');
 const VARIABLES = {
+	arg1: async (args) => argOf(args, 0).toLowerCase(),
+	arg2: async (args) => argOf(args, 1).toLowerCase(),
+	args: async (args) => args.join(' '),
+	bot_url: async () => baseUrl(),
 	live_count: async () => String((await liveStreams()).length),
 	live_list: async () => formatLiveList(await liveStreams()).join(SEPARATOR),
 	live_viewers: async () => String((await liveStreams()).reduce((sum, i) => sum + (i.viewers ?? 0), 0)),
@@ -83,11 +91,11 @@ const VARIABLES = {
 };
 
 /** Ersetzt die Variablen im Text; jede Variable einmal geholt (Helix/DB), auch wenn sie mehrfach vorkommt */
-const resolveVariables = async (text) => {
+const resolveVariables = async (text, args = []) => {
 	const cache = new Map();
 	const names = [...new Set([...text.matchAll(/\{(\w+)\}/g)].map((i) => i[1].toLowerCase()))].filter((i) => i in VARIABLES);
 	for (const name of names) {
-		cache.set(name, await VARIABLES[name]());
+		cache.set(name, await VARIABLES[name](args));
 	}
 	return text.replaceAll(/\{(\w+)\}/g, (all, name) => cache.get(name.toLowerCase()) ?? all);
 };
