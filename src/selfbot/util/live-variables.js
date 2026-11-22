@@ -6,6 +6,7 @@ const lastLiveModule = require('./lastlive-data.js');
 const userDataModule = require('./user-data.js');
 const viewerStreakModule = require('./viewerstreak-data.js');
 const stalkModule = require('./stalk-data.js');
+const topModule = require('./top-data.js');
 
 /**
  * Live- und Rekord-Variablen fuer Custom Commands (alexmoderat, 22.11.2026: "ich moechte aber custom cmd" statt fester
@@ -26,6 +27,8 @@ const stalkModule = require('./stalk-data.js');
  *                                                      vs_kind: nochannel | top | notfound | none | ok
  *   {s_kind} {s_emote} {s_first} {s_who} {s_ago} {s_channel} {s_text} - zuletzt gesehen: {arg1} (stalk-data.js);
  *                                                      s_kind: usage | nouser | self | bot | never | nochannel | banned | ok
+ *   {top_games}                                        - Top-10-Kategorien auf Twitch (top-data.js)
+ *   {ts_kind} {ts_list}                                - Top-10-Streams, optional einer Kategorie ({args}); ts_kind: nogame | empty | ok
  *   {bot_url}                                          - Basis-Link der Bot-Website
  *   {record_count} {record_date} {record_channels}     - Rekord gleichzeitig live Channels (Cron live-record)
  *   {viewers_record} {viewers_record_date} {viewers_record_channels} - Rekord Gesamt-Viewer, Liste "@x [300] // @y [120]"
@@ -150,6 +153,15 @@ const stalk = async (args, ctx) => {
 };
 const sField = (key) => async (args, ctx) => String((await stalk(args, ctx))[key] ?? '');
 
+/** Top-10-Streams, Kategorie aus allen Argumenten */
+const topStreams = async (args, ctx) => {
+	if (!ctx.memo.has('ts')) {
+		ctx.memo.set('ts', await topModule.getTopStreams(args.join(' ').trim()));
+	}
+
+	return ctx.memo.get('ts');
+};
+
 const argOf = (args, i) => (args[i] ?? '').replace(/^[@#]+/, '');
 const VARIABLES = {
 	...Object.fromEntries(['kind', 'channel', 'own', 'start', 'length', 'prev', 'year', 'when', 'ago', 'date', 'count', 'sessions', 'total', 'dayword'].map((key) => [`ll_${key}`, llField(key)])),
@@ -177,6 +189,9 @@ const VARIABLES = {
 	),
 	...Object.fromEntries(['kind', 'hint', 'login', 'channel', 'value', 'seen', 'best'].map((key) => [`vs_${key}`, vsField(key)])),
 	...Object.fromEntries(['kind', 'emote', 'first', 'who', 'ago', 'channel', 'text'].map((key) => [`s_${key}`, sField(key)])),
+	top_games: async () => topModule.getTopGames(),
+	ts_kind: async (args, ctx) => (await topStreams(args, ctx)).kind,
+	ts_list: async (args, ctx) => (await topStreams(args, ctx)).list ?? '',
 	si_kind: siField((d) => d.kind),
 	si_target: siField((d) => d.target),
 	si_error: siField((d) => d.error),

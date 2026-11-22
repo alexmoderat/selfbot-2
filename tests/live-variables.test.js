@@ -197,3 +197,22 @@ test('viewerstreak/stalk: Variablen mit gestubbten Daten, Flags des Custom-stalk
 		sm.getStalk = real.s;
 	}
 });
+
+test('topgames/topstreams: Variablen und Vorlage', async () => {
+	const tm = require('../src/selfbot/util/top-data.js');
+	const real = { g: tm.getTopGames, s: tm.getTopStreams };
+	const seen = [];
+	tm.getTopGames = async () => 'A (10k), B (5k)';
+	tm.getTopStreams = async (game) => (seen.push(game), game === 'zzz' ? { kind: 'nogame' } : game === 'empty' ? { kind: 'empty' } : { kind: 'ok', list: '@x - G (5)' });
+	const tpl = '{if ts_kind=nogame}NG{/if}{if ts_kind=empty}{if arg1}E1{else}E2{/if}{/if}{if ts_kind=ok}live: {ts_list}{/if}';
+	try {
+		assert.equal(await lv.resolveVariables('Current: {top_games}', []), 'Current: A (10k), B (5k)');
+		assert.equal(await lv.resolveVariables(tpl, []), 'live: @x - G (5)');
+		assert.equal(await lv.resolveVariables(tpl, ['zzz']), 'NG');
+		assert.equal(await lv.resolveVariables(tpl, ['empty']), 'E1');
+		assert.deepEqual(seen, ['', 'zzz', 'empty']);
+	} finally {
+		tm.getTopGames = real.g;
+		tm.getTopStreams = real.s;
+	}
+});

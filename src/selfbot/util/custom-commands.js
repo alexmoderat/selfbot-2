@@ -13,7 +13,7 @@ const CACHE_TTL = 60_000;
 const MESSAGE_LIMIT = 480;
 const MESSAGE_GAP_MS = 1_200;
 // Flags der eingebauten Vorgaenger: Opt-out/Block des Ziel-Users und Antwort mit "@user, " gelten weiter
-const CUSTOM_FLAGS = { '!stalk': ['block', 'external-input', 'mention', 'opt-out', 'pipe'] };
+const CUSTOM_FLAGS = { '!stalk': ['block', 'external-input', 'mention', 'opt-out', 'pipe'], '!topgames': ['mention', 'pipe'], '!topstreams': ['mention', 'pipe'] };
 const TEMPLATE_ONLY = new Set(['!raidping', '!raidreminder']);
 const cache = new Map();
 
