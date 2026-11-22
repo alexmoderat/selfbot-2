@@ -81,4 +81,4 @@ module.exports = {
 	},
 };
 
-Object.assign(module.exports, { formatLiveList, SEPARATOR, liveHead, totalViewers });
+Object.assign(module.exports, { formatLiveList, SEPARATOR, liveHead, totalViewers, fetchLiveStreams });
