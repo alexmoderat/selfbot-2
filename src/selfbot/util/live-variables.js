@@ -2,6 +2,7 @@ const { got } = require('../token/got.js');
 const stats = require('./channel-stats.js');
 const { baseUrl } = require('../token/user-tokens.js');
 const streamInfoModule = require('./stream-info.js');
+const lastLiveModule = require('./lastlive-data.js');
 
 /**
  * Live- und Rekord-Variablen fuer Custom Commands (alexmoderat, 22.11.2026: "ich moechte aber custom cmd" statt fester
@@ -12,6 +13,9 @@ const streamInfoModule = require('./stream-info.js');
  *   {si_kind} {si_target} {si_name} {si_viewers} {si_game} {si_uptime} {si_bitrate} {si_fps} {si_resolution} {si_clips}
  *   {si_title} {si_thumb} {si_offline} {si_last_game} {si_last_title} {si_error} - Stream-Infos von {arg1} oder dem Channel;
  *                                                      si_kind: live | offline | notfound | error
+ *   {ll_kind} {ll_channel} {ll_own} {ll_start} {ll_length} {ll_prev} {ll_year} {ll_when} {ll_ago} {ll_date} {ll_count}
+ *   {ll_sessions} {ll_total} {ll_dayword}              - zuletzt live von {arg1} oder dem Channel (lastlive-data.js);
+ *                                                      ll_kind: notfound | live | none | untracked | multi | single
  *   {bot_url}                                          - Basis-Link der Bot-Website
  *   {record_count} {record_date} {record_channels}     - Rekord gleichzeitig live Channels (Cron live-record)
  *   {viewers_record} {viewers_record_date} {viewers_record_channels} - Rekord Gesamt-Viewer, Liste "@x [300] // @y [120]"
@@ -96,8 +100,19 @@ const siField = (read) => async (args, ctx) => {
 	return String(read(data, data.info ?? {}) ?? '');
 };
 
+/** Zuletzt-live-Daten des Ziels (arg1 oder Channel), einmal pro Aufruf berechnet */
+const lastLive = async (args, ctx) => {
+	if (!ctx.memo.has('ll')) {
+		ctx.memo.set('ll', await lastLiveModule.getLastLive(argOf(args, 0).toLowerCase() || ctx.channel || '', ctx.channel));
+	}
+
+	return ctx.memo.get('ll');
+};
+const llField = (key) => async (args, ctx) => String((await lastLive(args, ctx))[key] ?? '');
+
 const argOf = (args, i) => (args[i] ?? '').replace(/^[@#]+/, '');
 const VARIABLES = {
+	...Object.fromEntries(['kind', 'channel', 'own', 'start', 'length', 'prev', 'year', 'when', 'ago', 'date', 'count', 'sessions', 'total', 'dayword'].map((key) => [`ll_${key}`, llField(key)])),
 	si_kind: siField((d) => d.kind),
 	si_target: siField((d) => d.target),
 	si_error: siField((d) => d.error),

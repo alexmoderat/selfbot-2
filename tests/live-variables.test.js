@@ -116,3 +116,35 @@ test('Stream-Infos: live, offline, nicht gefunden, Fehler; Titel mit "{if" bleib
 	assert.equal(await run(async () => null), 'N foo');
 	assert.equal(await run(async () => Promise.reject(new Error('boom'))), 'E boom');
 });
+
+test('!ll: Standardvorlage mit gestubbten Daten (live, notfound, multi)', async () => {
+	const ld = require('../src/selfbot/util/lastlive-data.js');
+	const real = ld.getLastLive;
+	const render = async (data) => {
+		ld.getLastLive = async () => data;
+		try {
+			return await lv.resolveVariables(ld.DEFAULT_TEMPLATE.replace('{user}', '@ninou2'), [], { channel: 'x' });
+		} finally {
+			ld.getLastLive = real;
+		}
+	};
+	assert.equal(await render({ kind: 'notfound', channel: 'zzz' }), '@ninou2, no Twitch account named "zzz" exists.');
+	assert.equal(
+		await render({
+			kind: 'live',
+			channel: 'xqc',
+			start: '15:00',
+			length: '1h 2m',
+			prev: ', Last live before this current stream was on A (1 day ago)',
+			year: ' [they streamed 1/365 soo far this year]',
+		}),
+		'@ninou2, @xqc is live right now [15:00 UTC to now, ⏱1h 2m], Last live before this current stream was on A (1 day ago) [they streamed 1/365 soo far this year]',
+	);
+	assert.equal(await render({ kind: 'live', channel: 'xqc' }), '@ninou2, @xqc is live right now.');
+	assert.equal(await render({ kind: 'none', own: '#xqc' }), '@ninou2, no stream found for #xqc (no VODs, never streamed as far as Twitch knows, and it is not tracked).');
+	assert.equal(
+		await render({ kind: 'multi', channel: 'a', date: 'D', count: '2', sessions: 'S1 , S2', total: '3h', dayword: 'today', year: '' }),
+		'@ninou2, @a went live last time on D for "2" times : S1 , S2 , THEY streamed for a total of 3h today.',
+	);
+	assert.equal(await render({ kind: 'single', channel: 'a', when: 'W', ago: '2 days ago', year: ' [y]' }), '@ninou2, @a went live last time on W (2 days ago) [y]');
+});
