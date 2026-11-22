@@ -3,6 +3,7 @@ const stats = require('./channel-stats.js');
 const { baseUrl } = require('../token/user-tokens.js');
 const streamInfoModule = require('./stream-info.js');
 const lastLiveModule = require('./lastlive-data.js');
+const userDataModule = require('./user-data.js');
 
 /**
  * Live- und Rekord-Variablen fuer Custom Commands (alexmoderat, 22.11.2026: "ich moechte aber custom cmd" statt fester
@@ -16,6 +17,9 @@ const lastLiveModule = require('./lastlive-data.js');
  *   {ll_kind} {ll_channel} {ll_own} {ll_start} {ll_length} {ll_prev} {ll_year} {ll_when} {ll_ago} {ll_date} {ll_count}
  *   {ll_sessions} {ll_total} {ll_dayword}              - zuletzt live von {arg1} oder dem Channel (lastlive-data.js);
  *                                                      ll_kind: notfound | live | none | untracked | multi | single
+ *   {u_kind} {u_login} {u_name} {u_display} {u_id} {u_color} {u_roles} {u_roles_c} {u_followers} {u_bio} {u_bio_c} {u_created}
+ *   {u_last_live_ago} {u_tail} {u_tail_c} {u_ban_type} {u_available} {u_restricted} - Account-Infos von {arg1} (user-data.js);
+ *                                                      u_kind: usage | notfound | banned | ok
  *   {bot_url}                                          - Basis-Link der Bot-Website
  *   {record_count} {record_date} {record_channels}     - Rekord gleichzeitig live Channels (Cron live-record)
  *   {viewers_record} {viewers_record_date} {viewers_record_channels} - Rekord Gesamt-Viewer, Liste "@x [300] // @y [120]"
@@ -110,9 +114,41 @@ const lastLive = async (args, ctx) => {
 };
 const llField = (key) => async (args, ctx) => String((await lastLive(args, ctx))[key] ?? '');
 
+/** Account-Infos des Users aus arg1, einmal pro Aufruf geholt */
+const userData = async (args, ctx) => {
+	if (!ctx.memo.has('u')) {
+		ctx.memo.set('u', await userDataModule.getUserData(argOf(args, 0).toLowerCase().trim()));
+	}
+
+	return ctx.memo.get('u');
+};
+const uField = (key) => async (args, ctx) => String((await userData(args, ctx))[key] ?? '');
+
 const argOf = (args, i) => (args[i] ?? '').replace(/^[@#]+/, '');
 const VARIABLES = {
 	...Object.fromEntries(['kind', 'channel', 'own', 'start', 'length', 'prev', 'year', 'when', 'ago', 'date', 'count', 'sessions', 'total', 'dayword'].map((key) => [`ll_${key}`, llField(key)])),
+	...Object.fromEntries(
+		Object.entries({
+			kind: 'kind',
+			login: 'login',
+			name: 'name',
+			display: 'display',
+			id: 'id',
+			color: 'color',
+			roles: 'roles',
+			roles_c: 'rolesCompact',
+			followers: 'followers',
+			bio: 'bio',
+			bio_c: 'bioCompact',
+			created: 'created',
+			last_live_ago: 'lastLiveAgo',
+			tail: 'tail',
+			tail_c: 'tailCompact',
+			ban_type: 'banType',
+			available: 'available',
+			restricted: 'restricted',
+		}).map(([name, key]) => [`u_${name}`, uField(key)]),
+	),
 	si_kind: siField((d) => d.kind),
 	si_target: siField((d) => d.target),
 	si_error: siField((d) => d.error),

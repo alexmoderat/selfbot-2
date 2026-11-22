@@ -148,3 +148,30 @@ test('!ll: Standardvorlage mit gestubbten Daten (live, notfound, multi)', async 
 	);
 	assert.equal(await render({ kind: 'single', channel: 'a', when: 'W', ago: '2 days ago', year: ' [y]' }), '@ninou2, @a went live last time on W (2 days ago) [y]');
 });
+
+test('user: Vorlagen fuer notfound, banned, ok (detailliert und kompakt) mit gestubbtem GQL', async () => {
+	const gql = require('../src/selfbot/token/gql.js');
+	const real = { p: gql.getUserProfile, a: gql.isUsernameAvailable, r: gql.getChatRestrictedReasons };
+	gql.isUsernameAvailable = async () => true;
+	gql.getChatRestrictedReasons = async () => ['CHANNEL_HAS_CONSEQUENCE'];
+	const tpl =
+		'{if u_kind=notfound}nf {u_login}{u_available}{/if}{if u_kind=banned}b {u_name} {u_ban_type}{/if}{if u_kind=ok}{if u_restricted}W {/if}{u_display}: {u_login} {u_id} {u_roles}|{u_roles_c}{u_followers} {u_bio}|{u_bio_c}{/if}';
+	const run = async (profile, arg) => {
+		gql.getUserProfile = async () => profile;
+		try {
+			return await lv.resolveVariables(tpl, [arg], { channel: 'x' });
+		} finally {
+			Object.assign(gql, { getUserProfile: real.p });
+		}
+	};
+	try {
+		assert.equal(await run(null, 'Nobody'), 'nf nobody · name is available!');
+		assert.equal(await run({ banned: true, banReason: 'TOS_INDEFINITE', id: '5', login: 'bad', displayName: 'Bad' }, 'bad'), 'b Bad indefinite');
+		assert.equal(
+			await run({ id: '7', login: 'xqc', displayName: 'xQc', roles: { isPartner: true }, followers: 1234, bio: '  hi   there ' }, 'xqc'),
+			'W xQc: xqc 7 Partner|partner · followers: 1,234 hi there|hi there',
+		);
+	} finally {
+		Object.assign(gql, { getUserProfile: real.p, isUsernameAvailable: real.a, getChatRestrictedReasons: real.r });
+	}
+});
