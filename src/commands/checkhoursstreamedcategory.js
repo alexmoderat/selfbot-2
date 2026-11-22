@@ -38,19 +38,20 @@ const parsePeriod = (word, now) => {
 const sumMatching = (rows, names) => rows.reduce((sum, i) => (names.has(i.category) ? sum + i.seconds : sum), 0);
 const duration = (seconds) => formatCategoryDuration(Math.round(seconds / 60));
 
-module.exports = {
+const command = {
 	name: 'checkhoursstreamedcategory',
 	aliases: ['chsc'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 0 },
 	description:
 		'How many hours a channel has streamed a specific category. No period = all-time. Add a year ("2026"), month+year ("january2026"), "yearly" or "monthly"/"monthly2026" at the end. An exact name wins, otherwise every category containing the text counts. Start with a channel name to check another channel.',
 	usage: 'checkhoursstreamedcategory [channel] <category> [year | month<year> | yearly | monthly[year]]',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		const display = msg.displayName;
 		const now = new Date();
 		if (args.length === 0) {
-			return { text: `@${display}, which category? Example: ${msg.prefix}chsc Just Chatting` };
+			return `@${display}, which category? Example: ${msg.prefix}chsc Just Chatting`;
 		}
 
 		const ownChannel = msg.channelData?.name ?? '';
@@ -91,7 +92,7 @@ module.exports = {
 		const where = channel === ownChannel ? 'this channel' : `#${channel}`;
 		const matches = matchCategories(rows, query);
 		if (!userId || matches.length === 0) {
-			return { text: `@${display}, no tracked hours in a category matching "${query}" for ${where}.` };
+			return `@${display}, no tracked hours in a category matching "${query}" for ${where}.`;
 		}
 
 		const names = new Set(matches.map((i) => i.category));
@@ -120,7 +121,7 @@ module.exports = {
 			}
 
 			if (lines.length === 0) {
-				return { text: `@${display}, no tracked hours in ${subject} for ${where} in ${period.year}.` };
+				return `@${display}, no tracked hours in ${subject} for ${where} in ${period.year}.`;
 			}
 
 			return await packed(`@${display}, @${channel}'s hours in ${subject} per month in ${period.year}: `, lines);
@@ -132,16 +133,18 @@ module.exports = {
 
 			const seconds = sumMatching(periodRows, names);
 			if (seconds < 60) {
-				return { text: `@${display}, no tracked hours in ${subject} for ${where} in ${label}.` };
+				return `@${display}, no tracked hours in ${subject} for ${where} in ${label}.`;
 			}
 
-			return { text: `@${display}, in ${label}, @${channel} has streamed ${subject} for ${duration(seconds)}.` };
+			return `@${display}, in ${label}, @${channel} has streamed ${subject} for ${duration(seconds)}.`;
 		}
 
 		const years = await streamData.getCategoryYears(userId);
 		const first = years[years.length - 1];
 		const last = years[0];
 		const range = first === last ? `(${first})` : `(${first}-${last})`;
-		return { text: `@${display}, @${channel} has streamed ${subject} for ${duration(sumMatching(rows, names))} ALLTIME ${range}.` };
+		return `@${display}, @${channel} has streamed ${subject} for ${duration(sumMatching(rows, names))} ALLTIME ${range}.`;
 	},
 };
+
+module.exports = { command };

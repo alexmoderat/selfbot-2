@@ -10,13 +10,14 @@ const { applyLevel, describeLevel, effectiveLevel, parseLevel } = require('../cl
  */
 const MAX_INLINE = 350;
 
-module.exports = {
+const command = {
 	name: 'permissions',
 	aliases: ['perm', 'perms'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 0 },
 	description: 'Shows or sets who can use a command in this channel: everyone, mods or streamer only (only stricter than the command itself).',
 	usage: 'perm | perm <command> | perm <command> everyone|mods|streamer',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [commandName, levelInput] = msg.args;
 		const display = msg.displayName;
 		const channel = msg.channelData;
@@ -29,7 +30,7 @@ module.exports = {
 		if (!commandName) {
 			const entries = Object.entries(overrides).sort(([a], [b]) => a.localeCompare(b));
 			if (entries.length === 0) {
-				return { text: `@${display}, no command has a stricter level in this channel. Usage: ${prefix}perm <command> everyone|mods|streamer` };
+				return `@${display}, no command has a stricter level in this channel. Usage: ${prefix}perm <command> everyone|mods|streamer`;
 			}
 
 			const group = (level) => entries.filter(([, l]) => l === level).map(([name]) => name);
@@ -41,14 +42,14 @@ module.exports = {
 				.map(([label, names]) => `${label}: ${names.join(', ')}`);
 			const text = parts.join(' · ');
 			if (text.length <= MAX_INLINE) {
-				return { text: `@${display}, stricter levels in this channel - ${text}` };
+				return `@${display}, stricter levels in this channel - ${text}`;
 			}
 
 			const link = await uploadList(
 				`Command levels in #${channel.name}`,
 				entries.map(([name, level]) => `${name}: ${describeLevel(level)}`),
 			);
-			return { text: `@${display}, ${entries.length} commands have a stricter level in this channel: ${link}` };
+			return `@${display}, ${entries.length} commands have a stricter level in this channel: ${link}`;
 		}
 
 		const command = getCommand(commandName.replace(/^!/, '').toLowerCase());
@@ -60,7 +61,7 @@ module.exports = {
 
 		const own = command.Flags.includes('mod') ? 'mod' : 'everyone';
 		if (!levelInput) {
-			return { text: `@${display}, ${command.Name} can be used by: ${describeLevel(effectiveLevel(own, overrides[command.Name]))}.` };
+			return `@${display}, ${command.Name} can be used by: ${describeLevel(effectiveLevel(own, overrides[command.Name]))}.`;
 		}
 
 		const level = parseLevel(levelInput);
@@ -79,6 +80,8 @@ module.exports = {
 		}
 
 		await bot.Channels.setData(channel, 'commandLevels', updated);
-		return { text: `@${display}, ${command.Name} can now be used by: ${describeLevel(effectiveLevel(own, updated[command.Name]))}.` };
+		return `@${display}, ${command.Name} can now be used by: ${describeLevel(effectiveLevel(own, updated[command.Name]))}.`;
 	},
 };
+
+module.exports = { command };

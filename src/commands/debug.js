@@ -66,16 +66,17 @@ const shortcuts = () => {
 	};
 };
 
-module.exports = {
+const command = {
 	name: 'debug',
 	aliases: ['eval', 'js'],
-	cooldown: 0,
+	cooldown: { user: 0 },
+	access: { global: 1 },
 	description: 'supiniHack',
 	usage: 'debug <code> | debug return <code> | debug function:<expression> <args…> — shortcuts: twitch, channels(), live(), gql, helix, mod.restrict/ban/timeout/unban, id(), moderation',
-	flags: ['owner', 'skip-banphrase'],
+	flags: ['skip-banphrase'],
 	params: [{ name: 'function', type: 'string' }],
 	whitelistResponse: 'Only administrators can access the debug command!',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		const permissions = getPermissions(msg);
 		if (!permissions.administrator || msg.sender.name !== OWNER_LOGIN) {
@@ -130,5 +131,7 @@ module.exports = {
 		}
 	},
 };
+
+module.exports = { command };
 
 Object.assign(module.exports, { collectSecrets, scrub, liveChannelNames });

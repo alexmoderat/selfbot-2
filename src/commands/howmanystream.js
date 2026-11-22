@@ -9,14 +9,15 @@ const { fmtDate } = require('../util/streamer-streak.js');
  */
 const ALL_WORDS = new Set(['all', 'alltime', 'total']);
 
-module.exports = {
+const command = {
 	name: 'howmanystream',
 	aliases: ['hms'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 0 },
 	description:
 		'How many single streams and different days a channel streamed. No argument = current year. Takes a year ("2026"), month+year ("october2026") or "all". Single streams only count since they started being tracked. Defaults to the current channel.',
 	usage: 'howmanystream [channel] [year | month<year> | all]',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		const display = msg.displayName;
 		let channelRaw;
@@ -42,22 +43,24 @@ module.exports = {
 		const channel = (channelRaw ?? msg.channelData?.name ?? '').replace(/^[@#]+/, '').toLowerCase();
 		const userId = await streamData.fetchUserId(channel);
 		if (!userId) {
-			return { text: `@${display}, no Twitch account named "${channel}" exists.` };
+			return `@${display}, no Twitch account named "${channel}" exists.`;
 		}
 
 		const [days, streams] = await Promise.all([streamData.getDays(userId), streamData.countStreams(userId, prefix)]);
 		const dayCount = days.filter((i) => i.startsWith(prefix)).length;
 		const head = `@${display}, ${label}, ${channel} streamed on [${dayCount}] different days`;
 		if (!streams.first) {
-			return { text: `${head}, no single streams tracked yet.` };
+			return `${head}, no single streams tracked yet.`;
 		}
 
 		const firstDay = streams.first.slice(0, 10);
 		if (prefix && firstDay.slice(0, prefix.length) > prefix) {
-			return { text: `${head}, single stream data only exists since ${fmtDate(firstDay)}.` };
+			return `${head}, single stream data only exists since ${fmtDate(firstDay)}.`;
 		}
 
 		const note = !prefix || firstDay.startsWith(prefix) ? ` (data only exists since ${fmtDate(firstDay)})` : '';
-		return { text: `${head}, single streams: [${streams.count}]${note}.` };
+		return `${head}, single streams: [${streams.count}]${note}.`;
 	},
 };
+
+module.exports = { command };

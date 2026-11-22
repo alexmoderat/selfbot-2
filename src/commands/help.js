@@ -19,28 +19,31 @@ const formatCommandHelp = (command, prefix) => {
 	return parts.join(' · ');
 };
 
-module.exports = {
+const command = {
 	name: 'help',
 	aliases: ['commands', 'cmds'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Lists all loaded commands; with an argument, help for a single one.',
 	usage: 'help [command]',
-	flags: ['mod'],
-	formatCommandHelp,
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [target] = msg.args;
 		if (target) {
 			const name = target.toLowerCase().replace(/^[!#]+/, '');
 			const command = getCommand(name);
 			if (!command) {
-				return { text: `@${msg.displayName}, no command "${name}".` };
+				return `@${msg.displayName}, no command "${name}".`;
 			}
-			return { text: `@${msg.displayName}, ${formatCommandHelp(command, bot.Config.prefix)}` };
+			return `@${msg.displayName}, ${formatCommandHelp(command, bot.Config.prefix)}`;
 		}
 
 		// Seite /commands kommt mit dem Web (Phase 5); bis dahin der Link auf die alte Seite bzw. nur die Anzahl
 		const base = process.env.WEB_BASE_URL;
 		const link = base ? `: ${base.replace(/\/$/, '')}/commands` : ' loaded.';
-		return { text: `@${msg.displayName}, ${commands.size} commands${link}` };
+		return `@${msg.displayName}, ${commands.size} commands${link}`;
 	},
+};
+
+module.exports = { command,
+	formatCommandHelp,
 };

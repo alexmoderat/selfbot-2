@@ -4,10 +4,11 @@ const Filter = require('../util/filter.js');
 // Supibots commands/optout (mit parseGenericFilterOptions/handleGenericFilter aus Supibots utils/command-utils.ts):
 // niemand kann den Command mit dir als Ziel ausfuehren. Ersetzt sb-v2s "lastseen optout" allgemein fuer alle
 // Commands mit dem Flag "opt-out" (alexmoderat, 23.10.2026).
-module.exports = {
+const command = {
 	name: 'optout',
 	aliases: ['unoptout'],
-	cooldown: 5000,
+	cooldown: { user: 5 },
+	access: { channel: 0 },
 	description: 'Makes it so you cannot be the target of a command - the command will not be executed at all. For detailed usage, please check the extended help.',
 	usage: 'optout <command|all> [channel:name] | unoptout <command|all> | optout id:<ID>',
 	flags: ['mention', 'skip-banphrase'],
@@ -18,7 +19,7 @@ module.exports = {
 		{ name: 'invocation', type: 'string' },
 		{ name: 'platform', type: 'string' },
 	],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		const { params, invocation } = msg;
 		const isEnable = invocation === 'optout';
@@ -133,3 +134,5 @@ module.exports = {
 		`<code>${prefix}unoptout (command)</code> / <code>${prefix}unoptout id:(ID)</code> - reverse it`,
 	],
 };
+
+module.exports = { command };

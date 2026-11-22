@@ -2,14 +2,15 @@ const SupiDate = require('../util/date.js');
 
 const RESUME_AFK_THRESHOLD_SEC = 120;
 
-module.exports = {
+const command = {
 	name: 'resumeafk',
 	aliases: ['rafk', 'cafk', 'continueafk'],
-	cooldown: 60_000,
+	cooldown: { user: 60 },
+	access: { channel: 0 },
 	description: 'Resumes your AFK status, if used shortly after coming back from an AFK. The time period is global, not just in the channel you came back from AFK in.',
 	usage: 'resumeafk',
 	flags: ['mention', 'pipe'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		if (msg.privateMessage) {
 			return {
 				success: false,
@@ -67,8 +68,8 @@ module.exports = {
 		await bot.DB.AFK.updateOne({ _id: lastAFK.ID }, { $set: { interruptedId: newAFK.ID, active: false } });
 
 		// Supibot macht den Cooldown hier global (alle Channels); das Cooldown-Objekt gibt es hier noch nicht
-		return {
-			text: 'Your AFK status has been resumed.',
-		};
+		return 'Your AFK status has been resumed.';
 	},
 };
+
+module.exports = { command };

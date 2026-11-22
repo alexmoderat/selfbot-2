@@ -12,21 +12,22 @@ const MAX_COUNT = 20;
 const SEND_DELAY = 400;
 const ZWS = '\u200B';
 
-module.exports = {
+const command = {
 	name: 'repeat',
 	aliases: ['rm'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: `Sends a text N times in a row (max ${MAX_COUNT}) — spam tool, not a moderation feature.`,
 	usage: 'repeat <count> <text...>',
 	// Ohne cooldown-notice verschwindet ein zu frueher Retry kommentarlos
-	flags: ['mod', 'cooldown-notice'],
-	execute: async (client, msg) => {
+	flags: ['cooldown-notice'],
+	execute: async ({ client, message: msg }) => {
 		const [countRaw, ...words] = msg.args;
 		const display = msg.displayName;
 		const count = Number(countRaw);
 		const text = words.join(' ').trim();
 		if (!Number.isInteger(count) || count < 1 || count > MAX_COUNT || !text) {
-			return { text: `@${display}, Usage: ${msg.prefix}${msg.invocation} <count 1-${MAX_COUNT}> <text...>` };
+			return `@${display}, Usage: ${msg.prefix}${msg.invocation} <count 1-${MAX_COUNT}> <text...>`;
 		}
 
 		for (let i = 0; i < count; i++) {
@@ -38,6 +39,8 @@ module.exports = {
 			await msg.send(line);
 		}
 
-		return { text: null };
+		return null;
 	},
 };
+
+module.exports = { command };

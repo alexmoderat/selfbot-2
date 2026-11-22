@@ -7,20 +7,21 @@ const { formatStreamExport, hasExportData } = require('../util/stream-export.js'
  * a TXT file with all info", "so we [have] it as backup"). Fuer jeden nutzbar. Roh-Ansicht, damit der Link direkt eine
  * Textdatei ist.
  */
-module.exports = {
+const command = {
 	name: 'getdata',
 	aliases: ['gd'],
-	cooldown: 30000,
+	cooldown: { user: 30 },
+	access: { channel: 0 },
 	description: "Gives a link to a text file with everything stored about a channel's streams: days, hours, streaks and categories. Defaults to the current channel.",
 	usage: 'getdata [channel]',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [channelRaw] = msg.args;
 		const display = msg.displayName;
 		const channel = (channelRaw ?? msg.channelData?.name ?? '').replace(/^[@#]+/, '').toLowerCase();
 		const where = channel === msg.channelData?.name ? 'this channel' : `#${channel}`;
 		const userId = await streamData.fetchUserId(channel);
 		if (!userId) {
-			return { text: `@${display}, no Twitch account named "${channel}" exists.` };
+			return `@${display}, no Twitch account named "${channel}" exists.`;
 		}
 
 		const [days, years, categoryAllTime, categoryYearList] = await Promise.all([
@@ -30,7 +31,7 @@ module.exports = {
 			streamData.getCategoryYears(userId),
 		]);
 		if (!hasExportData({ days, years, categoryAllTime })) {
-			return { text: `@${display}, nothing stored for ${where} yet — either tracking just started, or that's not a channel I watch.` };
+			return `@${display}, nothing stored for ${where} yet — either tracking just started, or that's not a channel I watch.`;
 		}
 
 		const sortedYears = years.toSorted((a, b) => a.year - b.year);
@@ -54,9 +55,11 @@ module.exports = {
 
 		const link = (await uploadToOwnHaste(text).catch(() => null))?.replace(/^(https:\/\/paste\.alexmoderat\.eu)\//, '$1/raw/');
 		if (!link) {
-			return { text: `@${display}, the upload failed, try again later.` };
+			return `@${display}, the upload failed, try again later.`;
 		}
 
-		return { text: `@${display}, stream data for @${channel}: ${link}` };
+		return `@${display}, stream data for @${channel}: ${link}`;
 	},
 };
+
+module.exports = { command };

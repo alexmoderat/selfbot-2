@@ -46,13 +46,13 @@ const describe = (timer) => {
 	return `#${timer.ID} every ${formatInterval(timer.Interval_Seconds)} (${flags.join(', ')}): ${preview}`;
 };
 
-module.exports = {
+const command = {
 	name: 'timer',
 	aliases: ['timers'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Posts a message in this channel every X time (by default only while the stream is live).',
 	usage: 'timer add <interval> <text> [offline:true | onlyoffline:true] [whenlive:channel] [sync:name] | timer list | timer remove|on|off <id> | timer edit <id> [interval:4h] [text]',
-	flags: ['mod'],
 	params: [
 		{ name: 'interval', type: 'string' },
 		{ name: 'offline', type: 'boolean' },
@@ -60,12 +60,12 @@ module.exports = {
 		{ name: 'whenlive', type: 'string' },
 		{ name: 'sync', type: 'string' },
 	],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [sub, ...args] = msg.args;
 		const display = msg.displayName;
 		const channel = msg.channelData;
 		if (!channel) {
-			return { text: `@${display}, this only works in a channel.` };
+			return `@${display}, this only works in a channel.`;
 		}
 
 		const usage = `${msg.prefix}${msg.invocation} add <interval> <text> | list | remove|on|off|edit <id>`;
@@ -74,19 +74,19 @@ module.exports = {
 
 		if (action === 'list') {
 			if (all.length === 0) {
-				return { text: `@${display}, no timers in #${channel.name}. Usage: ${usage}` };
+				return `@${display}, no timers in #${channel.name}. Usage: ${usage}`;
 			}
 
 			const text = all.map(describe).join(' · ');
 			if (text.length <= MAX_INLINE) {
-				return { text: `@${display}, ${all.length} timer(s) in #${channel.name}: ${text}` };
+				return `@${display}, ${all.length} timer(s) in #${channel.name}: ${text}`;
 			}
 
 			const link = await uploadList(
 				`Timers in #${channel.name}`,
 				all.map((i) => `#${i.ID} every ${formatInterval(i.Interval_Seconds)} (${modeText(i)}${i.Enabled ? '' : ', off'}): ${i.Message}`),
 			);
-			return { text: `@${display}, ${all.length} timers in #${channel.name}: ${link}` };
+			return `@${display}, ${all.length} timers in #${channel.name}: ${link}`;
 		}
 
 		if (action === 'add') {
@@ -94,18 +94,18 @@ module.exports = {
 			const ms = intervalRaw ? parseTimerInterval(intervalRaw) : null;
 			const message = words.join(' ').trim();
 			if (!ms || !message) {
-				return { text: `@${display}, Usage: ${msg.prefix}${msg.invocation} add <interval 5m-7d, e.g. 4h> <text> [offline:true | onlyoffline:true] [whenlive:channel] [sync:name]` };
+				return `@${display}, Usage: ${msg.prefix}${msg.invocation} add <interval 5m-7d, e.g. 4h> <text> [offline:true | onlyoffline:true] [whenlive:channel] [sync:name]`;
 			} else if (message.length > MAX_MESSAGE_LENGTH) {
-				return { text: `@${display}, the text is too long (max ${MAX_MESSAGE_LENGTH} characters).` };
+				return `@${display}, the text is too long (max ${MAX_MESSAGE_LENGTH} characters).`;
 			} else if (all.length >= MAX_TIMERS_PER_CHANNEL) {
-				return { text: `@${display}, #${channel.name} already has ${MAX_TIMERS_PER_CHANNEL} timers, remove one first.` };
+				return `@${display}, #${channel.name} already has ${MAX_TIMERS_PER_CHANNEL} timers, remove one first.`;
 			}
 
 			let liveChannel = null;
 			if (msg.params.whenlive !== undefined) {
 				const resolved = resolveWhenLive(msg.params.whenlive);
 				if (resolved.error) {
-					return { text: `@${display}, ${resolved.error}` };
+					return `@${display}, ${resolved.error}`;
 				}
 				liveChannel = resolved.id ?? null;
 			}
@@ -113,7 +113,7 @@ module.exports = {
 			if (msg.params.sync !== undefined) {
 				const resolved = resolveSync(msg.params.sync);
 				if (resolved.error) {
-					return { text: `@${display}, ${resolved.error}` };
+					return `@${display}, ${resolved.error}`;
 				}
 				syncGroup = resolved.name ?? null;
 			}
@@ -127,25 +127,25 @@ module.exports = {
 					: 'first one within a minute';
 			const other = liveChannel ? `, and only while #${bot.Channels.get(liveChannel)?.name} is live` : '';
 			const sync = syncGroup ? `, sharing its interval with all "${syncGroup}" timers` : '';
-			return { text: `@${display}, ✅ timer #${id} added: every ${formatInterval(ms / 1000)}, ${when}${other}${sync}.` };
+			return `@${display}, ✅ timer #${id} added: every ${formatInterval(ms / 1000)}, ${when}${other}${sync}.`;
 		}
 
 		if (!['remove', 'delete', 'on', 'off', 'edit'].includes(action)) {
-			return { text: `@${display}, Usage: ${usage}` };
+			return `@${display}, Usage: ${usage}`;
 		}
 
 		const id = Number(args[0]?.replace(/^#/, ''));
 		const existing = all.find((i) => i.ID === id);
 		if (!existing) {
-			return { text: `@${display}, timer "${args[0] ?? ''}" not found in #${channel.name}. See: ${msg.prefix}${msg.invocation} list` };
+			return `@${display}, timer "${args[0] ?? ''}" not found in #${channel.name}. See: ${msg.prefix}${msg.invocation} list`;
 		}
 
 		if (action === 'remove' || action === 'delete') {
 			await timers.remove(existing);
-			return { text: `@${display}, ✅ timer #${existing.ID} removed.` };
+			return `@${display}, ✅ timer #${existing.ID} removed.`;
 		} else if (action === 'on' || action === 'off') {
 			await timers.update(existing, { Enabled: action === 'on' });
-			return { text: `@${display}, ✅ timer #${existing.ID} is now ${action}.` };
+			return `@${display}, ✅ timer #${existing.ID} is now ${action}.`;
 		}
 
 		// edit: neues Intervall per interval:, neuer Text als Rest, Live-Bedingung per offline: / onlyoffline:
@@ -153,7 +153,7 @@ module.exports = {
 		if (msg.params.interval !== undefined) {
 			const ms = parseTimerInterval(msg.params.interval);
 			if (!ms) {
-				return { text: `@${display}, invalid interval, use e.g. interval:4h (5m-7d).` };
+				return `@${display}, invalid interval, use e.g. interval:4h (5m-7d).`;
 			}
 			values.Interval_Seconds = Math.round(ms / 1000);
 		}
@@ -164,14 +164,14 @@ module.exports = {
 		if (msg.params.whenlive !== undefined) {
 			const resolved = resolveWhenLive(msg.params.whenlive);
 			if (resolved.error) {
-				return { text: `@${display}, ${resolved.error}` };
+				return `@${display}, ${resolved.error}`;
 			}
 			values.Live_Channel = resolved.id ?? null;
 		}
 		if (msg.params.sync !== undefined) {
 			const resolved = resolveSync(msg.params.sync);
 			if (resolved.error) {
-				return { text: `@${display}, ${resolved.error}` };
+				return `@${display}, ${resolved.error}`;
 			}
 			values.Sync_Group = resolved.name ?? null;
 		}
@@ -182,16 +182,18 @@ module.exports = {
 
 		const message = args.slice(1).join(' ').trim();
 		if (message.length > MAX_MESSAGE_LENGTH) {
-			return { text: `@${display}, the text is too long (max ${MAX_MESSAGE_LENGTH} characters).` };
+			return `@${display}, the text is too long (max ${MAX_MESSAGE_LENGTH} characters).`;
 		} else if (message) {
 			values.Message = message;
 		}
 
 		if (Object.keys(values).length === 0) {
-			return { text: `@${display}, Usage: ${msg.prefix}${msg.invocation} edit <id> [interval:4h] [offline:true | onlyoffline:true] [whenlive:channel|none] [sync:name|none] [new text]` };
+			return `@${display}, Usage: ${msg.prefix}${msg.invocation} edit <id> [interval:4h] [offline:true | onlyoffline:true] [whenlive:channel|none] [sync:name|none] [new text]`;
 		}
 
 		await timers.update(existing, values);
-		return { text: `@${display}, ✅ timer #${existing.ID} updated: ${describe({ ...existing, ...values })}` };
+		return `@${display}, ✅ timer #${existing.ID} updated: ${describe({ ...existing, ...values })}`;
 	},
 };
+
+module.exports = { command };

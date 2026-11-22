@@ -15,14 +15,14 @@ const FEATURES = {
 
 const ACTIONS = new Set(['enable', 'disable', 'status']);
 
-module.exports = {
+const command = {
 	name: 'autoban',
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { global: 1 },
 	description: 'Toggle the per-channel autoban mechanisms: promo, agecheck, spam — or all of them at once (all).',
 	usage: 'autoban <enable|disable|status> [channel:name] | autoban <agecheck|spam|all> <enable|disable|status> [channel:name]',
-	flags: ['owner'],
 	params: [{ name: 'channel', type: 'string' }],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [arg1, arg2, arg3] = msg.args;
 		const display = msg.displayName;
 		const usage = `${msg.prefix}${msg.invocation}`;
@@ -32,9 +32,7 @@ module.exports = {
 		const action = (isFeature ? arg2 : arg1)?.toLowerCase();
 
 		if (!action || !ACTIONS.has(action)) {
-			return {
-				text: `@${display}, Usage: ${usage} <enable|disable|status> [channel:name] | ${usage} <agecheck|spam|all> <enable|disable|status> [channel:name]`,
-			};
+			return `@${display}, Usage: ${usage} <enable|disable|status> [channel:name] | ${usage} <agecheck|spam|all> <enable|disable|status> [channel:name]`;
 		}
 
 		// Channel als channel:name oder als nacktes Wort dahinter (beides gab es im alten Command)
@@ -44,18 +42,20 @@ module.exports = {
 			.toLowerCase();
 		const channel = bot.Channels.get(name);
 		if (!channel) {
-			return { text: `@${display}, I'm not in #${name}.` };
+			return `@${display}, I'm not in #${name}.`;
 		}
 
 		const spec = FEATURES[feature];
 		if (action === 'status') {
 			const off = (await bot.Channels.getData(channel, spec.property)) === true;
 			const change = formatAutobanChange(await lastAutobanChange(channel, spec.property));
-			return { text: `@${display}, ${spec.label} in #${channel.name}: ${off ? 'disabled' : 'enabled'} (${change}).` };
+			return `@${display}, ${spec.label} in #${channel.name}: ${off ? 'disabled' : 'enabled'} (${change}).`;
 		}
 
 		const disable = action === 'disable';
 		await setAutobanSwitch(channel, spec.property, disable, msg.sender.name, 'command');
-		return { text: `@${display}, ${spec.label} ${disable ? 'disabled' : 'enabled'} in #${channel.name}. (ID: ${randomUUID()})` };
+		return `@${display}, ${spec.label} ${disable ? 'disabled' : 'enabled'} in #${channel.name}. (ID: ${randomUUID()})`;
 	},
 };
+
+module.exports = { command };

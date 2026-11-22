@@ -3,14 +3,15 @@ const SupiDate = require('../util/date.js');
 const { ivrUserDataSchema } = require('../util/schemas.js');
 
 // Supibots commands/accountage (Block 7: Supibot-Version, sb-v2s war fast identisch)
-module.exports = {
+const command = {
 	name: 'accountage',
 	aliases: ['accage'],
-	cooldown: 15000,
+	cooldown: { user: 15 },
+	access: { channel: 0 },
 	description: 'Fetches the Twitch account age of a given account. If none is given, checks yours.',
 	usage: 'accountage [user]',
 	flags: ['mention', 'pipe'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [user] = msg.args;
 		const login = bot.Users.normalizeUsername(user ?? msg.sender.name).toLowerCase();
 		const response = await got('IVR')({
@@ -20,9 +21,7 @@ module.exports = {
 
 		const parseResult = ivrUserDataSchema.safeParse(response.body);
 		if (response.statusCode !== 200 || parseResult.error || parseResult.data.length === 0) {
-			return {
-				text: 'That Twitch account has no data associated with them.',
-			};
+			return 'That Twitch account has no data associated with them.';
 		}
 
 		const creationDate = parseResult.data[0].createdAt;
@@ -38,8 +37,8 @@ module.exports = {
 		}
 
 		const delta = bot.Utils.timeDelta(created, false, true);
-		return {
-			text: `${pronoun} Twitch account was created ${delta}. ${anniversary}`,
-		};
+		return `${pronoun} Twitch account was created ${delta}. ${anniversary}`;
 	},
 };
+
+module.exports = { command };

@@ -113,27 +113,27 @@ const parseTranslateArgs = (words, invocation) => {
 	return { engine, targetLang, fromLang, formality, text: rest.join(' ').trim() };
 };
 
-module.exports = {
+const command = {
 	name: 'translate',
 	aliases: ['tl', 'deepl'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Translates text. Default engine: Google (free). "engine:deepl" or the deepl alias uses DeepL instead (supports formality:more|less). Without a language: to English.',
 	usage: 'translate [language | to:language] [from:language] [engine:google|deepl] [formality:more|less] <text>',
-	flags: ['mod'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const words = [...msg.args];
 		const display = msg.displayName;
 		const usage = `@${display}, Usage: ${msg.invocation} [language | to:language] <text>`;
 		if (words.length === 0) {
-			return { text: usage };
+			return usage;
 		}
 
 		const args = parseTranslateArgs(words, msg.invocation);
 		if ('error' in args) {
-			return { text: `@${display}, ${args.error}` };
+			return `@${display}, ${args.error}`;
 		}
 		if (!args.text) {
-			return { text: usage };
+			return usage;
 		}
 
 		try {
@@ -148,13 +148,15 @@ module.exports = {
 				result = await translateGoogle(args.text, args.fromLang ?? 'auto', args.targetLang);
 			}
 
-			return { text: `@${display}, [${result.detectedLang} → ${args.targetLang}] ${result.translated}` };
+			return `@${display}, [${result.detectedLang} → ${args.targetLang}] ${result.translated}`;
 		} catch (e) {
 			const message = e instanceof Error ? e.message : '';
 			Logger.warn(`[translate] ${message}`);
-			return { text: `@${display}, Translation failed${message ? ` (${message})` : ''}.` };
+			return `@${display}, Translation failed${message ? ` (${message})` : ''}.`;
 		}
 	},
 };
+
+module.exports = { command };
 
 Object.assign(module.exports, { parseGoogleResult, parseTranslateArgs });

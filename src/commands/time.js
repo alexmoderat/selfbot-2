@@ -17,14 +17,15 @@ const zoneReply = (zone) => {
 	};
 };
 
-module.exports = {
+const command = {
 	name: 'time',
-	cooldown: 10000,
+	cooldown: { user: 10 },
+	access: { channel: 0 },
 	description:
 		'Fetches the current time and timezone for a given location, or a user, if they have set their location. Also takes a timezone ("utc", "cet", "utc+2") or a country ("uk", "Portugal").',
 	usage: 'time [location | timezone | country | @user]',
 	flags: ['block', 'mention', 'non-nullable', 'opt-out', 'pipe'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		const zone = detectTimezone(...args);
 		if (zone) {
@@ -35,12 +36,10 @@ module.exports = {
 		if (country) {
 			if (country.times.length === 1) {
 				const [{ offset, date }] = country.times;
-				return { text: `${country.name} is currently on ${offset}, and it's ${date} there right now.` };
+				return `${country.name} is currently on ${offset}, and it's ${date} there right now.`;
 			}
 
-			return {
-				text: `${country.name} has ${country.times.length} time offsets right now: ${country.times.map((i) => `${i.offset} -> ${i.date}`).join(' // ')}`,
-			};
+			return `${country.name} has ${country.times.length} time offsets right now: ${country.times.map((i) => `${i.offset} -> ${i.date}`).join(' // ')}`;
 		}
 
 		let skipLocation = false;
@@ -76,9 +75,7 @@ module.exports = {
 				};
 			} else if (targetUser.name === bot.Twitch.selfName) {
 				const robotEmote = await msg.getBestAvailableEmote(['MrDestructoid'], '🤖');
-				return {
-					text: `My current time is ${SupiDate.now()} ${robotEmote}`,
-				};
+				return `My current time is ${SupiDate.now()} ${robotEmote}`;
 			}
 
 			const targetZone = detectTimezone((await bot.Users.getData(targetUser, 'timezone')) ?? '');
@@ -145,20 +142,16 @@ module.exports = {
 
 		const locationDateTime = time.format('H:i (Y-m-d)');
 		if (skipLocation) {
-			return {
-				text: bot.Utils.tag.trim`
+			return bot.Utils.tag.trim`
 					(location hidden) is using UTC${offset},
 					and it's ${locationDateTime} there right now.
-				 `,
-			};
+				 `;
 		} else {
-			return {
-				text: bot.Utils.tag.trim`
+			return bot.Utils.tag.trim`
 					${place} is currently observing ${timeData.timeZoneName}, 
 					which is UTC${offset},
 					and it's ${locationDateTime} there right now.
-				 `,
-			};
+				 `;
 		}
 	},
 	dynamicDescription: (prefix) => [
@@ -187,3 +180,5 @@ module.exports = {
 		'',
 	],
 };
+
+module.exports = { command };

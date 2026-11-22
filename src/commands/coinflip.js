@@ -1,21 +1,20 @@
 const { randomInt } = require('../util/command-utils.js');
 
-module.exports = {
+const command = {
 	name: 'coinflip',
 	aliases: ['cf'],
-	cooldown: 2500,
+	cooldown: { user: 2.5 },
+	access: { channel: 0 },
 	description: 'Flips a coin, and shows you the result of it.',
 	usage: 'coinflip',
 	// no-prefix: dburgers2/alexmoderat, 20.10.2026 (aus sb-v2)
 	flags: ['mention', 'no-prefix', 'pipe', 'skip-banphrase'],
 	params: [{ name: 'fail', type: 'boolean' }],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		// According to Murray & Teare (1993), the probability of an American silver nickel landing on its edge is around 1 in 6000 tosses
 		const edgeRoll = randomInt(1, 6000);
 		if (edgeRoll === 1) {
-			return {
-				text: 'The coin landed on its edge (!!)',
-			};
+			return 'The coin landed on its edge (!!)';
 		}
 
 		const flipRoll = randomInt(1, 2);
@@ -42,3 +41,5 @@ module.exports = {
 		'Shows which side the coin landed on.',
 	],
 };
+
+module.exports = { command };

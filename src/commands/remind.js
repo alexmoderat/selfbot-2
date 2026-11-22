@@ -5,11 +5,12 @@ const { fetchTimeData, formatTimezoneOffset, parseChrono } = require('../util/co
 const MAXIMUM_SQL_TIMESTAMP = 253_402_297_199_999;
 const MESSAGE_LIMIT = 2000;
 
-module.exports = {
+const command = {
 	name: 'remind',
 	// Supibot hat auch "notify" - das ist hier sb-v2s notify (Block 8, alexmoderat 24.10.2026: sb-v2 notify + subscribe)
 	aliases: ['remindme', 'remindprivate', 'privateremind'],
-	cooldown: 10000,
+	cooldown: { user: 10 },
+	access: { channel: 0 },
 	description:
 		'Sets a notification for a given user. Can also set a time to ping that user (or yourself) in a given amount of time, but in that case you must use the word "in" and then a number specifying the amount days, hours, minutes, etc.',
 	usage: 'remind (user) (text) [in (time)] | remindme (text) in (time)',
@@ -22,7 +23,7 @@ module.exports = {
 		{ name: 'on', type: 'string' },
 		{ name: 'private', type: 'boolean' },
 	],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		const { params } = msg;
 		const chronoParams = Object.keys(params).filter((i) => i !== 'private');
@@ -54,7 +55,7 @@ module.exports = {
 			return {
 				success: false,
 				text: 'An invalid user was provided!',
-				cooldown: module.exports.cooldown / 2,
+				cooldown: (command.cooldown.user * 1000) / 2,
 			};
 		} else {
 			args.shift();
@@ -68,7 +69,7 @@ module.exports = {
 			return {
 				success: false,
 				text: 'You must create private reminders in private messages only!',
-				cooldown: module.exports.cooldown / 2,
+				cooldown: (command.cooldown.user * 1000) / 2,
 			};
 		}
 
@@ -210,7 +211,7 @@ module.exports = {
 				return {
 					success: false,
 					text: 'You cannot set a timed reminder in less than 30 seconds!',
-					cooldown: module.exports.cooldown / 2,
+					cooldown: (command.cooldown.user * 1000) / 2,
 				};
 			} else if (SupiDate.now() + delta > MAXIMUM_SQL_TIMESTAMP) {
 				const description = Number.isFinite(comparison.valueOf())
@@ -220,7 +221,7 @@ module.exports = {
 				return {
 					success: false,
 					text: `Your reminder was set to ${description}, but the limit is December 31st 9999.`,
-					cooldown: module.exports.cooldown / 2,
+					cooldown: (command.cooldown.user * 1000) / 2,
 				};
 			}
 		} else if (targetUser === msg.sender) {
@@ -280,7 +281,7 @@ module.exports = {
 			}
 
 			return {
-				cooldown: msg.privateMessage ? 2500 : module.exports.cooldown,
+				cooldown: msg.privateMessage ? 2500 : (command.cooldown.user * 1000),
 				text: message,
 			};
 		} else {
@@ -346,3 +347,5 @@ module.exports = {
 		'',
 	],
 };
+
+module.exports = { command };

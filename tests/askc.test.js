@@ -19,43 +19,49 @@ const ask = require('../src/commands/ask.js');
 const askc = require('../src/commands/askcontinue.js');
 const conversations = require('../src/util/ask-conversations.js');
 
+/** Command ueber die Datei-Form (execute(context)) ausfuehren; Strings werden zu { text } */
+const run = async (module, message) => {
+	const result = await module.command.execute({ client: null, message });
+	return typeof result === 'string' ? { text: result } : result;
+};
+
 const msg = (text, id = '1') => ({ displayName: 'ninou2', invocation: 'askc', args: text.split(' '), sender: { id } });
 const contentsTexts = () => lastRequest.json.contents.map((i) => `${i.role}:${i.parts[0].text}`);
 
 test('askc: Alias und eigener Command', () => {
-	assert.equal(askc.name, 'askcontinue');
-	assert.deepEqual(askc.aliases, ['askc']);
+	assert.equal(askc.command.name, 'askcontinue');
+	assert.deepEqual(askc.command.aliases, ['askc']);
 });
 
 test('askc: Verlauf der letzten Frage geht mit, danach wieder angehaengt', async () => {
 	process.env.GEMINI_API_KEY = 'zzq-test';
 	conversations.clear();
 	nextText = 'Paris.';
-	await ask.execute(null, msg('capital of france'));
+	await run(ask, msg('capital of france'));
 	assert.deepEqual(contentsTexts(), ['user:capital of france']);
 
 	nextText = 'About 2 million.';
-	await askc.execute(null, msg('and how many people live there'));
+	await run(askc, msg('and how many people live there'));
 	assert.deepEqual(contentsTexts(), ['user:capital of france', 'model:Paris.', 'user:and how many people live there']);
 
-	await askc.execute(null, msg('and the area'));
+	await run(askc, msg('and the area'));
 	assert.equal(lastRequest.json.contents.length, 5);
 });
 
 test('askc: ohne laufendes Gespraech oder von anderem User ist es eine frische Frage', async () => {
 	conversations.clear();
-	await askc.execute(null, msg('first thing'));
+	await run(askc, msg('first thing'));
 	assert.deepEqual(contentsTexts(), ['user:first thing']);
-	await askc.execute(null, msg('other user', '2'));
+	await run(askc, msg('other user', '2'));
 	assert.deepEqual(contentsTexts(), ['user:other user']);
 });
 
 test('ask: eine neue Frage beendet das alte Gespraech', async () => {
 	conversations.clear();
 	nextText = 'ok';
-	await ask.execute(null, msg('one'));
-	await ask.execute(null, msg('two'));
-	await askc.execute(null, msg('three'));
+	await run(ask, msg('one'));
+	await run(ask, msg('two'));
+	await run(askc, msg('three'));
 	assert.deepEqual(contentsTexts(), ['user:two', 'model:ok', 'user:three']);
 });
 
@@ -81,9 +87,9 @@ test('askc: nach 5 Minuten zaehlt die Frage als frisch', async () => {
 	let now = 5_000_000;
 	Date.now = () => now;
 	try {
-		await ask.execute(null, msg('old question'));
+		await run(ask, msg('old question'));
 		now += 5 * 60_000 + 1;
-		await askc.execute(null, msg('late follow up'));
+		await run(askc, msg('late follow up'));
 		assert.deepEqual(contentsTexts(), ['user:late follow up']);
 	} finally {
 		Date.now = realNow;

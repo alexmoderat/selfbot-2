@@ -3,18 +3,19 @@ const z = require('zod');
 
 const querySchema = z.union([z.object({ result: z.string(), error: z.null() }), z.object({ result: z.null(), error: z.string() })]);
 
-module.exports = {
+const command = {
 	name: 'math',
 	aliases: ['calculate', 'calc'],
 	usage: 'math <expression> [fixed:true] [precision:N]',
-	cooldown: 5000,
+	cooldown: { user: 5 },
+	access: { channel: 0 },
 	description: 'Does math. For more info, check the documentation for math.js.',
 	flags: ['external-input', 'mention', 'non-nullable', 'pipe'],
 	params: [
 		{ name: 'fixed', type: 'boolean' },
 		{ name: 'precision', type: 'number' },
 	],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		if (args.length === 0) {
 			return {
@@ -98,3 +99,5 @@ module.exports = {
 		`<code>${prefix}math 1000 * 1000 fixed:false</code> => 1e+6`,
 	],
 };
+
+module.exports = { command };

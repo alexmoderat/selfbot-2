@@ -37,10 +37,11 @@ const fetchChannelRandomLine = async (channelData) => {
 	return { success: true, text: line.Text, date: line.Posted, username: user?.name ?? `(${line.Platform_ID})` };
 };
 
-module.exports = {
+const command = {
 	name: 'randomline',
 	aliases: ['rl', 'rq'],
-	cooldown: 15000,
+	cooldown: { user: 15 },
+	access: { channel: 0 },
 	description: 'Fetches a random line from the current channel. If a user is specified, fetches a random line from that user only. "rq" only chooses from your own lines.',
 	usage: 'randomline [user] [textOnly:true] [userID:id]',
 	flags: ['block', 'external-input', 'opt-out', 'pipe'],
@@ -48,7 +49,7 @@ module.exports = {
 		{ name: 'textOnly', type: 'boolean' },
 		{ name: 'userID', type: 'string' },
 	],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [user] = msg.args;
 		const channel = msg.channelData;
 		if (!channel) {
@@ -110,3 +111,5 @@ module.exports = {
 		`<code>${prefix}rl userID:(user id)</code> - by user ID (channels logged by an external service only)`,
 	],
 };
+
+module.exports = { command };

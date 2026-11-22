@@ -18,6 +18,12 @@ require.cache[gotPath] = {
 };
 const ask = require('../src/commands/ask.js');
 
+/** Command ueber die Datei-Form (execute(context)) ausfuehren; Strings werden zu { text } */
+const run = async (module, message) => {
+	const result = await module.command.execute({ client: null, message });
+	return typeof result === 'string' ? { text: result } : result;
+};
+
 const msg = (text) => ({ displayName: 'ninou2', invocation: 'ask', args: text ? text.split(' ') : [] });
 
 test('ask: Antwort einzeilig ohne Markdown, hart gekuerzt', () => {
@@ -43,10 +49,10 @@ test('ask: Text aus Gemini-Antwort, Gedanken-Teile ignoriert, leer/gesperrt = nu
 });
 
 test('ask: ohne Frage Usage, ohne Schluessel Hinweis', async () => {
-	assert.equal((await ask.execute(null, msg(''))).text, '@ninou2, Usage: ask <question>');
+	assert.equal((await run(ask, msg(''))).text, '@ninou2, Usage: ask <question>');
 	const saved = process.env.GEMINI_API_KEY;
 	delete process.env.GEMINI_API_KEY;
-	assert.equal((await ask.execute(null, msg('zzq'))).text, "@ninou2, the AI isn't set up yet.");
+	assert.equal((await run(ask, msg('zzq'))).text, "@ninou2, the AI isn't set up yet.");
 	if (saved !== undefined) {
 		process.env.GEMINI_API_KEY = saved;
 	}
@@ -57,23 +63,23 @@ test('ask: Antwort, Kontingent aufgebraucht (429), Fehlerstatus', async () => {
 	process.env.GEMINI_API_KEY = 'zzq-test';
 	try {
 		nextResponse = { statusCode: 200, body: { candidates: [{ content: { parts: [{ text: 'No. Berlin rarely gets heavy snow.' }] } }] } };
-		assert.equal((await ask.execute(null, msg('does it snow a lot in berlin'))).text, '@ninou2, No. Berlin rarely gets heavy snow.');
+		assert.equal((await run(ask, msg('does it snow a lot in berlin'))).text, '@ninou2, No. Berlin rarely gets heavy snow.');
 		assert.equal(lastRequest.method, 'POST');
 		assert.equal(lastRequest.headers['x-goog-api-key'], 'zzq-test');
 		assert.equal(lastRequest.json.contents[0].parts[0].text, 'does it snow a lot in berlin');
 
 		const long = Array.from({ length: 150 }, (_, i) => `zzq${i}`).join(' ');
 		nextResponse = { statusCode: 200, body: { candidates: [{ content: { parts: [{ text: long }] } }] } };
-		const result = await ask.execute(null, msg('zzq'));
+		const result = await run(ask, msg('zzq'));
 		assert.ok(result.text.startsWith('@ninou2, zzq0 '));
 		assert.ok(result.followUps.length >= 1);
 		assert.equal([result.text.slice('@ninou2, '.length), ...result.followUps].join(' '), long);
 
 		nextResponse = { statusCode: 429, body: {} };
-		assert.match((await ask.execute(null, msg('zzq'))).text, /limit is used up/);
+		assert.match((await run(ask, msg('zzq'))).text, /limit is used up/);
 
 		nextResponse = { statusCode: 500, body: {} };
-		assert.match((await ask.execute(null, msg('zzq'))).text, /status 500/);
+		assert.match((await run(ask, msg('zzq'))).text, /status 500/);
 	} finally {
 		if (saved === undefined) {
 			delete process.env.GEMINI_API_KEY;

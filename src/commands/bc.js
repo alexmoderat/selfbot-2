@@ -10,13 +10,13 @@ const BAN_STATUS_HASH = '319f2a9a3ac7ddecd7925944416c14b818b65676ab69da604460b68
  *   Helix /moderation/banned   nur wo der Bot Mod oder Broadcaster ist
  *   GQL ChatRoomBanStatus      ueberall, braucht aber den Web-Token
  */
-module.exports = {
+const command = {
 	name: 'bc',
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Checks whether you are banned in a channel.',
 	usage: 'bc <channel>',
-	flags: ['mod'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [targetRaw] = msg.args;
 		const display = msg.displayName;
 		const target = (targetRaw ?? '')
@@ -25,13 +25,13 @@ module.exports = {
 			.trim();
 		const senderId = msg.sender.twitchId;
 		if (!senderId) {
-			return { text: `@${display}, could not resolve your user ID.` };
+			return `@${display}, could not resolve your user ID.`;
 		}
 
 		// Fuer nie existierende Logins antwortet GQL mit "gesperrt" ohne ID - vorher ergab das "du bist nicht gebannt"
 		const channelInfo = await getUserInfo(target);
 		if (!channelInfo?.id) {
-			return { text: `@${display}, channel "${target}" not found.` };
+			return `@${display}, channel "${target}" not found.`;
 		}
 
 		let ban = null;
@@ -44,7 +44,7 @@ module.exports = {
 			const row = helix.body.data?.[0];
 			ban = row ? { createdAt: row.created_at, expiresAt: row.expires_at || null, reason: row.reason, moderator: row.moderator_login } : null;
 		} else if (helix.statusCode !== 401 && helix.statusCode !== 403) {
-			return { text: `@${display}, error ${helix.statusCode}: ${helix.body.message ?? 'unknown error'}` };
+			return `@${display}, error ${helix.statusCode}: ${helix.body.message ?? 'unknown error'}`;
 		} else {
 			// Kein Mod dort -> GQL
 			try {
@@ -65,12 +65,12 @@ module.exports = {
 					: null;
 			} catch (e) {
 				Logger.warn('[bc] GQL-Rueckfall fehlgeschlagen', e);
-				return { text: `@${display}, can't check ban status in ${channelInfo.displayName} — not a mod there and the GQL fallback failed.` };
+				return `@${display}, can't check ban status in ${channelInfo.displayName} — not a mod there and the GQL fallback failed.`;
 			}
 		}
 
 		if (!ban) {
-			return { text: `@${display}, you are not banned in ${channelInfo.displayName}.` };
+			return `@${display}, you are not banned in ${channelInfo.displayName}.`;
 		}
 
 		const bannedAt = ban.createdAt ? new Date(ban.createdAt) : null;
@@ -89,6 +89,8 @@ module.exports = {
 					.replace(/\.\d+Z$/, ' UTC')} (${formatDuration(Date.now() - bannedAt.getTime())} ago).`
 			: '';
 
-		return { text: `@${display}, Banned in ${channelInfo.displayName} ${duration}${by}.${created} Reason: "${ban.reason || '—'}"` };
+		return `@${display}, Banned in ${channelInfo.displayName} ${duration}${by}.${created} Reason: "${ban.reason || '—'}"`;
 	},
 };
+
+module.exports = { command };

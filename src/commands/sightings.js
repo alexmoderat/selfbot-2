@@ -50,23 +50,23 @@ const ago = (date) => {
 };
 const day = (date) => date.toISOString().slice(0, 10);
 
-module.exports = {
+const command = {
 	name: 'sightings',
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Where and what an account wrote as first message across the radar channels.',
 	usage: 'sightings <user or user ID>',
-	flags: ['mod'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [userRaw] = msg.args;
 		const display = msg.displayName;
 		const login = userRaw?.replace(/^@/, '').toLowerCase();
 		if (!login) {
-			return { text: `@${display}, Usage: ${msg.prefix}${msg.invocation} <user>` };
+			return `@${display}, Usage: ${msg.prefix}${msg.invocation} <user>`;
 		}
 
 		const user = await resolveUser(login);
 		if (!user) {
-			return { text: `@${display}, user "${login}" not found.` };
+			return `@${display}, user "${login}" not found.`;
 		}
 
 		// gehoert utility-next (geteilte Daten in Postgres utility_next)
@@ -79,15 +79,14 @@ module.exports = {
 		const list = truncated ? rows.slice(0, MAX_ROWS) : rows;
 		const summary = summarize(list);
 		if (!summary) {
-			return { text: `@${display}, no sightings of ${user.login} (${user.id}) in the radar log.` };
+			return `@${display}, no sightings of ${user.login} (${user.id}) in the radar log.`;
 		}
 
 		const url = await uploadToHaste(formatReport(user.login, user.id, list, truncated)).catch(() => null);
-		return {
-			text:
-				`@${display}, ${user.login} (${user.id}): ${summary.count}${truncated ? '+' : ''} sightings in ${summary.channels} channels, ` +
+		return `@${display}, ${user.login} (${user.id}): ${summary.count}${truncated ? '+' : ''} sightings in ${summary.channels} channels, ` +
 				`${day(summary.firstSeen)} → ${day(summary.lastSeen)} (last: #${summary.lastChannel}, ${ago(summary.lastSeen)})` +
-				`${url ? ` · full report: ${url}` : ''}`,
-		};
+				`${url ? ` · full report: ${url}` : ''}`;
 	},
 };
+
+module.exports = { command };

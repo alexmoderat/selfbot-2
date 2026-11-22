@@ -12,13 +12,14 @@ const count = async (command, channelId) => {
 	return await bot.DB.CommandExecution.countDocuments({ command, ...(channelId !== null ? { channelId } : {}) });
 };
 
-module.exports = {
+const command = {
 	name: 'howmany',
 	aliases: ['hm'],
-	cooldown: 5000,
+	cooldown: { user: 5 },
+	access: { channel: 0 },
 	description: 'Shows how often a command has been used in this channel and globally.',
 	usage: 'howmany <command>',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [input] = msg.args;
 		const channel = msg.channelData;
 		const display = msg.displayName;
@@ -34,18 +35,20 @@ module.exports = {
 		const builtIn = getCommand(name);
 		if (builtIn) {
 			const [inChannel, global] = await Promise.all([count(builtIn.Name, channel.id), count(builtIn.Name, null)]);
-			return { text: formatHowMany(input, channel.name, inChannel, global) };
+			return formatHowMany(input, channel.name, inChannel, global);
 		}
 
 		// Custom Commands gibt es nur in diesem Channel - Name wie in custom-commands.resolve()
 		const custom = await customCommands.get(channel, `!${name}`);
 		if (custom) {
 			const uses = await count(`custom:${channel.id}:${name}`, channel.id);
-			return { text: formatHowMany(input, channel.name, uses, uses) };
+			return formatHowMany(input, channel.name, uses, uses);
 		}
 
 		return { success: false, text: `@${display}, there's no command called ${input}.` };
 	},
 };
+
+module.exports = { command };
 
 Object.assign(module.exports, { formatHowMany });

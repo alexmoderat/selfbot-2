@@ -12,14 +12,15 @@ const { packLines, replyInChunks } = require('../util/tracking-format.js');
 const MESSAGE_LIMIT = 480;
 const TOTAL_WORDS = new Set(['total', 'alltime', 'all']);
 
-module.exports = {
+const command = {
 	name: 'daysstreamed',
 	aliases: ['ds'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 0 },
 	description:
 		'How many days a channel has streamed. No argument = current year. Takes a year ("2026"), month+year ("october2026"), "monthly"/"monthly2026" for a month-by-month breakdown, "yearly" for every year with data, or "total"/"alltime"/"all". Defaults to the current channel.',
 	usage: 'daysstreamed [channel] [year | month<year> | monthly[year] | yearly | total]',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		const display = msg.displayName;
 		const now = new Date();
@@ -56,14 +57,14 @@ module.exports = {
 		const where = own ? 'this channel' : `#${channel}`;
 		const userId = await streamData.fetchUserId(channel);
 		if (!userId) {
-			return { text: `@${display}, no Twitch account named "${channel}" exists.` };
+			return `@${display}, no Twitch account named "${channel}" exists.`;
 		}
 
 		const allDays = await streamData.getDays(userId);
 		if (allDays.length === 0) {
-			return { text: `@${display}, no streaming days recorded for ${where} yet — either tracking just started, or that's not a channel I watch.` };
+			return `@${display}, no streaming days recorded for ${where} yet — either tracking just started, or that's not a channel I watch.`;
 		} else if (total) {
-			return { text: `@${display}, ${channel} has streamed on [${allDays.length}] days all-time.` };
+			return `@${display}, ${channel} has streamed on [${allDays.length}] days all-time.`;
 		}
 
 		if (yearly) {
@@ -80,13 +81,11 @@ module.exports = {
 			const prefix = `${monthSpec.year}-${String(monthSpec.month).padStart(2, '0')}-`;
 			const monthCount = allDays.filter((i) => i.startsWith(prefix)).length;
 			if (!monthCount) {
-				return {
-					text: `@${display}, no streaming days recorded for ${where} in ${monthSpec.label} — either tracking just started, or that's not a channel I watch.`,
-				};
+				return `@${display}, no streaming days recorded for ${where} in ${monthSpec.label} — either tracking just started, or that's not a channel I watch.`;
 			}
 
 			const current = monthSpec.year === now.getUTCFullYear() && monthSpec.month === now.getUTCMonth() + 1;
-			return { text: `@${display}, in ${monthSpec.label}, ${channel} streamed on [${monthCount}] days${current ? ' soo far' : ''}.` };
+			return `@${display}, in ${monthSpec.label}, ${channel} streamed on [${monthCount}] days${current ? ' soo far' : ''}.`;
 		}
 
 		const year = explicitYear ?? now.getUTCFullYear();
@@ -99,9 +98,7 @@ module.exports = {
 				}
 			}
 			if (perMonth.size === 0) {
-				return {
-					text: `@${display}, no streaming days recorded for ${where} in ${year} — either tracking just started, or that's not a channel I watch.`,
-				};
+				return `@${display}, no streaming days recorded for ${where} in ${year} — either tracking just started, or that's not a channel I watch.`;
 			}
 
 			const lines = [];
@@ -117,7 +114,7 @@ module.exports = {
 
 		const count = allDays.filter((i) => i.startsWith(`${year}-`)).length;
 		if (!count) {
-			return { text: `@${display}, no streaming days recorded for ${where} in ${year} — either tracking just started, or that's not a channel I watch.` };
+			return `@${display}, no streaming days recorded for ${where} in ${year} — either tracking just started, or that's not a channel I watch.`;
 		}
 
 		const soFar = year === now.getUTCFullYear() ? ' soo far' : '';
@@ -127,6 +124,8 @@ module.exports = {
 		const hourMonths = await streamData.getMonthlyBreakdown(userId, year);
 		const incomplete = hourMonths.some((i) => i.seconds > 0 && i.month < Number(firstDay.slice(5, 7)));
 		const since = incomplete ? `, since day tracking started on ${fmtDate(firstDay)} (hours go back further)` : '';
-		return { text: `@${display}, in ${year}, ${channel} streamed on [${count}] days${soFar}${since}.` };
+		return `@${display}, in ${year}, ${channel} streamed on [${count}] days${soFar}${since}.`;
 	},
 };
+
+module.exports = { command };

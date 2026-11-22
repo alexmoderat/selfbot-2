@@ -3,14 +3,15 @@ const { fetchTwitchUser } = require('../util/twitch/twitch-utils.js');
 const { twitchChannelSchema } = require('../util/schemas.js');
 
 // Supibots commands/shoutout (Block 8: Supibot-Version, alexmoderat 24.10.2026)
-module.exports = {
+const command = {
 	name: 'shoutout',
 	aliases: ['so'],
-	cooldown: 30000,
+	cooldown: { user: 30 },
+	access: { channel: 0 },
 	description: 'Shouts out a given streamer (Twitch only), and posts the last game they played as well.',
 	usage: 'shoutout <user>',
 	flags: ['mention'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [target] = msg.args;
 		if (bot.Twitch.name !== 'twitch') {
 			return {
@@ -71,3 +72,5 @@ module.exports = {
 		};
 	},
 };
+
+module.exports = { command };

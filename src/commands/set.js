@@ -1,15 +1,16 @@
 const { getPermissions } = require('../clients/modules/handler.js');
 const { subcommands } = require('../util/commands/set/subcommands/index.js');
 
-module.exports = {
+const command = {
 	name: 'set',
 	aliases: ['unset'],
-	cooldown: 5000,
+	cooldown: { user: 5 },
+	access: { channel: 0 },
 	description: 'Sets/unsets certain variables within the bot. Check the extended help for full info.',
 	usage: 'set <type> (value) | unset <type> (value)',
 	flags: ['mention', 'pipe'],
 	params: [{ name: 'from', type: 'string' }],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [typeInput, ...args] = msg.args;
 		if (!typeInput) {
 			return {
@@ -115,9 +116,7 @@ module.exports = {
 		const successString = success.length > 0 ? `Success: ${invocation}ting IDs ${success.map((i) => i.id).join(', ')}.` : '';
 		const failString = fail.length > 0 ? `Fail: ${invocation}ting IDs ${fail.map((i) => i.id).join(', ')}.` : '';
 
-		return {
-			text: [successString, failString].filter(Boolean).join(' '),
-		};
+		return [successString, failString].filter(Boolean).join(' ');
 	},
 	dynamicDescription: (prefix) => {
 		const list = subcommands
@@ -145,3 +144,5 @@ module.exports = {
 		];
 	},
 };
+
+module.exports = { command };

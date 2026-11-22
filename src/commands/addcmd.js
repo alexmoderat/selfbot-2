@@ -25,13 +25,13 @@ const describe = (row) =>
 		2,
 	);
 
-module.exports = {
+const command = {
 	name: 'addcmd',
 	aliases: ['rmcmd', 'removecmd', 'listcmd'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Manage trigger commands: trigger:word/phrase (no regex needed, exact:true for a full-message match) or trigger:/pattern/flags for advanced regex.',
 	usage: 'addcmd trigger:word|/pattern/ <reply> [exact:true] [cooldown:5] [modonly:true] [whitelist:id1,id2] [global:true] [text:true] [channel:name] | rmcmd <id> [channel:name] | listcmd [channel:name]',
-	flags: ['mod'],
 	params: [
 		{ name: 'trigger', type: 'string' },
 		{ name: 'exact', type: 'boolean' },
@@ -44,7 +44,7 @@ module.exports = {
 		{ name: 'channel', type: 'string' },
 		{ name: 'global', type: 'boolean' },
 	],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		const display = msg.displayName;
 		const p = msg.params;
@@ -56,52 +56,50 @@ module.exports = {
 			.toLowerCase();
 		const channel = bot.Channels.get(channelName);
 		if (!channel) {
-			return { text: `@${display}, I'm not in #${channelName || '?'}.` };
+			return `@${display}, I'm not in #${channelName || '?'}.`;
 		}
 
 		if (mode === 'listcmd') {
 			const rows = await triggers.list(channel.id);
 			if (rows.length === 0) {
-				return { text: `@${display}, No trigger commands in #${channel.name}.` };
+				return `@${display}, No trigger commands in #${channel.name}.`;
 			}
 
 			try {
 				const url = await uploadToHaste(`Trigger commands for #${channel.name}:\n\n[\n${rows.map(describe).join(',\n')}\n]`);
-				return { text: `@${display}, ${url}` };
+				return `@${display}, ${url}`;
 			} catch {
-				return { text: `@${display}, upload failed — ${rows.length} command(s) in #${channel.name}.` };
+				return `@${display}, upload failed — ${rows.length} command(s) in #${channel.name}.`;
 			}
 		}
 
 		if (mode === 'rmcmd' || mode === 'removecmd') {
 			const id = args[0];
 			if (!id) {
-				return { text: `@${display}, Usage: ${msg.prefix}${mode} <id> [channel:name]` };
+				return `@${display}, Usage: ${msg.prefix}${mode} <id> [channel:name]`;
 			}
 
 			const prefix = uuidPrefix(id);
 			const removed = prefix ? await triggers.removeByPrefix(channel, prefix) : null;
 			if (!removed) {
-				return { text: `@${display}, trigger command "${id}" not found in #${channel.name}.` };
+				return `@${display}, trigger command "${id}" not found in #${channel.name}.`;
 			}
 
-			return { text: `@${display}, removed trigger command in #${channel.name}. (ID: ${removed})` };
+			return `@${display}, removed trigger command in #${channel.name}. (ID: ${removed})`;
 		}
 
 		const trigger = triggers.parseTrigger(p.trigger, p.exact === true);
 		const response = args.join(' ').trim();
 		if (!trigger) {
-			return {
-				text: `@${display}, Usage: ${msg.prefix}addcmd trigger:word|/pattern/ <reply> [exact:true] [cooldown:5] [modonly:true] [whitelist:id1,id2] [text:true] [channel:name]`,
-			};
+			return `@${display}, Usage: ${msg.prefix}addcmd trigger:word|/pattern/ <reply> [exact:true] [cooldown:5] [modonly:true] [whitelist:id1,id2] [text:true] [channel:name]`;
 		} else if (!response) {
-			return { text: `@${display}, please provide a reply.` };
+			return `@${display}, please provide a reply.`;
 		}
 
 		try {
 			void new RegExp(trigger);
 		} catch (e) {
-			return { text: `@${display}, invalid regex: ${e.message}` };
+			return `@${display}, invalid regex: ${e.message}`;
 		}
 
 		const whitelist = p.whitelist
@@ -120,6 +118,8 @@ module.exports = {
 			Global_Cooldown: p.global === true,
 		});
 
-		return { text: `@${display}, ✅ trigger command created in #${channel.name}. (ID: ${uuid})` };
+		return `@${display}, ✅ trigger command created in #${channel.name}. (ID: ${uuid})`;
 	},
 };
+
+module.exports = { command };

@@ -7,25 +7,25 @@ const { getBanStatusBatch } = require('../token/gql.js');
  * Prueft die wegen Sperre verlassenen Channels von Hand nach, aus sb-v2: ein GQL-Batch, und wer wieder aktiv ist,
  * wird gleich wieder betreten (vorheriger Mode).
  */
-module.exports = {
+const command = {
 	name: 'checksuspended',
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Re-checks channels marked as suspended and rejoins reactivated ones.',
 	usage: 'checksuspended',
-	flags: ['mod'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const display = msg.displayName;
 		const platform = bot.Twitch;
 		const list = await listSuspended(platform);
 		if (list.length === 0) {
-			return { text: `@${display}, no banned channels recorded.` };
+			return `@${display}, no banned channels recorded.`;
 		}
 
 		let status;
 		try {
 			status = await getBanStatusBatch(list.map((i) => i.channel.name));
 		} catch {
-			return { text: `@${display}, the Twitch lookup failed, please try again later.` };
+			return `@${display}, the Twitch lookup failed, please try again later.`;
 		}
 
 		const revived = [];
@@ -37,11 +37,11 @@ module.exports = {
 		}
 
 		if (revived.length === 0) {
-			return { text: `@${display}, checked ${list.length} channel(s), all still banned.` };
+			return `@${display}, checked ${list.length} channel(s), all still banned.`;
 		}
 
-		return {
-			text: `@${display}, checked ${list.length} · active again: ${revived.length > 0 ? await listOrLink(revived, 'Reactivated channels') : 'none'} · still banned: ${list.length - revived.length}`,
-		};
+		return `@${display}, checked ${list.length} · active again: ${revived.length > 0 ? await listOrLink(revived, 'Reactivated channels') : 'none'} · still banned: ${list.length - revived.length}`;
 	},
 };
+
+module.exports = { command };

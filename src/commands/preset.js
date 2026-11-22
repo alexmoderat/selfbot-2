@@ -16,14 +16,15 @@ const splitPhraseAndReason = (rest, fallbackReason) => {
 	return { phrase, reason };
 };
 
-module.exports = {
+const command = {
 	name: 'preset',
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Manage phrase presets and enable them per channel.',
 	usage: 'preset <list|phrases|info|status|enable|disable|create|delete|addphrase|addregex|removephrase|autoenable> …',
 	// Loeschen nur nach zweiter Bestaetigung (ninou2, 06.10.2026)
-	flags: ['mod', 'confirm'],
-	execute: async (client, msg) => {
+	flags: ['confirm'],
+	execute: async ({ client, message: msg }) => {
 		const [sub, ...args] = msg.args;
 		const display = msg.displayName;
 		const action = sub?.toLowerCase();
@@ -32,7 +33,7 @@ module.exports = {
 		if (OWNER_ONLY.has(action)) {
 			const permissions = getPermissions(msg);
 			if (!permissions.administrator) {
-				return { text: null }; // stillschweigend ignorieren, wie in sb-v2
+				return null; // stillschweigend ignorieren, wie in sb-v2
 			}
 		}
 
@@ -46,173 +47,168 @@ module.exports = {
 			case 'list': {
 				const list = phrases.getPresets();
 				if (list.length === 0) {
-					return { text: `@${display}, no presets exist.` };
+					return `@${display}, no presets exist.`;
 				}
 
-				return {
-					text: `@${display}, presets (${list.length}): ${await listOrLink(
+				return `@${display}, presets (${list.length}): ${await listOrLink(
 						list.map((i) => `${i.Name} (${phrases.getPresetPhrases(i.ID).length})`),
 						'Presets',
-					)}`,
-				};
+					)}`;
 			}
 
 			case 'phrases': {
 				if (!presetName) {
-					return { text: `@${display}, Usage: ${usage} phrases <preset>` };
+					return `@${display}, Usage: ${usage} phrases <preset>`;
 				}
 
 				const target = phrases.getPreset(presetName);
 				const list = target ? phrases.getPresetPhrases(target.ID) : [];
 				if (list.length === 0) {
-					return { text: `@${display}, no phrases in "${presetName}".` };
+					return `@${display}, no phrases in "${presetName}".`;
 				}
 
 				const lines = list.map((i) => `[${i.ID}] ${i.Is_Regex ? '~' : ''}${i.Phrase}`);
-				return { text: `@${display}, ${presetName} has ${list.length} phrases: ${await listOrLink(lines, `Preset ${presetName}`)}` };
+				return `@${display}, ${presetName} has ${list.length} phrases: ${await listOrLink(lines, `Preset ${presetName}`)}`;
 			}
 
 			case 'info': {
 				if (!presetName) {
-					return { text: `@${display}, Usage: ${usage} info <preset>` };
+					return `@${display}, Usage: ${usage} info <preset>`;
 				}
 
 				const target = phrases.getPreset(presetName);
 				if (!target) {
-					return { text: `@${display}, preset "${presetName}" not found.` };
+					return `@${display}, preset "${presetName}" not found.`;
 				}
 
 				const channels = phrases
 					.getPresetChannelIds(target.ID)
 					.map((i) => bot.Channels.get(i)?.Name)
 					.filter(Boolean);
-				return {
-					text: `@${display}, preset "${target.Name}" · ${phrases.getPresetPhrases(target.ID).length} phrases · channels: ${channels.length > 0 ? `${channels.length} — ${await listOrLink(channels, `Channels with preset ${target.Name}`)}` : 'none'}${target.Description ? ` · ${target.Description}` : ''}`,
-				};
+				return `@${display}, preset "${target.Name}" · ${phrases.getPresetPhrases(target.ID).length} phrases · channels: ${channels.length > 0 ? `${channels.length} — ${await listOrLink(channels, `Channels with preset ${target.Name}`)}` : 'none'}${target.Description ? ` · ${target.Description}` : ''}`;
 			}
 
 			case 'status': {
 				const { name, channel } = findChannel(args[0]);
 				const enabled = channel ? phrases.getChannelPresets(channel.id).map((i) => i.Name) : [];
-				return {
-					text:
-						enabled.length > 0
+				return enabled.length > 0
 							? `@${display}, active presets in #${name} (${enabled.length}): ${await listOrLink(enabled, `Active presets in #${name}`)}`
-							: `@${display}, no presets active in #${name}.`,
-				};
+							: `@${display}, no presets active in #${name}.`;
 			}
 
 			case 'enable':
 			case 'disable': {
 				if (!presetName) {
-					return { text: `@${display}, Usage: ${usage} ${action} <preset> [channel]` };
+					return `@${display}, Usage: ${usage} ${action} <preset> [channel]`;
 				}
 
 				const target = phrases.getPreset(presetName);
 				if (!target) {
-					return { text: `@${display}, preset "${presetName}" not found.` };
+					return `@${display}, preset "${presetName}" not found.`;
 				}
 
 				const { name, channel } = findChannel(args[1]);
 				if (!channel) {
-					return { text: `@${display}, I'm not in #${name}.` };
+					return `@${display}, I'm not in #${name}.`;
 				}
 
 				if (action === 'enable') {
 					await phrases.enablePreset(target, channel.id, msg.sender.name);
-					return { text: `@${display}, preset "${presetName}" enabled in #${channel.name}.` };
+					return `@${display}, preset "${presetName}" enabled in #${channel.name}.`;
 				}
 
 				const ok = await phrases.disablePreset(target, channel.id);
-				return { text: ok ? `@${display}, preset "${presetName}" disabled in #${channel.name}.` : `@${display}, preset was not active.` };
+				return ok ? `@${display}, preset "${presetName}" disabled in #${channel.name}.` : `@${display}, preset was not active.`;
 			}
 
 			case 'create': {
 				if (!presetName) {
-					return { text: `@${display}, Usage: ${usage} create <name> [description]` };
+					return `@${display}, Usage: ${usage} create <name> [description]`;
 				} else if (phrases.getPreset(presetName)) {
-					return { text: `@${display}, preset "${presetName}" already exists.` };
+					return `@${display}, preset "${presetName}" already exists.`;
 				}
 
 				await phrases.createPreset(presetName, args.slice(1).join(' ') || null, msg.sender.name);
-				return { text: `@${display}, preset "${presetName}" created.` };
+				return `@${display}, preset "${presetName}" created.`;
 			}
 
 			case 'delete': {
 				if (!presetName) {
-					return { text: `@${display}, Usage: ${usage} delete <preset>` };
+					return `@${display}, Usage: ${usage} delete <preset>`;
 				}
 
 				const target = phrases.getPreset(presetName);
 				if (!target) {
-					return { text: `@${display}, preset not found.` };
+					return `@${display}, preset not found.`;
 				}
 
 				await phrases.deletePreset(target);
-				return { text: `@${display}, preset "${presetName}" deleted.` };
+				return `@${display}, preset "${presetName}" deleted.`;
 			}
 
 			case 'addphrase':
 			case 'addregex': {
 				if (!presetName) {
-					return { text: `@${display}, Usage: ${usage} ${action} <preset> <phrase> [| reason]` };
+					return `@${display}, Usage: ${usage} ${action} <preset> <phrase> [| reason]`;
 				}
 
 				const target = phrases.getPreset(presetName);
 				if (!target) {
-					return { text: `@${display}, preset "${presetName}" not found.` };
+					return `@${display}, preset "${presetName}" not found.`;
 				}
 
 				const { phrase, reason } = splitPhraseAndReason(args.slice(1).join(' '), presetName);
 				if (!phrase) {
-					return { text: `@${display}, phrase must not be empty.` };
+					return `@${display}, phrase must not be empty.`;
 				}
 
 				if (action === 'addregex') {
 					try {
 						new RegExp(phrase, 'i');
 					} catch (e) {
-						return { text: `@${display}, invalid regex: ${e.message}` };
+						return `@${display}, invalid regex: ${e.message}`;
 					}
 				}
 
 				await phrases.addPhrase({ preset: target.ID }, { phrase, reason, isRegex: action === 'addregex', regexFlags: 'i', addedBy: msg.sender.name });
-				return { text: `@${display}, ${action === 'addregex' ? 'regex' : 'phrase'} "${phrase}" added to preset "${presetName}".` };
+				return `@${display}, ${action === 'addregex' ? 'regex' : 'phrase'} "${phrase}" added to preset "${presetName}".`;
 			}
 
 			case 'removephrase': {
 				const id = Number(args[1]);
 				if (!presetName || !Number.isInteger(id)) {
-					return { text: `@${display}, Usage: ${usage} removephrase <preset> <id>` };
+					return `@${display}, Usage: ${usage} removephrase <preset> <id>`;
 				}
 
 				const target = phrases.getPreset(presetName);
 				const found = target ? phrases.getPresetPhrases(target.ID).find((i) => i.ID === id) : undefined;
 				if (!found) {
-					return { text: `@${display}, phrase not found.` };
+					return `@${display}, phrase not found.`;
 				}
 
 				await phrases.removePhrase(found);
-				return { text: `@${display}, phrase ${id} removed from "${presetName}".` };
+				return `@${display}, phrase ${id} removed from "${presetName}".`;
 			}
 
 			case 'autoenable': {
 				const value = args[1]?.toLowerCase();
 				if (!presetName || (value !== 'on' && value !== 'off')) {
-					return { text: `@${display}, Usage: ${usage} autoenable <preset> <on|off>` };
+					return `@${display}, Usage: ${usage} autoenable <preset> <on|off>`;
 				}
 
 				const target = phrases.getPreset(presetName);
 				if (!target) {
-					return { text: `@${display}, preset not found.` };
+					return `@${display}, preset not found.`;
 				}
 
 				await phrases.setPresetAutoEnable(target, value === 'on');
-				return { text: `@${display}, auto-enable for "${presetName}" ${value === 'on' ? 'enabled' : 'disabled'}.` };
+				return `@${display}, auto-enable for "${presetName}" ${value === 'on' ? 'enabled' : 'disabled'}.`;
 			}
 
 			default:
-				return { text: `@${display}, Usage: ${usage} <list|phrases|info|status|enable|disable|…>` };
+				return `@${display}, Usage: ${usage} <list|phrases|info|status|enable|disable|…>`;
 		}
 	},
 };
+
+module.exports = { command };

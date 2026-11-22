@@ -7,14 +7,15 @@ const { computeStreak, countDaysInYear, daysInYear, fmtDate, tiesNote, topStreak
  * 2024 , !ss all"), "top3" (top1-top10, bare "top" = 3) = die besten N Streaks, mit Jahr kombinierbar ("!ss top3 2026").
  * Fuehrendes "@" wird mitentfernt (ninou2, 29.09.2026: Twitch-Autocomplete). Zaehlung erst ab dem Cron, kein Import.
  */
-module.exports = {
+const command = {
 	name: 'streamerstreak',
 	aliases: ['streak', 'ss'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 0 },
 	description:
 		'Current daily streaming streak for a channel, scoped to the current year by default. "<year>" for a specific year, "all" for the all-time longest streak, "top3" (1-10, optionally + a year) for the best N streaks. Defaults to the current channel.',
 	usage: 'streamerstreak [channel] [year|all] [top1-10]',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const words = [...msg.args];
 		const display = msg.displayName;
 
@@ -44,14 +45,12 @@ module.exports = {
 		// Per ID statt Name - findet auch nach einer Umbenennung die richtige Historie
 		const userId = await streamData.fetchUserId(channel);
 		if (!userId) {
-			return { text: `@${display}, no Twitch account named "${channel}" exists.` };
+			return `@${display}, no Twitch account named "${channel}" exists.`;
 		}
 
 		const days = await streamData.getDays(userId);
 		if (days.length === 0) {
-			return {
-				text: `@${display}, no stream days recorded yet for ${own ? 'this channel' : `#${channel}`} — either tracking just started, or that's not a channel I watch.`,
-			};
+			return `@${display}, no stream days recorded yet for ${own ? 'this channel' : `#${channel}`} — either tracking just started, or that's not a channel I watch.`;
 		}
 
 		const now = new Date();
@@ -63,11 +62,11 @@ module.exports = {
 			const scopedDays = yearScope ? days.filter((i) => i.startsWith(`${yearScope}-`)) : days;
 			const runs = topStreaks(scopedDays, topCount);
 			if (runs.length === 0) {
-				return { text: `@${display}, no stream days recorded for ${own ? 'this channel' : `#${channel}`} ${yearScope ? `in ${yearScope}` : ''}.` };
+				return `@${display}, no stream days recorded for ${own ? 'this channel' : `#${channel}`} ${yearScope ? `in ${yearScope}` : ''}.`;
 			}
 
 			const list = runs.map((r, i) => `#${i + 1} ${r.length} (${fmtDate(r.start)} to ${fmtDate(r.end)})`).join(' , ');
-			return { text: `@${display}, ${channel}'s top ${runs.length} streaks ${yearScope ? `in ${yearScope}` : 'all time'}: ${list}` };
+			return `@${display}, ${channel}'s top ${runs.length} streaks ${yearScope ? `in ${yearScope}` : 'all time'}: ${list}`;
 		}
 
 		if (modeWord === 'all') {
@@ -77,13 +76,13 @@ module.exports = {
 				`${channel} stream is at ${current} Streak, their LONGEST streaming Streak was ${longest}, ` +
 				`[Recoreded FROM ${fmtDate(longestStart)} TO ${fmtDate(longestEnd)}${endsToday}${tiesNote(longestTies)}] , ` +
 				`in ${currentYear} they streamed : ${countDaysInYear(days, currentYear)}/${daysInYear(currentYear)} soo far`;
-			return { text: `@${display}, ${reply}` };
+			return `@${display}, ${reply}`;
 		}
 
 		const targetYear = modeWord ? Number(modeWord) : currentYear;
 		const yearStat = yearlyBreakdown(days).find((i) => i.year === targetYear);
 		if (!yearStat) {
-			return { text: `@${display}, no stream days recorded for ${own ? 'this channel' : `#${channel}`} in ${targetYear}.` };
+			return `@${display}, no stream days recorded for ${own ? 'this channel' : `#${channel}`} in ${targetYear}.`;
 		}
 
 		if (targetYear === currentYear) {
@@ -93,7 +92,7 @@ module.exports = {
 				`${channel} stream is at ${current} Streak, their LONGEST streaming Streak in ${targetYear} was ${yearStat.longestStreak}, ` +
 				`[Recoreded FROM ${fmtDate(yearStat.longestStart)} TO ${fmtDate(yearStat.longestEnd)}${endsToday}${tiesNote(yearStat.longestTies)}] , ` +
 				`in ${targetYear} they streamed : ${yearStat.count}/${yearStat.total} soo far`;
-			return { text: `@${display}, ${reply}` };
+			return `@${display}, ${reply}`;
 		}
 
 		// Vergangenes Jahr: kein "current Streak"/"soo far" ("when its in the past, its already done")
@@ -101,6 +100,8 @@ module.exports = {
 			`${channel}'s ${targetYear} stream streak: their LONGEST streaming Streak was ${yearStat.longestStreak}, ` +
 			`[Recoreded FROM ${fmtDate(yearStat.longestStart)} TO ${fmtDate(yearStat.longestEnd)}${tiesNote(yearStat.longestTies)}] , ` +
 			`they streamed : ${yearStat.count}/${yearStat.total}`;
-		return { text: `@${display}, ${reply}` };
+		return `@${display}, ${reply}`;
 	},
 };
+
+module.exports = { command };

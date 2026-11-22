@@ -2,10 +2,11 @@ const { got } = require('../token/got.js');
 const { ivrUserDataSchema } = require('../util/schemas.js');
 
 // Supibots commands/getprofilepicture (Block 7: Supibot-Version)
-module.exports = {
+const command = {
 	name: 'getprofilepicture',
 	aliases: ['avatar', 'pfp'],
-	cooldown: 10000,
+	cooldown: { user: 10 },
+	access: { channel: 0 },
 	description: 'For a given Twitch user, this command will fetch their profile picture.',
 	usage: 'pfp [user] [banner:true] [linkOnly:true]',
 	flags: ['mention', 'pipe'],
@@ -13,7 +14,7 @@ module.exports = {
 		{ name: 'banner', type: 'boolean' },
 		{ name: 'linkOnly', type: 'boolean' },
 	],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [username] = msg.args;
 		const login = bot.Users.normalizeUsername(username ?? msg.sender.name);
 		const response = await got('IVR')({
@@ -44,14 +45,10 @@ module.exports = {
 				};
 			}
 
-			return {
-				text: msg.params.linkOnly === true ? user.banner : `Profile banner for ${user.displayName}: ${user.banner}`,
-			};
+			return msg.params.linkOnly === true ? user.banner : `Profile banner for ${user.displayName}: ${user.banner}`;
 		}
 
-		return {
-			text: msg.params.linkOnly ? user.logo : `Profile picture for ${user.displayName}: ${user.logo}`,
-		};
+		return msg.params.linkOnly ? user.logo : `Profile picture for ${user.displayName}: ${user.logo}`;
 	},
 	dynamicDescription: (prefix) => [
 		"Fetches a Twitch user's profile picture, or other pictures related to their account.",
@@ -69,3 +66,5 @@ module.exports = {
 		`Post only the link to the user's profile banner. If they don't have one, the message "N/A" will show up.`,
 	],
 };
+
+module.exports = { command };

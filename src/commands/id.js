@@ -1,14 +1,15 @@
 const SupiDate = require('../util/date.js');
 
 // Supibots USER_ID_BREAKPOINT (User aus Logs vor Supibots Start) entfaellt hier: die Datenbank ist neu
-module.exports = {
+const command = {
 	name: 'id',
 	aliases: ['uid'],
-	cooldown: 10000,
+	cooldown: { user: 10 },
+	access: { channel: 0 },
 	description: "Checks your (or someone else's) ID in the database of users - the lower the number, the earlier the user was first spotted.",
 	usage: 'id [user]',
 	flags: ['mention', 'pipe', 'skip-banphrase'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [user] = msg.args;
 		const targetUser = user ? await bot.Users.get(user) : msg.sender;
 		if (!targetUser) {
@@ -54,3 +55,5 @@ module.exports = {
 		};
 	},
 };
+
+module.exports = { command };

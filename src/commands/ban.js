@@ -24,10 +24,11 @@ const capitalize = (input) =>
 		.map((i) => i.charAt(0).toUpperCase() + i.slice(1).toLowerCase())
 		.join('-');
 
-module.exports = {
+const command = {
 	name: 'ban',
 	aliases: ['unban'],
-	cooldown: 5000,
+	cooldown: { user: 5 },
+	access: { channel: 0 },
 	description: 'Bans/unbans any combination of channel, user, and command from being executed. Only usable by channel owners and bot administrators.',
 	usage: 'ban [command:name] [user:name] [invocation:alias] [channel:name] [type:blacklist|offline-only|online-only|cooldown|arguments|reminder-prevention]',
 	flags: ['mention'],
@@ -44,7 +45,7 @@ module.exports = {
 		{ name: 'string', type: 'string' },
 		{ name: 'user', type: 'string' },
 	],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const { invocation } = msg;
 		const type = capitalize(msg.params.type ?? 'Blacklist');
 		if (!isFilterType(type)) {
@@ -364,3 +365,5 @@ module.exports = {
 		`<code>${prefix}unban type:arguments index:(number) string:(text)</code> removes one item, <code>clear:true</code> removes all, without both it disables the filter.`,
 	],
 };
+
+module.exports = { command };

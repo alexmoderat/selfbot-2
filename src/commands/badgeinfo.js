@@ -47,21 +47,24 @@ const formatRecent = (entries) =>
 		? `Last global Twitch ${entries[0].kind === 'tweet' ? 'info' : entries[0].kind}: ${describeFull(entries[0])}`
 		: `Last ${entries.length} global Twitch infos: ${entries.map((i) => (i.kind === 'tweet' ? `tweet${eventStatus(i.title) ? ` ${eventStatus(i.title)}` : ''} ${i.link} (${agoOf(i)})` : `${i.kind} ${i.title} (${agoOf(i)})`)).join(', ')}`;
 
-module.exports = {
+const command = {
 	name: 'badgeinfo',
 	aliases: ['bi', 'badgein'],
-	cooldown: 5000,
+	cooldown: { user: 5 },
+	access: { channel: 0 },
 	description: `Posts the last 1-${MAX_COUNT} global Twitch badges and emotes the bot noticed (data from streamdatabase.com). Without a number only the latest one.`,
 	usage: `badgeinfo [1-${MAX_COUNT}]`,
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const count = parseCount(msg.args);
 		const [badges, emotes, tweets] = await Promise.all([getRecent('badge', count), getRecent('emote', count), getRecent('tweet', count)]);
 		const entries = mergeRecent(badges, emotes, count, tweets);
 		if (entries.length === 0) {
-			return { text: `@${msg.displayName}, no global Twitch badges or emotes recorded yet.` };
+			return `@${msg.displayName}, no global Twitch badges or emotes recorded yet.`;
 		}
 
-		return { text: `@${msg.displayName}, ${formatRecent(entries)}` };
+		return `@${msg.displayName}, ${formatRecent(entries)}`;
 	},
 };
+
+module.exports = { command };
 Object.assign(module.exports, { parseCount, mergeRecent, formatRecent });

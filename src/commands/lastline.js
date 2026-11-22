@@ -1,13 +1,14 @@
 // Supibots commands/lastline. Supibots Alias "ll" bleibt fuer lastlive (Block 6), wie schon in sb-v2 ("llog")
-module.exports = {
+const command = {
 	name: 'lastline',
 	aliases: ['llog', 'lastmessage', 'lm'],
-	cooldown: 5000,
+	cooldown: { user: 5 },
+	access: { channel: 0 },
 	description: "Posts the target user's last chat line in the context of the current channel, and the date they sent it.",
 	usage: 'lastline <user> [textOnly:true]',
 	flags: ['external-input', 'mention', 'opt-out', 'pipe'],
 	params: [{ name: 'textOnly', type: 'boolean' }],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [user] = msg.args;
 		if (!user) {
 			return { success: false, text: 'No user provided! You must mention a username to check their last line in this channel.' };
@@ -37,7 +38,7 @@ module.exports = {
 			return { success: true, text: data.message };
 		}
 
-		return { text: `That user's last message in this channel was (${bot.Utils.timeDelta(data.posted)}): ${data.message}` };
+		return `That user's last message in this channel was (${bot.Utils.timeDelta(data.posted)}): ${data.message}`;
 	},
 	dynamicDescription: (prefix) => [
 		'Checks the last message for a provided user, in the context of the current channel.',
@@ -46,3 +47,5 @@ module.exports = {
 		"Posts that user's last message in this channel.",
 	],
 };
+
+module.exports = { command };

@@ -72,9 +72,10 @@ const resolve = async (channel, invocation) => {
 			// Eigener Namensraum, damit Cooldowns nicht mit eingebauten Commands kollidieren
 			name: `custom:${channel.id}:${row.Name.replace(/^!/, '')}`,
 			description: `Custom command of #${channel.name}`,
-			cooldown: row.Cooldown * 1000,
-			flags: [...(row.Mod_Only ? ['mod'] : []), ...(CUSTOM_FLAGS[row.Name.toLowerCase()] ?? [])],
-			execute: async (client, msg) => {
+			cooldown: { user: row.Cooldown },
+			access: row.Mod_Only ? { channel: 2 } : { channel: 0 },
+			flags: [...(CUSTOM_FLAGS[row.Name.toLowerCase()] ?? [])],
+			execute: async ({ message: msg }) => {
 				// In sb-v2s Vorgaenger gespeichert und angezeigt, aber nie geprueft - hier durchgesetzt
 				if (row.Online_Only || row.Offline_Only) {
 					const live = bot.Channels.isLive(channel);

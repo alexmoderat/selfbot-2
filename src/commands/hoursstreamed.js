@@ -9,14 +9,15 @@ const { fmtDate } = require('../util/streamer-streak.js');
  * Durchschnitt pro Streaming-Tag - nur ueber das Tage-Tracking-Fenster, sonst verzerrt ein Stunden-Backfill ihn
  * (ninou2: 5444h / 13 Tage = 418h/Tag).
  */
-module.exports = {
+const command = {
 	name: 'hoursstreamed',
 	aliases: ['hs'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 0 },
 	description:
 		'Total hours streamed this year (or a given month, e.g. january2026, "alltime", or "monthly [year]" for a per-month breakdown) for a channel. Defaults to the current channel and year.',
 	usage: 'hoursstreamed [channel] [month+year|alltime|monthly [year]]',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		const display = msg.displayName;
 		const now = new Date();
@@ -46,20 +47,18 @@ module.exports = {
 		const where = own ? 'this channel' : `#${channel}`;
 		const userId = await streamData.fetchUserId(channel);
 		if (!userId) {
-			return { text: `@${display}, no Twitch account named "${channel}" exists.` };
+			return `@${display}, no Twitch account named "${channel}" exists.`;
 		}
 
 		if (monthly) {
 			const year = explicitYear ?? now.getUTCFullYear();
 			const rows = await streamData.getMonthlyBreakdown(userId, year);
 			if (rows.length === 0) {
-				return {
-					text: `@${display}, no stream hours recorded for ${where} in ${year} — either tracking just started, or that's not a channel I watch.`,
-				};
+				return `@${display}, no stream hours recorded for ${where} in ${year} — either tracking just started, or that's not a channel I watch.`;
 			}
 
 			const totalHours = Math.round(rows.reduce((total, i) => total + i.seconds, 0) / 3600);
-			return { text: `@${display}, in ${year} ${channel} streamed a total of ${totalHours}hours : ${formatMonthlyBreakdown(rows)}` };
+			return `@${display}, in ${year} ${channel} streamed a total of ${totalHours}hours : ${formatMonthlyBreakdown(rows)}`;
 		}
 
 		const isCurrent = !allTime && (monthSpec ? monthSpec.year === now.getUTCFullYear() && monthSpec.month === now.getUTCMonth() + 1 : true);
@@ -71,15 +70,13 @@ module.exports = {
 				: await streamData.getYearSeconds(userId, now.getUTCFullYear());
 
 		if (!seconds) {
-			return {
-				text: `@${display}, no stream hours recorded for ${where}${allTime ? '' : ` in ${periodLabel}`} — either tracking just started, or that's not a channel I watch.`,
-			};
+			return `@${display}, no stream hours recorded for ${where}${allTime ? '' : ` in ${periodLabel}`} — either tracking just started, or that's not a channel I watch.`;
 		}
 
 		const hours = Math.round(seconds / 3600);
 		if (!allTime) {
 			// ninou2, 08.10.2026: "in 2026, STREAMER has streamed XX soo far. alex it should be like this"
-			return { text: `@${display}, in ${periodLabel}, ${channel} ${isCurrent ? 'has streamed' : 'streamed'} [${hours}h]${isCurrent ? ' soo far' : ''}.` };
+			return `@${display}, in ${periodLabel}, ${channel} ${isCurrent ? 'has streamed' : 'streamed'} [${hours}h]${isCurrent ? ' soo far' : ''}.`;
 		}
 
 		// Kalendertage (inklusive heute) seit einem Tag
@@ -103,6 +100,8 @@ module.exports = {
 			average = ` Avg [${averageHours.toFixed(1)}h]/day, [${days.length}/${windowDays}]d since ${fmtDate(days[0])} (~${perYear}/365/yr).`;
 		}
 
-		return { text: `@${display}, ${channel} has streamed [${hours}h] all-time${since}.${average}` };
+		return `@${display}, ${channel} has streamed [${hours}h] all-time${since}.${average}`;
 	},
 };
+
+module.exports = { command };

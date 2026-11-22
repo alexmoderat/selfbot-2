@@ -25,13 +25,14 @@ const querySchema = z.object({
 		.optional(),
 });
 
-module.exports = {
+const command = {
 	name: 'isdown',
 	usage: 'isdown <domain>',
-	cooldown: 10000,
+	cooldown: { user: 10 },
+	access: { channel: 0 },
 	description: "Checks if a website is currently down or if it's just you.",
 	flags: ['mention', 'pipe'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [input] = msg.args;
 		const fixedInput = domainToASCII(input) || input; // domainToASCII returns empty string for invalid input - hence ||
 		if (cachingSites.some((i) => fixedInput.includes(i))) {
@@ -93,3 +94,5 @@ module.exports = {
 		}
 	},
 };
+
+module.exports = { command };

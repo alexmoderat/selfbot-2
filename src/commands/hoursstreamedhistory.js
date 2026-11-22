@@ -7,14 +7,15 @@ const { fmtDate } = require('../util/streamer-streak.js');
  * (ninou2, 08.10.2026, Layout "*2026* —>[2h] // ..."). Tracking-Start tagesgenau (Stream_Hours_First_Seen), beim
  * Monats-Breakdown nur, wenn das Tracking in genau diesem Jahr begann.
  */
-module.exports = {
+const command = {
 	name: 'hoursstreamedhistory',
 	aliases: ['hourshistory', 'hsh'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 0 },
 	description:
 		'Yearly total hours streamed for a channel, for every year with recorded data — or, with YYYYmonthly (e.g. 2026monthly), a per-month breakdown of that year. Defaults to the current channel.',
 	usage: 'hoursstreamedhistory [channel] [year|YYYYmonthly]',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		const display = msg.displayName;
 		let yearRaw;
@@ -35,7 +36,7 @@ module.exports = {
 		const where = own ? 'this channel' : `#${channel}`;
 		const userId = await streamData.fetchUserId(channel);
 		if (!userId) {
-			return { text: `@${display}, no Twitch account named "${channel}" exists.` };
+			return `@${display}, no Twitch account named "${channel}" exists.`;
 		}
 
 		const firstSeen = await streamData.getFirstSeen(userId);
@@ -43,18 +44,16 @@ module.exports = {
 			const year = Number(yearRaw);
 			const rows = await streamData.getMonthlyBreakdown(userId, year);
 			if (rows.length === 0) {
-				return {
-					text: `@${display}, no stream hours recorded for ${where} in ${year} — either tracking just started, or that's not a channel I watch.`,
-				};
+				return `@${display}, no stream hours recorded for ${where} in ${year} — either tracking just started, or that's not a channel I watch.`;
 			}
 
 			const trackingStart = firstSeen && Number(firstSeen.slice(0, 4)) === year ? ` (tracking started on ${fmtDate(firstSeen)})` : '';
-			return { text: `@${display}, ${channel}'s Monthly Streaming Hours of the YEAR ${year} : ${formatMonthlyBreakdown(rows)}${trackingStart}` };
+			return `@${display}, ${channel}'s Monthly Streaming Hours of the YEAR ${year} : ${formatMonthlyBreakdown(rows)}${trackingStart}`;
 		}
 
 		const years = await streamData.getAllYears(userId);
 		if (years.length === 0) {
-			return { text: `@${display}, no stream hours recorded yet for ${where} — either tracking just started, or that's not a channel I watch.` };
+			return `@${display}, no stream hours recorded yet for ${where} — either tracking just started, or that's not a channel I watch.`;
 		}
 
 		const list = years
@@ -65,6 +64,8 @@ module.exports = {
 			.join(' // ');
 
 		// ninou2, 08.10.2026: "better use the word streaming instead of stream"
-		return { text: `@${display}, ${channel}'s yearly streaming hours history : ${list}` };
+		return `@${display}, ${channel}'s yearly streaming hours history : ${list}`;
 	},
 };
+
+module.exports = { command };

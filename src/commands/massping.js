@@ -29,32 +29,30 @@ const withoutOptedOut = async (names, options) => {
 	return names.filter((i) => !optedOut.has(i.toLowerCase()));
 };
 
-module.exports = {
+const command = {
 	name: 'massping',
 	aliases: ['pingall'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: `Pings everyone currently in chat (max ${MAX_PINGS}), optionally with an announcement text. Owner: "massping block/unblock/blocklist <user>" locks a mod out globally.`,
 	usage: 'massping [announcement text] | massping block <user> [reason] | massping unblock <user> | massping blocklist',
-	flags: ['mod', 'cooldown-notice', 'opt-out'],
-	execute: async (client, msg) => {
+	flags: ['cooldown-notice', 'opt-out'],
+	execute: async ({ client, message: msg }) => {
 		const [first, ...words] = msg.args;
 		const display = msg.displayName;
 		const sub = first?.toLowerCase();
 
 		if (sub === 'block' || sub === 'unblock' || sub === 'blocklist') {
 			if ((await bot.Users.getData(msg.sender, 'administrator')) !== true) {
-				return { text: `@${display}, bot owner only.` };
+				return `@${display}, bot owner only.`;
 			}
 
 			if (sub === 'blocklist') {
 				const blocked = Filter.getLocals('Blacklist', { command: COMMAND_NAME, skipUserCheck: true }).filter((i) => i.User_Alias !== null && i.Channel === null);
 				const names = await Promise.all(blocked.map(async (i) => (await bot.Users.get(i.User_Alias))?.Name ?? `#${i.User_Alias}`));
-				return {
-					text:
-						names.length > 0
+				return names.length > 0
 							? `@${display}, blocked from ${COMMAND_NAME} (${names.length}): ${await listOrLink(names, `Blocked from ${COMMAND_NAME}`)}`
-							: `@${display}, no one is blocked from ${COMMAND_NAME}.`,
-				};
+							: `@${display}, no one is blocked from ${COMMAND_NAME}.`;
 			}
 
 			const target = words[0]
@@ -62,22 +60,22 @@ module.exports = {
 				.replace(/^[@#]+/, '')
 				.trim();
 			if (!target) {
-				return { text: `@${display}, Usage: ${msg.prefix}${msg.invocation} ${sub} <user>${sub === 'block' ? ' [reason]' : ''}` };
+				return `@${display}, Usage: ${msg.prefix}${msg.invocation} ${sub} <user>${sub === 'block' ? ' [reason]' : ''}`;
 			}
 
 			const user = await bot.Users.get(target);
 			const existing = user ? findBlock(user.id) : null;
 			if (sub === 'unblock') {
 				if (!existing?.Active) {
-					return { text: `@${display}, ${target} wasn't blocked.` };
+					return `@${display}, ${target} wasn't blocked.`;
 				}
 
 				await existing.toggle();
-				return { text: `@${display}, ${target} can use ${COMMAND_NAME} again.` };
+				return `@${display}, ${target} can use ${COMMAND_NAME} again.`;
 			}
 
 			if (!user) {
-				return { text: `@${display}, user ${target} not found.` };
+				return `@${display}, user ${target} not found.`;
 			} else if (existing) {
 				if (!existing.Active) {
 					await existing.toggle();
@@ -94,17 +92,17 @@ module.exports = {
 				});
 			}
 
-			return { text: `@${display}, ${target} can no longer use ${COMMAND_NAME} (any channel).` };
+			return `@${display}, ${target} can no longer use ${COMMAND_NAME} (any channel).`;
 		}
 
 		const channel = msg.channelData;
 		if (!channel?.twitchId) {
-			return { text: `@${display}, this only works in a channel.` };
+			return `@${display}, this only works in a channel.`;
 		}
 
 		const result = await fetchChatters(channel.twitchId, bot.Twitch.selfId);
 		if (result.forbidden) {
-			return { text: `@${display}, no mod rights in #${channel.name} — Twitch only gives out the chatter list to moderators.` };
+			return `@${display}, no mod rights in #${channel.name} — Twitch only gives out the chatter list to moderators.`;
 		}
 
 		const names = await withoutOptedOut(
@@ -112,7 +110,7 @@ module.exports = {
 			{ channel, platform: bot.Twitch, invocation: msg.invocation },
 		);
 		if (names.length === 0) {
-			return { text: `@${display}, no one else is in chat right now.` };
+			return `@${display}, no one else is in chat right now.`;
 		}
 
 		const pinged = names.slice(0, MAX_PINGS);
@@ -140,8 +138,10 @@ module.exports = {
 		}
 
 		Logger.info(`[massping] #${channel.name} von ${msg.sender.name}: ${pinged.length} gepingt${names.length > MAX_PINGS ? ` (gedeckelt, ${names.length} da)` : ''}`);
-		return { text: null };
+		return null;
 	},
 };
+
+module.exports = { command };
 
 Object.assign(module.exports, { withoutOptedOut });

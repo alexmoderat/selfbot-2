@@ -8,26 +8,27 @@ const { detectTimezone } = require('../util/timezones.js');
  */
 const REMOVE_WORDS = new Set(['unset', 'delete', 'remove']);
 
-module.exports = {
+const command = {
 	name: 'usertimezoneset',
 	aliases: ['uts'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 0 },
 	description: 'Saves your timezone, so that the time command works without adding anything. "set UTC+1" or "set CET" saves it, "unset" removes it, nothing shows the current one.',
 	usage: 'usertimezoneset [set <timezone> | unset]',
 	flags: ['mention'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [action, ...rest] = msg.args;
 		const low = action?.toLowerCase();
 		const saved = await bot.Users.getData(msg.sender, 'timezone');
 		if (!low) {
-			return { text: saved ? `Your timezone is set to ${saved}.` : `You have not set a timezone yet. Example: ${msg.prefix}uts set UTC+1` };
+			return saved ? `Your timezone is set to ${saved}.` : `You have not set a timezone yet. Example: ${msg.prefix}uts set UTC+1`;
 		} else if (REMOVE_WORDS.has(low)) {
 			if (!saved) {
 				return { success: false, text: 'You have not set a timezone yet.' };
 			}
 
 			await bot.Users.setData(msg.sender, 'timezone', null);
-			return { text: 'Your timezone has been removed.' };
+			return 'Your timezone has been removed.';
 		}
 
 		const input = (low === 'set' ? rest : [action, ...rest]).join(' ').trim();
@@ -40,6 +41,8 @@ module.exports = {
 
 		const value = input.toUpperCase();
 		await bot.Users.setData(msg.sender, 'timezone', value);
-		return { text: `Your timezone is now ${value}, it's ${zone.date} for you right now.` };
+		return `Your timezone is now ${value}, it's ${zone.date} for you right now.`;
 	},
 };
+
+module.exports = { command };

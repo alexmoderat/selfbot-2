@@ -49,14 +49,14 @@ const formatFollowDate = (date) =>
 		timeZone: 'UTC',
 	});
 
-module.exports = {
+const command = {
 	name: 'followage',
 	aliases: ['fa'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'How long a user has followed a channel. No arguments: you in this channel.',
 	usage: 'followage [user] [channel]',
-	flags: ['mod'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [userArg, channelArg] = msg.args;
 		const display = msg.displayName;
 		const targetUser = (userArg ?? msg.sender.name).toLowerCase().replace('@', '');
@@ -64,10 +64,10 @@ module.exports = {
 
 		const [broadcaster, user] = await Promise.all([targetChannel ? fetchTwitchUser(targetChannel) : null, fetchTwitchUser(targetUser)]);
 		if (!broadcaster) {
-			return { text: `@${display}, channel "${targetChannel}" not found.` };
+			return `@${display}, channel "${targetChannel}" not found.`;
 		}
 		if (!user) {
-			return { text: `@${display}, user "${targetUser}" not found.` };
+			return `@${display}, user "${targetUser}" not found.`;
 		}
 
 		let response = await got('Helix')({
@@ -110,14 +110,14 @@ module.exports = {
 
 		const entry = response.body.data[0];
 		if (!entry) {
-			return { text: `@${display}, ${user.display_name} does not follow ${broadcaster.display_name}.` };
+			return `@${display}, ${user.display_name} does not follow ${broadcaster.display_name}.`;
 		}
 
 		const followedDate = new Date(entry.followed_at);
-		return {
-			text: `@${display}, ${user.display_name} has followed ${broadcaster.display_name} for ${formatFollowDuration(followedDate, new Date())}. (since ${formatFollowDate(followedDate)} UTC)`,
-		};
+		return `@${display}, ${user.display_name} has followed ${broadcaster.display_name} for ${formatFollowDuration(followedDate, new Date())}. (since ${formatFollowDate(followedDate)} UTC)`;
 	},
 };
+
+module.exports = { command };
 
 Object.assign(module.exports, { formatFollowDuration, formatFollowDate });

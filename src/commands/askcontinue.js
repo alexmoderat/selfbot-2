@@ -5,12 +5,15 @@ const { answerQuestion } = require('./ask.js');
  * after 5min !askc will reset and not continue the conversation"). Innerhalb von 5 Minuten nach der letzten Frage desselben
  * Users kennt die KI den bisherigen Verlauf; danach ist das Gespraech zu Ende und die Frage zaehlt als neue.
  */
-module.exports = {
+const command = {
 	name: 'askcontinue',
 	aliases: ['askc'],
-	cooldown: 10_000,
+	cooldown: { user: 10 },
+	access: { channel: 0 },
 	description: 'Continues your last ask conversation if your last question was at most 5 minutes ago, otherwise starts a fresh one.',
 	usage: 'askc <question>',
 	flags: ['cooldown-notice', 'no-prefix', 'external-input'],
-	execute: async (client, msg) => await answerQuestion(msg, { continueChat: true }),
+	execute: async ({ client, message: msg }) => await answerQuestion(msg, { continueChat: true }),
 };
+
+module.exports = { command };

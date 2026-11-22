@@ -7,19 +7,20 @@ const { formatUsage } = require('../util/command-listing.js');
  */
 const MAX_LENGTH = 400;
 
-module.exports = {
+const command = {
 	name: 'how',
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 0 },
 	description: 'Explains a command in chat: aliases, what it does and how to call it.',
 	usage: 'how <command>',
 	// Mit "!" aufrufbar, wie !bio und !title
 	flags: ['no-prefix'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [nameRaw] = msg.args;
 		const name = (nameRaw ?? '').toLowerCase().replace(/^[!#]+/, '');
 		const command = getCommand(name);
 		if (!command) {
-			return { text: `@${msg.displayName}, no command "${name}".` };
+			return `@${msg.displayName}, no command "${name}".`;
 		}
 
 		const info = command.toListed();
@@ -30,6 +31,8 @@ module.exports = {
 
 		const text = `!${info.Name}${aliases}: ${description}${usageText}`.trim();
 		const short = text.length > MAX_LENGTH ? `${text.slice(0, MAX_LENGTH - 3)}...` : text;
-		return { text: `@${msg.displayName}, ${short}` };
+		return `@${msg.displayName}, ${short}`;
 	},
 };
+
+module.exports = { command };

@@ -1,13 +1,14 @@
 const { randomInt } = require('../util/command-utils.js');
 
-module.exports = {
+const command = {
 	name: 'percent',
 	aliases: ['%'],
-	cooldown: 5000,
+	cooldown: { user: 5 },
+	access: { channel: 0 },
 	description: 'Rolls a random percentage between 0 and 100%.',
 	usage: 'percent',
 	flags: ['mention', 'pipe', 'skip-banphrase'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const number = randomInt(0, 10_000);
 		return {
 			success: true,
@@ -16,3 +17,5 @@ module.exports = {
 	},
 	dynamicDescription: (prefix) => ['Rolls a random percentage!', '', `<code>${prefix}%</code>`, 'Random percentage, between 0.00% to 100.00%'],
 };
+
+module.exports = { command };

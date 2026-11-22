@@ -71,14 +71,15 @@ const editUsage = (channel) =>
  * Banphrases verwalten - global und je Channel (aus sb-v2). Ein Command mit Aliasen; name:, length:
  * und trigger: kommen ueber Params. Aenderungen greifen sofort (der Phrasen-Speicher laedt neu).
  */
-module.exports = {
+const command = {
 	name: 'banphrases',
 	aliases: ['addbp', 'caddbp', 'delbp', 'cdelbp', 'removephrase', 'delphrase', 'editbp', 'ceditbp', 'phrases', 'listphrases', 'listbp'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { global: 1 },
 	description: 'Create, delete and list ban phrases — global or per channel.',
 	usage: 'addbp trigger:<phrase|/regex/flags> name:"reason" [--ignorevip] [--ignoresub] [--escalate] [length:seconds] | caddbp <channel> <phrase> name:"reason" [--regex] [--escalate] … | delbp <name|id> | cdelbp <channel> <phrase|id> | removephrase <phrase|id> | editbp <id|name|phrase> … | ceditbp <channel> <id|phrase> … | phrases',
 	// Loeschen/Zuruecksetzen nur nach zweiter Bestaetigung (ninou2, 06.10.2026)
-	flags: ['owner', 'confirm'],
+	flags: ['confirm'],
 	params: [
 		{ name: 'trigger', type: 'string' },
 		{ name: 'name', type: 'string' },
@@ -87,7 +88,7 @@ module.exports = {
 		{ name: 'ignoresub', type: 'boolean' },
 		{ name: 'escalate', type: 'boolean' },
 	],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const rawArgs = [...msg.args];
 		const display = msg.displayName;
 		const mode = msg.invocation;
@@ -103,7 +104,7 @@ module.exports = {
 		if (mode === 'banphrases' || mode === 'phrases' || mode === 'listphrases' || mode === 'listbp') {
 			const list = phrases.getGlobal();
 			if (list.length === 0) {
-				return { text: `@${display}, No phrases configured` };
+				return `@${display}, No phrases configured`;
 			}
 
 			const json = list.map((i) => {
@@ -128,19 +129,19 @@ module.exports = {
 			});
 
 			const url = await uploadToHaste(JSON.stringify(json, null, 2));
-			return { text: `@${display}, ${list.length} phrase(s): ${url}` };
+			return `@${display}, ${list.length} phrase(s): ${url}`;
 		}
 
 		// Global anlegen
 		if (mode === 'addbp') {
 			const trigger = parseTrigger(p.trigger);
 			if (!trigger) {
-				return { text: `@${display}, Usage: addbp trigger:<phrase|/regex/flags> name:"reason" [--ignorevip] [--ignoresub] [--escalate] [length:-1]` };
+				return `@${display}, Usage: addbp trigger:<phrase|/regex/flags> name:"reason" [--ignorevip] [--ignoresub] [--escalate] [length:-1]`;
 			}
 
 			const error = reasonError(phrases.getGlobal(), trigger.phrase, p.name);
 			if (error) {
-				return { text: `@${display}, ${error} — add name:"reason".` };
+				return `@${display}, ${error} — add name:"reason".`;
 			}
 
 			const uuid = await phrases.addPhrase(
@@ -152,7 +153,7 @@ module.exports = {
 				},
 			);
 
-			return { text: `@${display}, banphrase created successfully. (ID: ${uuid})` };
+			return `@${display}, banphrase created successfully. (ID: ${uuid})`;
 		}
 
 		// Channel anlegen
@@ -160,17 +161,17 @@ module.exports = {
 			const [channelRaw, ...phraseWords] = rest;
 			const phrase = phraseWords.join(' ').trim();
 			if (!channelRaw || !phrase) {
-				return { text: `@${display}, Usage: caddbp <channel> <phrase> name:"reason" [--regex] [--ignorevip] [--ignoresub] [length:-1]` };
+				return `@${display}, Usage: caddbp <channel> <phrase> name:"reason" [--regex] [--ignorevip] [--ignoresub] [length:-1]`;
 			}
 
 			const { channel, channelName } = resolveChannel(channelRaw);
 			if (!channel) {
-				return { text: `@${display}, I'm not in #${channelName}.` };
+				return `@${display}, I'm not in #${channelName}.`;
 			}
 
 			const error = reasonError(phrases.getChannelPhrases(channel.id), phrase, p.name);
 			if (error) {
-				return { text: `@${display}, ${error} — add name:"reason".` };
+				return `@${display}, ${error} — add name:"reason".`;
 			}
 
 			const uuid = await phrases.addPhrase(
@@ -184,7 +185,7 @@ module.exports = {
 				},
 			);
 
-			return { text: `@${display}, phrase added to #${channel.name}: "${phrase}" (ID: ${uuid})` };
+			return `@${display}, phrase added to #${channel.name}: "${phrase}" (ID: ${uuid})`;
 		}
 
 		// Aendern (global / Channel)
@@ -193,7 +194,7 @@ module.exports = {
 			const channelRaw = isChannel ? rest.shift() : undefined;
 			const key = rest.join(' ').trim();
 			if (!key || (isChannel && !channelRaw)) {
-				return { text: `@${display}, Usage: ${editUsage(isChannel)}` };
+				return `@${display}, Usage: ${editUsage(isChannel)}`;
 			}
 
 			const changes = {};
@@ -209,7 +210,7 @@ module.exports = {
 
 			const fields = phrases.changedFields(changes);
 			if (fields.length === 0) {
-				return { text: `@${display}, nothing to change — give at least one of trigger:, name:, length:, ignorevip:, ignoresub:, escalate:.` };
+				return `@${display}, nothing to change — give at least one of trigger:, name:, length:, ignorevip:, ignoresub:, escalate:.`;
 			}
 
 			let list = phrases.getGlobal();
@@ -217,7 +218,7 @@ module.exports = {
 			if (isChannel) {
 				const { channel, channelName } = resolveChannel(channelRaw);
 				if (!channel) {
-					return { text: `@${display}, I'm not in #${channelName}.` };
+					return `@${display}, I'm not in #${channelName}.`;
 				}
 
 				list = phrases.getChannelPhrases(channel.id);
@@ -232,26 +233,26 @@ module.exports = {
 					duplicate: 'a banphrase with that trigger already exists',
 				}[result.reason];
 
-				return { text: `@${display}, ${why}${where}.` };
+				return `@${display}, ${why}${where}.`;
 			}
 
-			return { text: `@${display}, banphrase updated${where}: ${fields.join(', ')}. (ID: ${result.uuid})` };
+			return `@${display}, banphrase updated${where}: ${fields.join(', ')}. (ID: ${result.uuid})`;
 		}
 
 		// Global loeschen (nach Name oder ID)
 		if (mode === 'delbp') {
 			const name = rest.join(' ').trim();
 			if (!name) {
-				return { text: `@${display}, Usage: delbp <name|id>` };
+				return `@${display}, Usage: delbp <name|id>`;
 			}
 
 			const { phrase: found, error } = pickOne(phrases.getGlobal(), name);
 			if (!found) {
-				return { text: `@${display}, ${error ?? `No banphrase found with name or ID "${name}"`}.` };
+				return `@${display}, ${error ?? `No banphrase found with name or ID "${name}"`}.`;
 			}
 
 			await phrases.removePhrase(found);
-			return { text: `@${display}, banphrase "${name}" deleted. (ID: ${found.UUID})` };
+			return `@${display}, banphrase "${name}" deleted. (ID: ${found.UUID})`;
 		}
 
 		// Channel loeschen
@@ -259,37 +260,39 @@ module.exports = {
 			const [channelRaw, ...phraseWords] = rest;
 			const phrase = phraseWords.join(' ').trim();
 			if (!channelRaw || !phrase) {
-				return { text: `@${display}, Usage: cdelbp <channel> <phrase|id>` };
+				return `@${display}, Usage: cdelbp <channel> <phrase|id>`;
 			}
 
 			const { channel, channelName } = resolveChannel(channelRaw);
 			if (!channel) {
-				return { text: `@${display}, Phrase not found in #${channelName}.` };
+				return `@${display}, Phrase not found in #${channelName}.`;
 			}
 
 			const { phrase: found, error } = pickOne(phrases.getChannelPhrases(channel.id), phrase);
 			if (!found) {
-				return { text: `@${display}, ${error ?? 'Phrase not found'} in #${channel.name}.` };
+				return `@${display}, ${error ?? 'Phrase not found'} in #${channel.name}.`;
 			}
 
 			await phrases.removePhrase(found);
-			return { text: `@${display}, phrase removed from #${channel.name}: "${found.Phrase}" (ID: ${found.UUID})` };
+			return `@${display}, phrase removed from #${channel.name}: "${found.Phrase}" (ID: ${found.UUID})`;
 		}
 
 		// Global loeschen (nach Wortlaut oder ID): removephrase / delphrase
 		const phrase = rest.join(' ').trim();
 		if (!phrase) {
-			return { text: `@${display}, Usage: removephrase <phrase|id>` };
+			return `@${display}, Usage: removephrase <phrase|id>`;
 		}
 
 		const { phrase: found, error } = pickOne(phrases.getGlobal(), phrase);
 		if (!found) {
-			return { text: `@${display}, ${error ? `${error}.` : 'Phrase not found!'}` };
+			return `@${display}, ${error ? `${error}.` : 'Phrase not found!'}`;
 		}
 
 		await phrases.removePhrase(found);
-		return { text: `@${display}, Phrase removed! (ID: ${found.UUID})` };
+		return `@${display}, Phrase removed! (ID: ${found.UUID})`;
 	},
 };
+
+module.exports = { command };
 
 Object.assign(module.exports, { parseTrigger, parseLength });

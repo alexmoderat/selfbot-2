@@ -9,60 +9,59 @@ const { answerNthBotBan, formatBotbansText, getAutobanCounts } = require('../uti
  */
 const DEFAULT_TEMPLATE = '@{username} Auto-Bans in #{channel}: {count} · Global: {global}.';
 
-module.exports = {
+const command = {
 	name: 'moderation',
 	// bb: ninou2, 28.10.2026 ("the !botbans should be also !bb")
 	aliases: ['autobans', 'botbans', 'bb', 'botbanstext', 'banannounce'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Channel auto-ban counts; set the message template and the automatic announcement.',
 	usage: 'moderation | botbans [number] | botbans global [number] | botbanstext <text|reset> | banannounce <on|off>',
 	// !autobans und !botbans liefen schon immer ohne Prefix
-	flags: ['mod', 'no-prefix', 'confirm'],
-	execute: async (client, msg) => {
+	flags: ['no-prefix', 'confirm'],
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		const display = msg.displayName;
 		const channel = msg.channelData;
 		if (!channel) {
-			return { text: `@${display}, this only works in a channel.` };
+			return `@${display}, this only works in a channel.`;
 		}
 
 		if (msg.invocation === 'botbanstext') {
 			const text = args.join(' ').trim();
 			if (!text) {
 				const current = await bot.Channels.getData(channel, 'botbansText');
-				return { text: `@${display}, Current template: ${current || DEFAULT_TEMPLATE}` };
+				return `@${display}, Current template: ${current || DEFAULT_TEMPLATE}`;
 			} else if (text === 'reset') {
 				await bot.Channels.setData(channel, 'botbansText', null);
-				return { text: `@${display}, botbans text reset.` };
+				return `@${display}, botbans text reset.`;
 			}
 
 			await bot.Channels.setData(channel, 'botbansText', text);
-			return { text: `@${display}, botbans text updated.` };
+			return `@${display}, botbans text updated.`;
 		}
 
 		if (msg.invocation === 'banannounce') {
 			const state = args[0]?.toLowerCase();
 			if (state !== 'on' && state !== 'off') {
 				const current = await bot.Channels.getData(channel, 'autobanAnnounce');
-				return {
-					text: `@${display}, Auto-ban announcements in #${channel.name}: ${current ? 'on' : 'off'}. Usage: ${msg.prefix}${msg.invocation} <on|off>`,
-				};
+				return `@${display}, Auto-ban announcements in #${channel.name}: ${current ? 'on' : 'off'}. Usage: ${msg.prefix}${msg.invocation} <on|off>`;
 			}
 
 			await bot.Channels.setData(channel, 'autobanAnnounce', state === 'on');
-			return { text: `@${display}, Auto-ban announcements in #${channel.name} ${state === 'on' ? 'enabled' : 'disabled'}.` };
+			return `@${display}, Auto-ban announcements in #${channel.name} ${state === 'on' ? 'enabled' : 'disabled'}.`;
 		}
 
 		// "!bb 5" / "!bb global 366": Abkuerzung fuer !whenbotbans (alexmoderat, 28.10.2026: beide Aliase)
 		const nth = await answerNthBotBan(args, channel.name, display);
 		if (nth) {
-			return { text: nth };
+			return nth;
 		}
 
 		const counts = await getAutobanCounts(channel.name);
 		const template = await bot.Channels.getData(channel, 'botbansText');
-		return {
-			text: formatBotbansText(template, { username: msg.sender.name, channel: channel.name, count: counts.channel, global: counts.global }),
-		};
+		return formatBotbansText(template, { username: msg.sender.name, channel: channel.name, count: counts.channel, global: counts.global });
 	},
 };
+
+module.exports = { command };

@@ -26,14 +26,42 @@ export interface CommandResult {
 
 export type CommandFlag = 'confirm' | 'cooldown-notice' | 'external-input' | 'mention' | 'mod' | 'no-prefix' | 'non-nullable' | 'block' | 'opt-out' | 'owner' | 'pipe' | 'skip-banphrase' | 'whitelist';
 
-/** Eine Datei in src/commands/ exportiert genau dieses Objekt */
+/** Rechte wie bei song-bot: global (0 = jeder, 1 = Bot-Administrator) und channel (0 = jeder, 1 = VIP, 2 = Mod, 3 = Broadcaster) */
+export interface CommandAccess {
+	global?: number;
+	channel?: number;
+}
+
+/** Cooldown in Sekunden (je Aufrufer; Dezimalwerte erlaubt) */
+export interface CommandCooldown {
+	global?: number;
+	channel?: number;
+	user?: number;
+}
+
+/** Was execute() bekommt */
+export interface CommandContext {
+	client: ChatClient;
+	message: ChatMessage;
+	config: Config;
+	isMod: boolean;
+	isBroadcaster: boolean;
+	isAdmin: boolean;
+	channel: { id: string | null; name: string | null };
+}
+
+/** String = einfache Antwort; Objekt fuer success: false, cooldown, followUps, whisper usw. */
+export type CommandReturn = string | CommandResult | void | null | undefined;
+
+/** Jede Datei in src/commands/ exportiert `command` in dieser Form (wie song-bot) */
 export interface CommandDefinition {
 	name: string;
+	aliases?: string[];
 	description?: string | null;
 	usage?: string | null;
-	/** Cooldown in Millisekunden */
-	cooldown?: number;
-	aliases?: string[];
+	access: CommandAccess;
+	cooldown: CommandCooldown;
+	/** Zusatz zu song-bot: Verhaltens-Flags (pipe, mention, no-prefix, confirm, opt-out ...) */
 	flags?: CommandFlag[];
 	params?: unknown[];
 	whitelistResponse?: string | null;
@@ -41,17 +69,18 @@ export interface CommandDefinition {
 	data?: Record<string, unknown>;
 	init?: (command: Command) => unknown;
 	destroy?: (command: Command) => unknown;
-	execute(client: ChatClient, msg: ChatMessage): Promise<CommandResult | void | null> | CommandResult | void | null;
+	execute(context: CommandContext): Promise<CommandReturn> | CommandReturn;
 }
 
-/** Definition nach normalize(): alle Felder gefuellt */
-export interface Command extends CommandDefinition {
+/** Nach normalize(): Cooldown in ms, Flags aus access ergaenzt, execute(client, msg) -> { text, ... } */
+export interface Command extends Omit<CommandDefinition, 'cooldown' | 'execute'> {
 	aliases: string[];
 	cooldown: number;
 	flags: readonly CommandFlag[];
 	ready: boolean;
 	data: Record<string, unknown>;
 	readonly permission: 'owner' | 'mod' | 'everyone';
+	execute(client: ChatClient, msg: ChatMessage): Promise<CommandResult>;
 	toListed(): { Name: string; Aliases: string[]; Description: string | null; Usage: string | null; permission: string; noPrefix: boolean };
 }
 

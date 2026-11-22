@@ -1,12 +1,13 @@
 // Supibots commands/countline. sb-v2s "messages"/"msgs" zaehlten dasselbe und bleiben als Aliase erhalten
-module.exports = {
+const command = {
 	name: 'countline',
 	aliases: ['cl', 'messages', 'msgs'],
-	cooldown: 10000,
+	cooldown: { user: 10 },
+	access: { channel: 0 },
 	description: 'Fetches the number of chat lines a specified user (or you, if nothing is provided) has sent in the current channel.',
 	usage: 'countline [user]',
 	flags: ['mention', 'opt-out', 'pipe'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [username] = msg.args;
 		const channelData = msg.channelData;
 		if (!channelData) {
@@ -28,3 +29,5 @@ module.exports = {
 		return { success: true, text: `${who} sent ${bot.Utils.groupDigits(lines)} chat lines in this channel so far.` };
 	},
 };
+
+module.exports = { command };

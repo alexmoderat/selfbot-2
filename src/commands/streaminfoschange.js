@@ -50,14 +50,15 @@ const isManager = async (msg) => {
 	return permissions.administrator || permissions.channelOwner || permissions.moderator;
 };
 
-module.exports = {
+const command = {
 	name: 'streaminfoschange',
 	// csi/sci: so vertippt sich ninou2 dauernd ("!csi", "!sci" beim Erklaeren, 27.10.2026)
 	aliases: ['sic', 'csi', 'sci', 'sic2', 'csi2', 'sci2'],
-	cooldown: 5000,
+	cooldown: { user: 5 },
+	access: { channel: 0 },
 	description: "Posts the channel's current category and title as ready-to-copy /setgame and /settitle commands, and keeps saved slots of them.",
 	usage: 'sic | sic <slot> | sic save <slot> | sic save /setgame <game> /settitle <title> "<slot>" | sic delete <slot> (also csi, sci; csi2 = same with !setgame/!settitle)',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [action, ...args] = msg.args;
 		const channel = msg.channelData;
 		if (!channel?.twitchId || bot.Twitch.name !== 'twitch') {
@@ -84,7 +85,7 @@ module.exports = {
 
 				delete slots[slot];
 				await bot.Channels.setData(channel, 'streamInfoSlots', slots);
-				return { text: `@${display}, deleted slot ${slot}.` };
+				return `@${display}, deleted slot ${slot}.`;
 			}
 
 			const parsed = parseSaveArgs(args);
@@ -102,7 +103,7 @@ module.exports = {
 
 			slots[parsed.slot] = infos;
 			await bot.Channels.setData(channel, 'streamInfoSlots', slots);
-			return { text: `@${display}, saved to slot ${parsed.slot}: ${formatSavedStreamInfos(infos.game, infos.title, bang)}` };
+			return `@${display}, saved to slot ${parsed.slot}: ${formatSavedStreamInfos(infos.game, infos.title, bang)}`;
 		}
 
 		if (action) {
@@ -116,7 +117,7 @@ module.exports = {
 				};
 			}
 
-			return { text: formatSavedStreamInfos(saved.game, saved.title, bang) };
+			return formatSavedStreamInfos(saved.game, saved.title, bang);
 		}
 
 		const current = await fetchCurrent(channel.twitchId);
@@ -124,8 +125,10 @@ module.exports = {
 			return { success: false, text: 'Could not fetch the current stream infos.' };
 		}
 
-		return { text: formatStreamInfosChange(current.game, current.title, bang) };
+		return formatStreamInfosChange(current.game, current.title, bang);
 	},
 };
+
+module.exports = { command };
 
 Object.assign(module.exports, { formatStreamInfosChange, formatSavedStreamInfos, parseSaveArgs });

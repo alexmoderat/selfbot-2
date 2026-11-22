@@ -43,20 +43,20 @@ const listAll = async (channelId, channelName, display) => {
 	}
 };
 
-module.exports = {
+const command = {
 	name: 'notify',
 	aliases: ['unnotify', 'listevents'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Set up notifications for stream start and Twitch bans.',
 	usage: 'notify live <streamer> [x1-x5] [text] | notify ban <user> [text] | unnotify live|ban <name> | listevents',
-	flags: ['mod'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		const display = msg.displayName;
 		const channel = msg.channelData;
 		const mode = msg.invocation;
 		if (!channel) {
-			return { text: `@${display}, this only works in a channel.` };
+			return `@${display}, this only works in a channel.`;
 		}
 
 		const sub = args[0]?.toLowerCase();
@@ -66,26 +66,22 @@ module.exports = {
 		}
 
 		if (!sub || !EVENTS.has(sub)) {
-			return { text: `@${display}, Usage: ${mode} <live|ban> <name>${mode === 'notify' ? ' [text]' : ''}` };
+			return `@${display}, Usage: ${mode} <live|ban> <name>${mode === 'notify' ? ' [text]' : ''}`;
 		}
 
 		const target = cleanLogin(args[1]);
 		if (!target) {
-			return { text: `@${display}, Usage: ${mode} ${sub} <${sub === 'live' ? 'streamer' : 'user'}>${mode === 'notify' ? ' [text]' : ''}` };
+			return `@${display}, Usage: ${mode} ${sub} <${sub === 'live' ? 'streamer' : 'user'}>${mode === 'notify' ? ' [text]' : ''}`;
 		}
 
 		if (mode === 'unnotify') {
 			if (sub === 'live') {
 				const result = await bot.DB.NotifyLive.deleteMany({ channel: channel.id, streamerLogin: target });
-				return {
-					text: result.deletedCount > 0 ? `@${display}, Live notification for ${target} removed.` : `@${display}, ${target} was not on the live notify list.`,
-				};
+				return result.deletedCount > 0 ? `@${display}, Live notification for ${target} removed.` : `@${display}, ${target} was not on the live notify list.`;
 			}
 
 			const result = await bot.DB.NotifyBan.deleteMany({ channel: channel.id, login: target });
-			return {
-				text: result.deletedCount > 0 ? `@${display}, ✅ ${target} removed from ban watch.` : `@${display}, ${target} was not on ban watch.`,
-			};
+			return result.deletedCount > 0 ? `@${display}, ✅ ${target} removed from ban watch.` : `@${display}, ${target} was not on ban watch.`;
 		}
 
 		// notify live <streamer> [x1-x5] [text]: x3 = die Ansage wird 3x gepostet (ninou2, 13.11.2026)
@@ -102,7 +98,7 @@ module.exports = {
 			const streamer = await resolveStreamer(target);
 			if (!streamer) {
 				// sb-v2 speicherte trotzdem ("notification saved, but ...") - ohne Twitch-ID kann hier nichts abonniert werden
-				return { text: `@${display}, ${target} could not be resolved — please check the name.` };
+				return `@${display}, ${target} could not be resolved — please check the name.`;
 			}
 
 			await bot.DB.NotifyLive.updateOne(
@@ -114,11 +110,13 @@ module.exports = {
 			watchStreamer(streamer.id);
 			watchTitle(streamer.id);
 			Logger.info(`[notify] live ${streamer.login} in #${channel.name}`);
-			return { text: `@${display}, ✅ Live notification for ${target} added.${extra}` };
+			return `@${display}, ✅ Live notification for ${target} added.${extra}`;
 		}
 
 		await bot.DB.NotifyBan.updateOne({ channel: channel.id, login: target }, { $set: { message: customMessage, notified: null }, $setOnInsert: { added: new Date() } }, { upsert: true });
 		Logger.info(`[notify] ban ${target} in #${channel.name}`);
-		return { text: `@${display}, ✅ Watching ${target} for Twitch bans.${extra}` };
+		return `@${display}, ✅ Watching ${target} for Twitch bans.${extra}`;
 	},
 };
+
+module.exports = { command };

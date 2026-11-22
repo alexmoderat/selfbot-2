@@ -9,14 +9,15 @@ const CHANNEL_LIVE_SUBSCRIPTION_TITLE = 'Channel live';
 
 const EVENTS = [{ title: CHANNEL_LIVE_SUBSCRIPTION_TITLE, names: ['live', 'online'] }];
 
-module.exports = {
+const command = {
 	name: 'subscribe',
 	aliases: ['unsubscribe'],
-	cooldown: 5000,
+	cooldown: { user: 5 },
+	access: { channel: 0 },
 	description: 'Subscribe or unsubscribe to events, such as a channel going live. Check the extended help for detailed info on each event.',
 	usage: 'subscribe live (channels...) | unsubscribe live (channels...)',
 	flags: ['mention', 'pipe'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [type, ...args] = msg.args;
 		if (!type) {
 			return {
@@ -122,5 +123,7 @@ module.exports = {
 		'Unsubscribes from the given channels, or from all of them.',
 	],
 };
+
+module.exports = { command };
 
 Object.assign(module.exports, { CHANNEL_LIVE_SUBSCRIPTION_TITLE });

@@ -4,14 +4,15 @@ const SupiDate = require('../util/date.js');
 
 const cacheKey = 'selfbot-count-line-total-previous';
 
-module.exports = {
+const command = {
 	name: 'countlinetotal',
 	aliases: ['clt', 'totalcountline'],
-	cooldown: 120_000,
+	cooldown: { user: 120 },
+	access: { channel: 0 },
 	description: 'Fetches the number of chat lines from ALL the log tables the bot uses, and the rate they are being added at.',
 	usage: 'countlinetotal',
 	flags: ['mention'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		// Supibot nahm AUTO_INCREMENT aller Log-Tabellen; hier die (geschaetzte) Zahl der Dokumente in chatLines
 		const chatLineAmount = await bot.DB.ChatLine.estimatedDocumentCount();
 
@@ -29,6 +30,8 @@ module.exports = {
 			await bot.Cache.setJSON(cacheKey, { timestamp: SupiDate.now(), amount: Number(chatLineAmount) }, 365 * 864e5);
 		}
 
-		return { text: `Currently logging ${bot.Utils.groupDigits(Number(chatLineAmount))} lines in total across all channels.${historyText}` };
+		return `Currently logging ${bot.Utils.groupDigits(Number(chatLineAmount))} lines in total across all channels.${historyText}`;
 	},
 };
+
+module.exports = { command };

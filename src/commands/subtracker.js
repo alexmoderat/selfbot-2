@@ -14,27 +14,28 @@ const formatSubtrackerTotal = (target, row) => {
 	return `@${target} have a total of ${sub + resub + gift} subs (${sub} new, ${resub} resub, ${gift} gifted). "Estimated"`;
 };
 
-module.exports = {
+const command = {
 	name: 'subtracker',
 	aliases: ['subs'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description:
 		"Shows or toggles the sub counter (Twitch-wide, via the CatQuery firehose), for channels where Twitch's real subcount is unavailable (non-Affiliate/Partner). Takes an optional target channel to query from elsewhere.",
 	usage: 'subtracker | subtracker on | subtracker off | subtracker <channel>',
-	flags: ['mod', 'no-prefix'],
-	execute: async (client, msg) => {
+	flags: ['no-prefix'],
+	execute: async ({ client, message: msg }) => {
 		const [arg] = msg.args;
 		const display = msg.displayName;
 		const own = msg.channelData?.name ?? '';
 
 		if (arg === 'on' || arg === 'off') {
 			if (!own) {
-				return { text: null };
+				return null;
 			}
 			const value = arg === 'on';
 			// gehoert utility-next (geteilte Daten in Postgres utility_next)
 			await utility.query('INSERT INTO global_sub_counter (channel, enabled) VALUES (?, ?) ON CONFLICT (channel) DO UPDATE SET enabled = EXCLUDED.enabled', [own, value]);
-			return { text: `@${display}, sub counter turned ${arg.toUpperCase()}.` };
+			return `@${display}, sub counter turned ${arg.toUpperCase()}.`;
 		}
 
 		const target = (arg ?? own).replace(/^[@#]+/, '').toLowerCase();
@@ -43,11 +44,13 @@ module.exports = {
 
 		const who = target === own ? '' : `@${target}: `;
 		if (row && !row.enabled) {
-			return { text: `@${display}, ${who}sub counter is OFF.${target === own ? ` Turn it back on with "${msg.invocation} on".` : ''}` };
+			return `@${display}, ${who}sub counter is OFF.${target === own ? ` Turn it back on with "${msg.invocation} on".` : ''}`;
 		}
 
-		return { text: formatSubtrackerTotal(target, row) };
+		return formatSubtrackerTotal(target, row);
 	},
 };
+
+module.exports = { command };
 
 Object.assign(module.exports, { formatSubtrackerTotal });

@@ -5,10 +5,11 @@ const { invocations, specialSuffixes } = definitions;
 const STATUS_LENGTH_CHARACTER_LIMIT = 2000;
 
 // Supibots afk
-module.exports = {
+const command = {
 	name: 'afk',
 	aliases: ['gn', 'brb', 'shower', 'food', 'lurk', 'poop', '💩', 'work', 'study', 'nap'],
-	cooldown: 10_000,
+	cooldown: { user: 10 },
+	access: { channel: 0 },
 	description: 'Flags you as AFK. Supports a custom AFK message.',
 	usage: 'afk [text]',
 	flags: ['pipe'],
@@ -29,7 +30,7 @@ module.exports = {
 		'',
 		'and more - check the aliases',
 	],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		if (msg.privateMessage && bot.AFK.get(msg.sender)) {
 			return { success: false, text: 'You are already AFK!' };
 		}
@@ -58,3 +59,5 @@ module.exports = {
 		return { success: true, text: `${msg.displayName} is ${target.status}: ${text}` };
 	},
 };
+
+module.exports = { command };

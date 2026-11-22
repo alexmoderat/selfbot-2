@@ -11,13 +11,14 @@ const { replyInChunks } = require('../util/tracking-format.js');
  */
 const MESSAGE_LIMIT = 480;
 
-module.exports = {
+const command = {
 	name: 'hoursstreamedcategorieshistory',
 	aliases: ['hsch'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 0 },
 	description: 'Hours streamed per category for a channel, broken down by year (full tracked history, newest year first). Defaults to the current channel.',
 	usage: 'hoursstreamedcategorieshistory [channel]',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		// Mit Zeitraum ("!hsch im_row1 november2026") ist die Verlaufsansicht falsch, das kann !hsc
 		if (msg.args.some(isPeriodWord)) {
 			return await require('./hoursstreamedcategories.js').execute(client, msg);
@@ -30,12 +31,12 @@ module.exports = {
 		const where = own ? 'this channel' : `#${channel}`;
 		const userId = await streamData.fetchUserId(channel);
 		if (!userId) {
-			return { text: `@${display}, no Twitch account named "${channel}" exists.` };
+			return `@${display}, no Twitch account named "${channel}" exists.`;
 		}
 
 		const years = await streamData.getCategoryYears(userId);
 		if (years.length === 0) {
-			return { text: `@${display}, no tracked hours for ${where} yet — either tracking just started, or that's not a channel I watch.` };
+			return `@${display}, no tracked hours for ${where} yet — either tracking just started, or that's not a channel I watch.`;
 		}
 
 		const segments = [];
@@ -48,7 +49,7 @@ module.exports = {
 		}
 
 		if (segments.length === 0) {
-			return { text: `@${display}, no tracked hours for ${where} yet.` };
+			return `@${display}, no tracked hours for ${where} yet.`;
 		}
 
 		// Das aelteste (letzte) Jahr bekommt den Tracking-Start
@@ -95,3 +96,5 @@ module.exports = {
 		return await replyInChunks(msg, chunks);
 	},
 };
+
+module.exports = { command };

@@ -46,14 +46,15 @@ const getTwitchLatency = async (client) => {
 };
 
 // Format aus sb-v2 (Ausnahme von "Supibot zuerst")
-module.exports = {
+const command = {
 	name: 'ping',
 	aliases: ['pong'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 0 },
 	description: 'Shows bot and server uptime, memory usage, channel count, joiner channels, IRC and PubSub connections and commit.',
 	usage: 'ping',
 	flags: ['pipe', 'skip-banphrase'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const latency = msg.debug ? null : await getTwitchLatency(client);
 		const memory = (process.memoryUsage().rss / 1024 / 1024).toFixed(2);
 		// Wie potatbotat: offene IRC- und PubSub-Verbindungen
@@ -74,6 +75,8 @@ module.exports = {
 			`node: ${process.version}`,
 		].filter(Boolean);
 
-		return { text: `AlienDance 🏓 @${msg.displayName}, ${parts.join(' · ')}` };
+		return `AlienDance 🏓 @${msg.displayName}, ${parts.join(' · ')}`;
 	},
 };
+
+module.exports = { command };

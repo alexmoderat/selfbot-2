@@ -52,11 +52,12 @@ const determineReportType = (args) => {
 	};
 };
 
-module.exports = {
+const command = {
 	name: 'weather',
 	// "w" aus sb-v2 behalten, dort war es der gewohnte Kurzname
 	aliases: ['w'],
-	cooldown: 10000,
+	cooldown: { user: 10 },
+	access: { channel: 0 },
 	usage: 'weather [place | @user] [hour+X | day+X]',
 	description:
 		'Fetches the current weather in a given location. You can specify parameters to check the forecast, or mention a user to get their location, if they set it up. Check all possibilities in extended help.',
@@ -67,7 +68,7 @@ module.exports = {
 		{ name: 'pollution', type: 'boolean' },
 		{ name: 'provider', type: 'string' },
 	],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		let args = [...msg.args];
 		const reportData = determineReportType(args);
 		args = reportData.args;
@@ -236,3 +237,5 @@ module.exports = {
 		`Supported elements: <code>${ALLOWED_FORMAT_TYPES.join(', ')}</code>`,
 	],
 };
+
+module.exports = { command };

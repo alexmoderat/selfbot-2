@@ -2,26 +2,23 @@ const { randomBytes } = require('node:crypto');
 const { roll: diceRoll } = require('@jprochazk/roll-dice');
 const { randomInt } = require('../util/command-utils.js');
 
-module.exports = {
+const command = {
 	name: 'roll',
 	aliases: ['dice'],
-	cooldown: 5000,
+	cooldown: { user: 5 },
+	access: { channel: 0 },
 	description: 'Rolls a random number. If nothing is specified, rolls 1-100. You can specify min and max values, or some expression using standard dice notation.',
 	usage: 'roll [min max | NdM] [textOnly:true]',
 	flags: ['mention', 'pipe', 'skip-banphrase'],
 	params: [{ name: 'textOnly', type: 'boolean' }],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		if (args.length === 0) {
 			const result = randomInt(1, 100);
 			if (msg.params.textOnly) {
-				return {
-					text: String(result),
-				};
+				return String(result);
 			} else {
-				return {
-					text: `Your roll is ${result}.`,
-				};
+				return `Your roll is ${result}.`;
 			}
 		}
 
@@ -43,13 +40,9 @@ module.exports = {
 			const number = firstNum < secondNum ? randomInt(firstNum, secondNum) : randomInt(secondNum, firstNum);
 
 			if (msg.params.textOnly) {
-				return {
-					text: String(number),
-				};
+				return String(number);
 			} else {
-				return {
-					text: `Your roll is ${number}.`,
-				};
+				return `Your roll is ${number}.`;
 			}
 		}
 
@@ -69,13 +62,9 @@ module.exports = {
 		}
 
 		if (msg.params.textOnly) {
-			return {
-				text: String(result),
-			};
+			return String(result);
 		} else {
-			return {
-				text: `Your roll is ${result}.`,
-			};
+			return `Your roll is ${result}.`;
 		}
 	},
 	dynamicDescription: (prefix) => [
@@ -99,3 +88,5 @@ module.exports = {
 		'Rolls using DnD dice format.',
 	],
 };
+
+module.exports = { command };

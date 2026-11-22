@@ -21,17 +21,16 @@ const EIGHT_BALL_RESPONSES = [
 	'😦 Very doubtful.',
 ];
 
-module.exports = {
+const command = {
 	name: '8ball',
-	cooldown: 10000,
+	cooldown: { user: 10 },
+	access: { channel: 0 },
 	description: 'Checks your question against the fortune-telling 8-ball.',
 	usage: '8ball (question)',
 	// no-prefix: dburgers2/alexmoderat, 20.10.2026 - bares "!8ball" soll auch gehen (aus sb-v2)
 	flags: ['mention', 'no-prefix', 'pipe'],
-	execute: async (client, msg) => {
-		return {
-			text: bot.Utils.randArray(EIGHT_BALL_RESPONSES),
-		};
+	execute: async ({ client, message: msg }) => {
+		return bot.Utils.randArray(EIGHT_BALL_RESPONSES);
 	},
 	dynamicDescription: function (prefix) {
 		const list = EIGHT_BALL_RESPONSES.map((i) => `<li>${i}</li>`).join('');
@@ -39,3 +38,5 @@ module.exports = {
 		return ['Consult the 8-ball for your inquiry!', '', `<code>${prefix}8ball Is this command cool?</code>`, '(random 8-ball response)', '', 'List of responses:', `<ul>${list}</ul>`];
 	},
 };
+
+module.exports = { command };

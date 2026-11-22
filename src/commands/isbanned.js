@@ -8,14 +8,14 @@ const REASONS = {
 };
 
 /** Ist ein Account von Twitch gesperrt? (aus sb-v2, oeffentliches GQL - ohne Zeitpunkt, den liefert GQL nicht) */
-module.exports = {
+const command = {
 	name: 'isbanned',
 	aliases: ['isban'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Checks whether an account is banned by Twitch.',
 	usage: 'isbanned <user>',
-	flags: ['mod'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [target] = msg.args;
 		const display = msg.displayName;
 		const login = (target ?? '')
@@ -24,12 +24,14 @@ module.exports = {
 			.trim();
 		const user = await getUserInfo(login);
 		if (!user) {
-			return { text: `@${display}, user not found.` };
+			return `@${display}, user not found.`;
 		} else if (!user.banned) {
-			return { text: `@${display}, ${user.displayName} | IsBanned: False` };
+			return `@${display}, ${user.displayName} | IsBanned: False`;
 		}
 
 		const reason = REASONS[user.banReason ?? ''] ?? user.banReason ?? 'Unknown';
-		return { text: `@${display}, ${user.displayName} | IsBanned: True - (${reason})` };
+		return `@${display}, ${user.displayName} | IsBanned: True - (${reason})`;
 	},
 };
+
+module.exports = { command };

@@ -28,20 +28,51 @@ const FLAGS = new Set([
 	'whitelist', // nur auf ausdrueckliche Freigabe
 ]);
 
+/** Kontext, den Commands bekommen (wie bei song-bot: client, message, Rechte, Channel) */
+const buildContext = (client, msg) => {
+	let isAdmin = false;
+	try {
+		isAdmin = Boolean(msg.sender && bot.Users?.isAdministrator(msg.sender));
+	} catch {
+		isAdmin = false;
+	}
+	return {
+		client,
+		message: msg,
+		config: bot.Config,
+		isMod: Boolean(msg.user?.perms?.mod),
+		isBroadcaster: Boolean(msg.user?.perms?.broadcaster),
+		isAdmin,
+		channel: { id: msg.channel?.id ?? null, name: msg.channel?.login ?? null },
+	};
+};
+
+/** Cooldown-Objekt {user, channel, global} in Sekunden -> Millisekunden (der laengste Wert gilt je Aufrufer und Channel) */
+const cooldownMs = (cooldown) => {
+	if (typeof cooldown === 'number') {
+		return cooldown;
+	}
+	const seconds = Math.max(cooldown?.user ?? 0, cooldown?.channel ?? 0, cooldown?.global ?? 0);
+	return Math.round(seconds * 1000);
+};
+
+/** access {global, channel} -> interne Flags: global >= 1 = nur Bot-Administratoren, channel >= 2 = Mods/Broadcaster */
+const accessFlags = (access) => [...(access?.global >= 1 ? ['owner'] : []), ...(access?.channel >= 2 && !(access?.global >= 1) ? ['mod'] : [])];
+
 /** Fehlende Felder auffuellen, damit der Handler nicht ueberall pruefen muss */
 const normalize = (definition, file) => {
 	if (!definition?.name || typeof definition.execute !== 'function') {
 		throw new Error(`Command ${file}: name und execute() fehlen`);
 	}
-	const flags = definition.flags ?? [];
+	const flags = [...new Set([...(definition.flags ?? []), ...accessFlags(definition.access)])];
 	const unknown = flags.filter((i) => !FLAGS.has(i));
 	if (unknown.length > 0) {
 		throw new Error(`Command ${definition.name}: unbekannte Flags ${unknown.join(', ')}`);
 	}
+	const run = definition.execute;
 
 	const command = {
 		aliases: [],
-		cooldown: 0,
 		description: null,
 		usage: null,
 		params: [],
@@ -50,7 +81,14 @@ const normalize = (definition, file) => {
 		ready: true,
 		data: {},
 		...definition,
-		flags: Object.freeze([...flags]),
+		access: definition.access ?? { channel: 0 },
+		cooldown: cooldownMs(definition.cooldown ?? 0),
+		flags: Object.freeze(flags),
+		// Intern bleibt execute(client, msg) -> { text, ... }; die Datei liefert execute(context) -> string | Ergebnis
+		execute: async (client, msg) => {
+			const result = await run(buildContext(client, msg));
+			return typeof result === 'string' ? { text: result } : result;
+		},
 	};
 
 	// Alte Feldnamen (selfbots Command-Klasse) als Getter, damit portierte Commands, Module und Web gleich lesen
@@ -116,7 +154,7 @@ class CommandHandler {
 		this.aliases.clear();
 
 		const files = readdirSync(COMMAND_DIR).filter((file) => file.endsWith('.js'));
-		const definitions = files.map((file) => normalize(require(path.join(COMMAND_DIR, file)), file));
+		const definitions = files.map((file) => normalize(require(path.join(COMMAND_DIR, file)).command, file));
 
 		const names = definitions.flatMap((i) => [i.name, ...i.aliases]);
 		const duplicates = names.filter((name, index) => names.indexOf(name) !== index);

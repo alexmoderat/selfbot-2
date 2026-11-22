@@ -4,26 +4,25 @@
  * https://supinic.com/bot/reminder/list" / "the command should be !reminderlist aka !rl" -
  * "rl" ist schon !randomline, daher "reminders".
  */
-module.exports = {
+const command = {
 	name: 'reminderlist',
 	aliases: ['reminders'],
-	cooldown: 5000,
+	cooldown: { user: 5 },
+	access: { channel: 0 },
 	description: 'Gives a link to your pending reminders, where you can see and remove them.',
 	usage: 'reminderlist',
 	flags: ['mention'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const incoming = bot.Reminders.data.get(msg.sender.id) ?? [];
 		const outgoing = [...bot.Reminders.data.values()].flat().filter((i) => i.User_From === msg.sender.id && i.User_To !== msg.sender.id);
 
 		const count = incoming.length + outgoing.length;
 		if (count === 0) {
-			return { text: 'You have no pending reminders.' };
+			return 'You have no pending reminders.';
 		}
 
 		// ninou2, 03.11.2026: eigene Seite mit Entfernen-Knopf statt Liste im Chat
-		return {
-			text: `you have ${count} pending reminder${count === 1 ? '' : 's'}, see and remove them here: https://auth.alexmoderat.eu/dashboard#reminders`,
-		};
+		return `you have ${count} pending reminder${count === 1 ? '' : 's'}, see and remove them here: https://auth.alexmoderat.eu/dashboard#reminders`;
 	},
 	dynamicDescription: (prefix) => [
 		'Links to the page with your pending reminders, where you can remove them.',
@@ -33,3 +32,5 @@ module.exports = {
 		`To remove one, use <code>${prefix}unset reminder (ID)</code>.`,
 	],
 };
+
+module.exports = { command };

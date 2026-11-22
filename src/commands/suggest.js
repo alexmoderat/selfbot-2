@@ -3,16 +3,17 @@ const unsetSuggestionSubcommand = require('../util/commands/set/subcommands/sugg
 
 // Wie Supibots suggest. Nicht uebernommen: das automatische Abo fuer Status-Benachrichtigungen
 // (Supibots subscribe-System fehlt hier) und der Link zur Vorschlagsliste (Website kommt mit Block 9).
-module.exports = {
+const command = {
 	name: 'suggest',
 	aliases: ['suggestions'],
-	cooldown: 60000,
+	cooldown: { user: 60 },
+	access: { channel: 0 },
 	description: 'Suggest something for alexmoderat. Every suggestion gets an ID. To remove one, use the unset command.',
 	usage: 'suggest <text> [amend:ID]',
 	// Zuschauer tippen "!suggest" (aus sb-v2); cooldown-notice, damit die 60s-Sperre nicht wie ein Fehler wirkt
 	flags: ['mention', 'no-prefix', 'cooldown-notice', 'skip-banphrase'],
 	params: [{ name: 'amend', type: 'number' }],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		const prefix = bot.Config.prefix;
 		if (args.length === 0 || msg.invocation === 'suggestions') {
@@ -92,3 +93,5 @@ module.exports = {
 		unsetSuggestionSubcommand.description,
 	],
 };
+
+module.exports = { command };

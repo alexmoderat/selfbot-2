@@ -3,19 +3,20 @@ const { chatLogger } = require('../util/chat-logger.js');
 
 // Supibots commands/lastseen (ohne Channel-Namen - genau der Datenschutz-Punkt, wegen dem sb-v2 ein optout brauchte).
 // "lastseen optout" / "lastseen optin" aus sb-v2 bleiben als Kurzform fuer Supibots "optout lastseen" / "unoptout lastseen".
-module.exports = {
+const command = {
 	name: 'lastseen',
 	aliases: ['ls'],
-	cooldown: 5000,
+	cooldown: { user: 5 },
+	access: { channel: 0 },
 	description: 'For a given user, this command tells you when they were last seen - based on their chat activity.',
 	usage: 'lastseen <user> | lastseen optout | lastseen optin',
 	flags: ['block', 'mention', 'opt-out', 'pipe'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [user] = msg.args;
 		const sub = user?.toLowerCase();
 		if (sub === 'optout' || sub === 'optin') {
-			const existing = Filter.getLocals('Opt-out', { user: msg.sender, command: module.exports.name, includeInactive: true }).find(
-				(i) => i.User_Alias === msg.sender.id && i.Command === module.exports.name && i.Channel === null && i.Platform === null && i.Invocation === null,
+			const existing = Filter.getLocals('Opt-out', { user: msg.sender, command: command.name, includeInactive: true }).find(
+				(i) => i.User_Alias === msg.sender.id && i.Command === command.name && i.Channel === null && i.Platform === null && i.Invocation === null,
 			);
 
 			if (sub === 'optout') {
@@ -24,10 +25,10 @@ module.exports = {
 				} else if (existing) {
 					await existing.toggle();
 				} else {
-					await Filter.create({ Type: 'Opt-out', User_Alias: msg.sender.id, Command: module.exports.name, Issued_By: msg.sender.id });
+					await Filter.create({ Type: 'Opt-out', User_Alias: msg.sender.id, Command: command.name, Issued_By: msg.sender.id });
 				}
 
-				return { text: "You're opted out — lastseen will no longer work for your name." };
+				return "You're opted out — lastseen will no longer work for your name.";
 			}
 
 			if (!existing?.Active) {
@@ -35,7 +36,7 @@ module.exports = {
 			}
 
 			await existing.toggle();
-			return { text: "You're opted back in." };
+			return "You're opted back in.";
 		}
 
 		if (!user) {
@@ -70,3 +71,5 @@ module.exports = {
 		return { success: true, text: `${who} last seen in chat ${bot.Utils.timeDelta(date)}.` };
 	},
 };
+
+module.exports = { command };

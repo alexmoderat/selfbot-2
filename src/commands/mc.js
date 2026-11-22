@@ -19,14 +19,14 @@ const resolveArgs = (a, b, caller) => {
 	return { user: clean(a), channel: clean(b) };
 };
 
-module.exports = {
+const command = {
 	name: 'mc',
 	aliases: ['vc'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Shows since when a user has been mod (mc) or VIP (vc) of a channel.',
 	usage: 'mc <user> <channel> | vc <user> <channel>',
-	flags: ['mod'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [first, second] = msg.args;
 		const display = msg.displayName;
 		const isVip = msg.invocation === 'vc';
@@ -34,23 +34,23 @@ module.exports = {
 
 		const { user, channel } = resolveArgs(first, second, msg.sender.name);
 		if (!channel) {
-			return { text: `@${display}, Usage: ${msg.invocation} <user> <channel>` };
+			return `@${display}, Usage: ${msg.invocation} <user> <channel>`;
 		}
 
 		const result = await checkRole(channel, user, isVip ? 'vip' : 'mod');
 		if (!result) {
-			return { text: `@${display}, channel "${channel}" not found.` };
+			return `@${display}, channel "${channel}" not found.`;
 		}
 
 		const { found, entry, list } = result;
 		if (!found && list.entries.length === 0) {
-			return { text: `@${display}, #${channel} has no ${label}s.` };
+			return `@${display}, #${channel} has no ${label}s.`;
 		}
 		if (!found) {
-			return { text: `@${display}, ${user} is not a ${label} in #${channel}.` };
+			return `@${display}, ${user} is not a ${label} in #${channel}.`;
 		}
 		if (!entry?.grantedAt) {
-			return { text: `@${display}, ${entry?.displayName ?? user} is a ${label} of #${channel}. (grant time unknown — not available from any source)` };
+			return `@${display}, ${entry?.displayName ?? user} is a ${label} of #${channel}. (grant time unknown — not available from any source)`;
 		}
 
 		const granted = new Date(entry.grantedAt);
@@ -63,10 +63,10 @@ module.exports = {
 			hour12: false,
 			timeZone: 'UTC',
 		});
-		return {
-			text: `@${display}, ${entry.displayName ?? user} is a ${label} of #${channel}. ` + `Granted ${formatDuration(Date.now() - granted.getTime())} ago. (${dateStr} UTC)`,
-		};
+		return `@${display}, ${entry.displayName ?? user} is a ${label} of #${channel}. ` + `Granted ${formatDuration(Date.now() - granted.getTime())} ago. (${dateStr} UTC)`;
 	},
 };
+
+module.exports = { command };
 
 Object.assign(module.exports, { resolveArgs });

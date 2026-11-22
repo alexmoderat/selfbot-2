@@ -12,13 +12,14 @@ const { getChannelsWithRole, getEditableChannels } = require('../token/gql.js');
  */
 const sortedLogins = (logins) => [...new Set(logins)].sort((a, b) => a.localeCompare(b));
 
-module.exports = {
+const command = {
 	name: 'modcount',
 	aliases: ['ml'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 0 },
 	description: 'In how many channels a user is a moderator.',
 	usage: 'modcount [user]',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [targetRaw] = msg.args;
 		const display = msg.displayName;
 		const target = (targetRaw ?? msg.sender.name).toLowerCase().replace('@', '');
@@ -28,7 +29,7 @@ module.exports = {
 		if (target === self) {
 			const channels = await fetchModeratedChannels(twitch.selfId);
 			if (!channels) {
-				return { text: `@${display}, couldn't get the moderated channels from Twitch right now.` };
+				return `@${display}, couldn't get the moderated channels from Twitch right now.`;
 			}
 
 			const logins = sortedLogins(channels.map((i) => i.login));
@@ -48,20 +49,22 @@ module.exports = {
 				}
 			}
 			if (parts.length > 0) {
-				return { text: `@${display}, ${self} mods in ${logins.length} channels: ${url} | ${parts.join(' | ')}` };
+				return `@${display}, ${self} mods in ${logins.length} channels: ${url} | ${parts.join(' | ')}`;
 			}
 
-			return { text: `@${display}, ${self} mods in ${logins.length} channels: ${url}` };
+			return `@${display}, ${self} mods in ${logins.length} channels: ${url}`;
 		}
 
 		const tv = await fetchUserRoleList(target, 'moderators').catch(() => null);
 		if (!tv) {
 			// Fallback: StreamDatabase gibt die Liste nur eingeloggten Nutzern per API heraus, also auf die Seite verlinken
-			return { text: `https://streamdatabase.com/twitch/moderated-channels/${encodeURIComponent(target)}` };
+			return `https://streamdatabase.com/twitch/moderated-channels/${encodeURIComponent(target)}`;
 		}
 
 		// total ist roles.tvs Zahl; die Liste kann ein paar Eintraege kuerzer sein (sb-v2: 204 gegen 202)
 		const url = await uploadList(`${target} — moderated channels (via roles.tv)`, sortedLogins(tv.entries.map((i) => i.login)));
-		return { text: `@${display}, ${target} mods in ${tv.total} channels (via roles.tv): ${url}` };
+		return `@${display}, ${target} mods in ${tv.total} channels (via roles.tv): ${url}`;
 	},
 };
+
+module.exports = { command };

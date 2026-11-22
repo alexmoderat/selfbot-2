@@ -1,12 +1,13 @@
 // Supibots commands/firstseen: erste Nachricht ueber alle Channels laut Message_Meta_User_Alias
-module.exports = {
+const command = {
 	name: 'firstseen',
 	aliases: ['fs'],
-	cooldown: 10000,
+	cooldown: { user: 10 },
+	access: { channel: 0 },
 	description: 'For a given user, this command tells you when they were first seen in chat - based on chat logs, so it might not be 100% accurate.',
 	usage: 'firstseen [user]',
 	flags: ['block', 'mention', 'opt-out', 'pipe'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [user] = msg.args;
 		const userData = user ? await bot.Users.get(user) : msg.sender;
 		if (!userData) {
@@ -60,3 +61,5 @@ module.exports = {
 		`<code>${prefix}firstseen</code> / <code>${prefix}fs (user)</code>`,
 	],
 };
+
+module.exports = { command };

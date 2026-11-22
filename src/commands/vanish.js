@@ -1,14 +1,15 @@
 const { MODERATOR_BADGES } = require('../util/text-analysis.js');
 const { banUser, targetFromChannel } = require('../util/moderation.js');
 
-module.exports = {
+const command = {
 	name: 'vanish',
 	aliases: ['v'],
-	cooldown: 60000,
+	cooldown: { user: 60 },
+	access: { channel: 0 },
 	description: 'Twitch only: times the user out for 1 second. Only works if the bot is a Twitch moderator.',
 	usage: 'vanish',
 	flags: ['no-prefix', 'skip-banphrase'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		if (bot.Twitch.name !== 'twitch') {
 			return {
 				success: false,
@@ -61,3 +62,5 @@ module.exports = {
 		};
 	},
 };
+
+module.exports = { command };

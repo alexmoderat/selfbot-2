@@ -340,14 +340,15 @@ const directRemove = async (msg, ...args) => {
 	return { success: true, text: `Removed ${target.alias}.` };
 };
 
-module.exports = {
+const command = {
 	name: '7tv',
 	aliases: ['add', 'remove'],
-	cooldown: 10000,
+	cooldown: { user: 10 },
+	access: { channel: 0 },
 	description: 'Manages a rotating list of 7TV emotes, where users can add or replace a 7TV emote of their choosing within that list.',
 	usage: 'add <emote link or ID> [name] | remove <emote name> | 7tv (emote link or ID) | 7tv replace <old emote> <new link> | 7tv check [emote] | 7tv limit [number] | 7tv remove <emote> | 7tv access streamer|mods (who can use add/remove)',
 	flags: ['mention'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [type, ...args] = msg.args;
 		if (bot.Twitch.name !== 'twitch') {
 			return { success: false, text: 'This command is only usable on Twitch!' };
@@ -383,5 +384,7 @@ module.exports = {
 		return await subcommand.execute(msg, name, ...args);
 	},
 };
+
+module.exports = { command };
 
 Object.assign(module.exports, { canUseDirect });

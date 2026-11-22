@@ -19,16 +19,19 @@ const template = async () => {
 	}
 };
 
-module.exports = {
+const command = {
 	name: 'lastlive',
 	aliases: ['ll'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 0 },
 	description:
 		'When a channel last went live (start, end and length from the latest VOD or the recorded streaming days). The yearly stream count is shown for channels tracked via streaktrack. Defaults to the current channel.',
 	usage: 'lastlive [channel]',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const channelName = msg.channelData?.name ?? '';
 		const text = await resolveVariables(customCommands.formatResponse(await template(), msg.sender?.name ?? msg.displayName, channelName), msg.args, { channel: channelName });
-		return { text };
+		return text;
 	},
 };
+
+module.exports = { command };

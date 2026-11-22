@@ -1,11 +1,11 @@
 /** Ban-Log-Ueberblick: Gesamt, nach Status, Top-Channels (aus sb-v2) - nur Bans dieses Bots */
-module.exports = {
+const command = {
 	name: 'banstats',
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Ban log summary: total, breakdown by status, top channels.',
 	usage: 'banstats',
-	flags: ['mod'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const selfName = bot.Twitch.selfName;
 		// Mod_Name verglich MariaDB ohne Gross-/Kleinschreibung
 		const match = { type: 'ban', modName: new RegExp(`^${bot.Utils.escapeRegExp(selfName)}$`, 'i') };
@@ -25,8 +25,8 @@ module.exports = {
 
 		const statusParts = byStatus.map((i) => `${i.Label || 'unknown'}: ${i.Count}`).join(', ');
 		const channelParts = byChannel.map((i) => `#${i.Label}: ${i.Count}`).join(', ');
-		return {
-			text: `@${msg.displayName}, Ban stats · Total: ${total ?? 0} · ${statusParts} · Top channels: ${channelParts}`,
-		};
+		return `@${msg.displayName}, Ban stats · Total: ${total ?? 0} · ${statusParts} · Top channels: ${channelParts}`;
 	},
 };
+
+module.exports = { command };

@@ -136,14 +136,17 @@ const answerQuestion = async (msg, { continueChat }) => {
 	}
 };
 
-module.exports = {
+const command = {
 	name: 'ask',
 	aliases: [],
-	cooldown: 10_000,
+	cooldown: { user: 10 },
+	access: { channel: 0 },
 	description: 'Asks an AI (Google Gemini) a question and posts a short answer. Follow up within 5 minutes with askc.',
 	usage: 'ask <question>',
 	flags: ['cooldown-notice', 'no-prefix', 'external-input'],
-	execute: async (client, msg) => await answerQuestion(msg, { continueChat: false }),
+	execute: async ({ client, message: msg }) => await answerQuestion(msg, { continueChat: false }),
 };
+
+module.exports = { command };
 
 Object.assign(module.exports, { answerQuestion, extractAnswer, cleanAnswer, splitAnswer, askGemini, SYSTEM_PROMPT });

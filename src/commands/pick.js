@@ -1,11 +1,12 @@
-module.exports = {
+const command = {
 	name: 'pick',
-	cooldown: 10000,
+	cooldown: { user: 10 },
+	access: { channel: 0 },
 	description: 'Picks a single word from the provided list of words in a message.',
 	usage: 'pick (list of words) [delimiter:;]',
 	flags: ['mention', 'pipe'],
 	params: [{ name: 'delimiter', type: 'regex' }],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const words = [...msg.args];
 		if (words.length === 0) {
 			return {
@@ -43,3 +44,5 @@ module.exports = {
 		'<code>two words</code>',
 	],
 };
+
+module.exports = { command };

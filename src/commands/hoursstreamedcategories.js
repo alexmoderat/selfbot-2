@@ -11,14 +11,15 @@ const { replyInChunks } = require('../util/tracking-format.js');
  */
 const MESSAGE_LIMIT = 480;
 
-module.exports = {
+const command = {
 	name: 'hoursstreamedcategories',
 	aliases: ['hsc'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 0 },
 	description:
 		'Hours streamed per category for a channel. No argument = current year. Takes a year ("2026"), month+year ("july2026"), "alltime"/"all"/"total", or "monthly" / "monthly2026" for a month-by-month breakdown. Defaults to the current channel.',
 	usage: 'hoursstreamedcategories [channel] [year | month<year> | alltime | monthly[year]]',
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		const display = msg.displayName;
 		const now = new Date();
@@ -52,7 +53,7 @@ module.exports = {
 		const where = own ? 'this channel' : `#${channel}`;
 		const userId = await streamData.fetchUserId(channel);
 		if (!userId) {
-			return { text: `@${display}, no Twitch account named "${channel}" exists.` };
+			return `@${display}, no Twitch account named "${channel}" exists.`;
 		}
 
 		const year = monthSpec?.year ?? explicitYear ?? now.getUTCFullYear();
@@ -87,7 +88,7 @@ module.exports = {
 			}
 
 			if (lines.length === 0) {
-				return { text: `@${display}, no tracked hours for ${where} in ${year} — either tracking just started, or that's not a channel I watch.` };
+				return `@${display}, no tracked hours for ${where} in ${year} — either tracking just started, or that's not a channel I watch.`;
 			}
 
 			lines[lines.length - 1] += `${await trackingNote(year)} /// [${Math.round(totalSeconds / 3600)}h TOTAL]`;
@@ -104,9 +105,7 @@ module.exports = {
 		const label = allTime ? 'all-time' : monthSpec ? monthSpec.label : String(year);
 		const parts = formatCategoryParts(toMinutes(rows));
 		if (parts.length === 0) {
-			return {
-				text: `@${display}, no tracked hours for ${where}${allTime ? '' : ` in ${label}`} — either tracking just started, or that's not a channel I watch.`,
-			};
+			return `@${display}, no tracked hours for ${where}${allTime ? '' : ` in ${label}`} — either tracking just started, or that's not a channel I watch.`;
 		}
 
 		// ninou2, 23.10.2026: "@ninou2 has streamed ALLTIME (2023-2026)" - erstes und letztes Jahr, bei nur einem Jahr nur das
@@ -136,6 +135,8 @@ module.exports = {
 		return await replyInChunks(msg, chunks);
 	},
 };
+
+module.exports = { command };
 
 /** Wie sb-v2: Kopfzeile nur in der ersten Nachricht, keinen Eintrag zerreissen */
 const packCategoryLines = (head, lines, separator) => {

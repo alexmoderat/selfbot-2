@@ -14,14 +14,14 @@ const CATEGORY_LABELS = {
 };
 const CATEGORY_FLAGS = Object.keys(CATEGORY_LABELS);
 
-module.exports = {
+const command = {
 	name: 'monitor',
 	aliases: ['addmonitor', 'addscammer'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Manually adds a user to the scammer/bot monitor.',
 	usage: `monitor <user> --<${CATEGORY_FLAGS.join('|')}> [note]`,
-	flags: ['mod'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [targetRaw, ...rest] = msg.args;
 		const display = msg.displayName;
 		const target = (targetRaw ?? '').toLowerCase().replace(/^@/, '').trim();
@@ -32,7 +32,7 @@ module.exports = {
 			.trim();
 		const category = CATEGORY_FLAGS.find((i) => flags.has(i));
 		if (!target || !category) {
-			return { text: `@${display}, Usage: ${msg.prefix}${msg.invocation} <user> --<${CATEGORY_FLAGS.join('|')}> [note]` };
+			return `@${display}, Usage: ${msg.prefix}${msg.invocation} <user> --<${CATEGORY_FLAGS.join('|')}> [note]`;
 		}
 
 		// Notiz nur anhaengen, wenn sie etwas Neues sagt - sonst kam "Scam: Scam" heraus
@@ -50,6 +50,8 @@ module.exports = {
 			created: new Date(),
 		});
 
-		return { text: `@${display}, ${target} added to the monitor: "${label}"` };
+		return `@${display}, ${target} added to the monitor: "${label}"`;
 	},
 };
+
+module.exports = { command };

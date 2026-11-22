@@ -34,17 +34,17 @@ const pyramidLines = (text, size) => {
 	return counts.map((i) => text.repeat(i).trimEnd());
 };
 
-module.exports = {
+const command = {
 	name: 'pyramid',
-	cooldown: 60000,
+	cooldown: { user: 60 },
+	access: { channel: 2 },
 	description: 'Creates a pyramid in chat. Only usable in chats where the bot is a VIP or a Moderator.',
 	usage: 'pyramid <text> <size>',
-	flags: ['mod'],
 	params: [
 		{ name: 'delay', type: 'number' },
 		{ name: 'wait', type: 'boolean' },
 	],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const args = [...msg.args];
 		if (!msg.channelData) {
 			return {
@@ -135,5 +135,7 @@ module.exports = {
 		};
 	},
 };
+
+module.exports = { command };
 
 Object.assign(module.exports, { lineDelay, channelLockRemaining, pyramidLines });

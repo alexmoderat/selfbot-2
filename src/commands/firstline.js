@@ -1,8 +1,9 @@
 // Supibots commands/firstline (alexmoderat, 23.10.2026: Supibot-Modell fuer Chat-Logs)
-module.exports = {
+const command = {
 	name: 'firstline',
 	aliases: ['fl'],
-	cooldown: 5000,
+	cooldown: { user: 5 },
+	access: { channel: 0 },
 	description: "Posts the target user's first chat line in the context of the current or a specified channel, and the date they sent it.",
 	usage: 'firstline [user] [channel:name] [textOnly:true]',
 	flags: ['external-input', 'mention', 'opt-out', 'pipe'],
@@ -10,7 +11,7 @@ module.exports = {
 		{ name: 'channel', type: 'string' },
 		{ name: 'textOnly', type: 'boolean' },
 	],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [user] = msg.args;
 		const { channel } = msg.params;
 		if (!msg.channelData && !channel) {
@@ -63,11 +64,11 @@ module.exports = {
 		}
 
 		if (msg.params.textOnly) {
-			return { text: text };
+			return text;
 		}
 
 		const prefix = targetUser.id === msg.sender.id ? 'Your' : "That user's";
-		return { text: `${prefix} first message in ${channelArticle} channel according to my data was (${bot.Utils.timeDelta(posted)}): ${text}` };
+		return `${prefix} first message in ${channelArticle} channel according to my data was (${bot.Utils.timeDelta(posted)}): ${text}`;
 	},
 	dynamicDescription: (prefix) => [
 		"Posts the target user's first chat line, according to the bot's data - this might not always be 100% accurate.",
@@ -76,3 +77,5 @@ module.exports = {
 		`<code>${prefix}fl textOnly:true</code> - only the message, without the date and the command's text.`,
 	],
 };
+
+module.exports = { command };

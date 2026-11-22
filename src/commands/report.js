@@ -52,36 +52,36 @@ const DETAILED_REASON_MAP = {
 	harm: 'swatting',
 };
 
-module.exports = {
+const command = {
 	name: 'report',
 	aliases: ['lr'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description:
 		'Reports a user to Twitch. Reasons include: spam, harassment, hate, slurs, sexual, selfharm, terrorism, violence, gore, underage, impersonation, misinformation, harm, cheating, ban_evasion, evasion, ip, viewbot (reports the live stream for viewership tampering), fake_live (reports the live stream as a bot)',
 	usage: 'report <user> reason:<reason>',
-	flags: ['mod'],
 	params: [{ name: 'reason', type: 'string' }],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [targetRaw] = msg.args;
 		const display = msg.displayName;
 		if (!process.env.TWITCH_WEB_TOKEN) {
-			return { text: `@${display}, webToken not configured.` };
+			return `@${display}, webToken not configured.`;
 		}
 
 		const target = (targetRaw ?? '').toLowerCase().replace('@', '');
 		const input = msg.params.reason?.replace(/^["']|["']$/g, '').toLowerCase();
 		if (!input) {
-			return { text: `@${display}, Usage: ${msg.prefix}${msg.invocation} <user> reason:<reason>` };
+			return `@${display}, Usage: ${msg.prefix}${msg.invocation} <user> reason:<reason>`;
 		}
 
 		const reasonId = REPORT_REASON_ALIASES[input] ?? (VALID_REASON_IDS.has(input) ? input : null);
 		if (!reasonId) {
-			return { text: `@${display}, report failed: invalid reason. Valid reasons: ${Object.keys(REPORT_REASON_ALIASES).join(', ')}` };
+			return `@${display}, report failed: invalid reason. Valid reasons: ${Object.keys(REPORT_REASON_ALIASES).join(', ')}`;
 		}
 
 		const userInfo = await getUserInfo(target).catch(() => null);
 		if (!userInfo?.id) {
-			return { text: `@${display}, user "${target}" not found.` };
+			return `@${display}, user "${target}" not found.`;
 		}
 
 		// Livestream-Meldung: der Channel ist der des gemeldeten Users, nicht der Chat hier
@@ -111,14 +111,14 @@ module.exports = {
 			const data = await gqlAuth({ query: mutation, variables: {} });
 			const error = data.reportUserContent?.error;
 			if (error) {
-				return { text: `@${display}, report failed: ${error.__typename ?? 'unknown error'}` };
+				return `@${display}, report failed: ${error.__typename ?? 'unknown error'}`;
 			}
 		} catch (e) {
-			return { text: `@${display}, report failed: ${e.message}` };
+			return `@${display}, report failed: ${e.message}`;
 		}
 
-		return {
-			text: `@${display}, report sent. details ⇒ channelID: ${channelId} · targetUserID: ${userInfo.id} · reason: ${reasonId} · detailedReason: ${detailedReason}`,
-		};
+		return `@${display}, report sent. details ⇒ channelID: ${channelId} · targetUserID: ${userInfo.id} · reason: ${reasonId} · detailedReason: ${detailedReason}`;
 	},
 };
+
+module.exports = { command };

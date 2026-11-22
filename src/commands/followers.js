@@ -3,14 +3,14 @@ const { uploadList } = require('../token/haste.js');
 const { FOLLOWERS_CAP, fetchFollowers } = require('../token/twitch-lists.js');
 
 /** Follower eines Accounts (sb-v2): Zahl immer, Login-Liste nur, wo der Bot moddet */
-module.exports = {
+const command = {
 	name: 'followers',
 	aliases: ['fol'],
-	cooldown: 3000,
+	cooldown: { user: 3 },
+	access: { channel: 2 },
 	description: 'Follower count of an account, with login list where the bot mods.',
 	usage: 'followers [user]',
-	flags: ['mod'],
-	execute: async (client, msg) => {
+	execute: async ({ client, message: msg }) => {
 		const [target] = msg.args;
 		const display = msg.displayName;
 		const login = (target ?? msg.sender.name).replace(/^[@#]+/, '').toLowerCase();
@@ -21,25 +21,27 @@ module.exports = {
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e);
 			Logger.warn(`[followers] ${login}: ${message}`);
-			return { text: `@${display}, ${message}` };
+			return `@${display}, ${message}`;
 		}
 
 		if (!res) {
-			return { text: `@${display}, user "${login}" not found.` };
+			return `@${display}, user "${login}" not found.`;
 		}
 
 		const count = res.total.toLocaleString('en-US');
 		if (res.names.length === 0) {
 			// Kein Fehler: die Liste gibt es nur fuer Moderatoren des Channels
-			return { text: `@${display}, ${login}: ${count} follower(s)` };
+			return `@${display}, ${login}: ${count} follower(s)`;
 		}
 
 		const capped = res.names.length >= FOLLOWERS_CAP ? ` (latest ${FOLLOWERS_CAP})` : '';
 		try {
 			const url = await uploadList(`Followers ${login} (latest first)`, res.names);
-			return { text: `@${display}, ${login}: ${count} follower(s)${capped} — ${url}` };
+			return `@${display}, ${login}: ${count} follower(s)${capped} — ${url}`;
 		} catch {
-			return { text: `@${display}, ${login}: ${count} follower(s)` };
+			return `@${display}, ${login}: ${count} follower(s)`;
 		}
 	},
 };
+
+module.exports = { command };
