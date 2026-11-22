@@ -45,3 +45,13 @@ test('Lange Viewer-Liste: mehrere Nachrichten statt Link, keine ueber dem Limit,
 	assert.deepEqual(messages.join(' // ').replace('@ninou2, head : ', '').split(' // '), items);
 	assert.deepEqual(chunkMessages('h : ', ['@a [1]', '@b [2]'], ' // ', 480), ['h : @a [1] // @b [2]']);
 });
+
+test('!wil/!wilb/!wilbv: mehrere Nachrichten werden nacheinander gesendet, eine kommt als Antwort', async () => {
+	const { replyMessages } = require('../src/selfbot/commands/whoislivebest.js');
+	const sent = [];
+	global.bot = { Channels: { send: async (c, text) => void sent.push([c, text]) } };
+	assert.deepEqual(await replyMessages({ channelData: 'ch' }, ['one']), { text: 'one' });
+	assert.equal(sent.length, 0);
+	assert.deepEqual(await replyMessages({ channelData: 'ch' }, ['a', 'b']), { success: true, text: null });
+	assert.deepEqual(sent, [['ch', 'a'], ['ch', 'b']]);
+});

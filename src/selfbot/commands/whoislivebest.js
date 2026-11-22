@@ -1,14 +1,29 @@
 const { getRecord } = require('../util/channel-stats.js');
-const { uploadToOwnHaste } = require('../token/haste.js');
-const { formatListPage } = require('../util/list-reply.js');
+const { chunkMessages } = require('../util/list-reply.js');
 
 /**
  * Rekord an gleichzeitig live Channels (Cron live-record) mit Datum und Channels (ninou2, 18.11.2026: "a create a command
  * that save the best !wil", "AND who were live, with date", "!whoislivebest !wilb", Antwort "the most number channels
  * with the bot modded that were live at one time was recorded on 13 november 2025 with 13 channel : @ @ @ their @").
- * Passt die Liste nicht in eine Nachricht, kommt sie als Link (alexmoderat, 24.10.2026).
+ * Passt die Liste nicht in eine Nachricht, auf mehrere verteilt statt als Link (alexmoderat, 22.11.2026: "ninou mag es
+ * nicht als link", "Ja, beide auch").
  */
 const MESSAGE_LIMIT = 480;
+const MESSAGE_GAP_MS = 1_200;
+
+/** Eine Nachricht als Antwort, mehrere direkt nacheinander in den Channel */
+const replyMessages = async (msg, messages) => {
+	if (messages.length === 1) {
+		return { text: messages[0] };
+	}
+	for (const [i, text] of messages.entries()) {
+		if (i > 0) {
+			await new Promise((resolve) => setTimeout(resolve, MESSAGE_GAP_MS));
+		}
+		await bot.Channels.send(msg.channelData, text);
+	}
+	return { success: true, text: null };
+};
 
 /** 1st, 2nd, 3rd, 4th ... 11th, 12th, 13th, 21st, 22nd, 23rd ... */
 const ordinal = (n) => {
@@ -56,17 +71,8 @@ module.exports = {
 		}
 
 		const items = channels.map((i) => `@${i}`);
-		const inline = `${head} : ${items.join(' ')}`;
-		if (inline.length <= MESSAGE_LIMIT) {
-			return { text: inline };
-		}
-
-		try {
-			return { text: `${head} : ${await uploadToOwnHaste(formatListPage('Live record', items))}` };
-		} catch {
-			return { text: `${inline.slice(0, MESSAGE_LIMIT - 1)}…` };
-		}
+		return replyMessages(msg, chunkMessages(`${head} : `, items, ' ', MESSAGE_LIMIT));
 	},
 };
 
-Object.assign(module.exports, { formatRecordDate, recordHead, ordinal });
+Object.assign(module.exports, { formatRecordDate, recordHead, ordinal, replyMessages });

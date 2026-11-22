@@ -1,6 +1,6 @@
 const { getRecord } = require('../util/channel-stats.js');
 const { chunkMessages } = require('../util/list-reply.js');
-const { formatRecordDate } = require('./whoislivebest.js');
+const { formatRecordDate, replyMessages } = require('./whoislivebest.js');
 const { SEPARATOR } = require('./whoislive.js');
 
 /**
@@ -10,7 +10,6 @@ const { SEPARATOR } = require('./whoislive.js');
  * (alexmoderat, 22.11.2026: "ninou mag es nicht als link").
  */
 const MESSAGE_LIMIT = 480;
-const MESSAGE_GAP_MS = 1_200;
 
 const viewersHead = (record) =>
 	`the most total viewers of the channels with the bot that were live at one time was recorded on ${formatRecordDate(record.Achieved)} with [${record.Value} ${record.Value === 1 ? 'viewer' : 'viewers'}]`;
@@ -36,18 +35,7 @@ module.exports = {
 			return { text: head };
 		}
 
-		const messages = chunkMessages(`${head} : `, items, SEPARATOR, MESSAGE_LIMIT);
-		if (messages.length === 1) {
-			return { text: messages[0] };
-		}
-
-		for (const [i, text] of messages.entries()) {
-			if (i > 0) {
-				await new Promise((resolve) => setTimeout(resolve, MESSAGE_GAP_MS));
-			}
-			await bot.Channels.send(msg.channelData, text);
-		}
-		return { success: true, text: null };
+		return replyMessages(msg, chunkMessages(`${head} : `, items, SEPARATOR, MESSAGE_LIMIT));
 	},
 };
 

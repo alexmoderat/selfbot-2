@@ -1,12 +1,13 @@
 const { got } = require('../token/got.js');
 
-const { uploadToOwnHaste } = require('../token/haste.js');
-const { formatListPage } = require('../util/list-reply.js');
+const { chunkMessages } = require('../util/list-reply.js');
+const { replyMessages } = require('./whoislivebest.js');
 
 /**
  * Welche der eigenen Channels gerade live sind, mit Laufzeit in vollen Stunden (ninou2, 07.11.2026: "make it a command",
  * "!whoislive !wil", "make it @ the streamers and beside their @ add for how long has been [2h]", "it show only the hours").
- * Laengste Streams zuerst. Passt die Liste nicht in eine Nachricht, kommt sie als Link (alexmoderat, 24.10.2026).
+ * Laengste Streams zuerst. Passt die Liste nicht in eine Nachricht, auf mehrere verteilt statt als Link (alexmoderat,
+ * 22.11.2026: "ninou mag es nicht als link", "Ja, beide auch"); die Gesamt-Viewer am Ende der letzten.
  */
 const MESSAGE_LIMIT = 480;
 
@@ -68,16 +69,9 @@ module.exports = {
 		// ninou2, 07.11.2026: "12 channels with the bot are live! :"
 		const head = `@${display}, ${liveHead(items.length)} `;
 		const total = totalViewers(streams);
-		const inline = head + items.join(SEPARATOR) + total;
-		if (inline.length <= MESSAGE_LIMIT) {
-			return { text: inline };
-		}
-
-		try {
-			return { text: head + (await uploadToOwnHaste(formatListPage('Live channels', items))) + total };
-		} catch {
-			return { text: `${inline.slice(0, MESSAGE_LIMIT - 1)}…` };
-		}
+		const messages = chunkMessages(head, items, SEPARATOR, MESSAGE_LIMIT - total.length);
+		messages[messages.length - 1] += total;
+		return replyMessages(msg, messages);
 	},
 };
 
