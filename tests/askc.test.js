@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const gotPath = require.resolve('../src/selfbot/token/got.js');
+const gotPath = require.resolve('../src/token/got.js');
 let nextText = 'ok';
 let lastRequest = null;
 require.cache[gotPath] = {
@@ -15,9 +15,9 @@ require.cache[gotPath] = {
 		},
 	},
 };
-const ask = require('../src/selfbot/commands/ask.js');
-const askc = require('../src/selfbot/commands/askcontinue.js');
-const conversations = require('../src/selfbot/util/ask-conversations.js');
+const ask = require('../src/commands/ask.js');
+const askc = require('../src/commands/askcontinue.js');
+const conversations = require('../src/util/ask-conversations.js');
 
 const msg = (text, id = '1') => ({ displayName: 'ninou2', invocation: 'askc', args: text.split(' '), sender: { id } });
 const contentsTexts = () => lastRequest.json.contents.map((i) => `${i.role}:${i.parts[0].text}`);

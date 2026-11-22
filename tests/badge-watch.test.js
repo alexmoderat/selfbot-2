@@ -2,8 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 global.bot = global.bot ?? {};
-const { parseBadges, parseEmotes, parseEvents } = require('../src/selfbot/token/streamdatabase.js');
-const { newBadges, formatBadge, formatEmote } = require('../src/selfbot/clients/modules/crons/badge-watch.js');
+const { parseBadges, parseEmotes, parseEvents } = require('../src/token/streamdatabase.js');
+const { newBadges, formatBadge, formatEmote } = require('../src/clients/modules/crons/badge-watch.js');
 
 const page = (list) => `<html><script id="__NEXT_DATA__" type="application/json">${JSON.stringify({ props: { pageProps: { initialTwitchGlobalBadges: list } } })}</script></html>`;
 const item = (set_id, id, extra = {}) => ({ current: { set_id, version: { id, title: `T ${set_id}`, description: `D ${set_id}` } }, ...extra });
@@ -73,13 +73,13 @@ test('Aktionen: wie und bis wann', () => {
 });
 
 test('badgeAlerts ist als Channel-Eigenschaft deklariert (sonst "Unknown channel data property")', () => {
-	const { channelDataSchema, checkValue } = require('../src/selfbot/util/data-properties.js');
+	const { channelDataSchema, checkValue } = require('../src/util/data-properties.js');
 	assert.equal(channelDataSchema.badgeAlerts, 'object');
 	assert.ok(checkValue('object', { enabled: true, message: 'hi' }));
 });
 
 test('formatMany: mehrere neue in einer Sammelmeldung, lange Listen werden aufgeteilt', () => {
-	const { formatMany } = require('../src/selfbot/clients/modules/crons/badge-watch.js');
+	const { formatMany } = require('../src/clients/modules/crons/badge-watch.js');
 	const items = [
 		{ key: 'a:1', title: 'Alpha' },
 		{ key: 'b:1', title: 'Beta' },
@@ -98,7 +98,7 @@ test('formatMany: mehrere neue in einer Sammelmeldung, lange Listen werden aufge
 });
 
 test('!badgeinfo: Anzahl 1-5, Badges und Emotes gemischt, neueste zuerst', () => {
-	const { parseCount, mergeRecent, formatRecent } = require('../src/selfbot/commands/badgeinfo.js');
+	const { parseCount, mergeRecent, formatRecent } = require('../src/commands/badgeinfo.js');
 	assert.equal(parseCount([]), 1);
 	assert.equal(parseCount(['3']), 3);
 	assert.equal(parseCount(['9']), 5);
@@ -126,7 +126,7 @@ test('!badgeinfo: Anzahl 1-5, Badges und Emotes gemischt, neueste zuerst', () =>
 test('badge-history: neueste zuerst, nach KEEP abgeschnitten', async () => {
 	const store = new Map();
 	global.bot.Cache = { getJSON: async (k) => store.get(k) ?? null, setJSON: async (k, v) => store.set(k, v) };
-	const { recordRecent, getRecent, KEEP } = require('../src/selfbot/util/badge-history.js');
+	const { recordRecent, getRecent, KEEP } = require('../src/util/badge-history.js');
 	await recordRecent('badge', [{ title: 'A' }, { title: 'B' }], '2026-11-13T10:00:00.000Z');
 	await recordRecent('badge', [{ title: 'C' }], '2026-11-13T11:00:00.000Z');
 	assert.deepEqual(
@@ -143,7 +143,7 @@ test('badge-history: neueste zuerst, nach KEEP abgeschnitten', async () => {
 });
 
 test('Tweets: parseTweets (ohne angehefteten und t.co-Links) und parseGlobalTweet', () => {
-	const { parseTweets, parseGlobalTweet } = require('../src/selfbot/token/streamdatabase.js');
+	const { parseTweets, parseGlobalTweet } = require('../src/token/streamdatabase.js');
 	const body = {
 		data: {
 			timeline: [
@@ -167,14 +167,14 @@ test('Tweets: parseTweets (ohne angehefteten und t.co-Links) und parseGlobalTwee
 test('badge-history: wasAnnounced/markAnnounced', async () => {
 	const store = new Map();
 	global.bot.Cache = { getJSON: async (k) => store.get(k) ?? null, setJSON: async (k, v) => store.set(k, v) };
-	const { wasAnnounced, markAnnounced } = require('../src/selfbot/util/badge-history.js');
+	const { wasAnnounced, markAnnounced } = require('../src/util/badge-history.js');
 	assert.equal(await wasAnnounced('added:badge:x'), false);
 	await markAnnounced('added:badge:x');
 	assert.equal(await wasAnnounced('added:badge:x'), true);
 });
 
 test('!badgeinfo: Verfuegbarkeits-Tweet mit Link', () => {
-	const { mergeRecent, formatRecent } = require('../src/selfbot/commands/badgeinfo.js');
+	const { mergeRecent, formatRecent } = require('../src/commands/badgeinfo.js');
 	const at = (min) => new Date(Date.now() - min * 60_000).toISOString();
 	const tweet = { title: 'Twitch global badge now available: Jordan', link: 'https://x.com/StreamDatabase/status/1', at: at(10) };
 	const merged = mergeRecent([{ title: 'B', at: at(60) }], [], 2, [tweet]);
@@ -187,7 +187,7 @@ test('!badgeinfo: Verfuegbarkeits-Tweet mit Link', () => {
 });
 
 test('Zeitfenster: [AVAILABLE!] solange offen, [ENDED!] danach', () => {
-	const { parseEventEnd, eventStatus } = require('../src/selfbot/token/streamdatabase.js');
+	const { parseEventEnd, eventStatus } = require('../src/token/streamdatabase.js');
 	const text = 'Twitch global badge now available: Jordan Objective - Watch 15 minutes. The event ends November 13, 2026 at 21:59. (UTC) Good luck!';
 	assert.equal(parseEventEnd(text), Date.parse('2026-11-13T21:59:00Z'));
 	assert.equal(eventStatus(text, Date.parse('2026-11-13T21:00:00Z')), '[AVAILABLE!]');
@@ -196,14 +196,14 @@ test('Zeitfenster: [AVAILABLE!] solange offen, [ENDED!] danach', () => {
 });
 
 test('!badgeinfo: Tweet mit Status hinter dem Text', () => {
-	const { formatRecent } = require('../src/selfbot/commands/badgeinfo.js');
+	const { formatRecent } = require('../src/commands/badgeinfo.js');
 	const title = 'Twitch global badge now available: Jordan The event ends November 13, 2000 at 21:59. (UTC) Good luck!';
 	const entry = { kind: 'tweet', title, link: 'https://x.com/s/1', at: new Date(Date.now() - 60_000).toISOString() };
 	assert.equal(formatRecent([entry]), `Last global Twitch info: ${title} [ENDED!] https://x.com/s/1 (1min ago)`);
 });
 
 test('Zeitfenster aus den Aktionen: parseWindows und activeWindows', () => {
-	const { parseWindows, activeWindows } = require('../src/selfbot/token/streamdatabase.js');
+	const { parseWindows, activeWindows } = require('../src/token/streamdatabase.js');
 	const json = {
 		data: [
 			{
@@ -230,14 +230,14 @@ test('Zeitfenster aus den Aktionen: parseWindows und activeWindows', () => {
 	assert.equal(activeWindows(windows, Date.parse('2026-11-13T15:59:00Z')).length, 0);
 	assert.equal(activeWindows(windows, Date.parse('2026-11-13T16:00:00Z')).length, 1);
 	assert.equal(activeWindows(windows, Date.parse('2026-11-15T16:00:00Z')).length, 0);
-	const { formatWindow } = require('../src/selfbot/clients/modules/crons/event-watch.js');
+	const { formatWindow } = require('../src/clients/modules/crons/event-watch.js');
 	assert.equal(formatWindow(windows[0]), 'Twitch global badge now available: K/DA Fan [watch 30 min] The event ends November 15, 2026 at 15:59. (UTC)');
-	const { eventStatus } = require('../src/selfbot/token/streamdatabase.js');
+	const { eventStatus } = require('../src/token/streamdatabase.js');
 	assert.equal(eventStatus(formatWindow(windows[0]), Date.parse('2026-11-14T00:00:00Z')), '[AVAILABLE!]');
 });
 
 test('Raid Notify: Zeitpunkt der Erinnerung wird auf -30 bis 120 Sekunden begrenzt (0 = beim Start, negativ = danach)', () => {
-	const { clampLead, MIN_LEAD_S, MAX_LEAD_S } = require('../src/selfbot/clients/modules/chat/raid-notifier.js');
+	const { clampLead, MIN_LEAD_S, MAX_LEAD_S } = require('../src/clients/modules/chat/raid-notifier.js');
 	assert.equal(MIN_LEAD_S, -30);
 	assert.equal(MAX_LEAD_S, 120);
 	assert.equal(clampLead(undefined), 20);
@@ -256,14 +256,14 @@ test('event-watch: Tweet-Notify-Abonnenten bekommen eigenen Text und Anzahl, Bad
 	const sent = [];
 	const channel = { id: 70, name: 'ninou2', Platform: 'twitch', mode: 'Write' };
 	const redis = { store: new Map() };
-	const windows = require('../src/selfbot/token/streamdatabase.js');
+	const windows = require('../src/token/streamdatabase.js');
 	const origFetch = windows.fetchWindows;
 	const origActive = windows.activeWindows;
 	let active = [];
 	windows.fetchWindows = async () => [];
 	windows.activeWindows = () => active;
-	delete require.cache[require.resolve('../src/selfbot/clients/modules/crons/event-watch.js')]; // damit die Stubs greifen
-	const { runEventWatch } = require('../src/selfbot/clients/modules/crons/event-watch.js');
+	delete require.cache[require.resolve('../src/clients/modules/crons/event-watch.js')]; // damit die Stubs greifen
+	const { runEventWatch } = require('../src/clients/modules/crons/event-watch.js');
 	const saved = global.bot;
 	global.bot = {
 		Cache: { getJSON: async (k) => redis.store.get(k) ?? null, setJSON: async (k, v) => void redis.store.set(k, v) },
@@ -286,7 +286,7 @@ test('event-watch: Tweet-Notify-Abonnenten bekommen eigenen Text und Anzahl, Bad
 });
 
 test('Raid Notify: Test laeuft in echter Zeit wie ein Raid mit 120 s Countdown (ninou2, 20.11.2026)', () => {
-	const { testSchedule } = require('../src/selfbot/clients/modules/chat/raid-notifier.js');
+	const { testSchedule } = require('../src/clients/modules/chat/raid-notifier.js');
 	const items = [
 		{ id: 3, on: true, seconds: -4, times: 1 },
 		{ id: 1, on: true, seconds: 120, times: 3 },

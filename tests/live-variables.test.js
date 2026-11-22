@@ -1,8 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const lv = require('../src/selfbot/util/live-variables.js');
-const { splitMessages } = require('../src/selfbot/util/custom-commands.js');
+const lv = require('../src/util/live-variables.js');
+const { splitMessages } = require('../src/util/custom-commands.js');
 
 test('Rekord-Datum "the 19th november 2026 at 20:30 UTC" (ninou2, 19.11.2026)', () => {
 	assert.equal(lv.formatRecordDate('2026-11-19T20:30:00.000Z'), 'the 19th november 2026 at 20:30 UTC');
@@ -23,7 +23,7 @@ test('Live-Liste: laengste zuerst, Stunden bzw. Minuten', () => {
 });
 
 test('resolveVariables: Wil-Text wie der alte !wil, Rekord-Variablen, unbekannte bleiben stehen', async () => {
-	const stats = require('../src/selfbot/util/channel-stats.js');
+	const stats = require('../src/util/channel-stats.js');
 	const realGet = stats.getRecord;
 	stats.getRecord = async (name) =>
 		name === 'live_channels'
@@ -55,7 +55,7 @@ test('Custom Command: lange Antwort auf mehrere Nachrichten, an " // " getrennt,
 });
 
 test('Cron live-record speichert die Gesamt-Viewer mit Channels, meiste zuerst', async () => {
-	const stats = require('../src/selfbot/util/channel-stats.js');
+	const stats = require('../src/util/channel-stats.js');
 	const saved = [];
 	const realUpdate = stats.updateRecordIfHigher;
 	const realFetch = lv.fetchLiveStreams;
@@ -66,8 +66,8 @@ test('Cron live-record speichert die Gesamt-Viewer mit Channels, meiste zuerst',
 	];
 	global.bot = { Channels: { getJoinable: () => [{ twitchId: '1' }, { twitchId: '2' }, {}] } };
 	try {
-		delete require.cache[require.resolve('../src/selfbot/clients/modules/crons/live-record.js')];
-		await require('../src/selfbot/clients/modules/crons/live-record.js').recordLiveViewers();
+		delete require.cache[require.resolve('../src/clients/modules/crons/live-record.js')];
+		await require('../src/clients/modules/crons/live-record.js').recordLiveViewers();
 	} finally {
 		stats.updateRecordIfHigher = realUpdate;
 		lv.fetchLiveStreams = realFetch;
@@ -99,7 +99,7 @@ test('Bedingungen {if}/{else}, verschachtelt, = und !=; Werte werden nie als Vor
 });
 
 test('Stream-Infos: live, offline, nicht gefunden, Fehler; Titel mit "{if" bleibt Text', async () => {
-	const si = require('../src/selfbot/util/stream-info.js');
+	const si = require('../src/util/stream-info.js');
 	const real = si.getStreamInfo;
 	const tpl =
 		'{if si_kind=live}L {si_name} {si_viewers} {si_title}{if si_bitrate} {si_bitrate}k{/if}{/if}{if si_kind=offline}O {si_offline}{if si_last_title} t:{si_last_title}{/if}{/if}{if si_kind=notfound}N {si_target}{/if}{if si_kind=error}E {si_error}{/if}';
@@ -118,7 +118,7 @@ test('Stream-Infos: live, offline, nicht gefunden, Fehler; Titel mit "{if" bleib
 });
 
 test('!ll: Standardvorlage mit gestubbten Daten (live, notfound, multi)', async () => {
-	const ld = require('../src/selfbot/util/lastlive-data.js');
+	const ld = require('../src/util/lastlive-data.js');
 	const real = ld.getLastLive;
 	const render = async (data) => {
 		ld.getLastLive = async () => data;
@@ -150,7 +150,7 @@ test('!ll: Standardvorlage mit gestubbten Daten (live, notfound, multi)', async 
 });
 
 test('user: Vorlagen fuer notfound, banned, ok (detailliert und kompakt) mit gestubbtem GQL', async () => {
-	const gql = require('../src/selfbot/token/gql.js');
+	const gql = require('../src/token/gql.js');
 	const real = { p: gql.getUserProfile, a: gql.isUsernameAvailable, r: gql.getChatRestrictedReasons };
 	gql.isUsernameAvailable = async () => true;
 	gql.getChatRestrictedReasons = async () => ['CHANNEL_HAS_CONSEQUENCE'];
@@ -177,8 +177,8 @@ test('user: Vorlagen fuer notfound, banned, ok (detailliert und kompakt) mit ges
 });
 
 test('viewerstreak/stalk: Variablen mit gestubbten Daten, Flags des Custom-stalk', async () => {
-	const vsm = require('../src/selfbot/util/viewerstreak-data.js');
-	const sm = require('../src/selfbot/util/stalk-data.js');
+	const vsm = require('../src/util/viewerstreak-data.js');
+	const sm = require('../src/util/stalk-data.js');
 	const real = { v: vsm.getViewerStreak, s: sm.getStalk };
 	const calls = [];
 	vsm.getViewerStreak = async (input) => (calls.push(input), { kind: 'ok', login: 'foo', channel: 'ninou2', value: '12', seen: 'the 6th october 2026', best: ' [best]' });
@@ -199,7 +199,7 @@ test('viewerstreak/stalk: Variablen mit gestubbten Daten, Flags des Custom-stalk
 });
 
 test('topgames/topstreams: Variablen und Vorlage', async () => {
-	const tm = require('../src/selfbot/util/top-data.js');
+	const tm = require('../src/util/top-data.js');
 	const real = { g: tm.getTopGames, s: tm.getTopStreams };
 	const seen = [];
 	tm.getTopGames = async () => 'A (10k), B (5k)';

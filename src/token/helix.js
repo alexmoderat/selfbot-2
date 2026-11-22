@@ -1,79 +1,123 @@
-const got = require('got');
-const fetch = require('node-fetch');
-const { twitch } = require('../../config.json');
-const { racism, slurs } = require('../misc/regex');
-const { shortenText } = require('../misc/utility');
+const { request } = require('./http.js');
 
-const helix = got.extend({
-	prefixUrl: 'https://api.twitch.tv/helix/',
-	throwHttpErrors: false,
-	responseType: 'json',
-	headers: {
-		'Client-ID': twitch.client_id,
-		Authorization: `Bearer ${twitch.access_token}`,
-	},
-});
+// Twitch-Tokens und Helix-Aufrufe (bisher platforms/twitch-utils.ts + gots/helix, gots/helix-app)
 
-exports.ChangeColor = async (color) => {
-	const urlEncodeHex = (hex) => {
-		return hex.replace('#', '%23');
+const APP_TOKEN_KEY = 'twitch-app-token';
+const USER_TOKEN_KEY = 'twitch-user-token';
+const REFRESH_TOKEN_KEY = 'twitch-refresh-token';
+const HELIX = 'https://api.twitch.tv/helix/';
+
+const requireEnv = (name) => {
+	const value = process.env[name];
+	if (!value) {
+		throw new Error(`Missing env value ${name}`);
+	}
+	return value;
+};
+
+const requestToken = async (params) => {
+	const response = await request({
+		method: 'POST',
+		url: 'https://id.twitch.tv/oauth2/token',
+		searchParams: { client_id: requireEnv('TWITCH_CLIENT_ID'), client_secret: requireEnv('TWITCH_CLIENT_SECRET'), ...params },
+	});
+	if (!response.ok) {
+		throw new Error(`Twitch token request failed (${response.statusCode}, ${params.grant_type})`);
+	}
+	return response.body;
+};
+
+let appTokenPromise = null;
+const getAppToken = async () => {
+	const cached = await bot.Cache.getJSON(APP_TOKEN_KEY);
+	if (cached) {
+		return cached;
+	}
+	appTokenPromise ??= (async () => {
+		const body = await requestToken({ grant_type: 'client_credentials' });
+		await bot.Cache.setJSON(APP_TOKEN_KEY, body.access_token, Math.max(60, body.expires_in - 300) * 1000);
+		return body.access_token;
+	})().finally(() => {
+		appTokenPromise = null;
+	});
+	return await appTokenPromise;
+};
+
+/**
+ * Neue Werte in .env gewinnen gegen den in Redis gespeicherten Refresh-Token: Redis merkt sich, aus welchem
+ * .env-Token der Stand stammt (Supibot-Falle: dort gewinnt Redis fuer immer)
+ */
+const resolveRefreshToken = (envToken, stored) => (stored && stored.source === envToken ? stored.current : envToken);
+
+// Fester Bot-Token ohne Refresh (alexmoderat, 09.11.2026). Er gehoert zu einer anderen App, Helix braucht dann deren Client-ID.
+const getUserClientId = () => process.env.TWITCH_USER_CLIENT_ID || requireEnv('TWITCH_CLIENT_ID');
+
+let userTokenPromise = null;
+const getUserToken = async () => {
+	if (process.env.TWITCH_USER_TOKEN) {
+		return process.env.TWITCH_USER_TOKEN;
+	}
+
+	const cached = await bot.Cache.getJSON(USER_TOKEN_KEY);
+	if (cached) {
+		return cached;
+	}
+	userTokenPromise ??= (async () => {
+		const envToken = requireEnv('TWITCH_REFRESH_TOKEN');
+		const stored = await bot.Cache.getJSON(REFRESH_TOKEN_KEY);
+		const refreshToken = resolveRefreshToken(envToken, stored);
+
+		const body = await requestToken({ grant_type: 'refresh_token', refresh_token: refreshToken });
+		if (body.refresh_token && body.refresh_token !== refreshToken) {
+			await bot.Cache.setJSON(REFRESH_TOKEN_KEY, { source: envToken, current: body.refresh_token });
+		}
+		await bot.Cache.setJSON(USER_TOKEN_KEY, body.access_token, Math.max(60, body.expires_in - 300) * 1000);
+		return body.access_token;
+	})().finally(() => {
+		userTokenPromise = null;
+	});
+	return await userTokenPromise;
+};
+
+/** Neuer Refresh-Token des Bot-Kontos (Web-Login /bot-auth), alter Access-Token wird verworfen */
+const storeBotRefreshToken = async (refreshToken) => {
+	await bot.Cache.setJSON(REFRESH_TOKEN_KEY, { source: requireEnv('TWITCH_REFRESH_TOKEN'), current: refreshToken });
+	await bot.Cache.setJSON(USER_TOKEN_KEY, null);
+};
+
+const invalidateUserToken = () => bot.Cache.setJSON(USER_TOKEN_KEY, null);
+const invalidateAppToken = () => bot.Cache.setJSON(APP_TOKEN_KEY, null);
+
+/**
+ * Helix-Aufruf; mit app: true per App-Token, sonst per User-Token des Bots. Bei 401 einmal neuer Token.
+ * @returns {Promise<{ ok: boolean, statusCode: number, body: any, headers: Headers }>}
+ */
+const helix = async (path, options = {}) => {
+	const { app = false, ...rest } = options;
+	const run = async () => {
+		const token = app ? await getAppToken() : await getUserToken();
+		return await request({
+			...rest,
+			url: path.startsWith('http') ? path : HELIX + path,
+			headers: { 'Client-Id': app ? requireEnv('TWITCH_CLIENT_ID') : getUserClientId(), Authorization: `Bearer ${token}`, ...rest.headers },
+		});
 	};
 
-	await helix.put(`chat/color?user_id=790623318&color=${urlEncodeHex(color === null ? '#FF69B4' : color)}`);
+	let response = await run();
+	if (response.statusCode === 401) {
+		await (app ? invalidateAppToken() : invalidateUserToken());
+		response = await run();
+	}
+	return response;
 };
 
-exports.GetGames = async (name) => {
-	const { data } = await helix.get(`games?name=${name}`).json();
-	return data;
-};
-
-exports.GetFirstStreams = async (number, game) => {
-	const { data } = await helix.get(`streams?first=${number}&game_id=${game}`).json();
-	return data;
-};
-
-exports.Announce = async (channel, args) => {
-	args = shortenText(args, 490);
-	if (racism.test(args) || slurs.test(args)) return;
-	await helix
-		.post(`chat/announcements?broadcaster_id=${channel}&moderator_id=790623318`, {
-			json: {
-				message: args,
-				color: 'purple',
-			},
-		})
-		.json();
-};
-
-exports.UserInfo = async (user) => {
-	const { data } = await helix.get(`users?login=${user}`).json();
-	return data;
-};
-
-exports.GetClips = async (channel) => {
-	const { data } = await helix.get(`clips?broadcaster_id=${channel}`).json();
-	return data;
-};
-
-exports.GetStreams = async (channel, Boolean) => {
-	// true = login, false = id
-	const { data } = await helix.get(`streams?user_${Boolean ? 'login' : 'id'}=${channel}`).json();
-	return data;
-};
-
-exports.GetTopGames = async (amount) => {
-	const { data } = await helix.get(`games/top?first=${amount}`).json();
-	return data;
-};
-
-exports.getTwitchProfile = async (accessToken, clientID, userID) => {
-	const { data } = await fetch(`https://api.twitch.tv/helix/users${userID ? `?id=${userID}` : ''}`, {
-		method: 'GET',
-		headers: {
-			'Client-ID': clientID,
-			Accept: 'application/vnd.twitchtv.v5+json',
-			Authorization: 'Bearer ' + accessToken,
-		},
-	}).then((res) => res.json());
-	return data;
+module.exports = {
+	getAppToken,
+	getUserToken,
+	getUserClientId,
+	resolveRefreshToken,
+	storeBotRefreshToken,
+	invalidateUserToken,
+	invalidateAppToken,
+	helix,
 };

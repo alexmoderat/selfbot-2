@@ -1,7 +1,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const got = require('got');
-const { isRequestError } = require('../src/selfbot/util/crash-guard.js');
+const { isRequestError } = require('../src/util/crash-guard.js');
 
 describe('crash-guard', () => {
 	it('erkennt got-Fehler (Host existiert nicht) als Request-Fehler', async () => {

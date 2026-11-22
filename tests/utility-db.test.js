@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { numbered } = require('../src/selfbot/database/utility.js');
+const { numbered } = require('../src/database/utility.js');
 
 test('utility-db: ? wird zu $1, $2, ... (ausser in Zeichenketten)', () => {
 	assert.equal(numbered('SELECT 1 FROM t WHERE a = ? AND b = ? LIMIT ?'), 'SELECT 1 FROM t WHERE a = $1 AND b = $2 LIMIT $3');

@@ -1,9 +1,16 @@
-module.exports = {
-	invisChars: new RegExp(/[\u034f\u2800\u{E0000}\u180e\ufeff\u2000-\u200d\u206D]/gu),
-	racism: new RegExp(/(?:(?:\b(?<![-=\.])|monka)(?:[Nnñ]|[Ii7]V)|[\/|]\\[\/|])[\s\.]*?[liI1y!j\/|]+[\s\.]*?(?:[GgbB6934Q🅱qğĜƃ၅5\*][\s\.]*?){2,}(?!arcS|l|Ktlw|ylul|ie217|64|\d? ?times)/),
-	accents: new RegExp(/[\u0300-\u036f]/g),
-	punctuation: new RegExp(/[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]/g),
-	nonEnglish: new RegExp(/[^\x00-\x7F]+/gu),
-	slurs: /amerykaniec|angol|arabus|asfalt|bambus|brudas|brudaska|Brytol|chachoł|chinol|ciapaty|czarnuch|fryc|gudłaj|helmut|japoniec|kacap|kacapka|kebab|kitajec|koszerny|kozojebca|kudłacz|makaroniarz|małpa|Moskal|negatyw|parch|pejsaty|rezun|Rusek|Ruska|skośnooki|syfiara|syfiarz|szkop|szmatogłowy|szuwaks|szwab|szwabka|turas|wietnamiec|żabojad|żółtek|żydek|Żydzisko|zabojad|zoltek|zydek|zydzisko|matoglowy|chachol|szuwak|tura|fag|f@g|f@ag|faag|f@gg|fagg|f@gg0|f@ggo/imsu,
-	test: new RegExp(/^[A-Z_\d]{4,25}$/i),
-};
+// Gemeinsame Regexes (bisher utils/regexes.ts)
+
+const asciiArtRegex = /([\u2591\u2588\u2500\u2580\u2593\u2584\u2592])/g;
+const brailleRegex = /[\u2588\u2584\u2580\u2591\u2592\u2593\u2802-\u28FF]/g;
+const emojiRegex =
+	/[\u{1F300}-\u{1F5FF}\u{1F900}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F191}-\u{1F251}\u{1F004}\u{1F0CF}\u{1F170}-\u{1F171}\u{1F17E}-\u{1F17F}\u{1F18E}\u{3030}\u{2B50}\u{2B55}\u{2934}-\u{2935}\u{2B05}-\u{2B07}\u{2B1B}-\u{2B1C}\u{3297}\u{3299}\u{303D}\u{00A9}\u{00AE}\u{2122}\u{23F3}\u{24C2}\u{23E9}-\u{23EF}\u{25B6}\u{23F8}-\u{23FA}]/gu;
+const linkRegex = /(https?:\/\/)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&/=]*)/gi;
+const whitespaceRegex =
+	/[\u0000-\u0009\u000B-\u000C\u000E-\u001F\u0080-\u00A0\u00AD\u034F\u0600-\u0605\u061C\u061D\u070F\u08E2\u115F\u1160\u13FE-\u13FF\u17B4-\u17B5\u180B\u180F\u2000-\u200C\u200D\u200E\u200F\u2028-\u202F\u205F\u2060-\u206F\u2D26\u2800\u3000\u3164\uE000-\uF8FF\uFE00-\uFE0E\uFE20-\uFE2F\uFEFF\uFFA0\uFFF9-\uFFFB\uFFFD-\uFFFF\u{110BD}\u{110CD}\u{13430}-\u{13438}\u{1BCA0}-\u{1BCA3}\u{1D173}-\u{1D17A}\u{E0000}\u{E0001}\u{E0003}-\u{E007F}\u{E0100}-\u{E01EF}\u{F0000}-\u{FFFFF}\u{100000}-\u{10FFFF}]/gu;
+/** Unsichtbare Zeichen, die Chat-Clients an Nachrichten haengen (7TV, Chatterino) */
+const invisChars = /[\u034F\u2800\u{E0000}\u180E\uFEFF\u2000-\u200D\u206D]/gu;
+
+/** Zeichen, das in einen Namen gesetzt wird, damit der User nicht gepingt wird */
+const TWITCH_ANTIPING_CHARACTER = '\u034F';
+
+module.exports = { asciiArtRegex, brailleRegex, emojiRegex, linkRegex, whitespaceRegex, invisChars, TWITCH_ANTIPING_CHARACTER };

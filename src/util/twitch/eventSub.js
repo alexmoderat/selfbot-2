@@ -1,108 +1,209 @@
-const { twitch } = require('../../../config.json');
+const WebSocket = require('ws');
 
-const RWS = require('reconnecting-websocket');
-const WS = new RWS('wss://eventsub-beta.wss.twitch.tv/ws', [], {
-	WebSocket: require('ws'),
-	startedClosed: true,
-});
-const fetch = require('node-fetch');
-const { Logger, LogLevel } = require('../../misc/logger');
-const eventSubEvents = require('./eventSubEvents');
+const { helix } = require('../../token/helix.js');
+const { Logger, LogLevel } = require('../../misc/logger.js');
+const { isServed } = require('../../clients/JoinChannels.js');
+const eventSubEvents = require('./eventSubEvents.js');
 
-WS.onopen = () => {
-	Logger.log(LogLevel.INFO, 'Connected to Twitch EventSub');
-};
+/**
+ * EventSub ueber WebSocket wie DontAddThisBot (src/util/twitch/eventSub.js), bisher nur channel.follow.
+ * channel.follow v2 braucht moderator_user_id + moderator:read:followers -> nur Channels mit Mode Moderator.
+ * Abos haengen an der Session: nach einem Verbindungsabbruch sind sie weg und werden neu angelegt; bei
+ * session_reconnect wandern sie mit auf die neue URL. Twitch: hoechstens 300 Abos je WebSocket.
+ */
+const EVENTSUB_URL = 'wss://eventsub.wss.twitch.tv/ws?keepalive_timeout_seconds=30';
+const MAX_SUBSCRIPTIONS = 300;
+const TYPES = [{ type: 'channel.follow', version: '2' }];
 
-WS.onmessage = async ({ data }) => {
-	const parsed = JSON.parse(data);
-	const { payload, metadata } = parsed;
-	if (payload.session?.status == 'connected') {
-		const { data } = await getEventSubs();
-		if (data?.length == 0) {
-			const testIDS = ['148554088', '206378648'];
-			for (const id of testIDS) {
-				await createEventSub('channel.follow', id, payload.session.id).then((response) => {
-					if (response?.error) return Logger.log(LogLevel.ERROR, `Error creating EventSub: ${response?.message}`);
-					response?.data.forEach((sub) => {
-						const { id, status, type, version, condition, transport } = sub;
-						Logger.log(LogLevel.DEBUG, `Created EventSub: ${type} for ${condition.broadcaster_user_id}`);
-					});
-				});
-			}
-		} else {
-			Logger.log(LogLevel.WARN, `EventSubs already exist: ${data.map((sub) => `${sub.type} | ${sub.condition.broadcaster_user_id}`).join(', ')}`);
-			for (const topic of data) {
-				await deleteEventSub(topic.id);
-				Logger.log(LogLevel.WARN, `Deleted EventSub: ${topic.id}`);
-			}
-		}
-	}
+let socket = null;
+let sessionId = null;
+let watchdog = null;
+let reconnectDelay = 1000;
+let stopped = false;
+const subscriptions = new Map(); // twitchId -> Map(type -> subscriptionId)
+const seenMessages = new Set();
 
-	if (payload.event) {
-		const { type, condition, transport, id, status } = payload.subscription;
-		handleWSMsg(payload.event, condition.broadcaster_user_id, type, id, status, transport.session_id);
-	}
-};
+/** Gehoert der Channel ins EventSub? (Mod-Rechte noetig, eigener Channel immer) */
+const wantsChannel = (channel) => Boolean(channel?.twitchId) && isServed(channel.name) && (channel.mode === 'Moderator' || (channel.twitchId === bot.Twitch.selfId && channel.mode !== 'Inactive'));
 
-const handleWSMsg = (msg = {}, channel, type, id, status, session_id) => {
-	const event = eventSubEvents[type];
-	if (event) event(msg, type, channel, id, status, session_id);
-};
+const subscriptionCount = () => [...subscriptions.values()].reduce((sum, types) => sum + types.size, 0);
 
-const createEventSub = async (type, userID, session_id) => {
-	const createTopic = await fetch(`https://api.twitch.tv/helix/eventsub/subscriptions`, {
+const createSubscription = async (channel, { type, version }) => {
+	const response = await helix('eventsub/subscriptions', {
 		method: 'POST',
-		headers: {
-			'Client-ID': twitch.client_id,
-			Authorization: `Bearer ${twitch.access_token}`,
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			type: type,
-			version: '1',
-			condition: {
-				broadcaster_user_id: userID,
-			},
-			transport: {
-				method: 'websocket',
-				session_id: session_id,
-			},
-		}),
-	}).then(
-		(res) => res.json(),
-		(err) => Logger.log(LogLevel.ERROR, err),
-	);
-	return createTopic;
-};
-
-const deleteEventSub = async (id = '') => {
-	fetch('https://api.twitch.tv/helix/eventsub/subscriptions?id=' + id, {
-		method: 'DELETE',
-		headers: {
-			'Client-ID': twitch.client_id,
-			Authorization: `Bearer ${twitch.access_token}`,
-			'Content-Type': 'application/json',
+		json: {
+			type,
+			version,
+			condition: { broadcaster_user_id: channel.twitchId, moderator_user_id: bot.Twitch.selfId },
+			transport: { method: 'websocket', session_id: sessionId },
 		},
 	});
+
+	if (!response.ok) {
+		Logger.log(LogLevel.WARN, `[eventsub] ${type} fuer #${channel.name} fehlgeschlagen (${response.statusCode}): ${response.body?.message ?? ''}`);
+		return;
+	}
+
+	const id = response.body?.data?.[0]?.id;
+	if (!subscriptions.has(channel.twitchId)) {
+		subscriptions.set(channel.twitchId, new Map());
+	}
+	subscriptions.get(channel.twitchId).set(type, id);
 };
 
-const getEventSubs = async () => {
-	const getTopics = await fetch(`https://api.twitch.tv/helix/eventsub/subscriptions`, {
-		method: 'GET',
-		headers: {
-			'Client-ID': twitch.client_id,
-			Authorization: `Bearer ${twitch.access_token}`,
-			'Content-Type': 'application/json',
+const subscribeChannel = async (channel) => {
+	if (!sessionId || !wantsChannel(channel)) {
+		return;
+	}
+
+	const existing = subscriptions.get(channel.twitchId);
+	for (const spec of TYPES) {
+		if (existing?.has(spec.type)) {
+			continue;
+		} else if (subscriptionCount() >= MAX_SUBSCRIPTIONS) {
+			Logger.log(LogLevel.WARN, `[eventsub] Limit von ${MAX_SUBSCRIPTIONS} Abos erreicht, #${channel.name} ohne ${spec.type}`);
+			return;
+		}
+		await createSubscription(channel, spec);
+	}
+};
+
+const unsubscribeChannel = async (channel) => {
+	const existing = channel?.twitchId ? subscriptions.get(channel.twitchId) : null;
+	if (!existing) {
+		return;
+	}
+
+	subscriptions.delete(channel.twitchId);
+	for (const id of existing.values()) {
+		await helix('eventsub/subscriptions', { method: 'DELETE', searchParams: { id }, responseType: 'text' }).catch(() => {});
+	}
+};
+
+/** Abo an den aktuellen Mode anpassen (Join, Part, Mod-Wechsel) */
+const syncChannel = async (channel) => {
+	await (wantsChannel(channel) ? subscribeChannel(channel) : unsubscribeChannel(channel));
+};
+
+const subscribeAll = async () => {
+	const channels = bot.Channels.getJoinable().filter(wantsChannel);
+	for (const channel of channels) {
+		await subscribeChannel(channel);
+	}
+	Logger.log(LogLevel.INFO, `[eventsub] ${subscriptionCount()} Abo(s) in ${subscriptions.size} Channel(s)`);
+};
+
+const resetWatchdog = (timeoutSeconds) => {
+	clearTimeout(watchdog);
+	// Keepalive verpasst -> Verbindung gilt als tot (Twitch-Doku: keepalive_timeout_seconds)
+	watchdog = setTimeout(
+		() => {
+			Logger.log(LogLevel.WARN, '[eventsub] Kein Keepalive, neue Verbindung');
+			socket?.terminate();
 		},
-	}).then(
-		(res) => res.json(),
-		(err) => Logger.log(LogLevel.ERROR, err),
+		(timeoutSeconds + 10) * 1000,
 	);
-	return getTopics;
 };
 
-module.exports = {
-	createEventSub,
-	deleteEventSub,
-	getEventSubs,
+const handleNotification = (payload, messageId) => {
+	if (seenMessages.has(messageId)) {
+		return;
+	}
+	seenMessages.add(messageId);
+	if (seenMessages.size > 1000) {
+		seenMessages.delete(seenMessages.values().next().value);
+	}
+
+	const handler = eventSubEvents[payload.subscription?.type];
+	if (handler) {
+		Promise.resolve()
+			.then(() => handler(payload.event, payload.subscription))
+			.catch((e) => Logger.log(LogLevel.WARN, `[eventsub] ${payload.subscription.type}`, e));
+	}
 };
+
+/** isReconnect: Twitch hat per session_reconnect umgezogen, die Abos bleiben bestehen */
+const connect = (url = EVENTSUB_URL, isReconnect = false) => {
+	const ws = new WebSocket(url);
+	let keepaliveSeconds = 30;
+
+	ws.on('message', (raw) => {
+		let parsed;
+		try {
+			parsed = JSON.parse(raw.toString());
+		} catch {
+			return;
+		}
+
+		const { metadata, payload } = parsed;
+		resetWatchdog(keepaliveSeconds);
+		switch (metadata?.message_type) {
+			case 'session_welcome': {
+				const previous = socket;
+				socket = ws;
+				sessionId = payload.session.id;
+				keepaliveSeconds = payload.session.keepalive_timeout_seconds ?? keepaliveSeconds;
+				reconnectDelay = 1000;
+				resetWatchdog(keepaliveSeconds);
+				if (isReconnect) {
+					Logger.log(LogLevel.INFO, '[eventsub] Auf neue Verbindung umgezogen');
+					previous?.removeAllListeners('close');
+					previous?.close();
+				} else {
+					Logger.log(LogLevel.INFO, '[eventsub] Verbunden');
+					subscriptions.clear();
+					void subscribeAll().catch((e) => Logger.log(LogLevel.WARN, '[eventsub] Abonnieren fehlgeschlagen', e));
+				}
+				break;
+			}
+			case 'session_reconnect':
+				connect(payload.session.reconnect_url, true);
+				break;
+			case 'notification':
+				handleNotification(payload, metadata.message_id);
+				break;
+			case 'revocation': {
+				const { type, status, condition } = payload.subscription;
+				subscriptions.get(condition.broadcaster_user_id)?.delete(type);
+				Logger.log(LogLevel.WARN, `[eventsub] ${type} fuer ${condition.broadcaster_user_id} widerrufen (${status})`);
+				break;
+			}
+		}
+	});
+
+	ws.on('close', (code) => {
+		if (ws !== socket && socket !== null) {
+			return;
+		}
+		clearTimeout(watchdog);
+		socket = null;
+		sessionId = null;
+		subscriptions.clear();
+		if (stopped) {
+			return;
+		}
+		Logger.log(LogLevel.WARN, `[eventsub] Verbindung zu (${code}), neuer Versuch in ${reconnectDelay / 1000}s`);
+		setTimeout(() => connect(), reconnectDelay);
+		reconnectDelay = Math.min(reconnectDelay * 2, 60_000);
+	});
+
+	ws.on('error', (e) => Logger.log(LogLevel.WARN, `[eventsub] ${e.message}`));
+	if (!socket) {
+		socket = ws;
+	}
+};
+
+const start = () => {
+	stopped = false;
+	connect();
+};
+
+const stop = () => {
+	stopped = true;
+	clearTimeout(watchdog);
+	socket?.close();
+};
+
+const status = () => ({ connected: Boolean(sessionId), subscriptions: subscriptionCount() });
+
+module.exports = { start, stop, status, syncChannel, subscribeChannel, unsubscribeChannel, wantsChannel };

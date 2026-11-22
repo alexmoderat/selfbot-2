@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { isTimerDue, parseTimerInterval, timerMode, formatInterval, withGroupLastSent } = require('../src/selfbot/util/timer-rules.js');
+const { isTimerDue, parseTimerInterval, timerMode, formatInterval, withGroupLastSent } = require('../src/util/timer-rules.js');
 
 const base = { Enabled: true, Online_Only: false, Offline_Only: false, Interval_Seconds: 3610, Last_Sent: null };
 const now = Date.parse('2026-11-19T20:00:00Z');
@@ -48,7 +48,7 @@ test('Timer: Intervall genau mit Sekunden anzeigen', () => {
 });
 
 test('Timer-Cron: sendet faellige Timer wirklich (07.-19.11.2026 still uebersprungen, "writable" gab es nicht mehr)', async () => {
-	const servicesPath = require.resolve('../src/selfbot/util/timers.js');
+	const servicesPath = require.resolve('../src/util/timers.js');
 	const saved = require.cache[servicesPath];
 	const sent = [];
 	const marked = [];
@@ -59,7 +59,7 @@ test('Timer-Cron: sendet faellige Timer wirklich (07.-19.11.2026 still ueberspru
 		loaded: true,
 		exports: { listEnabled: async () => [timer], markSent: async (t) => marked.push(t.ID) },
 	};
-	const cronPath = require.resolve('../src/selfbot/clients/modules/crons/timers.js');
+	const cronPath = require.resolve('../src/clients/modules/crons/timers.js');
 	delete require.cache[cronPath];
 	const channels = { 70: { id: 70, name: 'ninou2', mode: 'Write' }, 71: { id: 71, name: 'zzq', mode: 'Read' } };
 	const prevBot = global.bot;
@@ -72,7 +72,7 @@ test('Timer-Cron: sendet faellige Timer wirklich (07.-19.11.2026 still ueberspru
 		},
 	};
 	try {
-		const cron = require('../src/selfbot/clients/modules/crons/timers.js');
+		const cron = require('../src/clients/modules/crons/timers.js');
 		await cron.code();
 		assert.deepEqual(sent, ['ninou2: +ed']);
 		assert.deepEqual(marked, [4]);
@@ -106,7 +106,7 @@ test('Timer: Sync-Gruppe zaehlt ab dem letzten Senden irgendeines Timers der Gru
 });
 
 test('Timer-Cron: zwei Timer derselben Gruppe senden nicht im selben Durchlauf', async () => {
-	const servicesPath = require.resolve('../src/selfbot/util/timers.js');
+	const servicesPath = require.resolve('../src/util/timers.js');
 	const saved = require.cache[servicesPath];
 	const sent = [];
 	const list = [
@@ -114,7 +114,7 @@ test('Timer-Cron: zwei Timer derselben Gruppe senden nicht im selben Durchlauf',
 		{ ID: 5, Channel: 69, Message: '+ed', Interval_Seconds: 3610, Online_Only: false, Offline_Only: true, Live_Channel: null, Sync_Group: 'ed', Enabled: true, Last_Sent: null },
 	];
 	require.cache[servicesPath] = { id: servicesPath, filename: servicesPath, loaded: true, exports: { listEnabled: async () => list, markSent: async () => {} } };
-	const cronPath = require.resolve('../src/selfbot/clients/modules/crons/timers.js');
+	const cronPath = require.resolve('../src/clients/modules/crons/timers.js');
 	delete require.cache[cronPath];
 	const channels = { 70: { id: 70, name: 'ninou2', mode: 'Write' }, 69: { id: 69, name: 'ajspyman', mode: 'Write' } };
 	const prevBot = global.bot;
@@ -127,7 +127,7 @@ test('Timer-Cron: zwei Timer derselben Gruppe senden nicht im selben Durchlauf',
 		},
 	};
 	try {
-		await require('../src/selfbot/clients/modules/crons/timers.js').code();
+		await require('../src/clients/modules/crons/timers.js').code();
 		assert.deepEqual(sent, ['ninou2: +ed']);
 	} finally {
 		global.bot = prevBot;

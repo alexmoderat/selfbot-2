@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { describe, it } = require('node:test');
-const { historyWhere } = require('../src/selfbot/api/reminders.js');
+const { historyWhere } = require('../src/api/reminders.js');
 
 describe('Reminder-History: Spalte Where', () => {
 	it('eigener Reminder nennt nur den Ort', () => {
@@ -18,7 +18,7 @@ describe('Reminder-History: Spalte Where', () => {
 });
 
 describe('Reminder-History: Zaehlung pro Zeitraum', () => {
-	const { reminderPeriodCounts } = require('../src/selfbot/api/reminders.js');
+	const { reminderPeriodCounts } = require('../src/api/reminders.js');
 	it('trennt all time, Jahr und Monat', () => {
 		const dates = ['2025-11-08T10:00:00Z', '2026-10-31T23:59:59Z', '2026-11-01T00:00:00Z', '2026-11-08T10:00:00Z'];
 		assert.deepEqual(reminderPeriodCounts(dates, new Date('2026-11-08T18:00:00Z')), {

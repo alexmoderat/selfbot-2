@@ -1,7 +1,7 @@
 const { describe, it, mock, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { _test } = require('../src/selfbot/util/catquery-firehose.js');
-const { Logger } = require('../src/selfbot/misc/logger.js');
+const { _test } = require('../src/util/catquery-firehose.js');
+const { Logger } = require('../src/misc/logger.js');
 
 const send = (message) => _test.handleMessage(JSON.stringify(message));
 const chat = (text, tags = {}) => ({ id: 'abc', channel: '#somechannel', text, tags: { 'room-id': '1', 'user-id': '2', 'display-name': 'Someone', ...tags } });

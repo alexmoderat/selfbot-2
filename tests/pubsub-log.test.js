@@ -1,6 +1,6 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { describe: line } = require('../src/selfbot/util/pubsub-log.js');
+const { describe: line } = require('../src/util/pubsub-log.js');
 
 describe('PubSub-Logzeilen im Wortlaut von Donts pubSubHandler', () => {
 	it('stream-up und stream-down', () => {

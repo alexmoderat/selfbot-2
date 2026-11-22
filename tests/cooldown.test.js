@@ -1,7 +1,7 @@
 const { describe, it, test } = require('node:test');
 const assert = require('node:assert/strict');
-const { CooldownManager } = require('../src/selfbot/clients/modules/cooldown.js');
-const { effectiveLevel, applyLevel, isLevelAllowed, parseLevel } = require('../src/selfbot/clients/modules/levels.js');
+const { CooldownManager } = require('../src/clients/modules/cooldown.js');
+const { effectiveLevel, applyLevel, isLevelAllowed, parseLevel } = require('../src/clients/modules/levels.js');
 
 describe('CooldownManager', () => {
 	it('blockiert innerhalb des Cooldowns und gibt danach frei', () => {

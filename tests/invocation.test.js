@@ -1,7 +1,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { checkConfirmation, isAltPrefixOwnedElsewhere, isAltPrefixFullCommand, isMissingRequiredArgument, parseInvocation, prefixProblem } = require('../src/selfbot/clients/modules/invocation.js');
-const { formatParams } = require('../src/selfbot/clients/modules/parameters.js');
+const { checkConfirmation, isAltPrefixOwnedElsewhere, isAltPrefixFullCommand, isMissingRequiredArgument, parseInvocation, prefixProblem } = require('../src/clients/modules/invocation.js');
+const { formatParams } = require('../src/clients/modules/parameters.js');
 
 const noPrefix = new Set(['8ball', 'vod']);
 const isNoPrefix = (name) => noPrefix.has(name);

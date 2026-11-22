@@ -1,146 +1,166 @@
-const { twitch } = require('../../../config.json');
 const WS = require('ws');
-const crypto = require('crypto');
-const utils = require('./utils.js');
+const crypto = require('node:crypto');
+const { EventEmitter } = require('node:events');
 const RWS = require('reconnecting-websocket');
-const { handleWSMsg } = require('./pubSubHandler.js');
-const { Logger, LogLevel } = require('../../misc/logger');
+const { Logger, LogLevel } = require('../../misc/logger.js');
 
-exports.topics = [];
-exports.connections = [];
-let id = 0;
+// Twitchs altes PubSub (wss://pubsub-edge.twitch.tv/v1) wie bei DontAddThisBot: reconnecting-websocket, PING alle
+// 250 s, LISTEN je Thema mit eigenem nonce, 50 Themen je Verbindung. Offiziell seit April 2025 abgeschaltet,
+// liefert aber weiter Ereignisse (getestet 07.11.2026: video-playback-by-id; Mod-Themen nur mit Web-Token).
+// Gleiche Schnittstelle wie hermes-client.js (connect, listen, unlisten, onMessage, onListenError, onConnect),
+// damit services/pubsub.js zwischen beiden waehlen kann.
 
-const listen = (channels, subs) => {
-	for (const channel of channels) {
-		for (const sub of subs) {
-			const nonce = crypto.randomBytes(20).toString('hex').slice(-8);
+const PUBSUB_URL = 'wss://pubsub-edge.twitch.tv/v1';
+const PING_INTERVAL = 250 * 1000;
+const MAX_TOPICS = 50;
 
-			this.topics.push({ channel, sub, nonce });
+let connectionId = 0;
+
+class LegacyPubSubClient extends EventEmitter {
+	#ws = null;
+	#id = ++connectionId;
+	#topics = new Map(); // topic -> Token
+	#nonces = new Map(); // nonce -> topic
+	#confirmed = new Set();
+	#pingTimer = null;
+
+	static get MAX_TOPICS() {
+		return MAX_TOPICS;
+	}
+
+	onMessage(cb) {
+		this.on('message', cb);
+	}
+	onListenError(cb) {
+		this.on('listenError', cb);
+	}
+	onConnect(cb) {
+		this.on('connect', cb);
+	}
+	onDisconnect(cb) {
+		this.on('disconnect', cb);
+	}
+
+	get isConnected() {
+		return this.#ws?.readyState === WS.OPEN;
+	}
+
+	connect() {
+		const ws = new RWS(PUBSUB_URL, [], { WebSocket: WS, startClosed: true });
+		this.#ws = ws;
+
+		ws.addEventListener('error', (e) => Logger.log(LogLevel.ERROR, e.message ?? e));
+		ws.addEventListener('close', () => {
+			this.#confirmed.clear();
+			this.emit('disconnect', true);
+			Logger.log(LogLevel.WARN, `[${this.#id}] PubSub Disconnected`);
+		});
+		ws.addEventListener('open', () => {
+			Logger.log(LogLevel.DEBUG, `[${this.#id}] PubSub Connected`);
+			for (const topic of this.#topics.keys()) {
+				this.#sendListen(topic);
+			}
+			this.emit('connect');
+		});
+		ws.addEventListener('message', ({ data }) => this.#handle(data));
+
+		this.#pingTimer = setInterval(() => {
+			if (this.isConnected) {
+				ws.send(JSON.stringify({ type: 'PING' }));
+			}
+		}, PING_INTERVAL);
+		this.#pingTimer.unref();
+
+		ws.reconnect();
+	}
+
+	listen(topics, token) {
+		const list = Array.isArray(topics) ? topics : [topics];
+		for (const topic of list) {
+			const known = this.#topics.get(topic);
+			this.#topics.set(topic, token || known || '');
+			// Schon bestaetigte Themen nicht erneut anmelden (regelmaessige Token-Auffrischung)
+			if (this.isConnected && !this.#confirmed.has(topic)) {
+				this.#sendListen(topic);
+			}
 		}
 	}
-};
 
-exports.init = async () => {
-	let { rows } = await bot.SQL.query(`SELECT * FROM pubsub_events;`);
-	let channels = new Set(rows.map((r) => r.event_channel_id));
-	for (const channel of channels) {
-		listen([{ id: channel }], ['video-playback-by-id', 'broadcast-settings-update']);
-	}
-	listen([{ id: '137199626' }], ['chatrooms-user-v1', 'community-points-channel-v1']); // dontaddthisbot
-	Logger.log(LogLevel.DEBUG, `PubSub: ${channels.size} streamers`);
-
-	const splitTopics = utils.splitArray(this.topics, 50);
-	for (const topics of splitTopics) {
-		const ws = new RWS('wss://pubsub-edge.twitch.tv/v1', [], { WebSocket: WS, startClosed: true });
-		this.connections.push({ ws, topics });
-		connect(ws, topics, ++id);
-		await utils.sleep(1000);
-	}
-};
-
-exports.createListener = (channel, sub, type) => {
-	const nonce = crypto.randomBytes(20).toString('hex').slice(-8);
-	const c = this.connections.find(({ topics }) => topics.length < 50);
-
-	if (c) {
-		const message = {
-			data: {
-				auth_token: twitch.gql_token,
-				topics: [`${sub}.${channel}`],
-			},
-			nonce: nonce,
-			type: type,
-		};
-
-		c.ws.send(JSON.stringify(message));
-		c.topics.push({ channel, sub, nonce });
-	} else {
-		const ws = new RWS('wss://pubsub-edge.twitch.tv/v1', [], { WebSocket: WS, startClosed: true });
-		const topics = [{ channel, sub, nonce }];
-		connect(ws, topics, ++id);
-		this.connections.push({ ws, topics });
-	}
-
-	this.topics.push({ channel, sub, nonce });
-};
-
-const connect = (ws, topics, id) => {
-	ws.addEventListener('error', (e) => {
-		Logger.log(LogLevel.ERROR, e);
-	});
-
-	ws.addEventListener('close', () => {
-		Logger.log(LogLevel.WARN, `[${id}] PubSub Disconnected`);
-	});
-
-	ws.addEventListener('open', () => {
-		Logger.log(LogLevel.DEBUG, `[${id}] PubSub Connected`);
-
-		for (const topic of topics) {
-			const message = {
-				data: {
-					auth_token: twitch.gql_token || twitch.oauth,
-					topics: [`${topic.sub}.${topic.channel.id}`],
-				},
-				nonce: topic.nonce,
-				type: 'LISTEN',
-			};
-
-			ws.send(JSON.stringify(message));
+	unlisten(topics) {
+		const list = Array.isArray(topics) ? topics : [topics];
+		for (const topic of list) {
+			const token = this.#topics.get(topic);
+			this.#topics.delete(topic);
+			this.#confirmed.delete(topic);
+			if (this.isConnected) {
+				this.#ws.send(JSON.stringify({ type: 'UNLISTEN', nonce: this.#nonce(topic), data: { topics: [topic], auth_token: token } }));
+			}
 		}
-	});
+	}
 
-	ws.addEventListener('message', ({ data }) => {
-		const msg = JSON.parse(data);
-		let msgData;
-		let msgTopic;
+	#nonce(topic) {
+		const nonce = crypto.randomBytes(20).toString('hex').slice(-8);
+		this.#nonces.set(nonce, topic);
+		return nonce;
+	}
+
+	#sendListen(topic) {
+		const token = this.#topics.get(topic);
+		this.#ws.send(JSON.stringify({ type: 'LISTEN', nonce: this.#nonce(topic), data: { topics: [topic], ...(token ? { auth_token: token } : {}) } }));
+	}
+
+	#handle(raw) {
+		let msg;
+		try {
+			msg = JSON.parse(raw);
+		} catch {
+			return;
+		}
 
 		switch (msg.type) {
 			case 'PONG':
-				break;
-
-			case 'RESPONSE':
-				handleWSResp(msg);
-				break;
-
-			case 'MESSAGE':
-				if (!msg.data) return Logger.log(LogLevel.ERROR, `No data associated with message [${JSON.stringify(msg)}]`);
-
-				msgData = JSON.parse(msg.data.message);
-				msgTopic = msg.data.topic;
-
-				handleWSMsg({ channelID: msgTopic.split('.').pop(), ...msgData });
-				break;
-
+				return;
+			case 'RESPONSE': {
+				const topic = this.#nonces.get(msg.nonce);
+				this.#nonces.delete(msg.nonce);
+				if (!topic) {
+					return;
+				}
+				if (msg.error) {
+					// ERR_BADAUTH = Token abgelehnt (userInitiated false wie bei Hermes -> neu anmelden)
+					this.emit('listenError', topic, new Error(msg.error), msg.error !== 'ERR_BADAUTH');
+				} else {
+					this.#confirmed.add(topic);
+				}
+				return;
+			}
+			case 'MESSAGE': {
+				if (!msg.data) {
+					Logger.log(LogLevel.ERROR, `No data associated with message [${JSON.stringify(msg)}]`);
+					return;
+				}
+				let message;
+				try {
+					message = JSON.parse(msg.data.message);
+				} catch {
+					message = msg.data.message;
+				}
+				this.emit('message', msg.data.topic, message);
+				return;
+			}
 			case 'RECONNECT':
-				Logger.log(LogLevel.WARN, `[${id}] PubSub server sent a reconnect message. Restarting the socket`);
-				ws.reconnect();
-				break;
-
+				Logger.log(LogLevel.WARN, `[${this.#id}] PubSub server sent a reconnect message. Restarting the socket`);
+				this.#ws.reconnect();
+				return;
 			default:
 				Logger.log(LogLevel.ERROR, `Unknown PubSub Message Type: ${msg.type}`);
 		}
-	});
-
-	setInterval(() => {
-		ws.send(
-			JSON.stringify({
-				type: 'PING',
-			}),
-		);
-	}, 250 * 1000);
-
-	ws.reconnect();
-};
-
-const handleWSResp = (msg) => {
-	if (!msg.nonce) return Logger.log(LogLevel.ERROR, `Unknown message without nonce: ${JSON.stringify(msg)}`);
-
-	const topic = this.topics.find((topic) => topic.nonce === msg.nonce);
-
-	if (msg.error && msg.error !== 'ERR_BADAUTH') {
-		// just ignore this shitty error
-		this.topics.splice(this.topics.indexOf(topic), 1);
-		Logger.log(LogLevel.ERROR, `Error occurred while subscribing to topic ${topic.sub} for channel ${topic.channel.login}: ${msg.error}`);
 	}
-};
+
+	close() {
+		clearInterval(this.#pingTimer);
+		this.#ws?.close();
+	}
+}
+
+module.exports = { LegacyPubSubClient, PUBSUB_URL };

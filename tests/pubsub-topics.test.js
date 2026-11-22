@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { channelTopics } = require('../src/selfbot/util/pubsub.js');
+const { channelTopics } = require('../src/util/pubsub.js');
 
 test('channelTopics: Mod-Topics nur mit moderator', () => {
 	const mod = channelTopics('1', '2');

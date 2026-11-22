@@ -7,8 +7,8 @@
 //   yarn migrate --fresh         Collections vorher leeren (letzter Abgleich beim Umschalten); Chat-Logs: migrate:chatlines
 
 const mariadb = require('mariadb');
-const { getConfig } = require('../src/selfbot/config.js');
-const DB = require('../src/selfbot/database/db.js');
+const { getConfig } = require('../src/config.js');
+const DB = require('../src/database/db.js');
 
 const BATCH = 2000;
 

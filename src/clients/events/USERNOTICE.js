@@ -1,27 +1,27 @@
 const { client } = require('../../util/twitch/connections.js');
+const ChatModules = require('../modules/chat-modules.js');
 
-async function rewardPoros(userID, Amount) {
-	return await bot.DB.poroCount.findOneAndUpdate({ id: userID }, { $inc: { poroCount: Number(Amount) } }).exec();
-}
+// Sub, Resub, Gift, Raid, Watch-Streak, ... an die Chat-Module (sub-announce, raid-shoutout, watch-streak-*)
 
 const USERNOTICE = () => {
-	client.on('USERNOTICE', async (msg) => {
-		if (['announcement', 'raid'].includes(msg.messageTypeID)) return;
-
-		const { channelName, channelID, senderUsername, senderUserID } = msg;
-		if ((msg.isResub || msg.isSub || msg.AnonSubgift || msg.isAnonGiftPaidUpgrade || msg.isSubgift) && channelID === '137199626') {
-			try {
-				const res = await rewardPoros(senderUserID, 5000);
-				if (!res || res == null) {
-					await client.say('kattah', "You aren't registered! type |poro to get started");
-					return;
-				}
-
-				await client.say('kattah', `Thank you for subbing!, ${senderUsername}. Here is free 5,000 poros!. You have ${res.poroCount + 5000} poros now!`);
-			} catch (err) {
-				console.log(err);
-			}
+	client.on('USERNOTICE', (msg) => {
+		// Shared Chat: nur am Ursprung
+		const source = msg.ircTags['source-room-id'];
+		if (source && source !== msg.channelID) {
+			return;
 		}
+
+		const channel = bot.Channels.getByTwitchId(msg.channelID);
+		ChatModules.dispatch('usernotice', {
+			channel,
+			channelId: msg.channelID,
+			channelName: msg.channelName,
+			msgId: msg.messageTypeID,
+			userId: msg.senderUserID ?? '',
+			userName: (msg.senderUsername ?? '').toLowerCase(),
+			tags: msg.ircTags,
+			text: msg.messageText ?? '',
+		});
 	});
 };
 

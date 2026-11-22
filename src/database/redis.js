@@ -1,53 +1,43 @@
 const Redis = require('ioredis');
-const redis = new Redis(require('../../config.json').redis ?? {}); // selfbot: eigene Redis-DB-Nummer aus config.json statt Standard-DB 0
-const { Logger, LogLevel } = require('../misc/logger');
+const { Logger } = require('../misc/logger.js');
 
-redis.on('error', (err) => {
-	Logger.log(LogLevel.ERROR, `Redis Error: ${err}`);
-});
+// Redis wie bei DontAddThisBot (bot.Cache), dazu JSON-Helfer statt supi-core Cache.
+// Eigene DB-Nummer aus config.json, damit sich Schluessel nicht mit selfbot/sb-v2 ueberschneiden.
 
-redis.on('ready', () => {
-	Logger.log(LogLevel.INFO, 'Redis Connected');
-});
+const PREFIX = 'selfbot-next:';
 
-module.exports.redis = redis;
+const create = ({ host, port, db }) => {
+	const client = new Redis({ host, port, db, lazyConnect: false, maxRetriesPerRequest: 3 });
+	client.on('error', (e) => Logger.warn('[redis]', e.message));
 
-module.exports.set = async (key, data, expiry = 120) => {
-	if (expiry === 0) {
-		await redis.set(key, JSON.stringify(data));
-	} else {
-		await redis.set(key, JSON.stringify(data), 'EX', expiry);
-	}
+	/** Wert lesen (JSON), null wenn nicht vorhanden */
+	client.getJSON = async (key) => {
+		const raw = await client.get(PREFIX + key);
+		if (raw === null) {
+			return null;
+		}
+		try {
+			return JSON.parse(raw);
+		} catch {
+			return null;
+		}
+	};
+
+	/** Wert schreiben (JSON); expiry in ms, null loescht den Schluessel */
+	client.setJSON = async (key, value, expiry = null) => {
+		if (value === null || value === undefined) {
+			await client.del(PREFIX + key);
+			return;
+		}
+		const raw = JSON.stringify(value);
+		if (expiry) {
+			await client.set(PREFIX + key, raw, 'PX', Math.max(1, Math.round(expiry)));
+		} else {
+			await client.set(PREFIX + key, raw);
+		}
+	};
+
+	return client;
 };
 
-module.exports.setpx = async (key, data, expiry = 120) => {
-	if (expiry === 0) {
-		await redis.set(key, JSON.stringify(data));
-	} else {
-		await redis.set(key, JSON.stringify(data), 'PX', expiry);
-	}
-};
-
-module.exports.get = async (key) => {
-	const data = await redis.get(key);
-	if (!data) {
-		return null;
-	}
-	return JSON.parse(data);
-};
-
-module.exports.del = async (key) => {
-	await redis.del(key);
-};
-
-module.exports.getBase64 = async (name) => {
-	const data = await redis.get(name);
-	if (!data) {
-		return null;
-	}
-	return JSON.parse(Buffer.from(data, 'base64'));
-};
-
-module.exports.setBase64 = async (name, data, expiry = 120) => {
-	await redis.set(name, Buffer.from(JSON.stringify(data)).toString('base64'), 'EX', expiry);
-};
+module.exports = { create, PREFIX };

@@ -1,57 +1,94 @@
-const got = require('got');
-const fetch = require('node-fetch');
+const SupiDate = require('../util/date.js');
+const unsetSuggestionSubcommand = require('../util/commands/set/subcommands/suggestion.js');
 
+// Wie Supibots suggest. Nicht uebernommen: das automatische Abo fuer Status-Benachrichtigungen
+// (Supibots subscribe-System fehlt hier) und der Link zur Vorschlagsliste (Website kommt mit Block 9).
 module.exports = {
-	tags: 'stats',
 	name: 'suggest',
-	aliases: ['suggestion'],
-	cooldown: 5000,
-	description: 'Suggestion to the bot',
+	aliases: ['suggestions'],
+	cooldown: 60000,
+	description: 'Suggest something for alexmoderat. Every suggestion gets an ID. To remove one, use the unset command.',
+	usage: 'suggest <text> [amend:ID]',
+	// Zuschauer tippen "!suggest" (aus sb-v2); cooldown-notice, damit die 60s-Sperre nicht wie ein Fehler wirkt
+	flags: ['mention', 'no-prefix', 'cooldown-notice', 'skip-banphrase'],
+	params: [{ name: 'amend', type: 'number' }],
 	execute: async (client, msg) => {
-		if (!msg.args[0]) {
+		const args = [...msg.args];
+		const prefix = bot.Config.prefix;
+		if (args.length === 0 || msg.invocation === 'suggestions') {
+			const count = await bot.DB.Suggestion.countDocuments({ userAlias: msg.sender.id });
+
 			return {
-				text: 'Usage: |suggest <suggestion>',
-				reply: true,
+				success: false,
+				text: bot.Utils.tag.trim`
+					No suggestion text provided!
+					You have made ${count ?? 0} suggestion(s) so far.
+					Use ${prefix}suggest (text) to make one.
+				`,
+				cooldown: 5000,
 			};
 		}
-		let { body: userData } = await got(`https://api.ivr.fi/twitch/resolve/${msg.user.login}`, {
-			timeout: 10000,
-			throwHttpErrors: false,
-			responseType: 'json',
+
+		const text = args.join(' ');
+		const row = await bot.DB.getRow('Suggestion');
+		if (msg.params.amend) {
+			await row.load(msg.params.amend, true);
+			if (!row.loaded) {
+				return {
+					success: false,
+					text: 'There is no suggestion with that ID!',
+				};
+			} else if (row.values.User_Alias !== msg.sender.id) {
+				return {
+					success: false,
+					text: 'That suggestion was not made by you!',
+				};
+			}
+
+			const date = new SupiDate().format('Y-m-d H:i:s');
+			row.setValues({
+				Text: `${row.values.Text}\n\n--- Amended on ${date} ---\n${text}`,
+			});
+
+			await row.save({ skipLoad: true });
+
+			return {
+				success: true,
+				text: `Your suggestion ID ${row.values.ID} was succesfully amended.`,
+			};
+		}
+
+		row.setValues({
+			Text: text,
+			User_Alias: msg.sender.id,
+			Priority: 255,
 		});
 
-		const pfp = userData.logo;
-		const XD = 'https://discord.com/api/webhooks/987635741523869757/MyyRLZ6MV-GSLjuzHEU2JJ5fyWcimcFiT_NGiLRfp-ibv5KpUF2kzHH-kNDgfHfU1leY';
-		const KEKW = {
-			embeds: [
-				{
-					color: 0x0099ff,
-					title: `Sent by ${msg.user.login} in #${msg.channel.login}`,
-					author: {
-						name: 'New suggestion',
-						icon_url: 'https://i.nuuls.com/nRGtC.png',
-					},
-					description: `${msg.args.join(' ')}`,
-					thumbnail: {
-						url: `${pfp}`,
-					},
-					timestamp: new Date(),
-					footer: {
-						text: 'Pulled time',
-						icon_url: 'https://static-cdn.jtvnw.net/jtv_user_pictures/89049925-b020-436f-bf9e-6262c0bc6419-profile_image-600x600.png ',
-					},
-				},
-			],
-		};
-		fetch(XD + '?wait=true', {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify(KEKW),
-		});
+		await row.save({ skipLoad: false });
 
 		return {
-			text: `Suggestion sent! :)`,
-			reply: true,
+			success: true,
+			text: `Suggestion saved, and will eventually be processed (ID ${row.values.ID}) 👍`,
 		};
 	},
+	dynamicDescription: (prefix) => [
+		'Creates a new suggestion for alexmoderat to take a look at in the near future.',
+		'These should avoid jokes, memes and such - focus instead on proper issues, bug reports, questions, ideas etc.',
+		'',
+
+		`You can remove a suggestion you've created via the <code>${prefix}unset suggestion (ID)</code> command.`,
+		'',
+
+		`<code>${prefix}suggest (text)</code>`,
+		'Creates a suggestion.',
+		"You will provided with a tracking ID with which you can check the suggestion's progress",
+		'',
+
+		`<code>${prefix}suggest amend:(ID) (text)</code>`,
+		"Amends an existing suggestion that you've made with more text.",
+		'',
+
+		`<code>${prefix}unset ${unsetSuggestionSubcommand.name} (${unsetSuggestionSubcommand.parameter})</code>`,
+		unsetSuggestionSubcommand.description,
+	],
 };

@@ -1,18 +1,22 @@
 const { client } = require('../../util/twitch/connections.js');
-const { Logger, LogLevel } = require('../../misc/logger.js');
+const ChatModules = require('../modules/chat-modules.js');
+
+// Wie DontAddThisBot: Kanal-Hinweise (gebannt, gesperrt, Nachricht abgelehnt). Die Behandlung selbst
+// (Channel inaktiv setzen usw.) uebernimmt das Chat-Modul channel-suspension ueber "channelState".
+
+const STATE_IDS = new Set(['msg_banned', 'msg_channel_suspended', 'msg_rejected_mandatory', 'msg_followersonly', 'msg_subsonly', 'msg_verified_email', 'msg_requires_verified_phone_number']);
 
 const NOTICE = async function () {
-	client.on('NOTICE', async ({ channelName, messageID }) => {
-		if (!messageID || channelName === 'xqc') return;
-
-		if (messageID == 'msg_rejected_mandatory') {
-			client.say(channelName, `That message violates the channel's moderation settings`);
+	client.on('NOTICE', ({ channelName, messageID, messageText }) => {
+		if (!messageID || !channelName) {
 			return;
-		} else if (messageID == 'msg_banned') {
-			Logger.log(LogLevel.WARN, `Banned from channel ${channelName}`);
-			await bot.DB.channels.updateOne({ username: channelName }, { isChannel: false }).catch((err) => Logger.log(LogLevel.ERROR, err));
-		} else if (messageID == 'msg_channel_suspended') {
-			Logger.log(LogLevel.WARN, `Suspended channel ${channelName}`);
+		}
+
+		if (STATE_IDS.has(messageID)) {
+			const channel = bot.Channels.get(channelName);
+			if (channel) {
+				ChatModules.dispatch('channelState', { channel, msgId: messageID, text: messageText });
+			}
 		}
 	});
 };

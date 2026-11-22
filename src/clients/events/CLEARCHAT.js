@@ -1,50 +1,39 @@
 const { client } = require('../../util/twitch/connections.js');
-const { BAND: banEvasion } = require('../../util/discord/discord.js');
-const { IVR } = require('../../util/twitch/utils.js');
 const { Logger, LogLevel } = require('../../misc/logger.js');
+const ChatModules = require('../modules/chat-modules.js');
+
+// Bans, Timeouts und /clear an die Chat-Module (mod-actions-log, ban-watch, ...).
+// Wie DontAddThisBot: wird der Bot selbst gebannt oder getimeoutet, als WARN ins Log.
 
 const CLEARCHAT = async function () {
-	client.on('CLEARCHAT', async (message) => {
-		const { targetUsername, channelName, ircTags, banDuration } = message;
-		const usernames = ['kattah', 'kattah7', 'kpqy', 'checkingstreamers', 'altaccountpoggers'];
-		if (usernames.includes(targetUsername)) {
-			if (!banDuration) {
-				client.part(channelName);
-				await bot.DB.channels
-					.findOneAndUpdate(
-						{ id: ircTags['room-id'] },
-						{
-							$set: {
-								isChannel: false,
-							},
-						},
-					)
-					.exec();
-				await bot.DB.users.updateOne({ id: ircTags['room-id'] }, { level: 0 }).exec();
-				Logger.log(LogLevel.WARN, 'Banned In ' + channelName + ': ' + targetUsername, ircTags['room-id']);
-			} else if (banDuration >= 3600) {
-				client.part(channelName);
-				await bot.DB.channels
-					.findOneAndUpdate(
-						{ id: ircTags['room-id'] },
-						{
-							$set: {
-								isChannel: false,
-							},
-						},
-					)
-					.exec();
-				Logger.info(LogLevel.WARN, `Timed out for ${banDuration}s in ${channelName}: ${targetUsername}`, ircTags['room-id']);
-			} else {
-				client.part(channelName);
-				Logger.log(LogLevel.WARN, `Timed out for ${banDuration}s in ${channelName}: ${targetUsername}`, ircTags['room-id']);
-			}
-			const { logo } = await IVR(ircTags['room-id']);
-			const isPerma = banDuration ? `${targetUsername} 𝗧𝗜𝗠𝗘𝗢𝗨𝗧` : `${targetUsername} 𝗕𝗔𝗡𝗡𝗘𝗗`;
-			const duration = banDuration ? `Duration: ${banDuration}s` : `Duration: 𝗣𝗘𝗥𝗠𝗔𝗡𝗘𝗡𝗧`;
-			const color = banDuration ? (banDuration >= 3600 ? 16776960 : 12370112) : 15548997;
-			await banEvasion(channelName, isPerma, duration, color, logo);
+	client.on('CLEARCHAT', (msg) => {
+		const { targetUsername, channelName, ircTags, banDuration } = msg;
+		if (targetUsername && targetUsername === client.configuration.username) {
+			const what = banDuration ? `Timed out for ${banDuration}s` : 'Banned';
+			Logger.log(LogLevel.WARN, `${what} in ${channelName}: ${targetUsername}`, ircTags['room-id']);
 		}
+
+		const channel = bot.Channels.getByTwitchId(msg.channelID ?? ircTags['room-id']);
+		ChatModules.dispatch('clearchat', {
+			channel,
+			channelName,
+			targetUsername: targetUsername ?? null,
+			targetUserId: ircTags['target-user-id'] ?? null,
+			banDuration: banDuration ?? null,
+			tags: ircTags,
+		});
+	});
+
+	client.on('CLEARMSG', (msg) => {
+		const channel = bot.Channels.get(msg.channelName);
+		ChatModules.dispatch('clearmsg', {
+			channel,
+			channelName: msg.channelName,
+			targetUsername: msg.targetUsername,
+			targetMessageId: msg.targetMessageID,
+			text: msg.targetMessageContent,
+			tags: msg.ircTags,
+		});
 	});
 };
 

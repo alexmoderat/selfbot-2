@@ -1,8 +1,8 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const utils = require('../src/selfbot/misc/utility.js');
-const { toBadgeList, stripReplyMention, trimMessage, ParseUser } = require('../src/selfbot/util/twitch/utils.js');
-const { filterByConfig } = require('../src/selfbot/config.js');
+const utils = require('../src/misc/utility.js');
+const { toBadgeList, stripReplyMention, trimMessage, ParseUser } = require('../src/util/twitch/utils.js');
+const { filterByConfig } = require('../src/config.js');
 
 describe('timeDelta (gleiche Ausgabe wie supi-core)', () => {
 	const now = new Date('2026-11-07T12:00:00.000Z');

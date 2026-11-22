@@ -1,1 +1,1 @@
-exports.misc = require('./misc');
+module.exports = require('./utility.js');

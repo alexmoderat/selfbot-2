@@ -108,15 +108,6 @@
 	"api": {
 		"port": 11200
 	},
-	"dont": {
-		"commands": {
-			"disableAll": false,
-			"whitelist": ["7tvpfp", "7tvaliasv4", "7tvyoinkv4"],
-			"blacklist": []
-		},
-		"stvUserId": "01HXECQC500001CJ47EJYYXTGD",
-		"editorsUrl": "https://auth.alexmoderat.eu/dashboard"
-	},
 	"twitch": {
 		"username": "alexmoderat",
 		"rateLimits": "default",

@@ -1,3 +1,8 @@
+// Logger: winston (Konsole + .logs/error.log + .logs/combined.log), Format "[Zeit] Emoji LEVEL Text".
+// Der Wrapper unten nimmt mehrere Argumente (Text, Fehler, Objekte) und fuegt sie zu einem Text zusammen.
+// LOG_LEVEL=info|warn|error blendet die geschwaetzigen Stufen aus (Standard: silly = alles).
+
+const { inspect } = require('node:util');
 const { createLogger, format, transports, Logger: WinstonLogger } = require('winston');
 const chalk = require('chalk');
 
@@ -64,7 +69,7 @@ const fileFormat = format.printf(({ level, message, timestamp, module }) => {
 	return `[${timestamp}] [${level.toUpperCase()}] ${module ? '[' + module.toUpperCase() + '] ' : ''}${message}`;
 });
 
-class Logger {
+class DontLogger {
 	static winstonLogger = createLogger({
 		level: LogLevel.SILLY,
 		format: format.combine(format.timestamp(), format.splat(), consoleFormat),
@@ -92,5 +97,28 @@ class Logger {
 		this.winstonLogger.log(level, message, { module });
 	}
 }
+
+const ORDER = { error: 0, warn: 1, info: 2, debug: 3, silly: 4 };
+const threshold = ORDER[process.env.LOG_LEVEL ?? 'silly'] ?? ORDER.silly;
+
+const toText = (value) => {
+	if (typeof value === 'string') {
+		return value;
+	}
+	return value instanceof Error ? (value.stack ?? value.message) : inspect(value, { depth: 3, breakLength: 200 });
+};
+
+const Logger = {
+	log(level, ...args) {
+		if ((ORDER[level] ?? ORDER.info) > threshold) {
+			return;
+		}
+		DontLogger.log(level, args.map(toText).join(' '));
+	},
+	error: (...args) => Logger.log(LogLevel.ERROR, ...args),
+	warn: (...args) => Logger.log(LogLevel.WARN, ...args),
+	info: (...args) => Logger.log(LogLevel.INFO, ...args),
+	debug: (...args) => Logger.log(LogLevel.DEBUG, ...args),
+};
 
 module.exports = { Logger, LogLevel };

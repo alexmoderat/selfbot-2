@@ -1,88 +1,43 @@
-const { Pool } = require('pg');
-const { postgres } = require('../../config.json');
-const { GetStvRoles } = require('../token/stvGQL');
-const { Logger, LogLevel } = require('../misc/logger');
+const { Pool, types } = require('pg');
 
-const sql = new Pool({
-	...postgres,
-	database: postgres.dontDatabase ?? 'dontaddthisbot', // selfbot: Name der Dont-Tabellen-DB aus config.json (postgres.dontDatabase)
-});
+// Postgres wie bei DontAddThisBot (bot.PG = pg-Pool), Verbindung aus config.json ("postgres": { host, port, user, password, database }).
+// Der Pool entsteht erst bei open(), damit die Modelle schon beim Laden darauf zeigen koennen.
 
-sql.connect(async function () {
-	Logger.log(LogLevel.INFO, 'Connected to SQL database!');
-	await sql.query(`CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        twitch_id VARCHAR(255) NOT NULL,
-        twitch_login VARCHAR(255) NOT NULL
-    )`);
-	await sql.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS language VARCHAR(255)`);
+// bigint (Zaehler, IDs, count) und numeric kommen als Zahl statt als Text
+types.setTypeParser(20, Number);
+types.setTypeParser(1700, Number);
 
-	await sql.query(`CREATE TABLE IF NOT EXISTS commands (
-        id SERIAL PRIMARY KEY,
-        twitch_id VARCHAR(255) NOT NULL,
-        twitch_login VARCHAR(255) NOT NULL,
-        command VARCHAR(50) NOT NULL,
-        command_usage INT NOT NULL,
-        last_used TIMESTAMP NOT NULL DEFAULT NOW()
-    )`);
+let pool = null;
 
-	await sql.query(`CREATE TABLE IF NOT EXISTS channels (
-        id SERIAL PRIMARY KEY,
-        twitch_login VARCHAR(255) NOT NULL,
-        is_mod INT NOT NULL,
-        is_vip INT NOT NULL
-    )`);
-
-	await sql.query(`CREATE TABLE IF NOT EXISTS stv_roles (
-        id SERIAL PRIMARY KEY,
-        stv_role VARCHAR(255) NOT NULL,
-        stv_role_id VARCHAR(255) NOT NULL
-    )`);
-
-	await sql.query(`CREATE TABLE IF NOT EXISTS user_commands_settings (
-        id SERIAL PRIMARY KEY,
-        twitch_id VARCHAR(255) NOT NULL,
-        twitch_login VARCHAR(255) NOT NULL,
-        command VARCHAR(50) NOT NULL,
-        aliases JSONB NOT NULL DEFAULT '[]'
-    )`);
-
-	await sql.query(`CREATE TABLE IF NOT EXISTS channel_settings (
-        id SERIAL PRIMARY KEY,
-        twitch_id VARCHAR(255) NOT NULL,
-        twitch_login VARCHAR(255) NOT NULL,
-        command VARCHAR(50) NOT NULL,
-        aliases JSONB NOT NULL DEFAULT '[]',
-        is_disabled INT NOT NULL DEFAULT 0
-    )`);
-
-	await sql.query(`CREATE TABLE IF NOT EXISTS stv_ids (
-        id SERIAL PRIMARY KEY,
-        twitch_id VARCHAR(255) NOT NULL,
-        twitch_login VARCHAR(255) NOT NULL,
-        stv_id VARCHAR(255) NOT NULL
-    )`);
-
-	await sql.query(`CREATE TABLE IF NOT EXISTS pubsub_events (
-        id SERIAL PRIMARY KEY,
-        twitch_id VARCHAR(255) NOT NULL,
-        twitch_login VARCHAR(255) NOT NULL,
-        event_channel_id VARCHAR(255) NOT NULL,
-        event_channel_name VARCHAR(255) NOT NULL,
-        event_type JSONB NOT NULL
-    )`);
-
-	await sql.query(`CREATE TABLE IF NOT EXISTS logout_token (
-        id SERIAL PRIMARY KEY,
-        jwt_token VARCHAR NOT NULL
-    )`);
-
-	const { roles } = await GetStvRoles();
-	for (const { id, name } of roles) {
-		await sql.query(
-			`INSERT INTO stv_roles (stv_role, stv_role_id) SELECT * FROM (SELECT '${name}', '${id}') AS tmp WHERE NOT EXISTS (SELECT stv_role_id FROM stv_roles WHERE stv_role_id = '${id}') LIMIT 1;`,
-		);
+const current = () => {
+	if (!pool) {
+		throw new Error('Postgres ist nicht verbunden (postgres.open fehlt)');
 	}
-});
+	return pool;
+};
 
-module.exports = sql;
+module.exports = {
+	open(config) {
+		if (!pool) {
+			pool = new Pool({ ...config, max: config.max ?? 10, connectionTimeoutMillis: 10_000 });
+			pool.on('error', (error) => bot.Logger?.error('[db] Postgres-Fehler', error));
+		}
+		return pool;
+	},
+	query: (text, values) =>
+		current()
+			.query(text, values)
+			.catch((error) => {
+				// Der Text hilft bei der Fehlersuche (Parameter bleiben draussen, sie koennen Chat-Inhalte enthalten)
+				error.sql = String(text).slice(0, 500);
+				throw error;
+			}),
+	connect: () => current().connect(),
+	async end() {
+		if (pool) {
+			const old = pool;
+			pool = null;
+			await old.end();
+		}
+	},
+};

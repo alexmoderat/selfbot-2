@@ -4,8 +4,8 @@
 //   yarn migrate:check
 
 const mariadb = require('mariadb');
-const { getConfig } = require('../src/selfbot/config.js');
-const DB = require('../src/selfbot/database/db.js');
+const { getConfig } = require('../src/config.js');
+const DB = require('../src/database/db.js');
 
 // Kern-Tabellen mit eigener Collection (Channel_Data/User_Alias_Data liegen in channels.data bzw. users.data)
 const CORE = {

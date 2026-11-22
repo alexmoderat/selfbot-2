@@ -1,27 +1,30 @@
 const { client } = require('../util/twitch/connections.js');
+const { Logger, LogLevel } = require('../misc/logger.js');
 
-const main = async () => {
-	let levelZeroArray = [];
-	const levelZeros = await bot.DB.users.find({ level: 0 }).exec();
-	for (const levelZero of levelZeros) {
-		levelZeroArray.push(levelZero.id);
-	}
+// Wie DontAddThisBot: alle aktiven Channels aus der DB joinen. Waehrend des Parallelbetriebs mit dem alten selfbot
+// begrenzt config.onlyChannels die Liste (sonst antworten beide Bots).
 
-	let ChannelsArray = [];
-	const channels = await bot.DB.channels.find({ isChannel: true }).exec();
-	for (const channel of channels) {
-		await bot.Redis.set(`xd:kattah:banned:${channel.id}`, '1', 0);
-		ChannelsArray.push({ id: channel.id, username: channel.username });
-	}
-
-	let filterChannels = ChannelsArray.filter((channel) => !levelZeroArray.includes(channel.id));
-
-	for (const channel of filterChannels) {
-		if (!client.joinedChannels.has(channel.username)) {
-			await new Promise((resolve) => setTimeout(resolve, 8));
-			client.join(channel.username);
-		}
-	}
+const joinableNames = () => {
+	const only = bot.Config.onlyChannels;
+	const names = bot.Channels.getJoinable().map((i) => i.name);
+	return Array.isArray(only) && only.length > 0 ? names.filter((name) => only.includes(name)) : names;
 };
 
-module.exports = { main };
+const main = async () => {
+	const names = joinableNames();
+	for (const name of names) {
+		if (!client.joinedChannels.has(name)) {
+			await new Promise((resolve) => setTimeout(resolve, 8));
+			client.join(name).catch((e) => Logger.log(LogLevel.WARN, `[join] ${name}: ${e.message}`));
+		}
+	}
+	Logger.log(LogLevel.INFO, `[twitch] ${names.length} Channel(s) per IRC`);
+};
+
+/** Ob der Bot einen Channel bedienen soll (Parallelbetrieb) */
+const isServed = (name) => {
+	const only = bot.Config.onlyChannels;
+	return !Array.isArray(only) || only.length === 0 || only.includes(name);
+};
+
+module.exports = { main, isServed };

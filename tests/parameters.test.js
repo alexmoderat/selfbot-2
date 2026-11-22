@@ -1,6 +1,6 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseParametersFromArguments, parseRegex } = require('../src/selfbot/clients/modules/parameters.js');
+const { parseParametersFromArguments, parseRegex } = require('../src/clients/modules/parameters.js');
 
 const defs = [
 	{ name: 'channel', type: 'string' },
