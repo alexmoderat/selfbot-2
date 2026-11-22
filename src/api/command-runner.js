@@ -1,4 +1,4 @@
-const { getCommand } = require('../clients/modules/commands.js');
+const { getCommand } = require('../commandHandler.js');
 
 /**
  * Befehle direkt auf der Website ausfuehren (ninou2, 03.11.2026: "create like a tab on the website", "as if someone was

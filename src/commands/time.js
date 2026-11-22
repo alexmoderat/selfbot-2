@@ -1,5 +1,5 @@
 const SupiDate = require('../util/date.js');
-const { isResultFailure } = require('../clients/modules/commands.js');
+const { isResultFailure } = require('../commandHandler.js');
 const { fetchGeoLocationData, fetchTimeData, formatTimezoneOffset } = require('../util/command-utils.js');
 const { detectCountryTime, detectTimezone } = require('../util/timezones.js');
 

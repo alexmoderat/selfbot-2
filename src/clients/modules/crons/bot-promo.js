@@ -1,5 +1,5 @@
 const { Logger } = require('../../../misc/logger.js');
-const { commands } = require('../commands.js');
+const { commands } = require('../../../commandHandler.js');
 const { defineCron } = require('../timers.js');
 const { buildCommandsUrl } = require('../../../util/command-catalog.js');
 

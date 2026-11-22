@@ -1,4 +1,4 @@
-const { commands } = require('../clients/modules/commands.js');
+const { commands } = require('../commandHandler.js');
 const { getConfig } = require('../config.js');
 const { invocationPrefix, loadOtherBotCommands } = require('./command-listing.js');
 const { uploadToOwnHaste } = require('../token/haste.js');

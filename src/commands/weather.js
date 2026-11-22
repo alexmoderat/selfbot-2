@@ -1,5 +1,5 @@
 const { isHttpError: isGotRequestError } = require('../token/http.js');
-const { isResultFailure } = require('../clients/modules/commands.js');
+const { isResultFailure } = require('../commandHandler.js');
 const { getWeatherLocation } = require('../util/commands/weather/location.js');
 const { weatherProviders } = require('../util/commands/weather/providers/index.js');
 const { formatWeatherReport } = require('../util/commands/weather/formatting.js');

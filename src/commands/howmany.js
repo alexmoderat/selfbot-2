@@ -1,4 +1,4 @@
-const { getCommand } = require('../clients/modules/commands.js');
+const { getCommand } = require('../commandHandler.js');
 const customCommands = require('../util/custom-commands.js');
 
 /**

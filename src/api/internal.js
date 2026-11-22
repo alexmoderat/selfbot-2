@@ -1,5 +1,5 @@
 const { Logger } = require('../misc/logger.js');
-const { commands } = require('../clients/modules/commands.js');
+const { commands } = require('../commandHandler.js');
 const { createServer } = require('node:http');
 const { pubsub } = require('../util/pubsub.js');
 const { getRecent } = require('../util/event-feed.js');

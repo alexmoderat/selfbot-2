@@ -24,7 +24,7 @@ const {
 	validateToken,
 } = require('../token/user-tokens.js');
 
-const { isResultFailure } = require('../clients/modules/commands.js');
+const { isResultFailure } = require('../commandHandler.js');
 
 const { fetchGeoLocationData, toUserLocation } = require('../util/command-utils.js');
 

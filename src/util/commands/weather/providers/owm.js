@@ -6,7 +6,7 @@ const { degreeShape, percentShape, probabilityShape, unixTimestampShape } = requ
 const { postToHastebin } = require('../../../command-utils.js');
 const logger = require('../../../log.js');
 
-const { isResultFailure } = require('../../../../clients/modules/commands.js');
+const { isResultFailure } = require('../../../../commandHandler.js');
 
 const precipitationShape = z.object({
 	'1h': z.number().nonnegative(),

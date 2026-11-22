@@ -1,4 +1,4 @@
-const { getCommand } = require('../clients/modules/commands.js');
+const { getCommand } = require('../commandHandler.js');
 const Filter = require('../util/filter.js');
 
 // Supibots commands/optout (mit parseGenericFilterOptions/handleGenericFilter aus Supibots utils/command-utils.ts):

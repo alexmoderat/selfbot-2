@@ -4,7 +4,7 @@ const { got } = require('../token/got.js');
 const sbv2 = require('../database/sbv2.js');
 const utilityDb = require('../database/utility.js');
 
-const { commands, toListed } = require('../clients/modules/commands.js');
+const { commands, toListed } = require('../commandHandler.js');
 
 const { execFile, execSync } = require('node:child_process');
 

@@ -2,7 +2,7 @@ const { got } = require('../../../../token/got.js');
 const z = require('zod');
 const SupiDate = require('../../../date.js');
 const { typedKeys } = require('../../../ts-helpers.js');
-const { isResultFailure } = require('../../../../clients/modules/commands.js');
+const { isResultFailure } = require('../../../../commandHandler.js');
 
 const WEATHER_ICONS = {
 	1: '🌤️️',

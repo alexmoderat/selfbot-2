@@ -1,4 +1,4 @@
-const { isResultFailure } = require('../clients/modules/commands.js');
+const { isResultFailure } = require('../commandHandler.js');
 const { detectTimezone } = require('../util/timezones.js');
 
 /**

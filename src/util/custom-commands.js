@@ -1,6 +1,6 @@
 const { Logger } = require('../misc/logger.js');
 const { randomUUID } = require('node:crypto');
-const { normalize } = require('../clients/modules/commands.js');
+const { normalize } = require('../commandHandler.js');
 const { chunkMessages } = require('./list-reply.js');
 const { resolveVariables } = require('./live-variables.js');
 

@@ -1,5 +1,5 @@
 const { Logger } = require('../../../misc/logger.js');
-const { commands } = require('../commands.js');
+const { commands } = require('../../../commandHandler.js');
 const { defineCron } = require('../timers.js');
 const timers = require('../../../util/timers.js');
 const { isTimerDue, withGroupLastSent } = require('../../../util/timer-rules.js');

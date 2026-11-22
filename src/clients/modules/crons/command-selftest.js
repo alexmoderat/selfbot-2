@@ -1,6 +1,6 @@
 const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
-const { getCommand, isResultFailure } = require('../commands.js');
+const { getCommand, isResultFailure } = require('../../../commandHandler.js');
 const { sendAlert } = require('../../../util/moderation.js');
 
 /**

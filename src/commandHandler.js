@@ -1,15 +1,12 @@
 const { readdirSync } = require('node:fs');
 const path = require('node:path');
-const { filterByConfig } = require('../../config.js');
-const { Logger } = require('../../misc/logger.js');
+const { filterByConfig } = require('./config.js');
+const { Logger } = require('./misc/logger.js');
 
-// Wie DontAddThisBot: alle Dateien in src/commands/ werden geladen, Name und Aliase in zwei Maps.
-// Zusaetzlich: Config-Filter (blacklist/whitelist), doppelte Namen sind ein Fehler, init()/destroy() je Command.
+// CommandHandler: laedt alle Dateien in src/commands/, haelt Name und Aliase in zwei Maps und loest Commands auf.
+// Config-Filter (blacklist/whitelist), doppelte Namen sind ein Fehler, init()/destroy() je Command.
 
-const COMMAND_DIR = path.join(__dirname, '..', '..', 'commands');
-
-const commands = new Map();
-const aliases = new Map();
+const COMMAND_DIR = path.join(__dirname, 'commands');
 
 const FLAGS = new Set([
 	'confirm', // destruktive Argumente (reset/delete/...) brauchen ein abschliessendes "yes"
@@ -86,54 +83,74 @@ const toListed = (command) => ({
 	noPrefix: command.flags.includes('no-prefix'),
 });
 
-const register = (command) => {
-	commands.set(command.name, command);
-	for (const alias of command.aliases) {
-		aliases.set(alias, command.name);
+class CommandHandler {
+	commands = new Map();
+	aliases = new Map();
+
+	register(command) {
+		this.commands.set(command.name, command);
+		for (const alias of command.aliases) {
+			this.aliases.set(alias, command.name);
+		}
+
+		if (typeof command.init === 'function') {
+			command.ready = false;
+			Promise.resolve(command.init(command))
+				.then(() => {
+					command.ready = true;
+				})
+				.catch((e) => Logger.warn(`[commands] Initialisierung von ${command.name} fehlgeschlagen`, e));
+		}
 	}
 
-	if (typeof command.init === 'function') {
-		command.ready = false;
-		Promise.resolve(command.init(command))
-			.then(() => {
-				command.ready = true;
-			})
-			.catch((e) => Logger.warn(`[commands] Initialisierung von ${command.name} fehlgeschlagen`, e));
-	}
-};
+	/** (Neu) laden: alte Commands abbauen, Dateien lesen, Config-Filter anwenden */
+	loadCommands(config) {
+		for (const command of this.commands.values()) {
+			command.destroy?.(command);
+		}
+		this.commands.clear();
+		this.aliases.clear();
 
-const startCmds = (config) => {
-	for (const command of commands.values()) {
-		command.destroy?.(command);
-	}
-	commands.clear();
-	aliases.clear();
+		const files = readdirSync(COMMAND_DIR).filter((file) => file.endsWith('.js'));
+		const definitions = files.map((file) => normalize(require(path.join(COMMAND_DIR, file)), file));
 
-	const files = readdirSync(COMMAND_DIR).filter((file) => file.endsWith('.js'));
-	const definitions = files.map((file) => normalize(require(path.join(COMMAND_DIR, file)), file));
+		const names = definitions.flatMap((i) => [i.name, ...i.aliases]);
+		const duplicates = names.filter((name, index) => names.indexOf(name) !== index);
+		if (duplicates.length > 0) {
+			throw new Error(`Doppelte Command-Namen oder Aliase: ${[...new Set(duplicates)].join(', ')}`);
+		}
 
-	const names = definitions.flatMap((i) => [i.name, ...i.aliases]);
-	const duplicates = names.filter((name, index) => names.indexOf(name) !== index);
-	if (duplicates.length > 0) {
-		throw new Error(`Doppelte Command-Namen oder Aliase: ${[...new Set(duplicates)].join(', ')}`);
+		for (const command of filterByConfig(definitions, (i) => i.name, config.modules.commands)) {
+			this.register(command);
+		}
+		return this;
 	}
 
-	for (const command of filterByConfig(definitions, (i) => i.name, config.modules.commands)) {
-		register(command);
+	/** Command per Name oder Alias */
+	get(identifier) {
+		if (identifier && typeof identifier === 'object') {
+			return identifier;
+		}
+		const name = String(identifier ?? '').toLowerCase();
+		return this.commands.get(name) ?? this.commands.get(this.aliases.get(name)) ?? null;
 	}
-	return { commands, aliases };
-};
+}
 
-/** Command per Name oder Alias */
-const getCommand = (identifier) => {
-	if (identifier && typeof identifier === 'object') {
-		return identifier;
-	}
-	const name = String(identifier ?? '').toLowerCase();
-	return commands.get(name) ?? commands.get(aliases.get(name)) ?? null;
-};
+const commandHandler = new CommandHandler();
 
 /** Fehlschlag mit Antworttext (bisher isResultFailure aus classes/command) */
 const isResultFailure = (input) => Boolean(input && typeof input === 'object' && input.success === false && typeof input.text === 'string');
 
-module.exports = { isResultFailure, startCmds, getCommand, commands, aliases, permissionOf, toListed, normalize, FLAGS };
+module.exports = {
+	CommandHandler,
+	commandHandler,
+	// Kurzformen auf dem gemeinsamen Handler (die Maps behalten ihre Identitaet)
+	commands: commandHandler.commands,
+	aliases: commandHandler.aliases,
+	getCommand: (identifier) => commandHandler.get(identifier),
+	isResultFailure,
+	permissionOf,
+	toListed,
+	normalize,
+	FLAGS,
+};

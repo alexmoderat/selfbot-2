@@ -1,5 +1,5 @@
 const { Logger } = require('../misc/logger.js');
-const { getCommand, commands } = require('../clients/modules/commands.js');
+const { getCommand, commands } = require('../commandHandler.js');
 
 const { Router } = require('express');
 
