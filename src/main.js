@@ -1,3 +1,4 @@
+// @ts-check
 // selfbot-next - alexmoderat's Twitch-Bot. Einstieg: die Klasse TwitchBot haelt die Dienste und startet in fester Reihenfolge
 // Datenbank -> Channels/Filter/AFK -> Commands -> Chat-Module -> Reminder -> Konsole -> Web/API -> Chat-Events.
 // Die Dienste erreichen den Bot weiter ueber das globale "bot" (die eine TwitchBot-Instanz).

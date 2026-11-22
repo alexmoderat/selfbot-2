@@ -98,6 +98,7 @@ const loadOtherBotCommands = (dir) => {
 	return result;
 };
 
+/** @type {Set<string> | null} */
 let utilityInvocations = null;
 /**
  * Namen und Aliase der "!"-Commands, die in den utility-Channels der utility-Bot beantwortet, einmal gelesen.

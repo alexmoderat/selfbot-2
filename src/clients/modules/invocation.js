@@ -22,6 +22,7 @@ const prefixProblem = (prefix) => {
 };
 
 /**
+ * @param {string | null} [altPrefix]
  * @returns {{ invocation: string, args: string[], altOnly: boolean, usedPrefix: string } | null}
  * altOnly: kam ueber das Zweit-Prefix, ohne dass ein no-prefix-Command passt (dann nur Custom Commands)
  */

@@ -1,3 +1,4 @@
+// @ts-check
 const { getConfig } = require('../../config.js');
 const { Logger } = require('../../misc/logger.js');
 const { replaceLinks, round, sqlDateTime } = require('../../misc/utility.js');
@@ -125,6 +126,7 @@ const checkAndExecute = async (msg, options = {}) => {
 
 	let args = msg.rawArgs.filter(Boolean);
 	let params = {};
+	/** @type {string | null} */
 	let failedParams = null;
 	if (command.params.length > 0) {
 		const parsed = parseParametersFromArguments(command.params, args);
@@ -207,7 +209,7 @@ const checkAndExecute = async (msg, options = {}) => {
 			context: { command: command.name, invocation: identifier, user: user.name, channel: channel?.name ?? null },
 			arguments: args,
 		});
-		logCommandExecution({ ...logBase, executed: new Date(), success: false, result: String(error?.message).slice(0, 300), executionTime: null });
+		logCommandExecution({ ...logBase, executed: new Date(), success: false, result: String(/** @type {any} */ (error)?.message).slice(0, 300), executionTime: null });
 		Logger.warn(`[handler] ${command.name} fehlgeschlagen`, error);
 
 		const idString = errorId !== null ? ` (ID ${errorId})` : '';

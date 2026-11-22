@@ -1,3 +1,4 @@
+// @ts-check
 const { readdirSync } = require('node:fs');
 const path = require('node:path');
 const { filterByConfig } = require('./config.js');
@@ -5,6 +6,9 @@ const { Logger } = require('./misc/logger.js');
 
 // CommandHandler: laedt alle Dateien in src/commands/, haelt Name und Aliase in zwei Maps und loest Commands auf.
 // Config-Filter (blacklist/whitelist), doppelte Namen sind ein Fehler, init()/destroy() je Command.
+
+/** @typedef {import('./types').Command} Command */
+/** @typedef {import('./types').CommandDefinition} CommandDefinition */
 
 const COMMAND_DIR = path.join(__dirname, 'commands');
 

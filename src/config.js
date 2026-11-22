@@ -1,3 +1,4 @@
+// @ts-check
 const { existsSync, readFileSync } = require('node:fs');
 const path = require('node:path');
 
@@ -26,7 +27,10 @@ const validate = (config) => {
 	return config;
 };
 
+/** @type {import('./types').Config | null} */
 let config = null;
+
+/** @returns {import('./types').Config} */
 exports.getConfig = () => {
 	if (config) {
 		return config;
@@ -34,8 +38,9 @@ exports.getConfig = () => {
 
 	const local = path.join(ROOT, 'config.json');
 	const file = existsSync(local) ? local : path.join(ROOT, 'example.config.json');
-	config = validate(JSON.parse(readFileSync(file, 'utf8')));
-	return config;
+	const loaded = validate(JSON.parse(readFileSync(file, 'utf8')));
+	config = loaded;
+	return loaded;
 };
 
 /** Wie Supibots filterModuleDefinitions: disableAll > whitelist > blacklist */
