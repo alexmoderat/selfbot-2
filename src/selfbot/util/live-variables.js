@@ -1,6 +1,7 @@
 const { got } = require('../token/got.js');
 const stats = require('./channel-stats.js');
 const { baseUrl } = require('../token/user-tokens.js');
+const streamInfoModule = require('./stream-info.js');
 
 /**
  * Live- und Rekord-Variablen fuer Custom Commands (alexmoderat, 22.11.2026: "ich moechte aber custom cmd" statt fester
@@ -8,9 +9,14 @@ const { baseUrl } = require('../token/user-tokens.js');
  *
  *   {live_count} {live_list} {live_viewers}            - gerade live (Helix), Liste "@x [2h] // @y [15m]", laengste zuerst
  *   {arg1} {arg2} {args}                               - Woerter nach dem Command (ohne @/#, klein), leer wenn keine
+ *   {si_kind} {si_target} {si_name} {si_viewers} {si_game} {si_uptime} {si_bitrate} {si_fps} {si_resolution} {si_clips}
+ *   {si_title} {si_thumb} {si_offline} {si_last_game} {si_last_title} {si_error} - Stream-Infos von {arg1} oder dem Channel;
+ *                                                      si_kind: live | offline | notfound | error
  *   {bot_url}                                          - Basis-Link der Bot-Website
  *   {record_count} {record_date} {record_channels}     - Rekord gleichzeitig live Channels (Cron live-record)
  *   {viewers_record} {viewers_record_date} {viewers_record_channels} - Rekord Gesamt-Viewer, Liste "@x [300] // @y [120]"
+ *
+ * Bedingungen: {if name}...{else}...{/if}, {if name=wert}, {if name!=wert} (wahr = nicht leer und nicht 0); verschachtelbar.
  */
 
 /** ninou2, 07.11.2026: "make it like this : @alexmoderat [34h] // @pearsbott [17h] //", "might [be] cleaner" */
@@ -69,8 +75,45 @@ const liveStreams = async () =>
 	);
 
 /** Variable -> async Wert (bekommt die Argumente des Aufrufs); Rekord ohne Eintrag: 0 / "never" / leer */
+/** Stream-Infos des Ziels (arg1 oder Channel), einmal pro Aufruf geholt */
+const streamInfo = async (args, ctx) => {
+	if (!ctx.memo.has('si')) {
+		const target = argOf(args, 0).toLowerCase() || ctx.channel || '';
+		let data;
+		try {
+			const info = await streamInfoModule.getStreamInfo(target);
+			data = info ? (info.live ? { kind: 'live', info } : { kind: 'offline', info }) : { kind: 'notfound' };
+		} catch (e) {
+			data = { kind: 'error', error: e instanceof Error ? e.message : String(e) };
+		}
+		ctx.memo.set('si', { target, ...data });
+	}
+
+	return ctx.memo.get('si');
+};
+const siField = (read) => async (args, ctx) => {
+	const data = await streamInfo(args, ctx);
+	return String(read(data, data.info ?? {}) ?? '');
+};
+
 const argOf = (args, i) => (args[i] ?? '').replace(/^[@#]+/, '');
 const VARIABLES = {
+	si_kind: siField((d) => d.kind),
+	si_target: siField((d) => d.target),
+	si_error: siField((d) => d.error),
+	si_name: siField((d, i) => i.displayName),
+	si_viewers: siField((d, i) => (d.kind === 'live' ? i.viewers : '')),
+	si_game: siField((d, i) => (d.kind === 'live' ? i.gameName : '')),
+	si_uptime: siField((d, i) => (d.kind === 'live' ? i.uptime : '')),
+	si_bitrate: siField((d, i) => i.hls?.bitrate),
+	si_fps: siField((d, i) => i.hls?.fps),
+	si_resolution: siField((d, i) => i.hls?.resolution),
+	si_clips: siField((d, i) => i.clipCount),
+	si_title: siField((d, i) => (d.kind === 'live' ? i.title : '')),
+	si_thumb: siField((d, i) => (d.kind === 'live' ? i.thumb : '')),
+	si_offline: siField((d, i) => (d.kind === 'offline' ? i.offlineSince : '')),
+	si_last_game: siField((d, i) => (d.kind === 'offline' ? i.lastGame : '')),
+	si_last_title: siField((d, i) => (d.kind === 'offline' ? i.lastTitle : '')),
 	arg1: async (args) => argOf(args, 0).toLowerCase(),
 	arg2: async (args) => argOf(args, 1).toLowerCase(),
 	args: async (args) => args.join(' '),
@@ -90,14 +133,31 @@ const VARIABLES = {
 	viewers_record_channels: async () => ((await stats.getRecord('live_viewers'))?.Channels ?? []).map((i) => `@${i.login} [${i.viewers}]`).join(SEPARATOR),
 };
 
-/** Ersetzt die Variablen im Text; jede Variable einmal geholt (Helix/DB), auch wenn sie mehrfach vorkommt */
-const resolveVariables = async (text, args = []) => {
-	const cache = new Map();
-	const names = [...new Set([...text.matchAll(/\{(\w+)\}/g)].map((i) => i[1].toLowerCase()))].filter((i) => i in VARIABLES);
+const IF_BLOCK = /\{if (\w+)(?:(!?=)([^}]*))?\}((?:(?!\{if )[\s\S])*?)(?:\{else\}((?:(?!\{if )[\s\S])*?))?\{\/if\}/;
+
+/**
+ * Ersetzt Bedingungen und Variablen; jede Variable einmal geholt (Helix/DB), auch wenn sie mehrfach vorkommt. Erst die
+ * Bedingungen, dann die Werte in einem Durchgang - ein Wert (z. B. ein Streamtitel mit "{if") wird nie als Vorlage gelesen.
+ * ctx: { channel } fuer das Standardziel
+ */
+const resolveVariables = async (text, args = [], context = {}) => {
+	const ctx = { channel: context.channel ?? '', memo: new Map() };
+	const names = [...new Set([...text.matchAll(/\{(?:if )?(\w+)[}=!]/g)].map((i) => i[1].toLowerCase()))].filter((i) => i in VARIABLES);
+	const values = new Map();
 	for (const name of names) {
-		cache.set(name, await VARIABLES[name](args));
+		values.set(name, await VARIABLES[name](args, ctx));
 	}
-	return text.replaceAll(/\{(\w+)\}/g, (all, name) => cache.get(name.toLowerCase()) ?? all);
+
+	let out = text;
+	for (let guard = 0; guard < 200 && IF_BLOCK.test(out); guard++) {
+		out = out.replace(IF_BLOCK, (all, name, op, expected, body, otherwise = '') => {
+			const value = values.get(name.toLowerCase());
+			const truthy = op ? (value ?? '') === expected : Boolean(value) && value !== '0';
+			return (op === '!=' ? !truthy : truthy) ? body : otherwise;
+		});
+	}
+
+	return out.replaceAll(/\{(\w+)\}/g, (all, name) => values.get(name.toLowerCase()) ?? all);
 };
 
 module.exports = { SEPARATOR, formatLiveList, fetchLiveStreams, ordinal, formatRecordDate, resolveVariables, VARIABLES };

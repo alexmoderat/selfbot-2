@@ -81,7 +81,7 @@ const resolve = async (channel, invocation) => {
 					}
 				}
 
-				const response = await resolveVariables(formatResponse(row.Response, msg.sender.name, channel.name), msg.args ?? []);
+				const response = await resolveVariables(formatResponse(row.Response, msg.sender.name, channel.name), msg.args ?? [], { channel: channel.name });
 				const messages = splitMessages(row.Reply ? `@${msg.sender.name}, ${response}` : response);
 				if (messages.length === 1) {
 					return { text: messages[0] };

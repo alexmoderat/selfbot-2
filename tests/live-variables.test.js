@@ -90,3 +90,29 @@ test('Variablen {arg1}/{args}/{bot_url}', async () => {
 	assert.equal(await lv.resolveVariables('{arg1}|{arg2}|{args}|{bot_url}/dashboard|{ARG1}', ['@Ninou2', 'x']), 'ninou2|x|@Ninou2 x|https://bot.example/dashboard|ninou2');
 	assert.equal(await lv.resolveVariables('[{arg1}]'), '[]');
 });
+
+test('Bedingungen {if}/{else}, verschachtelt, = und !=; Werte werden nie als Vorlage gelesen', async () => {
+	const t = (s) => lv.resolveVariables(s, ['@Foo']);
+	assert.equal(await t('{if arg1}da{else}leer{/if}'), 'da');
+	assert.equal(await t('{if arg1=foo}a{else}b{/if}|{if arg1!=foo}a{else}b{/if}'), 'a|b');
+	assert.equal(await t('{if arg2}x{/if}-{if arg1}{if arg2}1{else}2{/if}{/if}'), '-2');
+});
+
+test('Stream-Infos: live, offline, nicht gefunden, Fehler; Titel mit "{if" bleibt Text', async () => {
+	const si = require('../src/selfbot/util/stream-info.js');
+	const real = si.getStreamInfo;
+	const tpl =
+		'{if si_kind=live}L {si_name} {si_viewers} {si_title}{if si_bitrate} {si_bitrate}k{/if}{/if}{if si_kind=offline}O {si_offline}{if si_last_title} t:{si_last_title}{/if}{/if}{if si_kind=notfound}N {si_target}{/if}{if si_kind=error}E {si_error}{/if}';
+	const run = async (impl) => {
+		si.getStreamInfo = impl;
+		try {
+			return await lv.resolveVariables(tpl, ['Foo'], { channel: 'chan' });
+		} finally {
+			si.getStreamInfo = real;
+		}
+	};
+	assert.equal(await run(async () => ({ live: true, displayName: 'Foo', viewers: 5, title: 'x {if arg1}y{/if}', hls: { bitrate: 6000 } })), 'L Foo 5 x {if arg1}y{/if} 6000k');
+	assert.equal(await run(async () => ({ live: false, displayName: 'Foo', offlineSince: '2h', lastTitle: 'T' })), 'O 2h t:T');
+	assert.equal(await run(async () => null), 'N foo');
+	assert.equal(await run(async () => Promise.reject(new Error('boom'))), 'E boom');
+});
