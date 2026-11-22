@@ -34,3 +34,14 @@ test('Cron live-record speichert die Gesamt-Viewer mit Channels, meiste zuerst',
 	}
 	assert.deepEqual(saved, [['live_viewers', 320, [{ login: 'a', viewers: 300 }, { login: 'b', viewers: 20 }]]]);
 });
+
+test('Lange Viewer-Liste: mehrere Nachrichten statt Link, keine ueber dem Limit, kein Eintrag zerschnitten', () => {
+	const { chunkMessages } = require('../src/selfbot/util/list-reply.js');
+	const items = Array.from({ length: 40 }, (_, i) => `@channel_number_${i} [${100 - i}]`);
+	const messages = chunkMessages('@ninou2, head : ', items, ' // ', 480);
+	assert.ok(messages.length > 1);
+	assert.ok(messages.every((m) => m.length <= 480));
+	assert.ok(messages[0].startsWith('@ninou2, head : @channel_number_0 [100]'));
+	assert.deepEqual(messages.join(' // ').replace('@ninou2, head : ', '').split(' // '), items);
+	assert.deepEqual(chunkMessages('h : ', ['@a [1]', '@b [2]'], ' // ', 480), ['h : @a [1] // @b [2]']);
+});

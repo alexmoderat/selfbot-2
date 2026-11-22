@@ -21,4 +21,26 @@ const listOrLink = async (items, title, inlineMax = LIST_INLINE_MAX) => {
 	}
 };
 
-module.exports = { LIST_INLINE_MAX, formatListPage, listOrLink };
+/**
+ * Lange Liste auf mehrere Chat-Nachrichten verteilen statt Link: erste mit head, Eintraege mit sep getrennt, keine
+ * Nachricht laenger als limit, kein Eintrag wird zerschnitten
+ */
+const chunkMessages = (head, items, sep, limit) => {
+	const messages = [];
+	let current = head;
+	let empty = true;
+	for (const item of items) {
+		const next = empty ? `${current}${item}` : `${current}${sep}${item}`;
+		if (next.length > limit && !empty) {
+			messages.push(current);
+			current = item;
+		} else {
+			current = next;
+		}
+		empty = false;
+	}
+	messages.push(current);
+	return messages;
+};
+
+module.exports = { LIST_INLINE_MAX, formatListPage, listOrLink, chunkMessages };

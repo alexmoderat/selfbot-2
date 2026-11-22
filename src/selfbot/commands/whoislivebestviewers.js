@@ -1,15 +1,16 @@
 const { getRecord } = require('../util/channel-stats.js');
-const { uploadToOwnHaste } = require('../token/haste.js');
-const { formatListPage } = require('../util/list-reply.js');
+const { chunkMessages } = require('../util/list-reply.js');
 const { formatRecordDate } = require('./whoislivebest.js');
 const { SEPARATOR } = require('./whoislive.js');
 
 /**
  * Rekord der Gesamt-Viewer aller gleichzeitig live Channels (Cron live-record, seit 22.11.2026), wie !wilb, aber fuer das
  * "--- TOTAL Viewers" aus !wil (ninou2, 22.11.2026: "!wilbv", "the viewers best recorded"). Channels mit ihren Viewern im
- * !wil-Stil "@x [300] // @y [120]", meiste zuerst; passt das nicht in eine Nachricht, als Link (alexmoderat, 24.10.2026).
+ * !wil-Stil "@x [300] // @y [120]", meiste zuerst. Passt das nicht in eine Nachricht, auf mehrere verteilt statt als Link
+ * (alexmoderat, 22.11.2026: "ninou mag es nicht als link").
  */
 const MESSAGE_LIMIT = 480;
+const MESSAGE_GAP_MS = 1_200;
 
 const viewersHead = (record) =>
 	`the most total viewers of the channels with the bot that were live at one time was recorded on ${formatRecordDate(record.Achieved)} with [${record.Value} ${record.Value === 1 ? 'viewer' : 'viewers'}]`;
@@ -35,16 +36,18 @@ module.exports = {
 			return { text: head };
 		}
 
-		const inline = `${head} : ${items.join(SEPARATOR)}`;
-		if (inline.length <= MESSAGE_LIMIT) {
-			return { text: inline };
+		const messages = chunkMessages(`${head} : `, items, SEPARATOR, MESSAGE_LIMIT);
+		if (messages.length === 1) {
+			return { text: messages[0] };
 		}
 
-		try {
-			return { text: `${head} : ${await uploadToOwnHaste(formatListPage('Viewer record', items))}` };
-		} catch {
-			return { text: `${inline.slice(0, MESSAGE_LIMIT - 1)}…` };
+		for (const [i, text] of messages.entries()) {
+			if (i > 0) {
+				await new Promise((resolve) => setTimeout(resolve, MESSAGE_GAP_MS));
+			}
+			await bot.Channels.send(msg.channelData, text);
 		}
+		return { success: true, text: null };
 	},
 };
 
