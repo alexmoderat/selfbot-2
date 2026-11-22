@@ -2661,13 +2661,6 @@
 					</div>
 					<div class="data-row" style="grid-template-columns: 1fr auto">
 						<div>
-							<div class="cell-mono" style="color: #3a9bd0">Crossban</div>
-							<div class="cell-muted" style="font-size: 14px">Lets network-wide bans from !crossban apply in your channel too.</div>
-						</div>
-						<div class="toggle-pair" id="toggleCrossban"></div>
-					</div>
-					<div class="data-row" style="grid-template-columns: 1fr auto">
-						<div>
 							<div class="cell-mono" style="color: #3a9bd0">7TV !add / !remove</div>
 							<div class="cell-muted" style="font-size: 14px">Who can add and remove 7TV emotes with !add and !remove (same as !7tv access streamer / mods).</div>
 						</div>
@@ -4131,7 +4124,7 @@
 				showToast('Command added!', 'success');
 			});
 
-			// ── Channel Settings (Commands allowed / Moderation / Crossban) ────────────
+			// ── Channel Settings (Commands allowed / Moderation) ────────────
 			async function loadChannelSettings() {
 				const result = await apiFetch('api/settings/channel');
 				if (result === null) return;
@@ -4151,8 +4144,6 @@
 				document.getElementById('toggleModeration').innerHTML =
 					toggleBtn(s.moderation === 'automatic', 'Automatic', `setChannelSetting('moderation', 'automatic')`) +
 					toggleBtn(s.moderation === 'disabled', 'Disabled', `setChannelSetting('moderation', 'disabled')`);
-				document.getElementById('toggleCrossban').innerHTML =
-					toggleBtn(!s.crossban, 'No', `setChannelSetting('crossban', false)`) + toggleBtn(s.crossban, 'Yes', `setChannelSetting('crossban', true)`);
 				document.getElementById('toggleSevenTvAccess').innerHTML =
 					toggleBtn(s.sevenTvAccess !== 'streamer', 'Mods + streamer', `setChannelSetting('sevenTvAccess', 'mods')`) +
 					toggleBtn(s.sevenTvAccess === 'streamer', 'Streamer only', `setChannelSetting('sevenTvAccess', 'streamer')`);
@@ -5543,13 +5534,6 @@
           <div class="toggle-pair">
             ${toggleBtn(s.moderation === 'automatic', 'Automatic', `setAdminChannelSetting('${esc(channel)}','moderation', 'automatic')`)}
             ${toggleBtn(s.moderation === 'disabled', 'Disabled', `setAdminChannelSetting('${esc(channel)}','moderation', 'disabled')`)}
-          </div>
-        </div>
-        <div class="data-row" style="grid-template-columns:1fr auto">
-          <div><div class="cell-mono" style="color:#3a9bd0">Crossban</div></div>
-          <div class="toggle-pair">
-            ${toggleBtn(!s.crossban, 'No', `setAdminChannelSetting('${esc(channel)}','crossban', false)`)}
-            ${toggleBtn(s.crossban, 'Yes', `setAdminChannelSetting('${esc(channel)}','crossban', true)`)}
           </div>
         </div>
         <div class="data-row" style="grid-template-columns:1fr auto">

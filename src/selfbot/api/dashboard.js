@@ -43,7 +43,7 @@ const { loadOtherBotCommands } = require('../util/command-listing.js');
  *   Banphrases       -> Moderation_Phrase (Channel-/globale Ebene)
  *   Custom Commands  -> Custom_Command
  *   Commands an/aus  -> Supibot-Filter (Blacklist, Antwort "None"): ganzer Channel oder einzelner Command
- *   Moderation       -> Channel_Data autobanDisabled, Crossban -> crossbanOptIn
+ *   Moderation       -> Channel_Data autobanDisabled
  *   notify/banwatch  -> Notify_Live / Notify_Ban, Admins -> User_Alias_Data administrator
  *   Blacklist        -> manuell verlassene Channels (Mode Inactive, inactive.reason "manual"), die Auto-Join auslaesst
  * Antwortformen wie in sb-v2, damit dashboard.html unveraendert bleiben kann.
@@ -90,7 +90,6 @@ const setBlock = async (existing, wanted, create) => {
 const channelSettings = async (channel) => ({
 	commandsAllowed: !channelBlock(channel)?.Active,
 	moderation: (await bot.Channels.getData(channel, 'autobanDisabled')) === true ? 'disabled' : 'automatic',
-	crossban: (await bot.Channels.getData(channel, 'crossbanOptIn')) === true,
 	// !add/!remove (7tv) nur fuer den Streamer - wie "7tv access streamer|mods" (ninou2, 29.10.2026: auch im Dashboard)
 	sevenTvAccess: (await bot.Channels.getData(channel, 'sevenTvStreamerOnly')) === true ? 'streamer' : 'mods',
 	// ninou2, 13.11.2026: neue globale Badges im Chat melden, standardmaessig aus, eigener Textteil
@@ -108,16 +107,13 @@ const raidActiveCount = async (channel) => {
 };
 
 const applyChannelSettings = async (req, channel) => {
-	const { commandsAllowed, moderation, crossban, sevenTvAccess, badgeAlerts, badgeAlertsMessage, raidNotify } = req.body;
+	const { commandsAllowed, moderation, sevenTvAccess, badgeAlerts, badgeAlertsMessage, raidNotify } = req.body;
 	if (typeof commandsAllowed === 'boolean') {
 		const by = await issuer(req);
 		await setBlock(channelBlock(channel), !commandsAllowed, () => Filter.create({ Channel: channel.id, Type: 'Blacklist', Response: 'None', Issued_By: by }));
 	}
 	if (moderation === 'disabled' || moderation === 'automatic') {
 		await setAutobanSwitch(channel, 'autobanDisabled', moderation === 'disabled', req.sess?.username ?? 'dashboard', 'dashboard');
-	}
-	if (typeof crossban === 'boolean') {
-		await bot.Channels.setData(channel, 'crossbanOptIn', crossban);
 	}
 	if (sevenTvAccess === 'streamer' || sevenTvAccess === 'mods') {
 		await bot.Channels.setData(channel, 'sevenTvStreamerOnly', sevenTvAccess === 'streamer');
