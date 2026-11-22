@@ -1,7 +1,7 @@
 const { Logger } = require('../../../misc/logger.js');
 const { defineCron } = require('../timers.js');
 const { updateRecordIfHigher } = require('../../../util/channel-stats.js');
-const { fetchLiveStreams } = require('../../../commands/whoislive.js');
+const { fetchLiveStreams } = require('../../../util/live-variables.js');
 
 /**
  * Rekord der Gesamt-Viewer aller gleichzeitig live Channels, fuer !wilbv (ninou2, 22.11.2026: "!wilbv", "the viewers best

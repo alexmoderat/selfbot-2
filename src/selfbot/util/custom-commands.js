@@ -1,6 +1,8 @@
 const { Logger } = require('../misc/logger.js');
 const { randomUUID } = require('node:crypto');
 const { normalize } = require('../clients/modules/commands.js');
+const { chunkMessages } = require('./list-reply.js');
+const { resolveVariables } = require('./live-variables.js');
 
 // Custom Commands pro Channel (Collection customCommand), aus sb-v2s singletons/custom-commands.ts. Ein Eintrag wird zu
 // einem echten Command-Objekt und laeuft durch denselben Handler wie eingebaute (Rechte, Cooldown, Filter).
@@ -8,6 +10,8 @@ const { normalize } = require('../clients/modules/commands.js');
 // Datensaetze in der alten Form ({ ID, UUID, Channel, Name, Response, Cooldown, Mod_Only, Reply, ... }).
 
 const CACHE_TTL = 60_000;
+const MESSAGE_LIMIT = 480;
+const MESSAGE_GAP_MS = 1_200;
 const TEMPLATE_ONLY = new Set(['!raidping', '!raidreminder']);
 const cache = new Map();
 
@@ -39,6 +43,18 @@ const get = async (channel, name) => (await getChannelCommands(channel)).get(nam
 /** Ersetzt {user} und {channel} */
 const formatResponse = (response, userName, channelName) => response.replaceAll(/\{user\}/gi, `@${userName}`).replaceAll(/\{channel\}/gi, channelName);
 
+/**
+ * Zu lange Antworten (z. B. {live_list}) auf mehrere Nachrichten verteilen statt zu kuerzen: an " // " getrennt, sonst
+ * an Leerzeichen; nichts wird zerschnitten
+ */
+const splitMessages = (text) => {
+	if (text.length <= MESSAGE_LIMIT) {
+		return [text];
+	}
+	const sep = text.includes(' // ') ? ' // ' : ' ';
+	return chunkMessages('', text.split(sep), sep, MESSAGE_LIMIT);
+};
+
 /** Command-Objekt fuer einen Aufruf ("discord" oder "!discord"), sonst null */
 const resolve = async (channel, invocation) => {
 	const rows = await getChannelCommands(channel);
@@ -65,8 +81,18 @@ const resolve = async (channel, invocation) => {
 					}
 				}
 
-				const response = formatResponse(row.Response, msg.sender.name, channel.name);
-				return { text: row.Reply ? `@${msg.sender.name}, ${response}` : response };
+				const response = await resolveVariables(formatResponse(row.Response, msg.sender.name, channel.name));
+				const messages = splitMessages(row.Reply ? `@${msg.sender.name}, ${response}` : response);
+				if (messages.length === 1) {
+					return { text: messages[0] };
+				}
+				for (const [i, text] of messages.entries()) {
+					if (i > 0) {
+						await new Promise((resolve) => setTimeout(resolve, MESSAGE_GAP_MS));
+					}
+					await bot.Channels.send(channel, text);
+				}
+				return { success: true, text: null };
 			},
 		},
 		'custom-command',
@@ -101,4 +127,4 @@ const remove = async (existing) => {
 	cache.delete(existing.Channel);
 };
 
-module.exports = { list, invalidate, get, formatResponse, resolve, add, edit, remove };
+module.exports = { splitMessages, list, invalidate, get, formatResponse, resolve, add, edit, remove };
