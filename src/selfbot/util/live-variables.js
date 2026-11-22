@@ -4,6 +4,8 @@ const { baseUrl } = require('../token/user-tokens.js');
 const streamInfoModule = require('./stream-info.js');
 const lastLiveModule = require('./lastlive-data.js');
 const userDataModule = require('./user-data.js');
+const viewerStreakModule = require('./viewerstreak-data.js');
+const stalkModule = require('./stalk-data.js');
 
 /**
  * Live- und Rekord-Variablen fuer Custom Commands (alexmoderat, 22.11.2026: "ich moechte aber custom cmd" statt fester
@@ -20,6 +22,10 @@ const userDataModule = require('./user-data.js');
  *   {u_kind} {u_login} {u_name} {u_display} {u_id} {u_color} {u_roles} {u_roles_c} {u_followers} {u_bio} {u_bio_c} {u_created}
  *   {u_last_live_ago} {u_tail} {u_tail_c} {u_ban_type} {u_available} {u_restricted} - Account-Infos von {arg1} (user-data.js);
  *                                                      u_kind: usage | notfound | banned | ok
+ *   {vs_kind} {vs_hint} {vs_login} {vs_channel} {vs_value} {vs_seen} {vs_best} - Watch-Streak von {arg1} (viewerstreak-data.js);
+ *                                                      vs_kind: nochannel | top | notfound | none | ok
+ *   {s_kind} {s_emote} {s_first} {s_who} {s_ago} {s_channel} {s_text} - zuletzt gesehen: {arg1} (stalk-data.js);
+ *                                                      s_kind: usage | nouser | self | bot | never | nochannel | banned | ok
  *   {bot_url}                                          - Basis-Link der Bot-Website
  *   {record_count} {record_date} {record_channels}     - Rekord gleichzeitig live Channels (Cron live-record)
  *   {viewers_record} {viewers_record_date} {viewers_record_channels} - Rekord Gesamt-Viewer, Liste "@x [300] // @y [120]"
@@ -124,6 +130,26 @@ const userData = async (args, ctx) => {
 };
 const uField = (key) => async (args, ctx) => String((await userData(args, ctx))[key] ?? '');
 
+/** Watch-Streak des Users aus arg1 (sonst der Sender) im Channel */
+const viewerStreak = async (args, ctx) => {
+	if (!ctx.memo.has('vs')) {
+		ctx.memo.set('vs', await viewerStreakModule.getViewerStreak({ userRaw: args[0], channelName: ctx.channel, channelId: ctx.twitchId, senderName: ctx.sender?.name }));
+	}
+
+	return ctx.memo.get('vs');
+};
+const vsField = (key) => async (args, ctx) => String((await viewerStreak(args, ctx))[key] ?? '');
+
+/** Zuletzt gesehen: arg1 */
+const stalk = async (args, ctx) => {
+	if (!ctx.memo.has('s')) {
+		ctx.memo.set('s', await stalkModule.getStalk({ userRaw: argOf(args, 0), msg: ctx.msg, hasChannel: Boolean(ctx.channel) }));
+	}
+
+	return ctx.memo.get('s');
+};
+const sField = (key) => async (args, ctx) => String((await stalk(args, ctx))[key] ?? '');
+
 const argOf = (args, i) => (args[i] ?? '').replace(/^[@#]+/, '');
 const VARIABLES = {
 	...Object.fromEntries(['kind', 'channel', 'own', 'start', 'length', 'prev', 'year', 'when', 'ago', 'date', 'count', 'sessions', 'total', 'dayword'].map((key) => [`ll_${key}`, llField(key)])),
@@ -149,6 +175,8 @@ const VARIABLES = {
 			restricted: 'restricted',
 		}).map(([name, key]) => [`u_${name}`, uField(key)]),
 	),
+	...Object.fromEntries(['kind', 'hint', 'login', 'channel', 'value', 'seen', 'best'].map((key) => [`vs_${key}`, vsField(key)])),
+	...Object.fromEntries(['kind', 'emote', 'first', 'who', 'ago', 'channel', 'text'].map((key) => [`s_${key}`, sField(key)])),
 	si_kind: siField((d) => d.kind),
 	si_target: siField((d) => d.target),
 	si_error: siField((d) => d.error),
@@ -192,7 +220,7 @@ const IF_BLOCK = /\{if (\w+)(?:(!?=)([^}]*))?\}((?:(?!\{if )[\s\S])*?)(?:\{else\
  * ctx: { channel } fuer das Standardziel
  */
 const resolveVariables = async (text, args = [], context = {}) => {
-	const ctx = { channel: context.channel ?? '', memo: new Map() };
+	const ctx = { channel: context.channel ?? '', twitchId: context.twitchId, sender: context.sender, msg: context.msg, memo: new Map() };
 	const names = [...new Set([...text.matchAll(/\{(?:if )?(\w+)[}=!]/g)].map((i) => i[1].toLowerCase()))].filter((i) => i in VARIABLES);
 	const values = new Map();
 	for (const name of names) {

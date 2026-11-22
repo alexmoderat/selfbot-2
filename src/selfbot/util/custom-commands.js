@@ -12,6 +12,8 @@ const { resolveVariables } = require('./live-variables.js');
 const CACHE_TTL = 60_000;
 const MESSAGE_LIMIT = 480;
 const MESSAGE_GAP_MS = 1_200;
+// Flags der eingebauten Vorgaenger: Opt-out/Block des Ziel-Users und Antwort mit "@user, " gelten weiter
+const CUSTOM_FLAGS = { '!stalk': ['block', 'external-input', 'mention', 'opt-out', 'pipe'] };
 const TEMPLATE_ONLY = new Set(['!raidping', '!raidreminder']);
 const cache = new Map();
 
@@ -71,7 +73,7 @@ const resolve = async (channel, invocation) => {
 			name: `custom:${channel.id}:${row.Name.replace(/^!/, '')}`,
 			description: `Custom command of #${channel.name}`,
 			cooldown: row.Cooldown * 1000,
-			flags: row.Mod_Only ? ['mod'] : [],
+			flags: [...(row.Mod_Only ? ['mod'] : []), ...(CUSTOM_FLAGS[row.Name.toLowerCase()] ?? [])],
 			execute: async (client, msg) => {
 				// In sb-v2s Vorgaenger gespeichert und angezeigt, aber nie geprueft - hier durchgesetzt
 				if (row.Online_Only || row.Offline_Only) {
@@ -81,7 +83,12 @@ const resolve = async (channel, invocation) => {
 					}
 				}
 
-				const response = await resolveVariables(formatResponse(row.Response, msg.sender.name, channel.name), msg.args ?? [], { channel: channel.name });
+				const response = await resolveVariables(formatResponse(row.Response, msg.sender.name, channel.name), msg.args ?? [], {
+					channel: channel.name,
+					twitchId: channel.twitchId,
+					sender: msg.sender,
+					msg,
+				});
 				const messages = splitMessages(row.Reply ? `@${msg.sender.name}, ${response}` : response);
 				if (messages.length === 1) {
 					return { text: messages[0] };

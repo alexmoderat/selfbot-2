@@ -175,3 +175,25 @@ test('user: Vorlagen fuer notfound, banned, ok (detailliert und kompakt) mit ges
 		Object.assign(gql, { getUserProfile: real.p, isUsernameAvailable: real.a, getChatRestrictedReasons: real.r });
 	}
 });
+
+test('viewerstreak/stalk: Variablen mit gestubbten Daten, Flags des Custom-stalk', async () => {
+	const vsm = require('../src/selfbot/util/viewerstreak-data.js');
+	const sm = require('../src/selfbot/util/stalk-data.js');
+	const real = { v: vsm.getViewerStreak, s: sm.getStalk };
+	const calls = [];
+	vsm.getViewerStreak = async (input) => (calls.push(input), { kind: 'ok', login: 'foo', channel: 'ninou2', value: '12', seen: 'the 6th october 2026', best: ' [best]' });
+	sm.getStalk = async (input) => (calls.push(input), { kind: 'ok', who: 'That user was', ago: '5m ago', channel: '#ninou2', text: 'hi {if x}' });
+	try {
+		const ctx = { channel: 'ninou2', twitchId: '42', sender: { name: 'me' }, msg: { m: 1 } };
+		assert.equal(await lv.resolveVariables('{if vs_kind=ok}{vs_login} > {vs_value} < ({vs_seen}){vs_best}{/if}', ['Foo'], ctx), 'foo > 12 < (the 6th october 2026) [best]');
+		assert.deepEqual(calls[0], { userRaw: 'Foo', channelName: 'ninou2', channelId: '42', senderName: 'me' });
+		assert.equal(
+			await lv.resolveVariables('{if s_kind=ok}{s_who} last seen in chat {s_ago} ({s_channel}) Last message: {s_text}{/if}', ['@Foo'], ctx),
+			'That user was last seen in chat 5m ago (#ninou2) Last message: hi {if x}',
+		);
+		assert.deepEqual(calls[1], { userRaw: 'Foo', msg: ctx.msg, hasChannel: true });
+	} finally {
+		vsm.getViewerStreak = real.v;
+		sm.getStalk = real.s;
+	}
+});
